@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('payment_suppliers', function (Blueprint $table) {
             $table->id();
             $table->string('screenshot');
-            $table->boolean('is_verified');
             $table->foreignId('site_id')->constrained()->cascadeOnDelete();
             $table->foreignId('supplier_id')->constrained()->cascadeOnDelete();
-            $table->unsignedBigInteger('amount');
+            $table->decimal('amount',8,2);
+            $table->boolean('verified_by_admin')->default(false);
             $table->softDeletes();
             $table->timestamps();
         });

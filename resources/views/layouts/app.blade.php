@@ -1,3 +1,14 @@
+@php
+    use App\Models\User;
+
+    $notifications = auth()
+        ->user()
+        ->unreadNotifications()
+        ->where('notifiable_type', User::class)
+        ->get(); // Don't forget to add get()!
+
+@endphp
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -44,119 +55,23 @@
     {{-- ChartJs  --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js" charset="utf-8"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+        integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 </head>
 
 <body class="with-welcome-text">
 
     <!-- partial:partials/_navbar.html -->
-    <nav class="navbar default-layout col-lg-12 col-12 p-0 fixed-top d-flex align-items-top flex-row">
-
-        <div class="text-center navbar-brand-wrapper d-flex align-items-center justify-content-start">
-            <div class="me-3">
-                <button class="navbar-toggler navbar-toggler align-self-center" type="button"
-                    data-bs-toggle="minimize">
-                    <span class="icon-menu"></span>
-                </button>
-            </div>
-            <div>
-                <a class="navbar-brand brand-logo" href="index.html">
-                    <img src="assets/images/logo.svg" alt="logo" />
-                </a>
-                <a class="navbar-brand brand-logo-mini" href="index.html">
-                    <img src="assets/images/logo-mini.svg" alt="logo" />
-                </a>
-            </div>
-        </div>
-
-        <div class="navbar-menu-wrapper d-flex align-items-top">
-
-            <ul class="navbar-nav">
-                <li class="nav-item fw-semibold d-none d-lg-block ms-0">
-                    <h1 class="welcome-text text-info">Welcome, <span
-                            class="text-info fw-bold">{{ ucfirst(auth()->user()->name) }}</span></h1>
-                </li>
-            </ul>
-
-            <ul class="navbar-nav ms-auto">
-
-                <li class="nav-item">
-                    <form class="search-form" action="#">
-                        <i class="icon-search"></i>
-                        <input type="search" class="form-control" placeholder="Search Here" title="Search here">
-                    </form>
-                </li>
 
 
-                {{-- <div class="border border-green-500 px-2 py-3">
+    @if (auth()->user()->role_name === 'admin')
+        @include('components.admin-topbar')
+    @else
+        @include('components.user-topbar')
+    @endif
 
-                    <br>
-
-                    <br>
-                    <br>
-
-
-                </div> --}}
-
-                @if (auth()->user()->role_name === 'site_engineer')
-                    @yield('notifications')
-                @endif
-
-                <li class="nav-item dropdown d-none d-lg-block user-dropdown">
-                    <a class="nav-link" id="UserDropdown" href="#" data-bs-toggle="dropdown"
-                        aria-expanded="false">
-                        {{ ucfirst(auth()->user()->name) }}
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="UserDropdown">
-                        <div class="dropdown-header text-center">
-                            <p class="mb-1 mt-3 fw-semibold">{{ ucfirst(auth()->user()->name) }}</p>
-                            <p class="fw-light text-muted mb-0">{{ auth()->user()->email }}</p>
-                        </div>
-
-                        @if (auth()->user()->role_name === 'admin')
-                            <a class="dropdown-item" href="{{ route('profile.edit') }}">
-                                <i class="dropdown-item-icon mdi mdi-account-outline text-primary me-2"></i>
-                                My Profile
-                            </a>
-                        @endif
-
-                        @if (auth()->user()->role_name === 'admin' or auth()->user()->role_name === 'site_engineer')
-                            <form method="POST" action="{{ route('logout') }}">
-
-                                @csrf
-
-                                <a class="dropdown-item" href="{{ route('logout') }}"
-                                    onclick="event.preventDefault(); this.closest('form').submit();">
-                                    <i class="dropdown-item-icon mdi mdi-power text-primary me-2"></i>
-                                    {{ __('Log Out') }}
-                                </a>
-
-                            </form>
-                        @else
-                            <form method="POST" action="{{ route('client.logout') }}">
-
-                                @csrf
-
-                                <a class="dropdown-item" href="{{ route('client.logout') }}"
-                                    onclick="event.preventDefault(); this.closest('form').submit();">
-                                    <i class="dropdown-item-icon mdi mdi-power text-primary me-2"></i>
-                                    {{ __('Log Out') }}
-                                </a>
-
-                            </form>
-                        @endif
-
-
-
-                    </div>
-                </li>
-            </ul>
-            <button class="navbar-toggler navbar-toggler-right d-lg-none align-self-center" type="button"
-                data-bs-toggle="offcanvas">
-                <span class="mdi mdi-menu"></span>
-            </button>
-        </div>
-    </nav>
     <!-- partial -->
     <div class="container-fluid page-body-wrapper">
 
@@ -172,16 +87,18 @@
         <!-- partial -->
         <div class="main-panel">
 
-           
             <div class="content-wrapper">
-                <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
+
+                {{-- <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
                     <ol class="breadcrumb">
                         <li class="breadcrumb-item"><a href="#">Home</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Library</li>
                     </ol>
-                </nav>
+                </nav> --}}
+
+
                 {{ $slot }}
-                
+
             </div>
             <!-- content-wrapper ends -->
             <!-- partial:partials/_footer.html -->
@@ -199,6 +116,22 @@
     </div>
     <!-- page-body-wrapper ends -->
     </div>
+
+
+
+    <script>
+        window.onload = function() {
+            const alertBox = document.getElementById('alert-box');
+            if (alertBox) {
+                setTimeout(function() {
+                    alertBox.classList.remove('show');
+                    alertBox.classList.add('fade');
+                }, 5000); // 5000 milliseconds = 5 seconds
+            }
+        };
+    </script>
+
+
 
 
 

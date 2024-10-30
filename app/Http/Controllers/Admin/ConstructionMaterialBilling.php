@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class ConstructionMaterialBilling extends Controller
 {
@@ -48,38 +49,39 @@ class ConstructionMaterialBilling extends Controller
         if ($request->ajax()) {
 
 
+            $validator = Validator::make($request->all(), [
+                'image' => 'sometimes|mimes:png,jpg,webp|max:1024',
+                'amount' => 'required|numeric',
+                'item_name' => 'required|string',
+                'supplier_id' => 'required|exists:suppliers,id',
+                'phase_id' => 'required|exists:phases,id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => 'Validation Error.. Try Again'], 422);
+            }
+
+            $image_path = null;
+            if ($request->hasFile('image')) {
+                $image_path = $request->file('image')->store('ConstructionBillingImage', 'public');
+            }
 
             try {
-                // Validate the incoming request data
-                $validatedData = $request->validate([
-                    'image' => 'sometimes|mimes:png,jpg,webp|max:1024',
-                    'amount' => 'required',
-                    'item_name' => 'required',
-                    'supplier_id' => 'required|exists:suppliers,id',
-                    'phase_id' => 'required|exists:phases,id'
-                ]);
-
-                $image_path = null;
-
-                if ($request->hasFile('image')) {
-
-                    $image_path = $request->file('image')->store('ConstructionBillingImage', 'public');
-                }
-
-
+                // Create the construction billing entry
                 $constructionBilling = new ModelsConstructionMaterialBilling();
-                $constructionBilling->amount = $validatedData['amount'];
+                $constructionBilling->amount = $request->input('amount');
                 $constructionBilling->item_image_path = $image_path;
-                $constructionBilling->item_name = $validatedData['item_name'];
-                $constructionBilling->verified_by_admin = 1;
-                $constructionBilling->supplier_id = $validatedData['supplier_id'];
-                $constructionBilling->user_id = auth()->user()->id;
-                $constructionBilling->phase_id = $validatedData['phase_id'];
+                $constructionBilling->item_name = $request->input('item_name');
+                $constructionBilling->verified_by_admin = 1; // or set based on logic
+                $constructionBilling->supplier_id = $request->input('supplier_id');
+                $constructionBilling->user_id = auth()->user()->id; // Ensure user is authenticated
+                $constructionBilling->phase_id = $request->input('phase_id');
                 $constructionBilling->save();
 
                 return response()->json(['message' => 'Construction billing created successfully'], 201);
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                return response()->json(['errors' => $e->validator->errors()], 422);
+            } catch (\Exception $e) {
+                // Handle any unexpected errors
+                return response()->json(['error' => 'An unexpected error occurred: '], 500);
             }
         }
     }
@@ -129,9 +131,9 @@ class ConstructionMaterialBilling extends Controller
 
         if ($request->hasFile('image')) {
 
-            if (Storage::exists($construction_material_billing->item_image_path)) {
+            if (Storage::disk('public')->exists($construction_material_billing->item_image_path)) {
 
-                Storage::delete($construction_material_billing->item_image_path);
+                Storage::disk('public')->delete($construction_material_billing->item_image_path);
             }
 
             $image_path = $request->file('image')->store('ConstructionBillingImage', 'public');

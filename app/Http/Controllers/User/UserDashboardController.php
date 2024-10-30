@@ -10,9 +10,10 @@ class UserDashboardController extends Controller
 {
     public function index() {
 
+        $user = auth()->user();
 
-        $notifications = auth()->user()->unreadnotifications()->where('notifiable_type', User::class)->get();
+        $sites = $user->sites()->paginate(10);
 
-        return view('profile.User.user-dashboard', compact('notifications'));
+        return view('profile.User.Site.site', compact('sites'));
     }
 }

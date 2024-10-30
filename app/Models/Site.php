@@ -21,7 +21,7 @@ class Site extends Model
         'user_id',
         'service_charge',
         'client_id',
-        'is_on_going'
+        'is_on_going',
     ];
 
     /**
@@ -44,10 +44,6 @@ class Site extends Model
         return $this->hasMany(PaymentSupplier::class);
     }
 
-
-
-
-
     /**
      * Get all of the phases for the Site
      *
@@ -59,5 +55,14 @@ class Site extends Model
     }
 
 
+    /**
+     * Get the client that owns the Site
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
 
 }

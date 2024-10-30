@@ -135,24 +135,46 @@
             max-height: 500px;
             /* Arbitrary large value */
         }
+
+          #messageContainer {
+            position: fixed;
+            bottom: 5%;
+            right: 45%;
+            z-index: 999;
+        }
     </style>
 
 
     @if ($site)
+
+
         <div class="row">
             <div class="col-12 text-center mb-3"> <!-- Center align buttons -->
                 <div class="d-flex flex-wrap"> <!-- Use flex for responsive layout -->
                     <button class="btn btn-info btns mx-2 mb-2" data-modal="phase">
                         Phase
                     </button>
+
                     <button class="btn btn-info btns mx-2 mb-2" data-modal="payment-supplier">
                         Supplier Payment
                     </button>
-                    <a href="{{ route('supplier-payments.show', [$site->id]) }}" class="btn btn-info mx-2 mb-2">
+
+                    <a href="{{ url('user/site/payments', [$site->id]) }}" class="btn btn-info mx-2 mb-2">
                         View Payments
                     </a>
-                    <a href="{{ route('sites.view-ledger', $site->id) }}" class="btn btn-info mx-2 mb-2">
+
+                    <a href="{{ url('user/site/ledger', $site->id) }}" class="btn btn-info mx-2 mb-2">
                         View Ledger
+                    </a>
+
+                    <a href="{{ url('user/download-site/report', ['id' => base64_encode($site->id)]) }}"
+                        class="btn btn-info mx-2 mb-2">
+                        Download Site PDF
+                    </a>
+
+                    <a href="{{ url('user/site-payment/report', ['id' => base64_encode($site->id)]) }}"
+                        class="btn btn-info mx-2 mb-2">
+                        Generate Site Payments
                     </a>
                 </div>
             </div>
@@ -210,18 +232,20 @@
                 @endphp
 
                 <x-general-detail :balance="$balance">
-                    <i class=" display-4 fa fa-balance-scale  me-2 {{ $balance >= 0 ? 'text-info' : 'text-danger' }} fw-bold"></i>
+                    <i
+                        class=" display-4 fa fa-balance-scale  me-2 {{ $balance >= 0 ? 'text-info' : 'text-danger' }} fw-bold"></i>
                     Balance:
                     {{ Number::currency($balance, 'INR') }}
                 </x-general-detail>
 
                 <x-general-detail>
-                      <i class=" display-4 fa fa-credit-card text-info me-2 fw-bold"></i>
-                        Credit: {{ Number::currency($totalPaymentSuppliersAmount, 'INR') }}
+                    <i class=" display-4 fa fa-credit-card text-info me-2 fw-bold"></i>
+                    Credit: {{ Number::currency($totalPaymentSuppliersAmount, 'INR') }}
                 </x-general-detail>
             </div>
 
         </div>
+
 
 
 
@@ -365,6 +389,11 @@
 
                                             <div class="btn-wrapper mt-3 mt-sm-0">
 
+                                                <a href="{{ url('user/download-phase/report', ['id' => base64_encode($phase->id)]) }}"
+                                                    class="btn btn-info btn-sm text-white">
+                                                    Generate Phase PDF
+                                                </a>
+
                                                 <a href="#" class="btn btn-inverse-success btn-sm fw-bold">
                                                     Phase Total:
                                                     <i class="fa fa-indian-rupee"></i>
@@ -465,7 +494,9 @@
                                                                         <a
                                                                             href="{{ route('construction-material-billings.edit', [base64_encode($construction_material_billing->id)]) }}">
                                                                             <i
-                                                                                class="fa-regular fa-pen-to-square text-xl bg-white rounded-full px-2 py-1"></i>
+                                                                                class="fa-regular fa-pen-to-square text-xl bg-white rounded-full px-2 py-1">
+
+                                                                            </i>
                                                                         </a>
 
                                                                     </td>
@@ -492,7 +523,7 @@
                                                             @endforeach
                                                         @else
                                                             <tr>
-                                                                <td colspan="5" class="text-center text-danger">No
+                                                                <td colspan="6" class="text-center text-danger">No
                                                                     Records Found..</td>
                                                             </tr>
                                                         @endif
@@ -606,7 +637,7 @@
                                                             @endforeach
                                                         @else
                                                             <tr>
-                                                                <td colspan="5" class="text-center text-danger">
+                                                                <td colspan="9" class="text-center  text-danger">
                                                                     No
                                                                     Records Found</td>
                                                             </tr>
@@ -689,10 +720,9 @@
                                                             @endforeach
                                                         @else
                                                             <tr>
-                                                                <td colspan="2" class="text-center text-danger">
-                                                                    No
-                                                                    Records Found</td>
-                                                                <td>
+                                                                <td colspan="4" class="text-center text-danger">
+                                                                    No Records Found
+                                                                </td>
                                                             </tr>
                                                         @endif
 
@@ -850,7 +880,7 @@
                                                             @endforeach
                                                         @else
                                                             <tr>
-                                                                <td colspan="4" class="text-center text-danger">
+                                                                <td colspan="5" class="text-center  text-danger">
                                                                     No Records Found
                                                                 </td>
                                                             </tr>
@@ -1477,8 +1507,7 @@
 
             <div class="modal-content">
 
-                <form action="{{ route('supplier-payments.store') }}" class="forms-sample material-form"
-                    method="POST" enctype="multipart/form-data">
+                <form id="payment_supplierForm" class="forms-sample material-form"  enctype="multipart/form-data">
 
                     @csrf
 
@@ -1536,6 +1565,8 @@
 
             </div>
         </div>
+
+    <div id="messageContainer"> </div>
 
 
 
@@ -1621,32 +1652,61 @@
     <script>
         $(document).ready(function() {
 
-            // Phase Form
             $('form[id="phaseForm"]').on('submit', function(e) {
                 e.preventDefault();
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
+                const messageContainer = $('#messageContainer');
+                messageContainer.empty();
+
+                $('.text-danger').remove(); // Clear previous error messages
 
                 $.ajax({
-                    url: '{{ route('user-phase.store') }}',
+                    url: '{{ url('user/user-phase') }}',
                     type: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
                         form[0].reset();
-                        location.reload();
+                        messageContainer.append(`
+                        <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                </div>
+                            </div>
+                        </div>
+                `);
+                        // Auto-hide success message after 3 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.reload();
+                        }, 3000);
                     },
-                    error: function(xhr) {
-                        if (xhr.status === 422) { // Validation errors
-                            const errors = xhr.responseJSON.errors;
-                            $.each(errors, function(key, value) {
-                                // Display errors next to the respective input fields
-                                $(`[name="${key}"]`).after(
-                                    `<p class="text-danger mt-2">${value[0]}</p>`);
-                            });
+                    error: function(response) {
+
+                        if (response.status === 422) { // Validation errors
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
+                        ${response.responseJSON.errors}
+
+                        </div>`)
+
+                        } else {
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again later.
+
+                        </div>
+                    `);
                         }
+                        // Auto-hide error message after 5 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+
+                        }, 5000);
                     }
                 });
             });
@@ -1657,30 +1717,57 @@
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
+                const messageContainer = $('#messageContainer');
+                messageContainer.empty();
 
                 $('.text-danger').text('');
 
                 $.ajax({
-                    url: '{{ route('user-construction-billings.store') }}',
+                    url: '{{ url('user/construction-material-billings') }}',
                     type: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
                         form[0].reset();
-                        location.reload();
+                        messageContainer.append(`
+                        <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                </div>
+                            </div>
+                        </div>
+                `);
+                        // Auto-hide success message after 3 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.reolord();
+
+                        }, 3000);
                     },
-                    error: function(xhr) {
+                    error: function(response) {
 
-                        if (xhr.status === 422) { // Validation errors
-                            const errors = xhr.responseJSON.errors;
-                            $.each(errors, function(key, value) {
-                                // Display errors next to the respective input fields
-                                $(`[name="${key}"]`).after(
-                                    `<p class="text-danger mt-2">${value[0]}</p>`);
+                        if (response.status === 422) { // Validation errors
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
+                        ${response.responseJSON.errors}
 
-                            });
+                        </div>`)
+
+                        } else {
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again later.
+
+                        </div>
+                    `);
                         }
+                        // Auto-hide error message after 5 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+
+                        }, 5000);
                     }
                 });
             });
@@ -1691,30 +1778,57 @@
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
+                const messageContainer = $('#messageContainer');
+                messageContainer.empty();
 
                 $('.text-danger').text('');
 
                 $.ajax({
-                    url: '{{ route('user-square-footage-bills.store') }} ',
+                    url: '{{ url('user/user-square-footage-bills') }} ',
                     type: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
                         form[0].reset();
-                        location.reload();
+                        messageContainer.append(`
+                        <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                </div>
+                            </div>
+                        </div>
+                `);
+                        // Auto-hide success message after 3 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.reload();
+
+                        }, 3000);
                     },
-                    error: function(xhr) {
+                    error: function(response) {
 
-                        if (xhr.status === 422) {
-                            const errors = xhr.responseJSON.errors;
-                            $.each(errors, function(key, value) {
-                                // Display errors next to the respective input fields
-                                $(`[name="${key}"]`).after(
-                                    `<p class="text-danger mt-2">${value[0]}</p>`);
+                        if (response.status === 422) { // Validation errors
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
+                        ${response.responseJSON.errors}
 
-                            });
+                        </div>`)
+
+                        } else {
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again later.
+
+                        </div>
+                    `);
                         }
+                        // Auto-hide error message after 5 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+
+                        }, 5000);
                     }
                 });
             });
@@ -1724,36 +1838,62 @@
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
+                const messageContainer = $('#messageContainer');
+                messageContainer.empty();
 
                 $('.text-danger').text('');
 
                 $.ajax({
-                    url: '{{ route('user-daily-wager.store') }} ',
+                    url: '{{ url('user/user-daily-wager') }} ',
                     type: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
                         form[0].reset();
-                        location.reload();
+                        messageContainer.append(`
+                        <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                </div>
+                            </div>
+                        </div>
+                `);
+                        // Auto-hide success message after 3 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.reload();
+
+                        }, 3000);
                     },
-                    error: function(xhr) {
+                    error: function(response) {
 
-                        if (xhr.status === 422) {
-                            const errors = xhr.responseJSON.errors;
-                            $.each(errors, function(key, value) {
-                                // Display errors next to the respective input fields
-                                $(`[name="${key}"]`).after(
-                                    `<p class="text-danger mt-2">${value[0]}</p>`);
+                        if (response.status === 422) { // Validation errors
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
+                        ${response.responseJSON.errors}
 
-                            });
+                        </div>`)
+
+                        } else {
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again later.
+
+                        </div>
+                    `);
                         }
+                        // Auto-hide error message after 5 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+
+                        }, 5000);
                     }
                 });
             });
 
             $('form[id^="wagerAttendance"]').on('submit', function(e) {
-
                 e.preventDefault();
 
                 const form = $(this);
@@ -1761,10 +1901,8 @@
 
                 $('.text-danger').text('');
 
-
-
                 $.ajax({
-                    url: '{{ route('user-daily-wager-attendance.store') }} ',
+                    url: '{{ url('user/user-wager-attendance') }} ',
                     type: 'POST',
                     data: formData,
                     contentType: false,
@@ -1793,30 +1931,116 @@
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
+                const messageContainer = $('#messageContainer');
+                messageContainer.empty();
 
                 $('.text-danger').text('');
 
                 $.ajax({
-                    url: '{{ route('user-daily-expenses.store') }} ',
+                    url: '{{ url('user/user-daily-expenses') }} ',
                     type: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
                         form[0].reset();
-                        location.reload();
+                        messageContainer.append(`
+                        <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                </div>
+                            </div>
+                        </div>
+                `);
+                        // Auto-hide success message after 3 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.reload();
+
+                        }, 3000);
                     },
-                    error: function(xhr) {
+                    error: function(response) {
 
-                        if (xhr.status === 422) {
-                            const errors = xhr.responseJSON.errors;
-                            $.each(errors, function(key, value) {
-                                // Display errors next to the respective input fields
-                                $(`[name="${key}"]`).after(
-                                    `<p class="text-danger mt-2">${value[0]}</p>`);
+                        if (response.status === 422) { // Validation errors
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
+                        ${response.responseJSON.errors}
 
-                            });
+                        </div>`)
+
+                        } else {
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again later.
+
+                        </div>
+                    `);
                         }
+                        // Auto-hide error message after 5 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+
+                        }, 5000);
+                    }
+                });
+            });
+
+
+            $('form[id="payment_supplierForm"]').on('submit', function(e) {
+                e.preventDefault();
+                const form = $(this);
+                const formData = new FormData(form[0]);
+                const messageContainer = $('#messageContainer');
+                messageContainer.empty();
+
+                $('.text-danger').remove(); // Clear previous error messages
+
+                $.ajax({
+                    url: '{{ url('user/site/payments') }}',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        form[0].reset();
+                        messageContainer.append(`
+                        <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                </div>
+                            </div>
+                        </div>
+                `);
+                        // Auto-hide success message after 3 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.relord();
+                        }, 3000);
+                    },
+                    error: function(response) {
+
+                        if (response.status === 422) { // Validation errors
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
+                        ${response.responseJSON.errors}
+
+                        </div>`)
+
+                        } else {
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again later.
+
+                        </div>
+                    `);
+                        }
+                        // Auto-hide error message after 5 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+
+                        }, 5000);
                     }
                 });
             });

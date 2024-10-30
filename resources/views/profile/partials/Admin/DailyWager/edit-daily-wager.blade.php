@@ -4,22 +4,21 @@
     <div class="row">
 
 
+           @if (session('message'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
+                {{ session('message') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+
         <div class="col-md-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
 
                     <h3 class="text-info"> {{ __('Edit Wager') }}</h3>
 
-                    @if (session('message'))
-                        <p class="card-description">
-                            {{ session('message') }}
-
-                        </p>
-                    @endif
-
-                     @if (session('error'))
-                            {{ session('error') }}
-                        @endif
 
 
 
@@ -28,11 +27,6 @@
 
                         @method('PUT')
                         @csrf
-
-
-
-
-
 
                         <!-- Wager Name -->
                         <div class="form-group">
@@ -47,8 +41,7 @@
 
                         <!-- Price Per day -->
                         <div class="form-group">
-                            <input id="price_per_day" type="number" name="price_per_day"
-                                value="{{ $daily_wager->price_per_day }}" />
+                            <input id="price_per_day" type="number" name="price_per_day" value="{{ $daily_wager->price_per_day }}" step="0.01"/>
                             <label for="price_per_day" class="control-label">Price Per
                                 Day</label><i class="bar"></i>
 
@@ -56,6 +49,8 @@
                                 <x-input-error :messages="$message" class="mt-2" />
                             @enderror
                         </div>
+
+                        
 
                         <!-- Select Supplier -->
                         <div class="form-group">

@@ -6,19 +6,29 @@
                 <div class="flex items-center justify-between">
                     <h4 class="text-xl text-info fw-bold">Clients</h4>
 
-                    <a class="btn btn-info text-white" href="{{ route('clients.create') }}">
+                    <a class="btn btn-info  text-white" href="{{ route('clients.create') }}">
+                        <i class="fa fa-user me-2"></i>
                         Create Client
                     </a>
                 </div>
 
                 <div class="table-responsive mt-4">
 
+                    @if (session('message'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
+                            {{ session('message') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+
                     @if (count($clients))
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
                                     <th class="bg-info fw-bold text-white"> Name </th>
-                                    <th class="bg-info fw-bold text-white"> Username /  Number </th>
+                                    <th class="bg-info fw-bold text-white"> Username / Number </th>
                                     <th class="bg-info fw-bold text-white">Actions</th>
                                 </tr>
                             </thead>
@@ -47,7 +57,15 @@
 
                         </table>
                     @else
-                        <h1 class="display-4">No records found..</h1>
+                         <table class="table table-bordered">
+                    <thead></thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-center text-danger fw-bold">No Records Awailable Yet</td>
+                        </tr>
+                    </tbody>
+                </table>
+
 
                     @endif
 

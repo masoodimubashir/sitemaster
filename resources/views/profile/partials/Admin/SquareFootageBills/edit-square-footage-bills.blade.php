@@ -3,35 +3,27 @@
 
     <div class="row">
 
+         @if (session('message'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
+                {{ session('message') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+
         <div class="col-md-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
 
                     <h3 class="text-info">Edit Square Footage Bill</h3>
 
-                    @if (session('message'))
-                        <p class="card-description">
-                            {{ session('message') }}
-
-                        </p>
-                    @endif
-
                     <form method="POST"
                         action="{{ route('square-footage-bills.update', [base64_encode($square_footage_bill->id)]) }}"
-                        class="forms-sample material-form">
+                        class="forms-sample material-form" enctype="multipart/form-data">
 
                         @method('PUT')
                         @csrf
-
-                        @if (session('message'))
-                            {{ session('message') }}
-                        @endif
-
-                        @if (session('error'))
-                            {{ session('error') }}
-                        @endif
-
-
 
                         <!-- Wager Name -->
                         <div class="form-group">
@@ -66,15 +58,12 @@
                             @enderror
                         </div>
 
-
-
-
                         <!-- Type -->
                         <select class="form-select form-select-sm" id="exampleFormControlSelect3" name="type">
                             <option value="">Select Type</option>
-                            <option value="per_sqr_ft">Per Square Feet</option>
-                            <option value="per_unit">Per Unit</option>
-                            <option value="full_contract">Full Contract
+                            <option {{ $square_footage_bill->type === 'per_sqr_ft' ? 'selected' : ''  }} value="per_sqr_ft">Per Square Feet</option>
+                            <option {{ $square_footage_bill->type === 'per_unit' ? 'selected' : ''  }} value="per_unit">Per Unit</option>
+                            <option {{ $square_footage_bill->type === 'full_contract' ? 'selected' : ''  }} value="full_contract">Full Contract
                             </option>
                         </select>
                         @error('type')
@@ -84,9 +73,8 @@
 
                         <!-- Select Supplier -->
                         <div class="form-group">
-                            <input id="multiplier" type="number" name="supplier_id"
+                            <input id="multiplier" type="hidden" name="supplier_id"
                                 value="{{ $square_footage_bill->supplier->id }}" />
-                            <label for="supplier_id" class="control-label">Multiplier</label><i class="bar"></i>
 
                             @error('supplier_id')
                                 <x-input-error :messages="$supplier_id" class="mt-2" />

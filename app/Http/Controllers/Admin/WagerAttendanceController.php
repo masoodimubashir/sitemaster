@@ -7,6 +7,7 @@ use App\Models\DailyWager;
 use App\Models\User;
 use App\Models\WagerAttendance;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class WagerAttendanceController extends Controller
 {
@@ -36,38 +37,43 @@ class WagerAttendanceController extends Controller
      */
     public function store(Request $request)
     {
-
         if ($request->ajax()) {
+            // Validation rules
+            $validator = Validator::make($request->all(), [
+                'no_of_persons' => 'required|integer|min:1', // Ensure at least one person
+                'daily_wager_id' => 'sometimes|exists:daily_wagers,id',
+                'date' => 'sometimes',
+                'phase_id' => 'required|exists:phases,id'
+            ]);
+
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => 'Validation Error... Try Again!'], 422);
+            }
 
             try {
-
-                $request->validate([
-                    'no_of_persons' => 'required|integer',
-                    'daily_wager_id' => 'sometimes|exists:daily_wagers,id',
-                    'date' => 'required|date',
-                    'phase_id' => 'required|exists:phases,id'
-                ]);
-
+                // Create a new WagerAttendance entry
                 $daily_wager_attendance = new WagerAttendance();
-
                 $daily_wager_attendance->no_of_persons = $request->no_of_persons;
-                $daily_wager_attendance->daily_wager_id = $request->daily_wager_id;
-                $daily_wager_attendance->user_id = auth()->user()->id;
-                $daily_wager_attendance->is_present = 1;
-                $daily_wager_attendance->created_at = $request->date;
+                $daily_wager_attendance->daily_wager_id = $request->daily_wager_id; // Nullable
+                $daily_wager_attendance->user_id = auth()->user()->id; // Current authenticated user
+                $daily_wager_attendance->is_present = 1; // Assuming default value
+                $daily_wager_attendance->created_at = $request->date ? $request->date : now();
                 $daily_wager_attendance->phase_id = $request->phase_id;
+                // $daily_wager_attendance->verified_by_admin = true;
 
                 $daily_wager_attendance->save();
 
-                return response()->json(['message', 'attendance done...'], 201);
-
-            } catch (\Illuminate\Validation\ValidationException $e) {
-
-                return response()->json(['errors' => $e->validator->errors()], 422);
-
+                return response()->json(['message' => 'Attendance recorded successfully.'], 201);
+            } catch (\Exception $e) {
+                // Handle any unexpected errors
+                return response()->json(['error' => 'An unexpected error occurred: ' . $e->getMessage()], 500);
             }
         }
+
+        return response()->json(['error' => 'Invalid request'], 400);
     }
+
 
     /**
      * Display the specified resource.
@@ -95,11 +101,12 @@ class WagerAttendanceController extends Controller
     public function update(Request $request, string $id)
     {
 
+
+
         $request->validate([
             'no_of_persons' => 'required|integer',
             'daily_wager_id' => 'sometimes|exists:daily_wagers,id',
-            'date' => 'required|date',
-            'is_present' => 'required'
+            'date' => 'sometimes',
         ]);
 
         $wager_attendance = WagerAttendance::find($id);
@@ -107,12 +114,11 @@ class WagerAttendanceController extends Controller
         $wager_attendance->no_of_persons = $request->no_of_persons;
         $wager_attendance->daily_wager_id = $request->daily_wager_id;
         $wager_attendance->user_id = auth()->user()->id;
-        $wager_attendance->is_present = $request->is_present ? 1 : 0;
-        $wager_attendance->created_at = $request->date;
-
+        $wager_attendance->is_present =  1;
+        $wager_attendance->created_at = $request->date ? $request->date :  now();
         $wager_attendance->save();
 
-        return redirect()->back()->with('success', 'attendance done...');
+        return redirect()->back()->with('message', 'attendance done...');
     }
 
     /**

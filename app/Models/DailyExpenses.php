@@ -16,6 +16,8 @@ class DailyExpenses extends Model
         'price',
         'phase_id',
         'user_id',
+        'bill_photo',
+        'verified_by_admin'
     ];
 
     /**

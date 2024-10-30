@@ -25,7 +25,6 @@ class AdminUserController extends Controller
     public function register(Request $request)
     {
 
-
         $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|lowercase|min:5|unique:' . User::class,
@@ -38,10 +37,10 @@ class AdminUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->back()->with('message', 'user created successfully');
+        return redirect()->route('users.index')->with('message', 'user created successfully');
     }
 
-    public function editUser($id): View {
+    public function editUser($id) {
 
 
         $user = User::find($id);

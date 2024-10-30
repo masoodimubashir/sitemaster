@@ -49,45 +49,63 @@
 
     @if ($site)
 
+
+
         <div class="row">
-
-            <div class="col-lg-12 grid-margin stretch-card">
-
-                <div class="card">
-
-                    <div class="card-body row g-2 text-left">
-
-                        <div class="col-md-4">
-                            <i class="fa fa-building display-5 text-info me-2"></i> {{ ucwords($site->site_name) }}
-
-                        </div>
-                        <div class="col-md-4">
-                            <i class="fa fa-user-circle display-5 text-info me-2"></i>
-                            {{ ucwords($site->site_owner_name) }}
-                        </div>
-                        <div class="col-md-4">
-                            <i class="fa fa-mobile display-5 text-info me-2"></i> <a
-                                href="tel:+91-{{ $site->contact_no }}">91-{{ ucwords($site->contact_no) }}</a>
-                        </div>
-                        <div class="col-md-4">
-                            <i class="fa fa-map-marker display-5 text-info me-2"></i> {{ ucwords($site->location) }}
-                        </div>
-
-                        <div class="col-md-4 ">
-                            Service Charge : {{ $site->service_charge }} <i class="fa fa-percent  text-info me-2"></i>
-                        </div>
-
-                        <div class="col-md-4">
-                            <i class="fa fa-money display-5 text-info me-2"></i>
-                            {{-- {{ $grand_total_amount }} + {{ $site->service_charge }} = --}}
-                            {{ ($site->service_charge / 100) * $grand_total_amount + $grand_total_amount }}
-                        </div>
-
-                    </div>
+            <div class="col-12 text-center mb-3"> <!-- Center align buttons -->
+                <div class="d-flex flex-wrap"> <!-- Use flex for responsive layout -->
 
 
+                    <a href="{{ url('client/download-site/report', ['id' => base64_encode($site->id)]) }}"
+                        class="btn btn-info mx-2 mb-2">
+                        Download Site PDF
+                    </a>
+
+                    <a href="{{ url('client/site-payment/report', ['id' => base64_encode($site->id)]) }}"
+                        class="btn btn-info mx-2 mb-2">
+                        Generate Site Payments
+                    </a>
                 </div>
             </div>
+        </div>
+
+        <div class="row mt-4">
+
+            <div class=" col-12 col-md-4 col-lg-4 mb-1"> <!-- 2 on small, 3 on medium, 4 on large -->
+                <x-general-detail>
+                    <i class="fa fa-building display-5 text-info me-2"></i> {{ ucwords($site->site_name) }}
+
+                </x-general-detail>
+
+                <x-general-detail>
+                    <i class="fa fa-user-circle display-5 text-info me-2"></i>
+                    {{ ucwords($site->site_owner_name) }}
+                </x-general-detail>
+            </div>
+
+            <div class=" col-12 col-md-4 col-lg-4 mb-1">
+                <x-general-detail>
+                    <i class="fa fa-mobile display-5 text-info me-2"></i> <a
+                        href="tel:+91-{{ $site->contact_no }}">91-{{ ucwords($site->contact_no) }}</a>
+                </x-general-detail>
+                <x-general-detail>
+                    <i class="fa fa-map-marker display-5 text-info me-2"></i> {{ ucwords($site->location) }}
+
+                </x-general-detail>
+            </div>
+
+            <div class=" col-12 col-md-4 col-lg-4 mb-1">
+                <x-general-detail>
+                    Service Charge : {{ $site->service_charge }} <i class="fa fa-percent  text-info me-2"></i>
+
+                </x-general-detail>
+                <x-general-detail>
+                    <i class="fa fa-money display-5 text-info me-2"></i>
+                    {{ ($site->service_charge / 100) * $grand_total_amount + $grand_total_amount }}
+                </x-general-detail>
+            </div>
+
+
 
         </div>
 
@@ -111,8 +129,8 @@
                                                 <li class="nav-item bg-info">
                                                     <a class="nav-link text-white"
                                                         id="commulative-cost-tab{{ $phase->id }}"
-                                                        data-bs-toggle="tab" href="#commulative-cost{{ $phase->id }}"
-                                                        role="tab"
+                                                        data-bs-toggle="tab"
+                                                        href="#commulative-cost{{ $phase->id }}" role="tab"
                                                         aria-controls="commulative-cost{{ $phase->id }}"
                                                         aria-selected="false">
                                                         {{ $phase->phase_name }} Cost</a>
@@ -173,9 +191,9 @@
 
                                             <div class="btn-wrapper mt-3 mt-sm-0">
 
-
-                                                <a href="{{ route('generate-report', [$site->id]) }}" class="btn text-info fw-bold">
-                                                    Generate Report
+                                                <a href="{{ url('client/download-phase/report', ['id' => base64_encode($phase->id)]) }}"
+                                                    class="btn btn-info btn-sm text-white">
+                                                    Generate Phase PDF
                                                 </a>
 
                                                 <a href="#" class="btn btn-inverse-success btn-sm fw-bold">
@@ -183,7 +201,6 @@
                                                     <i class="fa fa-indian-rupee"></i>
                                                     {{ ($site->service_charge / 100) * $phase->total_amount + $phase->total_amount }}
                                                 </a>
-
 
                                                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 
@@ -239,7 +256,8 @@
                                                             @foreach ($phase->constructionMaterialBillings as $construction_material_billing)
                                                                 <tr>
 
-                                                                    <td>{{ $construction_material_billing->created_at->format('d-M-Y') }}</td>
+                                                                    <td>{{ $construction_material_billing->created_at->format('d-M-Y') }}
+                                                                    </td>
                                                                     <td>
                                                                         <img src="{{ asset($construction_material_billing->item_image_path) }}"alt=""
                                                                             class="w-20 h-20 rounded-full">
@@ -457,7 +475,8 @@
                                                             @foreach ($phase->dailyWagers as $daily_wager)
                                                                 <tr>
 
-                                                                    <td>{{ $daily_wager->created_at->format('d-M-Y') }}</td>
+                                                                    <td>{{ $daily_wager->created_at->format('d-M-Y') }}
+                                                                    </td>
 
                                                                     <td>
                                                                         {{ ucwords($daily_wager->wager_name) }}
@@ -538,7 +557,8 @@
                                                             @foreach ($phase->dailyExpenses as $daily_expenses)
                                                                 <tr>
 
-                                                                    <td>{{ $daily_expenses->created_at->format('d-M-Y') }}</td>
+                                                                    <td>{{ $daily_expenses->created_at->format('d-M-Y') }}
+                                                                    </td>
 
                                                                     <td>
                                                                         {{ ucwords($daily_expenses->item_name) }}
@@ -620,7 +640,8 @@
                                                                 <tr aria-colspan="4">
 
 
-                                                                    <td>{{ $wager_attendance->created_at->format('d-M-Y') }}</td>
+                                                                    <td>{{ $wager_attendance->created_at->format('d-M-Y') }}
+                                                                    </td>
                                                                     <td>
                                                                         {{ $wager_attendance->no_of_persons }}
                                                                     </td>

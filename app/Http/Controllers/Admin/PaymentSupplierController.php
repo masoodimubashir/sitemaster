@@ -7,6 +7,7 @@ use App\Models\PaymentSupplier;
 use App\Models\Site;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class PaymentSupplierController extends Controller
 {
@@ -28,31 +29,53 @@ class PaymentSupplierController extends Controller
      */
     public function store(Request $request)
     {
+        // Validate the incoming request
 
 
-        $request->validate([
-            'screenshot' => 'required|mimes:png,jpg,webp|max:1024',
-            'supplier_id' => 'required|exists:suppliers,id',
-            'site_id' => 'required|exists:sites,id',
-            'amount' => 'required|integer',
-        ]);
+        if ($request->ajax()) {
 
 
-        $image_path = null;
 
-        if ($request->hasFile('screenshot')) {
-            $image_path = $request->file('screenshot')->store('Supplier_Payemnt');
+            $validatedData = Validator::make($request->all(), [
+                'screenshot' => 'required|mimes:png,jpg,webp, jpeg|max:1024',
+                'supplier_id' => 'required|exists:suppliers,id',
+                'site_id' => 'required|exists:sites,id',
+                'amount' => [
+                    'required',
+                    'numeric',
+                    'min:0',
+                    'max:99999999.99',
+                    'regex:/^\d+(\.\d{0,2})?$/'
+                ]
+            ]);
+
+            if ($validatedData->fails()) {
+                return response()->json(['errors' =>  'Validation Error Try Agian...'], 422);
+            }
+
+            $image_path = null;
+
+            // Handle file upload
+            if ($request->hasFile('screenshot')) {
+                $image_path = $request->file('screenshot')->store('SupplierPayment', 'public');
+            }
+
+            try {
+
+                // Create the payment supplier entry
+                PaymentSupplier::create([
+                    'screenshot' => $image_path,
+                    'supplier_id' => $request->supplier_id,
+                    'site_id' => $request->site_id,
+                    'amount' => $request->amount,
+                    'verified_by_admin' => true
+                ]);
+
+                return response()->json(['message' => 'Supplier payment created successfully.']);
+            } catch (\Exception $e) {
+                return response()->json(['error' => 'An unexpected error occurred: ']);
+            }
         }
-
-        PaymentSupplier::create([
-            'screenshot' => $image_path,
-            'supplier_id' => $request->supplier_id,
-            'site_id' => $request->site_id,
-            'amount' => $request->amount,
-            'is_verified' => $request->has('is_verified') ? true : false
-        ]);
-
-        return redirect()->back()->with('message', 'supplier payment created..');
     }
 
     /**
@@ -63,7 +86,7 @@ class PaymentSupplierController extends Controller
 
         $site = Site::findOrFail($id);
 
-        $site->paymeentSuppliers()->latest()->paginate(1);
+        $site->paymeentSuppliers()->latest()->paginate(10);
 
         return view('profile.partials.Admin.PaymentSuppliers.site-payment-supplier', compact('site'));
     }

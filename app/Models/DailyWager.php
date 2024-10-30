@@ -15,7 +15,8 @@ class DailyWager extends Model
         'price_per_day',
         'wager_name',
         'supplier_id',
-        'phase_id'
+        'phase_id',
+        'verified_by_admin',
     ];
 
     /**

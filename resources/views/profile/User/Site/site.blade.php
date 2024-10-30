@@ -2,6 +2,10 @@
 
 
 
+    @section('notifications')
+      
+    @endsection
+
     <div class="row">
         <div class="col-lg-12 grid-margin stretch-card">
             <div class="card-body">
@@ -36,8 +40,7 @@
 
 
                                         <td title=" View {{ $site->site_name }} details...">
-                                            <a href="{{ route('user-sites.show', [base64_encode($site->id)],
-                                            ) }}"
+                                            <a href="{{ route('user-sites.show', [base64_encode($site->id)]) }}"
                                                 class="fw-bold link-offset-2 link-underline link-underline-opacity-0">
                                                 <mark>{{ ucfirst($site->site_name) }}</mark>
                                             </a>
@@ -55,7 +58,7 @@
                                             {{ ucfirst($site->site_owner_name) }}
                                         </td>
 
-                                       
+
 
                                         {{-- <td class="space-x-4">
                                             <a href="{{ route('sites.edit', base64_encode($site->id)) }}">

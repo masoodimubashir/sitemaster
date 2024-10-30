@@ -1,5 +1,3 @@
-
-
 <x-app-layout>
 
 
@@ -16,19 +14,21 @@
                         {{ session('message') }}
                     @endif
 
-                    <form method="POST" action="{{ route('sites.update', [base64_encode($site->id)]) }}" class="forms-sample material-form">
+                    <form method="POST" action="{{ route('sites.update', [base64_encode($site->id)]) }}"
+                        class="forms-sample material-form">
 
                         @csrf
                         @method('PUT')
 
                         <div class="form-group">
-                            <input type="text" name="site_name" value="{{ $site->site_name }}"/>
+                            <input type="text" name="site_name" value="{{ $site->site_name }}" />
                             <label for="input" class="control-label">Site Name</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('site_name')" class="mt-2" />
                         </div>
 
                         <div class="form-group">
-                            <input type="number" name="service_charge" value="{{ $site->service_charge }}" />
+                            <input type="number" name="service_charge" value="{{ $site->service_charge }}"
+                                step="0.01" min="0" />
                             <label for="input" class="control-label">Service Charge</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('service_charge')" class="mt-2" />
                         </div>
@@ -40,7 +40,7 @@
                         </div>
 
                         <div class="form-group">
-                            <input type="text" name="site_owner_name"  value="{{ $site->site_owner_name }}"/>
+                            <input type="text" name="site_owner_name" value="{{ $site->site_owner_name }}" />
                             <label for="input" class="control-label">Site Owner Name</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('site_owner_name')" class="mt-2" />
                         </div>
@@ -55,7 +55,8 @@
                             <select class="form-select form-select-sm" id="exampleFormControlSelect3" name="user_id">
                                 <option value="">Assign To User</option>
                                 @foreach ($users as $user)
-                                    <option {{ $site->user_id === $user->id ? 'selected' : '' }} value="{{ $user->id }}">{{ ucfirst($user->name )}}</option>
+                                    <option {{ $site->user_id === $user->id ? 'selected' : '' }}
+                                        value="{{ $user->id }}">{{ ucfirst($user->name) }}</option>
                                 @endforeach
                             </select>
                             <x-input-error :messages="$errors->get('user_id')" class="mt-2" />

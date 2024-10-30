@@ -1,8 +1,9 @@
 <x-app-layout>
+
+
     <div class="row">
         <div class="col-sm-12">
 
-            <a href="{{ route('payments.create') }}" class="btn btn-sm btn-info text-white">Make Payment</a>
 
 
             <div class="table-responsive mt-4">
@@ -18,7 +19,7 @@
                                         </b>
                                     </small>
                                     <h4 class="fw-bold">
-                                        {{ Number::currency($final_total_balance, 'INR') }}
+                                        {{ Number::currency($total_balance, 'INR') }}
                                     </h4>
                                 </div>
                             </td>
@@ -30,7 +31,7 @@
                                         </b>
                                     </small>
                                     <h4 class="fw-bold">
-                                        {{ Number::currency($total_debit, 'INR') }}
+                                        {{ Number::currency($total_due, 'INR') }}
                                     </h4>
                                 </div>
                             </td>
@@ -42,42 +43,17 @@
                                         </b>
                                     </small>
                                     <h4 class="fw-bold">
-                                        {{ Number::currency($total_credit, 'INR') }}
+                                        {{ Number::currency($total_paid, 'INR') }}
                                     </h4>
                                 </div>
                             </td>
-                            <td>
-                                <div class="p-3 d-flex flex-column gap-2 text-info fw-bold">
-                                    <small>
-                                        <b>
-                                            Ongoing Sites
-                                        </b>
-                                    </small>
-                                    <h4>
-                                        {{ $is_ongoing_count }}
-                                    </h4>
+                         
 
-                                </div>
-                            </td>
-                            <td>
-                                <div class="p-3 d-flex flex-column gap-2 text-info fw-bold">
-                                    <small>
-                                        <b>
-                                            Closed Sites
-                                        </b>
-                                    </small>
-                                    <h4>
-                                        {{ $is_not_ongoing_count }}
-                                    </h4>
-
-                                </div>
-                            </td>
                             <td colspan="4" style="background: #F4F5F7; border:none">
-                                <div>
+                                <div class="row">
 
-
-
-                                    <form action="{{ route('sites.view-ledger', [$id]) }}" method="GET" id="filterForm">
+                                    <form class="col" action="{{ url('admin/site/ledger/' . $id) }}" method="GET"
+                                        id="filterForm">
                                         <select class="form-select form-select-sm bg-white" name="date_filter"
                                             id="date_filter" onchange="document.getElementById('filterForm').submit();">
                                             <option value="today"
@@ -99,6 +75,34 @@
                                                 {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
                                                 All Data</option>
                                         </select>
+
+                                    </form>
+
+                                    <form class="col" action=" url('admin/ledger/report') }}"
+                                        method="GET" id="ledger-report">
+                                        <select class="form-select form-select-sm bg-white" name="date_filter"
+                                            id="date_filter"
+                                            onchange="document.getElementById('ledger-report').submit();">
+                                            <option value="today"
+                                                {{ request('date_filter') === 'today' ? 'selected' : '' }}>
+                                                Generate Today's Report</option>
+                                            <option value="yesterday"
+                                                {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>
+                                                Generate Yesterday's Report</option>
+                                            <option value="last_week"
+                                                {{ request('date_filter') === 'last_week' ? 'selected' : '' }}>
+                                                Generate Last Week's Report</option>
+                                            <option value="last_month"
+                                                {{ request('date_filter') === 'last_month' ? 'selected' : '' }}>
+                                                Generate Last Month's Report</option>
+                                            <option value="last_year"
+                                                {{ request('date_filter') === 'last_year' ? 'selected' : '' }}>
+                                                Generate Last Year's Report</option>
+                                            <option value="lifetime"
+                                                {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
+                                                Generate Full Report</option>
+                                        </select>
+
                                     </form>
 
                                 </div>
@@ -113,18 +117,15 @@
                             <th class="bg-info text-white fw-bold">Information</th>
                             <th class="bg-info text-white fw-bold ">Debit</th>
                             <th class="bg-info text-white fw-bold ">Credit</th>
-                            <th class="bg-info text-white fw-bold ">Balance</th>
 
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($paginatedLedgers as $key => $ledger)
-
                             @php
 
                                 // $balance =  $ledger['amount'] - $ledger['payment_amounts'];
                             @endphp
-
                             <tr>
                                 <td>
                                     {{ $ledger['created_at'] }}
@@ -140,22 +141,9 @@
                                 <td>
                                     {{ $ledger['credit'] }}
                                 </td>
-
-                                <td>
-                                    {{ $ledger['balance'] }}
-                                    {{-- @foreach ($balance as $k => $b)
-                                                    {{ $key === $k ? $b  : null }}
-                                                @endforeach --}}
-                                    {{-- {{ $balance }} --}}
-                                </td>
-
-
                             </tr>
-                            
                         @endforeach
-
                     </tbody>
-
                 </table>
 
             </div>

@@ -9,13 +9,11 @@
         <div class="col-md-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="text-3xl text-info">Create Site Engineer</h4>
-                    @if (session('message'))
-                        <p class="card-description">
-                            {{ session('message') }}
 
-                        </p>
-                    @endif
+                    
+
+                    <h4 class="text-3xl text-info">Create Site Engineer</h4>
+
 
                     <form method="POST" action="{{ route('admin.register-user') }}" class="forms-sample material-form">
 

@@ -15,6 +15,8 @@ class ClientAuthController extends Controller
     public function store(Request $request)
     {
 
+        // dd($request->all());
+
         $request->validate([
             'number' => 'required|digits:10',
             'password' => 'required',

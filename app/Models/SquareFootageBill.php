@@ -18,7 +18,8 @@ class SquareFootageBill extends Model
         'type',
         'multiplier',
         'phase_id',
-        'supplier_id'
+        'supplier_id',
+        'verified_by_admin',
     ];
 
     /**

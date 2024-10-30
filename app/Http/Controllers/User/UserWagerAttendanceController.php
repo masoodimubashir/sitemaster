@@ -33,6 +33,8 @@ class UserWagerAttendanceController extends Controller
 
                 $daily_wager_attendance->save();
 
+
+
                 return response()->json(['success', 'attendance done...'], 200);
             } catch (\Illuminate\Validation\ValidationException $e) {
                 return response()->json(['errors' => $e->validator->errors()], 422);

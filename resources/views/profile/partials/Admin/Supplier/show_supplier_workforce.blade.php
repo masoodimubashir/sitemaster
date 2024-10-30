@@ -169,6 +169,15 @@
 
             </div>
 
+             <div class="col-md-3 ">
+
+                <a href="{{ url('admin/supplier-payment/report', ['id' => base64_encode($supplier->id)]) }}"
+                    class="btn btn-info btn-sm">
+                    Generate Payment Report
+                </a>
+
+            </div>
+
 
         </div>
 

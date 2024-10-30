@@ -16,6 +16,7 @@ return new class extends Migration
             $table->decimal('amount');
             $table->foreignId('phase_id')->constrained()->cascadeOnDelete();
             $table->foreignId('supplier_id')->constrained()->cascadeOnDelete();
+            $table->boolean('verified_by_admin')->default(false);
             $table->softDeletes();
             $table->timestamps();
         });

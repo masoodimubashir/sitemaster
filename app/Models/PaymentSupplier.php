@@ -13,7 +13,7 @@ class PaymentSupplier extends Model
 
     protected $fillable = [
         'screenshot',
-        'is_verified',
+        'verified_by_admin',
         'site_id',
         'supplier_id',
         'amount'

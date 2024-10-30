@@ -40,7 +40,6 @@ class ClientController extends Controller
     public function store(Request $request)
     {
 
-
         $request->validate([
             'name' => 'required|string|max:255',
             'number' => 'required|digits:10|unique:' . Client::class,
@@ -53,7 +52,7 @@ class ClientController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->back()->with('message', 'Client Created Successfully');
+        return redirect()->route('clients.index')->with('message', 'Client Created Successfully');
     }
 
     /**

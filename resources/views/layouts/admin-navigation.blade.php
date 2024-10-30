@@ -55,8 +55,5 @@
                 href="{{ route('trash.sites') }}">
                 <span class="menu-title">Sites</span></a>
         </li>
-
-
-
     </ul>
 </nav>

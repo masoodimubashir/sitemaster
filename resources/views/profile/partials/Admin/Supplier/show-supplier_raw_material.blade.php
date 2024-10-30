@@ -170,6 +170,17 @@
 
             </div>
 
+            <div class="col-md-3 ">
+
+                <a href="{{ url('admin/supplier-payment/report', ['id' => base64_encode($supplier->id)]) }}"
+                    class="btn btn-info btn-sm">
+                    Generate Payment Report
+                </a>
+
+            </div>
+
+
+
         </div>
 
         <div class="row mt-4">
@@ -373,16 +384,6 @@
                                     @enderror
 
 
-                                    <!-- Is Verified -->
-                                    <div class="form-check">
-                                        <label class="form-check-label mt-2">
-                                            <input type="checkbox" class="form-check-input" name="is_verified">
-                                            Verify
-                                        </label>
-                                        @error('is_verified')
-                                            <x-input-error :messages="$message" class="mt-2" />
-                                        @enderror
-                                    </div>
 
                                     {{-- Screenshot --}}
                                     <div class="mt-3">

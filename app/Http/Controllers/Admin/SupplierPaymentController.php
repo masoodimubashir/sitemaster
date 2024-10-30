@@ -18,7 +18,6 @@ class SupplierPaymentController extends Controller
     public function __invoke(Request $request, string $id)
     {
 
-
         $payments = PaymentSupplier::with(['site', 'supplier'])->latest()->paginate(10);
 
         $raw_materials = ConstructionMaterialBilling::with(['phase.site', 'supplier'])->get();
@@ -116,26 +115,30 @@ class SupplierPaymentController extends Controller
             return $ledger;
         });
 
-        [$total_balance, $total_debit, $total_credit, $currentBalance, $ledgers] = $this->calculateBalances($ledgers);
+        $totals = $this->calculateBalances($ledgers);
 
-        $final_total_balance = $total_balance - $total_credit;
 
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $totals = $this->calculateBalances($ledgers);
+        $total_paid = $totals['total_paid'];
+        $total_due = $totals['total_due'];
+        $total_balance = $totals['total_balance'];
+
         $perPage = 10;
-
         $paginatedLedgers = new LengthAwarePaginator(
-            $ledgers->forPage($currentPage, $perPage),
+            $ledgers->forPage($request->input('page', 1), $perPage),
             $ledgers->count(),
             $perPage,
-            $currentPage,
-            ['path' => LengthAwarePaginator::resolveCurrentPath()]
+            $request->input('page', 1),
+            ['path' => $request->url(), 'query' => $request->query()]
         );
 
         $is_ongoing_count = Site::where('is_on_going', 1)->count();
         $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
 
-        return view("profile.partials.Admin.Ledgers.supplier-ledger", compact('payments', 'paginatedLedgers', 'final_total_balance', 'total_debit', 'total_credit', 'is_ongoing_count', 'is_not_ongoing_count', 'id'));
+        return view("profile.partials.Admin.Ledgers.supplier-ledger", compact('payments', 'paginatedLedgers', 'total_paid', 'total_due', 'id', 'total_balance', 'is_ongoing_count', 'is_not_ongoing_count'));
+
     }
+
 
     private function filterLedgersByDate($ledgers, $dateFilter, $now)
     {
@@ -158,31 +161,36 @@ class SupplierPaymentController extends Controller
 
     private function calculateBalances($ledgers)
     {
+
+        // dd($ledgers);
+
+        $total_amount_payments = 0;
+        $total_amount_non_payments = 0;
         $total_balance = 0;
-        $total_debit = 0;
-        $total_credit = 0;
-        $currentBalance = 0;
 
-        $ledgers = $ledgers->map(function ($ledger) use (&$currentBalance, &$total_balance, &$total_debit, &$total_credit) {
-            $debitAmount = $ledger['debit'] === 'NA' ? 0 : $ledger['debit'];
-            $creditAmount = $ledger['credit'] === 'NA' ? 0 : $ledger['credit'];
 
-            if ($debitAmount > 0) {
-                $currentBalance += $debitAmount;
-                $total_debit += $debitAmount;
+        foreach ($ledgers as $item) {
+            switch ($item['category']) {
+                case 'Payments':
+                    $total_amount_payments += is_string($item['credit']) ? floatval($item['credit']) : $item['credit'];
+                    break;
+                case 'Raw Material':
+                case 'Square Footage Bill':
+                case 'Daily Expense':
+                case 'Daily Wager':
+                    $total_amount_non_payments += is_string($item['debit']) ? floatval($item['debit']) : $item['debit'];
+                    break;
             }
+        }
 
-            if ($creditAmount > 0) {
-                $currentBalance -= $creditAmount;
-                $total_credit += $creditAmount;
-            }
 
-            $total_balance += $currentBalance;
-            $ledger['balance'] = $currentBalance;
+        $total_balance = $total_amount_non_payments - $total_amount_payments;
 
-            return $ledger;
-        });
 
-        return [$total_balance, $total_debit, $total_credit, $currentBalance, $ledgers];
+        return [
+            'total_paid' => $total_amount_payments,
+            'total_due' => $total_amount_non_payments,
+            'total_balance' => $total_balance
+        ];
     }
 }

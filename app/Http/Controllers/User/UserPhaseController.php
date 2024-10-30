@@ -5,7 +5,11 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Phase;
 use App\Models\Site;
+use App\Models\User;
+use App\Notifications\VerificationNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class UserPhaseController extends Controller
 {
@@ -28,27 +32,36 @@ class UserPhaseController extends Controller
     public function store(Request $request)
     {
 
+
         if ($request->ajax()) {
 
 
-            try {
-                $request->validate([
-                    'phase_name' => [
-                        'required',
-                        'string',
-                        'unique:phases,phase_name,NULL,id,site_id,' . $request->site_id
-                    ],
-                    'site_id' => 'required|exists:sites,id'
-                ]);
+            $validator = Validator::make($request->all(), [
+                'phase_name' => [
+                    'required',
+                    'string',
+                    Rule::unique('phases')->where(function ($query) use ($request) {
+                        return $query->where('site_id', $request->site_id);
+                    }),
+                ],
+                'site_id' => 'required|exists:sites,id',
+            ]);
 
+            // Check for validation errors
+            if ($validator->fails()) {
+                return response()->json(['errors' => 'Validation Error.. Try Again'], 422);
+            }
+
+            try {
+                // Create the phase after validation passes
                 Phase::create($request->all());
 
-                return response()->json(['message', 'phase created...'], 201);
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                return response()->json(['errors' => $e->validator->errors()], 422);
+                return response()->json(['message' => 'Phase created successfully.'], 201);
+            } catch (\Exception $e) {
+                // Handle any unexpected errors
+                return response()->json(['error' => 'An unexpected error occurred.'], 500);
             }
         }
-
     }
 
     /**

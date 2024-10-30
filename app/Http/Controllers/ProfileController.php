@@ -16,8 +16,12 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+
+        $user_notification = auth()->user()->unreadNotifications;
+
         return view('profile.edit', [
             'user' => $request->user(),
+            'user_notification' => $user_notification
         ]);
     }
 

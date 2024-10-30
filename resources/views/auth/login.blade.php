@@ -1,27 +1,25 @@
 <x-guest-layout>
 
 
-    <div class="auth-form-light text-left py-5 px-4 px-sm-5">
 
-        <h4 class=" fw-bold text-info ">Sign in To Start Your Session.</h4>
         <form class="pt-3" method="POST" action="{{ route('login') }}">
-           
+
             @csrf
-           
+
             <div class="form-group">
                 <input type="text" class="form-control form-control-lg" id="username" placeholder="Username"
                     name="username" value="{{ old('name') }}">
                 <x-input-error :messages="$errors->get('username')" class="mt-2" />
 
             </div>
-           
+
             <div class="form-group">
                 <input type="password" class="form-control form-control-lg" id="password" placeholder="Password"
                     name="password" value="{{ old('password') }}">
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
 
             </div>
-            
+
             <div class="mt-3 d-grid gap-2">
                 <button type="submit" class="btn btn-block btn-primary btn-lg fw-medium auth-form-btn">
                     Sign in
@@ -41,6 +39,5 @@
             </div>
 
         </form>
-    </div>
 
 </x-guest-layout>

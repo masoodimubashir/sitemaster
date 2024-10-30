@@ -2,7 +2,9 @@
 
     <div class="row">
 
+
         <div class="flex items-center justify-between">
+
             <h4 class="text-xl text-info fw-bold">Site Engineers</h4>
             <a class="btn btn-sm btn-info" href="{{ route('users.create') }}">
                 Create Supplier
@@ -10,7 +12,18 @@
 
         </div>
 
+
+
         <div class="table-responsive mt-4">
+
+              @if (session('message'))
+                <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
+                    {{ session('message') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
 
             @if (count($users))
                 <table class="table table-bordered">
@@ -53,9 +66,10 @@
 
                                                 <div class="row g-1">
                                                     @foreach ($user->sites as $site)
-                                                    <div class="col">
-                                                        <p class=" p-2  rounded text-black me-1 "> -> {{ ucwords($site->site_name) }}</p>
-                                                    </div>
+                                                        <div class="col">
+                                                            <p class=" p-2  rounded text-black me-1 "> ->
+                                                                {{ ucwords($site->site_name) }}</p>
+                                                        </div>
                                                     @endforeach
                                                 </div>
 
@@ -85,7 +99,15 @@
 
                 </table>
             @else
-                <h1 class="display-4">No records found..</h1>
+
+                <table class="table table-bordered">
+                    <thead></thead>
+                    <tbody>
+                        <tr>
+                            <td class="text-center text-danger fw-bold">No Records Awailable Yet</td>
+                        </tr>
+                    </tbody>
+                </table>
 
             @endif
 
@@ -98,6 +120,8 @@
     </div>
 
     <!-- Button trigger modal -->
+
+
 
 
 

@@ -48,7 +48,7 @@ class UserSiteNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'message' => 'Admin has assigned a site'
+            'message' => "You have been assigned a site",
         ];
     }
 }

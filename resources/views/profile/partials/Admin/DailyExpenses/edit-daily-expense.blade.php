@@ -3,6 +3,14 @@
 
     <div class="row">
 
+         @if (session('message'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
+                {{ session('message') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
 
         <div class="col-md-12 grid-margin stretch-card">
             <div class="card">
@@ -10,15 +18,10 @@
 
                     <h3 class="text-info">Edit Daily Expense</h3>
 
-                    @if (session('message'))
-                        <p class="card-description">
-                            {{ session('message') }}
 
-                        </p>
-                    @endif
 
                     <form method="POST" action="{{ route('daily-expenses.update', [$dialy_expense->id]) }}"
-                        class="forms-sample material-form">
+                        class="forms-sample material-form" enctype="multipart/form-data">
 
                         @csrf
                         @method('PUT')

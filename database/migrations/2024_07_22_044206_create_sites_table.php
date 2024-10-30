@@ -21,9 +21,10 @@ return new class extends Migration
             $table->string('contact_no');
             $table->decimal('service_charge',10,2);
             $table->string('site_owner_name');
+            $table->boolean('is_on_going');
+            // $table->boolean('is_verified')->default(false);
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('client_id')->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(Client::class)->constrained()->cascadeOnDelete();
             $table->softDeletes();
             $table->timestamps();
         });

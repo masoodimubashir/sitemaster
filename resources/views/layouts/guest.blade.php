@@ -29,19 +29,28 @@
 
 <body>
 
-    <div class="container-scroller">
-        <div class="container-fluid page-body-wrapper full-page-wrapper">
-            <div class="content-wrapper d-flex align-items-center auth px-0">
-                <div class="row w-100 mx-0">
-                    <div class="col-lg-4 mx-auto">
+    <!-- Navbar-->
+
+
+    <body class="min-vh-100 d-flex justify-content-center align-items-center ">
+        <div class="container ">
+            <div class="row p-2 d-flex justify-content-center align-items-center ">
+                <!-- Left Column - Image and Title -->
+                <div class="col-md-5">
+
+                    <h1 class="fw-bold fs-3">Sign In To Start Your Session</h1>
+                    <p class="text-muted fs-4 mt-4">
+                        Site Master
+                    </p>
+                </div>
+
+                <div class="col-md-7">
                         {{ $slot }}
-                    </div>
                 </div>
             </div>
-            <!-- content-wrapper ends -->
         </div>
-        <!-- page-body-wrapper ends -->
-    </div>
+    </body>
+
 
     {{-- Chart Js CDN --}}
 

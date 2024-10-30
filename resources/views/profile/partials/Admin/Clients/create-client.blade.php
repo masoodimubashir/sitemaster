@@ -54,7 +54,7 @@
 
                         <div>
 
-                            <a class=" btn btn-info" href="{{ route('users.index') }}">Back</a>
+                            <a class=" btn btn-info" href="{{ route('clients.index') }}">Back</a>
 
                             <button class=" btn btn-primary"><span>Submit</span></button>
 

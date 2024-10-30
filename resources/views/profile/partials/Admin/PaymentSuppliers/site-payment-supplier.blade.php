@@ -28,7 +28,7 @@
                                 </tr>
                                 <tr>
                                     <td><strong>Service Charge</strong></td>
-                                    <td>{{ Number::percentage($site->service_charge) }}</td>
+                                    <td>{{ $site->service_charge }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Site Owner Name</strong></td>
@@ -43,9 +43,9 @@
                             <thead>
                                 <tr>
                                     <th class="fw-bold bg-info  text-white">Date</th>
-                                    <th class="fw-bold bg-info  text-white">Amount Paid To</th>
-                                    <th class="fw-bold bg-info  text-white">Amount</th>
                                     <th class="fw-bold bg-info  text-white">Screenshot</th>
+                                    <th class="fw-bold bg-info  text-white">Supplier</th>
+                                    <th class="fw-bold bg-info  text-white">Amount</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -57,14 +57,14 @@
                                             <td>{{ $payment_supplier->created_at->format('d-M-Y') }}</td>
 
                                             <td>
+                                                <img src="{{ asset($payment_supplier->screenshot) }}" alt="">
+                                            </td>
+
+                                            <td>
                                                 {{ Ucwords($payment_supplier->supplier->name) }}
                                             </td>
 
                                             <td>{{ Number::currency($payment_supplier->amount, 'INR') }}</td>
-
-                                            <td>
-                                                <img src="{{ $payment_supplier->screenshot }}" alt="">
-                                            </td>
                                     @endforeach
                                     </tr>
                                 @else

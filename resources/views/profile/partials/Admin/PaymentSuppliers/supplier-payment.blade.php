@@ -13,11 +13,10 @@
                     <thead>
                         <tr>
                             <th class="bg-info text-white">Date</th>
+                            <th class="bg-info text-white">Bill Image</th>
                             <th class="bg-info text-white">Site Name</th>
                             <th class="bg-info text-white">Site Owner</th>
-                            <th class="bg-info text-white">Service Charge (%)</th>
                             <th class="bg-info text-white">Amount</th>
-                            <th class="bg-info text-white">Screenshot</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -28,11 +27,10 @@
 
                                     <td>{{ $payment_supplier->created_at->format('d-M-Y') }}</td>
                                     <td>
-                                        <img src="{{ $payment_supplier->screenshot }}" alt="">
+                                        <img src="{{ asset($payment_supplier->screenshot) }}" alt="">
                                     </td>
                                     <td>{{ ucwords($payment_supplier->site->site_owner_name) }}</td>
                                     <td>{{ ucwords($payment_supplier->site->site_name) }}</td>
-                                    <td>{{ $payment_supplier->site->service_charge }}</td>
                                     <td>{{ Number::currency($payment_supplier->amount, 'INR') }}</td>
 
 

@@ -51,17 +51,19 @@ class SiteController extends Controller
 
         $client = Client::find($request->client_id);
 
-        $user->notify(new UserSiteNotification());
-
-        Site::create([
+        $site = Site::create([
             'site_name' => $request->site_name,
             'service_charge' => $request->service_charge,
             'location' => $request->location,
             'site_owner_name' => $client->name,
             'contact_no' => $client->number,
             'user_id' => $request->user_id,
-            'client_id' => $request->client_id
+            'client_id' => $request->client_id,
+            'is_on_going' => true
         ]);
+
+
+        $user->notify(new UserSiteNotification());
 
         return redirect()->route('sites.index')->with('message', 'site created');
     }
@@ -109,13 +111,22 @@ class SiteController extends Controller
         $grand_total_square_footage_amount = 0;
 
         foreach ($site->phases as $phase) {
+
+            // dd($phase->dailyWagers->sum('price_per_day'));
+            // dd($phase->daily_expenses_total_amount = $phase->dailyExpenses->sum('price'));
+
             $phase->construction_total_amount = $phase->constructionMaterialBillings->sum('amount');
             $phase->daily_expenses_total_amount = $phase->dailyExpenses->sum('price');
-            $phase->daily_wagers_total_amount = $phase->dailyWagers->sum('price_per_day');
+            $phase->daily_wagers_total_amount = $phase->dailyWagers->sum('price_per_day') *  $phase->wagerAttendances->sum('no_of_persons');
+            $phase->daily_wager_attendance_amount = $phase->wagerAttendances->sum('no_of_persons');
+
+            // getWagerAttendance Number Of Persons
 
             $phase->square_footage_total_amount = $phase->squareFootageBills->reduce(function ($carry, $bill) {
                 return $carry + ($bill->price * $bill->multiplier);
             }, 0);
+
+            // dd($phase->square_footage_total_amount);
 
             $phase->total_amount = $phase->construction_total_amount +
             $phase->daily_expenses_total_amount +
@@ -132,6 +143,8 @@ class SiteController extends Controller
         $grand_total_daily_expenses_amount +
         $grand_total_daily_wagers_amount +
         $grand_total_square_footage_amount;
+
+        // dd($grand_total_amount);
 
         $suppliers = Supplier::orderBy('name')->get();
 

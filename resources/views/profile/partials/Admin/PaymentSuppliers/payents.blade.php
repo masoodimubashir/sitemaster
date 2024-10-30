@@ -1,9 +1,20 @@
 <x-app-layout>
+
+    <style>
+          #messageContainer {
+            position: fixed;
+            bottom: 5%;
+            right: 45%;
+            z-index: 9999999;
+        }
+    </style>
+
     <div class="row">
         <div class="col-sm-12">
             <div class="home-tab">
 
                 <div class="d-sm-flex align-items-center justify-content-between border-bottom">
+
                     <ul class="nav nav-tabs" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link active" id="workforce-tab" data-bs-toggle="tab" href="#workforce"
@@ -15,8 +26,16 @@
                         </li>
                     </ul>
 
-                    <a href="{{ route('payments.create') }}" class="btn btn-sm btn-info text-white">Make Payment</a>
+                    <div>
 
+                        <a class="btn btn-info text-white" href="#payment-supplier" data-bs-toggle="modal"
+                            role="button">
+                            <i class="fas fa-money-bill me-2"></i>Make Payment
+                        </a>
+
+
+
+                    </div>
 
                 </div>
 
@@ -38,7 +57,7 @@
                                                     </b>
                                                 </small>
                                                 <h4 class="fw-bold">
-                                                    {{ Number::currency($final_total_balance, 'INR') }}
+                                                    {{ Number::currency($total_balance, 'INR') }}
                                                 </h4>
                                             </div>
                                         </td>
@@ -50,7 +69,7 @@
                                                     </b>
                                                 </small>
                                                 <h4 class="fw-bold">
-                                                    {{ Number::currency($total_debit, 'INR') }}
+                                                    {{ Number::currency($total_due, 'INR') }}
                                                 </h4>
                                             </div>
                                         </td>
@@ -62,7 +81,7 @@
                                                     </b>
                                                 </small>
                                                 <h4 class="fw-bold">
-                                                    {{ Number::currency($total_credit, 'INR') }}
+                                                    {{ Number::currency($total_paid, 'INR') }}
                                                 </h4>
                                             </div>
                                         </td>
@@ -93,11 +112,12 @@
                                             </div>
                                         </td>
                                         <td colspan="4" style="background: #F4F5F7; border:none">
-                                            <div>
+                                            <div class="row">
 
-                                                <form action="{{ route('payments.index') }}" method="GET"
-                                                    id="filterForm">
-                                                    <select class="form-select form-select-sm bg-white" name="date_filter" id="date_filter"
+                                                <form class="col" action="{{ route('payments.index') }}"
+                                                    method="GET" id="filterForm">
+                                                    <select class="form-select form-select-sm bg-white"
+                                                        name="date_filter" id="date_filter"
                                                         onchange="document.getElementById('filterForm').submit();">
                                                         <option value="today"
                                                             {{ request('date_filter') === 'today' ? 'selected' : '' }}>
@@ -118,6 +138,35 @@
                                                             {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
                                                             All Data</option>
                                                     </select>
+
+                                                </form>
+
+
+                                                <form class="col" action="{{ url('admin/ledger/report') }}"
+                                                    method="GET" id="ledger-report">
+                                                    <select class="form-select form-select-sm bg-white"
+                                                        name="date_filter" id="date_filter"
+                                                        onchange="document.getElementById('ledger-report').submit();">
+                                                        <option value="today"
+                                                            {{ request('date_filter') === 'today' ? 'selected' : '' }}>
+                                                            Generate Today's Report</option>
+                                                        <option value="yesterday"
+                                                            {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>
+                                                            Generate Yesterday's Report</option>
+                                                        <option value="last_week"
+                                                            {{ request('date_filter') === 'last_week' ? 'selected' : '' }}>
+                                                            Generate Last Week's Report</option>
+                                                        <option value="last_month"
+                                                            {{ request('date_filter') === 'last_month' ? 'selected' : '' }}>
+                                                            Generate Last Month's Report</option>
+                                                        <option value="last_year"
+                                                            {{ request('date_filter') === 'last_year' ? 'selected' : '' }}>
+                                                            Generate Last Year's Report</option>
+                                                        <option value="lifetime"
+                                                            {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
+                                                            Generate Full Report</option>
+                                                    </select>
+
                                                 </form>
 
                                             </div>
@@ -132,7 +181,6 @@
                                         <th class="bg-info text-white fw-bold">Information</th>
                                         <th class="bg-info text-white fw-bold ">Debit</th>
                                         <th class="bg-info text-white fw-bold ">Credit</th>
-                                        <th class="bg-info text-white fw-bold ">Balance</th>
 
                                     </tr>
                                 </thead>
@@ -157,16 +205,6 @@
                                             <td>
                                                 {{ $ledger['credit'] }}
                                             </td>
-
-                                            <td>
-                                                {{ $ledger['balance'] }}
-                                                {{-- @foreach ($balance as $k => $b)
-                                                    {{ $key === $k ? $b  : null }}
-                                                @endforeach --}}
-                                                {{-- {{ $balance }} --}}
-                                            </td>
-
-
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -175,8 +213,7 @@
                         </div>
 
                         <div class="mt-4">
-                            {{ $paginatedLedgers }}
-
+                            {{ $paginatedLedgers->links() }}
                         </div>
                     </div>
                     <div class="tab-pane fade" id="material" role="tabpanel" aria-labelledby="material-tab">
@@ -217,13 +254,13 @@
 
                                 </table>
                             @else
-                                <h1 class="display-4">No records found..</h1>
+                                <h1 class="display-4 bg-white p-2 text-center fw-4">No records found..</h1>
 
                             @endif
                         </div>
 
                         <div class="mt-4">
-                            {{ $payments->links() }}
+                            {{-- {{ $payments->links() }} --}}
 
                         </div>
                     </div>
@@ -232,4 +269,146 @@
             </div>
         </div>
     </div>
+
+    {{-- Payment Supplier --}}
+    <div id="payment-supplier" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
+        tabindex="-1">
+
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+
+                    <form id="payment_supplierForm" class="forms-sample material-form">
+
+                        @csrf
+
+                        {{-- Phase Name --}}
+                        <div class="form-group">
+                            <input type="number" min="0" name="amount" />
+                            <label for="input" class="control-label">Amount</label><i class="bar"></i>
+                            <x-input-error :messages="$errors->get('amount')" class="mt-2" />
+                        </div>
+
+                        <!-- Site -->
+                        <div class="form-group">
+                            {{-- <input type="hidden" name="site_id" value="{{ $site->id }}" /> --}}
+                            <x-input-error :messages="$errors->get('site_id')" class="mt-2" />
+                        </div>
+
+                        {{-- Supplier --}}
+
+                        <select class="form-select form-select-sm" id="supplier_id" name="supplier_id">
+                            <option value="">Select Supplier</option>
+                            {{-- @foreach ($suppliers as $supplier)
+                                    <option value="{{ $supplier->id }}">
+                                        {{ $supplier->name }}
+                                    </option>
+                                @endforeach --}}
+                        </select>
+                        @error('supplier_id')
+                            <x-input-error :messages="$message" class="mt-2" />
+                        @enderror
+
+
+                        <!-- Is Verified -->
+                        <div class="form-check">
+                            <label class="form-check-label">
+                                <input type="checkbox" class="form-check-input" name="is_verified"> Verify
+                            </label>
+                            @error('is_verified')
+                                <x-input-error :messages="$message" class="mt-2" />
+                            @enderror
+                        </div>
+
+                        {{-- Screenshot --}}
+                        <div class="mt-3">
+                            <input class="form-control form-control-md" id="image" type="file"
+                                name="screenshot">
+                        </div>
+
+                        <div class="flex items-center justify-end mt-4">
+                            <x-primary-button>
+                                {{ __('Pay') }}
+                            </x-primary-button>
+                        </div>
+
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="messageContainer"> </div>
+
+
+    <script>
+        $(document).ready(function() {
+            $('form[id="payment_supplierForm"]').on('submit', function(e) {
+                e.preventDefault();
+                console.log(e);
+
+
+                const form = $(this);
+                const formData = new FormData(form[0]);
+                const messageContainer = $('#messageContainer');
+                messageContainer.empty();
+
+                $('.text-danger').remove(); // Clear previous error messages
+
+                $.ajax({
+                    url: '{{ route('supplier-payments.store') }}',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        form[0].reset();
+                        messageContainer.append(`
+                        <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                </div>
+                            </div>
+                        </div>
+                `);
+                        // Auto-hide success message after 3 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.relord();
+                        }, 3000);
+                    },
+                    error: function(response) {
+
+
+
+                        if (response.status === 422) {
+
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show " role="alert">
+
+                            ${response.responseJSON.errors}
+                        </div>`)
+
+                        } else {
+                            messageContainer.append(`
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show " role="alert">
+                            An unexpected error occurred. Please try again later.
+
+                        </div>
+                    `);
+                        }
+                        // Auto-hide error message after 5 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+
+                        }, 5000);
+                    }
+                });
+            });
+        })
+    </script>
 </x-app-layout>

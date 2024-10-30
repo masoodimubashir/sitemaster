@@ -12,11 +12,21 @@
 
                     <h4 class="text-xl text-info fw-bold">Sites</h4>
 
-                    <a class="btn btn-sm btn-info" href="{{ route('sites.create') }}">
+                    <a class="btn btn-info" href="{{ route('sites.create') }}">
+                        <i class="fa-solid fa-building me-2"></i>
                         Create New Site
                     </a>
 
                 </div>
+
+                 @if (session('message'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
+                            {{ session('message') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
 
                 <div class="table-responsive mt-4">
 
@@ -49,6 +59,9 @@
                                             {{ $site->is_on_going ? 'Open' : 'Closed' }}
 
                                         </td>
+
+
+
                                         <td> {{ $site->created_at->format('d-M-Y') }} </td>
 
                                         <td title=" View {{ $site->site_name }} details...">
@@ -123,7 +136,14 @@
 
                         </table>
                     @else
-                        <h1 class="display-4">No records found..</h1>
+                        <table class="table table-bordered">
+                            <thead></thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-danger fw-bold text-center">No Sites Found...</td>
+                                </tr>
+                            </tbody>
+                        </table>
 
 
                     @endif

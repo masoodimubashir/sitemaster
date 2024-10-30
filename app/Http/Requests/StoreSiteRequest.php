@@ -25,8 +25,6 @@ class StoreSiteRequest extends FormRequest
             'site_name' => 'required|string|min:5',
             'service_charge' => 'required|decimal:0,2',
             'location' => 'required|string',
-            // 'site_owner_name' => 'required|string',
-            // 'contact_no' => 'required|digits:10',
             'user_id' => 'required|exists:users,id',
             'client_id' => 'required|exists:clients,id'
         ];

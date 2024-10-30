@@ -7,6 +7,7 @@ use App\Models\DailyWager;
 use App\Models\Site;
 use App\Models\Workforce;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class DailyWagerController extends Controller
@@ -33,28 +34,43 @@ class DailyWagerController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+
     public function store(Request $request)
     {
-
         if ($request->ajax()) {
-            try {
+            // Validation rules
+            $validator = Validator::make($request->all(), [
+                'price_per_day' => 'required|integer',
+                'wager_name' => 'required|string|max:255',
+                'phase_id' => 'required|exists:phases,id',
+                'supplier_id' => 'required|exists:suppliers,id',
+            ]);
 
-                $request->validate([
-                    'price_per_day' => 'required|integer',
-                    'wager_name' => 'required|string',
-                    'phase_id' => 'required|exists:phases,id',
-                    'supplier_id' => 'required|exists:suppliers,id'
+            // Check for validation errors
+            if ($validator->fails()) {
+                return response()->json(['errors' => 'Validation Error.. Try Again!'], 422);
+            }
+
+            try {
+                // Create the daily wager
+                DailyWager::create([
+                    'price_per_day' => $request->price_per_day,
+                    'wager_name' => $request->wager_name,
+                    'phase_id' => $request->phase_id,
+                    'supplier_id' => $request->supplier_id,
+                    'verified_by_admin' => true,
                 ]);
 
-                DailyWager::create($request->all());
-
-                return response()->json(['message', 'wager created...'], 201);
-                
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                return response()->json(['errors' => $e->validator->errors()], 422);
+                return response()->json(['message' => 'Wager created successfully.'], 201);
+            } catch (\Exception $e) {
+                // Handle any unexpected errors
+                return response()->json(['error' => 'An unexpected error occurred: '], 500);
             }
         }
+
+        return response()->json(['error' => 'Invalid request'], 400);
     }
+
 
     /**
      * Display the specified resource.

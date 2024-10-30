@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.2",
         "consoletvs/charts": "6.*",
+        "fpdf/fpdf": "^1.86",
         "laravel/framework": "^11.9",
         "laravel/tinker": "^2.9"
     },
