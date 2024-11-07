@@ -36,7 +36,7 @@ class DailyExpensesController extends Controller
             // Validation rules
             $validator = Validator::make($request->all(), [
                 'item_name' => 'required|string|max:255',
-                'price' => 'required|numeric|min:0', // Ensure price is numeric and non-negative
+                'price' => 'required|numeric|max:9999999999',
                 'bill_photo' => 'required|image|mimes:jpg,jpeg,webp|max:1024',
                 'phase_id' => 'required|exists:phases,id',
             ]);
@@ -101,32 +101,26 @@ class DailyExpensesController extends Controller
     public function update(Request $request, string $id)
     {
 
-
         $request->validate([
             'item_name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0', // Ensure price is numeric and non-negative
+            'price' => 'required|numeric|max:9999999999',
             'bill_photo' => 'required|mimes:jpg,jpeg,webp|max:1024',
             'phase_id' => 'required|exists:phases,id',
         ]);
 
         $daily_expense = DailyExpenses::findorFail($id);
 
-
-
         $image_path = null;
 
         if ($request->hasFile('bill_photo')) {
-
-
 
             if (Storage::disk('public')->exists($daily_expense->bill_photo)) {
 
                 Storage::disk('public')->delete($daily_expense->bill_photo);
             }
 
-
-
             $image_path = $request->file('bill_photo')->store('Expenses', 'public');
+
         } else {
 
             $image_path = $daily_expense->bill_photo;
@@ -140,7 +134,7 @@ class DailyExpensesController extends Controller
             'user_id' => auth()->user()->id
         ]);
 
-        return redirect()->back()->with('message', 'expenses detail updated..');
+        return redirect()->route('sites.show', [base64_encode($daily_expense->phase->site->id)])->with('status', 'update');
 
     }
 

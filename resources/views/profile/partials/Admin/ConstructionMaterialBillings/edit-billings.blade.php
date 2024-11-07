@@ -1,28 +1,27 @@
 <x-app-layout>
 
 
+    <x-breadcrumb :names="[
+        'View' . $construction_material_billing->phase->site->site_name,
+        'Edit ' . $construction_material_billing->item_name,
+    ]" :urls="[
+        'admin/sites/' . base64_encode($construction_material_billing->phase->site->id),
+        'admin/construction-material-billings/' . base64_encode($construction_material_billing->id),
+    ]" />
+
+
     <div class="row">
 
-        @if (session('message'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
-                {{ session('message') }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        @endif
-
         <div class="col-md-12 grid-margin stretch-card">
+
             <div class="card">
+
                 <div class="card-body">
-
-                    <h3 class="text-info">Update Construction Material</h3>
-
-
 
                     <form method="POST" class="forms-sample material-form"
                         action="{{ route('construction-material-billings.update', [$construction_material_billing->id]) }}"
                         enctype="multipart/form-data">
+
                         @csrf
                         @method('PUT')
 
@@ -49,17 +48,19 @@
                             <x-input-error :messages="$errors->get('site_id')" class="mt-2" />
 
                         </div>
-                        
+
                         <!-- Supplier -->
+
                         <div class="mt-4">
-                            <select id="supplier_id" class="form-select form-select-sm" name="supplier_id">
-                                <option value="">Select Supplier</option>
+
+                            <select id="supplier_id" class="form-select form-select-sm text-black" name="supplier_id">
                                 @foreach ($suppliers as $supplier)
                                     <option
                                         {{ $construction_material_billing->supplier_id === $supplier->id ? 'selected' : '' }}
                                         value="{{ $supplier->id }}">{{ $supplier->name }}</option>
                                 @endforeach
                             </select>
+                         
                             @error('supplier_id')
                                 <x-input-error :messages="$message" class="mt-2" />
                             @enderror
@@ -85,29 +86,7 @@
                             @enderror
                         </div>
 
-                        {{-- <!-- Verified By Admin -->
-                        <div class="mt-4">
-                            <x-input-label for="verified_by_admin" :value="__('Verified By Admin')" />
-                            <input id="verified_by_admin" type="checkbox" class="block mt-1" name="verified_by_admin"
-                                {{ $construction_material_billing->verified_by_admin ? 'checked' : '' }}
-                                autocomplete="verified_by_admin" />
-                            @error('verified_by_admin')
-                                <x-input-error :messages="$message" class="mt-2" />
-                            @enderror
-                        </div> --}}
-
-
-                        <div class="flex items-center justify-end mt-4">
-
-                            <div class="button-container">
-
-                                <a class=" btn btn-info"
-                                    href="{{ route('sites.show', [base64_encode($construction_material_billing->phase->site->id)]) }}"><span>Back</span></a>
-
-                                <button class="btn btn-info"><span>Update Billing</span></button>
-
-                            </div>
-                        </div>
+                        <button class="btn btn-info mt-4">Save</button>
 
                     </form>
 

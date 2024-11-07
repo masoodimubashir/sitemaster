@@ -17,7 +17,7 @@ class PhaseController extends Controller
      */
     public function index()
     {
-        $phases = Phase::with('site')->paginate();
+        $phases = Phase::paginate(10);
 
         return view('profile.partials.Admin.Phase.phase', compact('phases'));
     }
@@ -90,7 +90,7 @@ class PhaseController extends Controller
         $phase = Phase::find($phase_id);
 
         if (!$phase) {
-            return redirect()->back()->with('error', 'phase not found..');
+            return redirect()->back()->with('status', 'not_found');
         }
 
         return view('profile.partials.Admin.Phase.edit-phase', compact('phase'));
@@ -112,7 +112,7 @@ class PhaseController extends Controller
 
         $phase->update($request->all());
 
-        return redirect()->route('phase.index')->with('message', 'phase updated...');
+        return redirect()->route('phase.index')->with('status', 'update');
     }
 
     /**
@@ -130,6 +130,6 @@ class PhaseController extends Controller
 
         $phase->delete();
 
-        return redirect()->back()->with('message', 'phase deleted');
+        return redirect()->back()->with('status', 'delete');
     }
 }

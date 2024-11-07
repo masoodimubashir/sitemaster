@@ -1,11 +1,15 @@
 @php
     use App\Models\User;
 
-    $notifications = auth()
-        ->user()
-        ->unreadNotifications()
-        ->where('notifiable_type', User::class)
-        ->get(); // Don't forget to add get()!
+    if (auth()->user()->role_name === 'admin' || auth()->user()->role_name === 'site_engineer') {
+        # code...
+
+        $notifications = auth()
+            ->user()
+            ->unreadNotifications()
+            ->where('notifiable_type', User::class)
+            ->get();
+    }
 
 @endphp
 
@@ -25,6 +29,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
         integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
         crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -59,18 +65,137 @@
         integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+    <style>
+        .second a:hover {
+            color: rgb(0, 183, 255) !important;
+        }
+
+
+        .second .active-2 {
+            color: rgb(0, 183, 255) !important;
+            border-bottom: 3px solid rgb(0, 183, 255) !important;
+            padding-bottom: 11px !important;
+
+
+        }
+
+        .second span:hover {
+            padding-bottom: 11px !important;
+            border-bottom: 3px solid rgb(0, 183, 255) !important;
+
+        }
+
+        .second .breadcrumb>li+li:before {
+            content: "" !important;
+        }
+
+        .second .breadcrumb {
+            /* padding: 10px; */
+            font-size: 14px;
+            color: #aaa !important;
+            letter-spacing: 2px;
+            border-radius: 5px !important;
+        }
+
+
+
+        .second>>.fa,
+        i {
+            color: rgb(0, 183, 255) !important;
+            font-size: 10px;
+        }
+
+        .second>>.fa-angle-double-right {
+            color: #aaa !important;
+        }
+
+
+        .second .first {
+            background-color: white !important;
+        }
+
+
+        .second a {
+            text-decoration: none !important;
+            color: #aaa !important;
+        }
+
+        .second a:focus,
+        a:active {
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+
+        .second .fa-caret-right,
+        .fa-angle-double-right {
+            font-size: 20px !important;
+        }
+
+        .second .fa-caret-right {
+            vertical-align: middle;
+        }
+
+        .second img {
+            vertical-align: bottom;
+            opacity: 0.3;
+        }
+
+
+
+
+        .second .four ol {
+            background-color: rgb(51, 0, 80) !important;
+        }
+
+        @media (max-width: 767px) {
+            .second .breadcrumb {
+                font-size: 10px;
+
+            }
+
+            .second .breadcrumb-item+.breadcrumb-item {
+                padding-left: 0;
+
+            }
+
+            .second .fa {
+                font-size: 9px !important;
+            }
+
+
+
+            .second .breadcrumb {
+                letter-spacing: 1px !important;
+            }
+
+            .second .breadcrumb>* div {
+                max-width: 60px;
+            }
+
+            .second .active-2 {
+                border-bottom: none !important;
+
+            }
+
+
+        }
+    </style>
+
 </head>
 
 <body class="with-welcome-text">
 
-    <!-- partial:partials/_navbar.html -->
-
 
     @if (auth()->user()->role_name === 'admin')
         @include('components.admin-topbar')
-    @else
+    @elseif (auth()->user()->role_name === 'site_engineer')
         @include('components.user-topbar')
+    @else
+        @include('components.client-topbar')
     @endif
+
+
 
     <!-- partial -->
     <div class="container-fluid page-body-wrapper">
@@ -88,13 +213,6 @@
         <div class="main-panel">
 
             <div class="content-wrapper">
-
-                {{-- <nav style="--bs-breadcrumb-divider: '>';" aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item"><a href="#">Home</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Library</li>
-                    </ol>
-                </nav> --}}
 
 
                 {{ $slot }}
@@ -115,27 +233,6 @@
         <!-- main-panel ends -->
     </div>
     <!-- page-body-wrapper ends -->
-    </div>
-
-
-
-    <script>
-        window.onload = function() {
-            const alertBox = document.getElementById('alert-box');
-            if (alertBox) {
-                setTimeout(function() {
-                    alertBox.classList.remove('show');
-                    alertBox.classList.add('fade');
-                }, 5000); // 5000 milliseconds = 5 seconds
-            }
-        };
-    </script>
-
-
-
-
-
-    <!-- container-scroller -->
 
 
     <!-- plugins:js -->

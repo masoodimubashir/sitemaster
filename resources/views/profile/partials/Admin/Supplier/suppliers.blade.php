@@ -1,26 +1,27 @@
 <x-app-layout>
+
+    <x-breadcrumb :names="['Suppliers']" :urls="['admin/suppliers']" />
+
+    @if (session('status') === 'supplier')
+        <x-success-message message="Supplier Created.."/>
+    @endif
+
     <div class="row">
-        <div class="d-flex justify-content-end">
-            <a class="btn btn-info  text-white" href="{{ route('suppliers.create') }}">
-                <i class="fa-solid fa-user me-2"></i>
-                Create Supplier
-            </a>
-        </div>
+
 
         <div class="col-sm-12">
 
+            <div class="d-flex justify-content-end">
+
+                <a class="btn btn-sm btn-success" href="{{ url('admin/suppliers/create') }}">
+                    <i class="fa fa-user mr-2"></i>
+                    Create Supplier
+                </a>
+
+            </div>
 
 
             <div class="table-responsive mt-4">
-
-                @if (session('message'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
-                        {{ session('message') }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                @endif
 
                 @if ($suppliers)
                     <table class="table table-bordered">

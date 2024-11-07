@@ -50,10 +50,14 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/client-login', [ClientAuthController::class, 'login'])->name('client.login');
-Route::post('/client-login', [ClientAuthController::class, 'store'])->name('client.store');
+
+
 
 Route::middleware(['auth'])->group(function () {});
+
+
+Route::get('/client-login', [ClientAuthController::class, 'login'])->name('client.login');
+Route::post('/client-login', [ClientAuthController::class, 'store'])->name('client.store');
 
 //  Client Routes
 Route::middleware(['auth:clients', 'isClient'])->prefix('client')->group(function () {
@@ -63,8 +67,6 @@ Route::middleware(['auth:clients', 'isClient'])->prefix('client')->group(functio
     Route::post('/logout', [ClientLogoutController::class, 'logout'])->name('client.logout');
 
     Route::get('/generate-report/{id}', GenerateReportController::class)->name('generate-report');
-
-
     Route::get('/download-site/report/{id}', [PDFController::class, 'showSitePdf']);
     Route::get('/download-phase/report/{id}', [PDFController::class, 'showPhasePdf']);
     // Route::get('/supplier-payment/report/{id}', [PDFController::class, 'showSupplierPaymentPdf']);
@@ -86,21 +88,27 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
 
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::post('/register', [AdminUserController::class, 'register'])->name('admin.register-user');
-    Route::get('/edit-user/{id}', [AdminUserController::class, 'editUser'])->name('admin.edit-user');
-    Route::put('/user/update-password/{id}', [AdminUserController::class, 'updateUserPassword'])->name('admin.update-user-password');
 
-    // Admin Creates Site Enginner Here
+
+
+    // Admin Enginner Controllers
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
+    Route::get('/edit-user/{id}', [AdminUserController::class, 'editUser'])->name('admin.edit-user');
+    Route::post('/register', [AdminUserController::class, 'register'])->name('admin.register-user');
+    Route::put('/user/update-password/{id}', [AdminUserController::class, 'updateUserPassword'])->name('admin.update-user-password');
 
+    // Clents Routes
     Route::resource('/clients', ClientController::class);
 
+    // Suppliers Routes
     Route::resource('/suppliers', SupplierController::class);
 
+    // Sites Controller
     Route::resource('/sites', SiteController::class);
 
     Route::post('sites/update-on-going/{id}', UpdateOnGoingController::class)->name('sites.update-on-going');
@@ -121,11 +129,12 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
 
     Route::resource('/phase', PhaseController::class);
+    
     Route::resource('/payment-bills', PaymentBillsController::class);
 
     Route::get('/site/ledger/{id}', SitePaymentController::class)->name('sites.view-ledger');
 
-    
+
     Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');
 
     Route::resource('/payments', PaymentsController::class);
@@ -150,20 +159,23 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 });
 
 
+
+
 //  -------------------------- User Routes --------------------------
 Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
     // Route::get('/markread', [MarkNotificationAsReadController::class, 'markNotificationAsRead'])->name('user.markAsRead');
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
+
     Route::get('/sites/{id}', [ViewSiteController::class, 'show'])->name('user-sites.show');
+
+
     Route::resource('/user-phase', UserPhaseController::class);
 
     // Construction Material Routes
-    Route::post('construction-material-billings', [UserConstuctionMaterialBuildingsController::class, 'store'])
-        ->name('user-construction-billings.store');
-
+    Route::post('construction-material-billings', [UserConstuctionMaterialBuildingsController::class, 'store']);
     // Attendance Routes
-    Route::post('/user-wager-attendance', UserWagerAttendanceController::class)->name('user-daily-wager-attendance.store');
+    Route::post('/user-wager-attendance', UserWagerAttendanceController::class);
 
     // Expenses Routes
     Route::post('/user-daily-expenses', [UserDailyExpensesController::class, 'store']);
@@ -175,7 +187,7 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::post('/user-square-footage-bills', [UserSquareFootageBillsController::class, 'store']);
 
     // Site Payments
-    // Route::resource('site/payments', UserSitePayments::class);
+    Route::resource('site/payments', UserSitePayments::class);
 
     // View Ledger
     Route::get('/site/ledger/{id}', UserLedgerController::class);

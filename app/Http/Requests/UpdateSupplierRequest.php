@@ -30,7 +30,7 @@ class UpdateSupplierRequest extends FormRequest
             'contact_no' => [
                 'required',
                 'string',
-                'min:10',
+                'digits:10',
                 Rule::unique(Supplier::class)->ignore($supplier->id),
             ],
             'address' => 'required|string',

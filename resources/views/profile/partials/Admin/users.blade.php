@@ -1,29 +1,26 @@
 <x-app-layout>
 
+
+    <x-breadcrumb :names="['Site Engineer']" :urls="['admin/users']" />
+
+    @if (session('message') === 'create')
+        <x-success-message message="Site Engineer Created..." />
+    @endif
+
     <div class="row">
 
+        <div class="d-flex justify-content-end">
 
-        <div class="flex items-center justify-between">
-
-            <h4 class="text-xl text-info fw-bold">Site Engineers</h4>
-            <a class="btn btn-sm btn-info" href="{{ route('users.create') }}">
-                Create Supplier
+            <a class="btn btn-sm btn-success" href="{{ url('admin/users/create') }}" class="float-right">
+                <i class="fa fa-user-plus pr-1" aria-hidden="true"></i>
+                Create Engineer
             </a>
 
         </div>
 
-
-
         <div class="table-responsive mt-4">
 
-              @if (session('message'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
-                    {{ session('message') }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
+
 
             @if (count($users))
                 <table class="table table-bordered">
@@ -99,7 +96,6 @@
 
                 </table>
             @else
-
                 <table class="table table-bordered">
                     <thead></thead>
                     <tbody>

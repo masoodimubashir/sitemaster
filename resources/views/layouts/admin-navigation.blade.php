@@ -35,13 +35,20 @@
                 <span class="menu-title">Site</span>
             </a>
         </li>
-         <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('payments.index') ? 'active' : '' }}"
-                href="{{ route('payments.index') }}">
+        <li class="nav-item">
+            <a class="nav-link {{ Request::is('admin/payments') ? 'active' : '' }}" href="{{ url('admin/payments') }}">
                 <i class="menu-icon fa fa-indian-rupee"></i>
                 <span class="menu-title">Payments</span>
             </a>
         </li>
+
+        <li class="nav-item">
+            <a class="nav-link {{ Request::is('admin/phase') ? 'active' : '' }}" href="{{ url('admin/phase') }}">
+                <i class="menu-icon fas fa-tasks me-2"></i>
+                <span class="menu-title">Phase</span>
+            </a>
+        </li>
+
         <li class="nav-item nav-category">Trash</li>
 
         <li class="nav-item">

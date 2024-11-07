@@ -132,10 +132,9 @@ class SupplierPaymentController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $is_ongoing_count = Site::where('is_on_going', 1)->count();
-        $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
+       
 
-        return view("profile.partials.Admin.Ledgers.supplier-ledger", compact('payments', 'paginatedLedgers', 'total_paid', 'total_due', 'id', 'total_balance', 'is_ongoing_count', 'is_not_ongoing_count'));
+        return view("profile.partials.Admin.Ledgers.supplier-ledger", compact('payments', 'paginatedLedgers', 'total_paid', 'total_due', 'id', 'total_balance'));
 
     }
 

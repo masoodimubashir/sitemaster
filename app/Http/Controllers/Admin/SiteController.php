@@ -65,7 +65,7 @@ class SiteController extends Controller
 
         $user->notify(new UserSiteNotification());
 
-        return redirect()->route('sites.index')->with('message', 'site created');
+        return redirect()->route('sites.index')->with('status', 'create');
     }
 
     /**
@@ -88,9 +88,9 @@ class SiteController extends Controller
                 })->latest();
             },
             'phases.dailyWagers' => function ($q) {
-                $q->with('supplier', function ($q) {
+                $q->with(['wagerAttendances', 'supplier' => function ($q) {
                     $q->withTrashed();
-                })->latest();
+                }])->latest();
             },
             'phases.dailyExpenses' => function ($q) {
                 $q->withTrashed()->latest();
@@ -105,46 +105,51 @@ class SiteController extends Controller
 
         $totalPaymentSuppliersAmount = $site->paymeentSuppliers()->sum('amount');
 
-        $grand_total_construction_amount = 0;
-        $grand_total_daily_expenses_amount = 0;
-        $grand_total_daily_wagers_amount = 0;
-        $grand_total_square_footage_amount = 0;
+        // $total_construction_amount = 0;
+        // $total_daily_expenses_amount = 0;
+        // $total_daily_wagers_amount = 0;
+        // $total_square_footage_amount = 0;
+        // $service_charge_amount = 0;
+
+        $grand_total_amount = 0;
 
         foreach ($site->phases as $phase) {
 
-            // dd($phase->dailyWagers->sum('price_per_day'));
-            // dd($phase->daily_expenses_total_amount = $phase->dailyExpenses->sum('price'));
+
+
 
             $phase->construction_total_amount = $phase->constructionMaterialBillings->sum('amount');
             $phase->daily_expenses_total_amount = $phase->dailyExpenses->sum('price');
-            $phase->daily_wagers_total_amount = $phase->dailyWagers->sum('price_per_day') *  $phase->wagerAttendances->sum('no_of_persons');
-            $phase->daily_wager_attendance_amount = $phase->wagerAttendances->sum('no_of_persons');
 
-            // getWagerAttendance Number Of Persons
+            foreach ($phase->dailyWagers as $wager) {
+                $phase->daily_wagers_total_amount += $wager->wager_total;
+            }
+
 
             $phase->square_footage_total_amount = $phase->squareFootageBills->reduce(function ($carry, $bill) {
                 return $carry + ($bill->price * $bill->multiplier);
             }, 0);
 
-            // dd($phase->square_footage_total_amount);
+            $phase->construction_total_service_charge_amount = (($site->service_charge / 100) * $phase->construction_total_amount) +  $phase->construction_total_amount;
+            $phase->daily_expense_total_service_charge_amount = (($site->service_charge / 100) * $phase->daily_expenses_total_amount) + $phase->daily_expenses_total_amount;
+            $phase->daily_wagers_total_service_charge_amount = (($site->service_charge / 100) * $phase->daily_wagers_total_amount) + $phase->daily_wagers_total_amount;
 
-            $phase->total_amount = $phase->construction_total_amount +
-            $phase->daily_expenses_total_amount +
-            $phase->daily_wagers_total_amount +
-            $phase->square_footage_total_amount;
+            // Phase Total Amount
+            $phase->phase_total_amount = $phase->construction_total_amount + $phase->daily_expenses_total_amount + $phase->daily_wagers_total_amount + $phase->square_footage_total_amount;
 
-            $grand_total_construction_amount += $phase->construction_total_amount;
-            $grand_total_daily_expenses_amount += $phase->daily_expenses_total_amount;
-            $grand_total_daily_wagers_amount += $phase->daily_wagers_total_amount;
-            $grand_total_square_footage_amount += $phase->square_footage_total_amount;
+            $phase->sqft_total_service_charge_amount = (($site->service_charge / 100) * $phase->square_footage_total_amount) + $phase->square_footage_total_amount;
+
+            // Phase Total Service Charge Amount
+            $phase->phase_total_service_charge_amount = ($site->service_charge / 100) * $phase->phase_total_amount;
+
+            // Phase Total Service Charge Amount
+            $phase->phase_total_with_service_charge_amount = $phase->phase_total_amount + $phase->phase_total_service_charge_amount;
+
+            $grand_total_amount += $phase->phase_total_with_service_charge_amount;
         }
 
-        $grand_total_amount = $grand_total_construction_amount +
-        $grand_total_daily_expenses_amount +
-        $grand_total_daily_wagers_amount +
-        $grand_total_square_footage_amount;
 
-        // dd($grand_total_amount);
+        $balance = $grand_total_amount - $totalPaymentSuppliersAmount;
 
         $suppliers = Supplier::orderBy('name')->get();
 
@@ -156,7 +161,20 @@ class SiteController extends Controller
 
         $items = Item::orderBy('item_name')->get();
 
-        return view('profile.partials.Admin.Site.show-site', compact('site', 'grand_total_amount', 'suppliers', 'workforce_suppliers', 'raw_material_providers', 'wagers', 'items', 'totalPaymentSuppliersAmount'));
+        return view(
+            'profile.partials.Admin.Site.show-site',
+            compact(
+                'site',
+                'grand_total_amount',
+                'suppliers',
+                'workforce_suppliers',
+                'raw_material_providers',
+                'wagers',
+                'items',
+                'totalPaymentSuppliersAmount',
+                'balance'
+            )
+        );
     }
 
     /**
@@ -192,7 +210,7 @@ class SiteController extends Controller
 
         $site->update($request->all());
 
-        return redirect()->route('sites.index')->with('message', 'site updated');
+        return redirect()->route('sites.index')->with('status', 'update');
     }
 
     /**
@@ -206,6 +224,6 @@ class SiteController extends Controller
 
         $site->delete();
 
-        return redirect()->route('sites.index')->with('message', 'site deleted');
+        return redirect()->route('sites.index')->with('status', 'delete');
     }
 }

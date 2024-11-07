@@ -1,74 +1,115 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Phases') }}
-        </h2>
 
-    </x-slot>
+    <x-breadcrumb :names="['Phases']" :urls="['admin/phase']" />
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+    @if (session('status') === 'create')
+        <x-success-message message="Phase Created..." />
+    @endif
 
-                <div class="p-6 text-gray-900">
+    @if (session('status') === 'update')
+        <x-success-message message="Phase Verification Updated...." />
+    @endif
 
-                    @if (session('message'))
-                        {{ session('message') }}
-                    @endif
+    @if (session('status') === 'not_found')
+        <x-success-message message="Phase Not Found....." />
+    @endif
 
-                    @if (session('error'))
-                        {{ session('message') }}
-                    @endif
+    @if (session('status') === 'delete')
+        <x-success-message message="Phase deleted......" />
+    @endif
 
-                    @can('admin')
-                        <a class="bg-black  p-2 rounded text-white " href="{{ route('phase.create') }}">Create Phase</a>
-                    @endcannot
 
-                    <br>
-                    <br>
-                    <br>
+    <div class="row">
+
+        <div class="col-lg-12">
+
+            <div class="card-body">
+
+                <div class="table-responsive mt-4">
 
                     @if (count($phases))
-                        @foreach ($phases as $phase)
-                            <div class="border my-4 p-2">
-                                {{ $phase->id }}
 
-                                <br>
+                        <table class="table table-bordered">
 
-                                Phase Name: {{ $phase->phase_name }}
-                                <br>
-                                Site Name: {{ $phase->site->site_name }}
-                                <br>
+                            <thead>
 
-                                Site Owner Name: {{ $phase->site->site_owner_name }}
-                                <br>
+                                <tr>
 
-                                Site Service Charge: {{ Number::currency($phase->site->service_charge, 'INR') }}
+                                    <th class="bg-info text-white fw-bold">Date</th>
+                                    <th class="bg-info text-white fw-bold">Phase Name</th>
+                                    <th class="bg-info text-white fw-bold">Actions</th>
 
-                                <a href="{{ route('phase.edit', base64_encode($phase->id)) }}">Edit Phase</a>
-                                <br>
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+                                @foreach ($phases as $phase)
+                                    <tr>
 
 
-                                <form id="delete-form-{{ $phase->id }}"
-                                    action="{{ route('phase.destroy', [base64_encode($phase->id)]) }}" method="POST"
-                                    style="display: none;">
-                                    @csrf
-                                    @method('DELETE')
-                                </form>
+                                        <td>
+                                            {{ $phase->created_at->format('D-M') }}
+                                        </td>
 
-                                <a href="{{ base64_encode($phase->id) }}"
-                                    onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this supplier?')) document.getElementById('delete-form-{{ $phase->id }}').submit();">
-                                    Delete Supplier
-                                </a>
-                            </div>
-                        @endforeach
+                                        <td>
+                                            {{ $phase->phase_name }}
+                                        </td>
+
+                                        <td>
+
+                                            <a href="{{ route('phase.edit', base64_encode($phase->id)) }}">
+                                                <i
+                                                    class="fa-regular fa-pen-to-square text-xl bg-white rounded-full"></i>
+                                            </a>
+
+                                            <form id="delete-form-{{ $phase->id }}"
+                                                action="{{ route('phase.destroy', [base64_encode($phase->id)]) }}"
+                                                method="POST" style="display: none;">
+                                                @csrf
+                                                @method('DELETE')
+                                            </form>
+
+                                            <a href="#"
+                                                onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this phase?')) document.getElementById('delete-form-{{ $phase->id }}').submit();">
+                                                <i
+                                                    class="fa-solid fa-trash-o text-xl text-red-600 bg-white rounded-full px-2 py-1"></i>
+                                            </a>
+                                        </td>
+
+
+
+
+                                    </tr>
+                                @endforeach
+
+                            </tbody>
+
+
+                        </table>
                     @else
-                        <h1>No records found...</h1>
-                    @endif
+                        <table class="table table-bordered">
+                            <thead></thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-danger fw-bold text-center">No Phases Found...</td>
+                                </tr>
+                            </tbody>
+                        </table>
 
+
+                    @endif
+                </div>
+
+
+                <div class="mt-4">
+
+                    {{ $phases->links() }}
 
                 </div>
+
             </div>
+
         </div>
     </div>
 </x-app-layout>

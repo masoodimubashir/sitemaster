@@ -1,25 +1,16 @@
 <x-app-layout>
 
+     <x-breadcrumb :names="['View ' . $daily_wager->phase->site->site_name, 'Edit ' . $daily_wager->wager_name]" :urls="[
+        'admin/sites/' . base64_encode($daily_wager->phase->site->id),
+        'admin/dailywager/' . base64_encode($daily_wager->id) . '/edit',
+    ]" />
 
     <div class="row">
 
 
-           @if (session('message'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
-                {{ session('message') }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        @endif
-
         <div class="col-md-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
-
-                    <h3 class="text-info"> {{ __('Edit Wager') }}</h3>
-
-
 
 
                     <form method="POST" action="{{ route('dailywager.update', [$daily_wager->id]) }}"
@@ -41,7 +32,8 @@
 
                         <!-- Price Per day -->
                         <div class="form-group">
-                            <input id="price_per_day" type="number" name="price_per_day" value="{{ $daily_wager->price_per_day }}" step="0.01"/>
+                            <input id="price_per_day" type="number" name="price_per_day"
+                                value="{{ $daily_wager->price_per_day }}" step="0.01" />
                             <label for="price_per_day" class="control-label">Price Per
                                 Day</label><i class="bar"></i>
 
@@ -50,7 +42,7 @@
                             @enderror
                         </div>
 
-                        
+
 
                         <!-- Select Supplier -->
                         <div class="form-group">
@@ -71,18 +63,8 @@
                             @enderror
                         </div>
 
+                        <button class="btn btn-info"><span>Save</span></button>
 
-
-                        <div class="flex items-center justify-end mt-4">
-                            <div class="button-container">
-
-                                <a class=" btn btn-info"
-                                    href="{{ route('sites.show', [base64_encode($daily_wager->phase->site->id)]) }}"><span>Back</span></a>
-
-                                <button class="btn btn-info"><span>Update Wager</span></button>
-
-                            </div>
-                        </div>
                     </form>
 
 
@@ -92,7 +74,3 @@
     </div>
 
 </x-app-layout>
-
-
-
-

@@ -1,5 +1,10 @@
 <x-app-layout>
 
+    <x-breadcrumb :names="['Suppliers', 'Edit ' . $supplier->name]" :urls="['admin/suppliers', 'admin/suppliers/' . $supplier->id . '/edit']" />
+
+    @if (session('status') === 'supplier')
+        <x-success-message message="supplier not found.." />
+    @endif
 
     <div class="row">
 
@@ -10,23 +15,11 @@
 
                     <h4 class="text-3xl text-primary">Create Supplier</h4>
 
-                    @if (session('message'))
-                        <p class="card-description">
-                            {{ session('message') }}
-
-                        </p>
-                    @endif
-
-
                     <form method="POST" action="{{ route('suppliers.update', ['supplier' => $supplier]) }}"
                         class="forms-sample material-form">
 
                         @csrf
                         @method('PUT')
-
-                        @if (session('message'))
-                            {{ session('message') }}
-                        @endif
 
                         <div class="form-group">
                             <input type="text" name="name" value="{{ $supplier->name }}" />
@@ -39,6 +32,15 @@
                             <input type="text" name="contact_no" value="{{ $supplier->contact_no }}" />
                             <label for="number" class="control-label">Contact Number</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('contact_no')" class="mt-2" />
+                        </div>
+
+
+
+
+                        <div class="form-group">
+                            <textarea name="address">{{ $supplier->address }}</textarea>
+                            <label for="textarea" class="control-label">Address</label><i class="bar"></i>
+                            <x-input-error :messages="$errors->get('address')" class="mt-2" />
                         </div>
 
                         <div class="form-group flex gap-4">
@@ -61,19 +63,8 @@
                         </div>
 
 
-                        <div class="form-group">
-                            <textarea name="address">{{ $supplier->address }}</textarea>
-                            <label for="textarea" class="control-label">Address</label><i class="bar"></i>
-                            <x-input-error :messages="$errors->get('address')" class="mt-2" />
-                        </div>
+                        <button class="btn btn-info"><span>Save</span></button>
 
-                        <div class="button-container">
-
-                            <a class=" btn btn-info" href="{{ route('suppliers.index') }}"><span>Back</span></a>
-
-                            <button class="btn btn-primary"><span>Submit</span></button>
-
-                        </div>
 
                     </form>
                 </div>

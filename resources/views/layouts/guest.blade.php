@@ -33,19 +33,22 @@
 
 
     <body class="min-vh-100 d-flex justify-content-center align-items-center ">
+
+
+
         <div class="container ">
             <div class="row p-2 d-flex justify-content-center align-items-center ">
                 <!-- Left Column - Image and Title -->
                 <div class="col-md-5">
 
-                    <h1 class="fw-bold fs-3">Sign In To Start Your Session</h1>
+                    <h1 class="fw-bold fs-3 text-info">Sign In To Start Your Session</h1>
                     <p class="text-muted fs-4 mt-4">
                         Site Master
                     </p>
                 </div>
 
                 <div class="col-md-7">
-                        {{ $slot }}
+                    {{ $slot }}
                 </div>
             </div>
         </div>
@@ -67,6 +70,31 @@
     <script src="{{ asset('assets/js/settings.js') }}"></script>
     <script src="{{ asset('assets/js/hoverable-collapse.js') }}"></script>
     <script src="{{ asset('assets/js/todolist.js') }}"></script>
+
+
+    <script>
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const passwordIcon = document.getElementById('password-icon');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+
+                passwordIcon.classList.remove('fa-eye-slash');
+                passwordIcon.classList.remove('text-info')
+                passwordIcon.classList.add('fa-eye');
+                passwordIcon.classList.add('text-danger')
+
+
+            } else {
+                passwordInput.type = 'password';
+                passwordIcon.classList.remove('fa-eye');
+                passwordIcon.classList.remove('text-danger')
+                passwordIcon.classList.add('fa-eye-slash');
+                passwordIcon.classList.add('text-info')
+            }
+        }
+    </script>
     <!-- endinject -->
 </body>
 

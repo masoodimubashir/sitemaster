@@ -29,4 +29,14 @@ class DailyExpenses extends Model
     {
         return $this->belongsTo(Phase::class);
     }
+
+    /**
+     * Get the supplier that owns the DailyExpenses
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
+    }
 }

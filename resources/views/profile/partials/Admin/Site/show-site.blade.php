@@ -1,79 +1,54 @@
 <x-app-layout>
 
+    @if (session('status') === 'update')
+        <x-success-message message="Your Record has been updated" />
+    @endif
 
+    @if (session('status') === 'delete')
+        <x-success-message message="Your Record has been deleted" />
+    @endif
 
-    <!-- Add this custom CSS to your stylesheet -->
-    <style>
-        .phase-header {
-            background: linear-gradient(45deg, #2196F3, #1976D2);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-        }
-
-        .stats-card {
-            border: none;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
-        }
-
-        .stats-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .custom-tab {
-            border: none !important;
-            margin-right: 10px;
-            border-radius: 20px !important;
-            padding: 10px 20px !important;
-            font-weight: 500;
-        }
-
-        .custom-tab.active {
-            background: linear-gradient(45deg, #2196F3, #1976D2) !important;
-            color: white !important;
-        }
-
-        .progress {
-            height: 10px;
-            border-radius: 5px;
-        }
-
-        .status-badge {
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-weight: 500;
-        }
-
-        .table-custom th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-
-        .card-title-custom {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #1976D2;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .quick-stats {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-    </style>
-
-
-
+    <div id="messageContainer"> </div>
 
     <style>
-        /* Basic reset and styling */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 9999999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
 
+        .modal-content {
+            position: relative;
+            margin: 15% auto;
+            background-color: white;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .modal img {
+            width: 100%;
+            height: 400px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
 
         .d {
             position: relative;
@@ -118,15 +93,70 @@
         #messageContainer {
             position: fixed;
             bottom: 5%;
-            right: 45%;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 99999;
+        }
+
+
+        .phase-header {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+
+        .stats-card {
+            border: none;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+
+
+        .custom-tab.active {
+            background: linear-gradient(45deg, #2196F3, #1976D2) !important;
+            color: white !important;
+        }
+
+        .progress {
+            height: 10px;
+            border-radius: 5px;
+        }
+
+        .status-badge {
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .table-custom th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .card-title-custom {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1976D2;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .quick-stats {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
         }
     </style>
 
-
-
-
-
+    <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['admin/sites', 'admin/sites/' . base64_encode($site->id)]" />
 
     {{-- Action Buttons Section --}}
     <div class="row mb-4">
@@ -160,8 +190,6 @@
             </div>
         </div>
     </div>
-
-
 
     {{-- Stats Cards Section --}}
     <div class="row g-4">
@@ -232,17 +260,14 @@
                             <h5 class="mb-0">{{ $site->service_charge }}%</h5>
                         </div>
                     </div>
-                    @php
-                        $service_charge_total_amount =
-                            ($site->service_charge / 100) * $grand_total_amount + $grand_total_amount;
-                    @endphp
+
                     <div class="d-flex align-items-center">
                         <div class=" bg-opacity-10 ">
                             <i class="fas fa-money-bill text-info fs-3 p-2"></i>
                         </div>
                         <div>
                             <h6 class="text-muted mb-1">Debit</h6>
-                            <h5 class="mb-0">{{ Number::currency($service_charge_total_amount, 'INR') }}</h5>
+                            <h5 class="mb-0">{{ Number::currency($grand_total_amount, 'INR') }}</h5>
                         </div>
                     </div>
                 </div>
@@ -252,9 +277,6 @@
         <div class="col-12 col-md-6 col-xl-3">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    @php
-                        $balance = $service_charge_total_amount - $totalPaymentSuppliersAmount;
-                    @endphp
                     <div class="d-flex align-items-center mb-3">
                         <div class=" bg-{{ $balance >= 0 ? '' : '' }} fs-3 p-2">
                             <i class="fas fa-balance-scale text-{{ $balance >= 0 ? 'info' : 'danger' }}"></i>
@@ -280,33 +302,29 @@
         </div>
     </div>
 
-
-
-
-    <div id="messageContainer"> </div>
-
-
     @if ($site)
 
         @if ($site->phases->count() > 0)
 
             <div class="card-body mt-3">
+
                 <ul class="nav nav-pills mb-4">
+
                     @foreach ($site->phases as $phase_key => $phase)
                         <li class="nav-item">
 
-                            <a class="nav-link custom-tab {{ $phase_key === 0 ? 'active' : '' }}"
-                                href="#{{ $phase->id }}" data-bs-toggle="tab">
-                                {{ $phase->phase_name }}</a>
+                            <a class="nav-link  {{ $phase_key === 0 ? 'active' : '' }}" href="#{{ $phase->id }}"
+                                data-bs-toggle="tab">
+                                {{ $phase->phase_name }}
+                            </a>
+
                         </li>
                     @endforeach
 
                 </ul>
             </div>
 
-
-
-            <div class="tab-content">
+            <div class="tab-content border-0 p-0">
                 @foreach ($site->phases as $phase_key => $phase)
                     <div class="tab-pane fade {{ $phase_key === 0 ? 'show active' : '' }}" id="{{ $phase->id }}">
 
@@ -394,24 +412,24 @@
                                                     </tr>
                                                     <tr>
                                                         <td>
-                                                            Raw Materials
+                                                            Materials
+
                                                         </td>
                                                         <td>
                                                             {{ $phase->construction_total_amount }}
+
                                                         </td>
                                                         <td>
                                                             ....
-                                                            {{-- {{ ($site->service_charge / 100) * $phase->construction_total_amount }} --}}
                                                         </td>
                                                         <td>
-
-                                                            {{ ($site->service_charge / 100) * $phase->construction_total_amount + $phase->construction_total_amount }}
+                                                            {{ $phase->construction_total_service_charge_amount }}
                                                         </td>
                                                     </tr>
 
                                                     <tr>
                                                         <td>
-                                                            Square Footage
+                                                            Square Footage Bills
                                                         </td>
 
                                                         <td>
@@ -420,12 +438,10 @@
 
                                                         <td>
                                                             ....
-                                                            {{-- {{ ($site->service_charge / 100) * $phase->square_footage_total_amount }} --}}
                                                         </td>
 
                                                         <td>
-
-                                                            {{ ($site->service_charge / 100) * $phase->square_footage_total_amount + $phase->square_footage_total_amount }}
+                                                            {{ $phase->sqft_total_service_charge_amount }}
                                                         </td>
                                                     </tr>
 
@@ -441,12 +457,11 @@
                                                         <td>
                                                             ....
 
-                                                            {{-- {{ ($site->service_charge / 100) * $phase->daily_expenses_total_amount }} --}}
                                                         </td>
 
                                                         <td>
+                                                            {{ $phase->daily_expense_total_service_charge_amount }}
 
-                                                            {{ $phase->daily_expenses_total_amount }}
                                                         </td>
 
                                                     </tr>
@@ -463,12 +478,11 @@
 
                                                         <td>
                                                             ....
-                                                            {{-- {{ ($site->service_charge / 100) * $phase->daily_wagers_total_amount }} --}}
                                                         </td>
 
                                                         <td>
 
-                                                            {{ ($site->service_charge / 100) * $phase->daily_wagers_total_amount + $phase->daily_wagers_total_amount }}
+                                                            {{-- {{  }} --}}
                                                         </td>
                                                     </tr>
 
@@ -477,39 +491,16 @@
                                                         <td>Sub Total</td>
 
                                                         <td>
-                                                            {{ Number::currency(
-                                                                $phase->construction_total_amount +
-                                                                    $phase->square_footage_total_amount +
-                                                                    $phase->daily_expenses_total_amount +
-                                                                    $phase->daily_wagers_total_amount,
-                                                                'INR',
-                                                            ) }}
+                                                            {{ $phase->phase_total_amount }}
 
                                                         </td>
 
                                                         <td>
-                                                            {{ Number::currency(
-                                                                ($site->service_charge / 100) * $phase->construction_total_amount +
-                                                                    ($site->service_charge / 100) * $phase->square_footage_total_amount +
-                                                                    ($site->service_charge / 100) * $phase->daily_expenses_total_amount +
-                                                                    ($site->service_charge / 100) * $phase->daily_wagers_total_amount,
-                                                                'INR',
-                                                            ) }}
 
+                                                            {{ $phase->phase_total_service_charge_amount }}
                                                         </td>
                                                         <td>
-                                                            {{ Number::currency(
-                                                                ($site->service_charge / 100) * $phase->construction_total_amount +
-                                                                    $phase->construction_total_amount +
-                                                                    ($site->service_charge / 100) * $phase->square_footage_total_amount +
-                                                                    $phase->square_footage_total_amount +
-                                                                    ($site->service_charge / 100) * $phase->daily_expenses_total_amount +
-                                                                    $phase->daily_expenses_total_amount +
-                                                                    ($site->service_charge / 100) * $phase->daily_wagers_total_amount +
-                                                                    $phase->daily_wagers_total_amount,
-                                                                'INR',
-                                                            ) }}
-
+                                                            {{ $phase->phase_total_with_service_charge_amount }}
                                                         </td>
                                                     </tr>
 
@@ -541,7 +532,7 @@
                                                         <th> Item Name </th>
                                                         <th> Price </th>
                                                         <th>
-                                                            Edit
+                                                            Actions
                                                         </th>
                                                     </tr>
                                                 </thead>
@@ -552,23 +543,20 @@
                                                         @foreach ($phase->constructionMaterialBillings as $construction_material_billing)
                                                             <tr>
 
-
-
-
                                                                 <td>
                                                                     {{ $construction_material_billing->created_at->format('d-M-Y') }}
                                                                 </td>
 
                                                                 <td>
-                                                                    <img src="{{ asset($construction_material_billing->item_image_path) }}"alt=""
-                                                                        class="w-20 h-20 rounded-full">
+                                                                    <img data-full="{{ asset($construction_material_billing->item_image_path) }}"
+                                                                        src="{{ asset($construction_material_billing->item_image_path) }}"alt=""
+                                                                        class="w-20 h-20 rounded-full gallery-image">
                                                                 </td>
+
                                                                 <td>
                                                                     <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
-                                                                        href="{{ route('suppliers.show', [base64_encode($construction_material_billing->supplier->id)]) }}">
-                                                                        <mark>
-                                                                            {{ $construction_material_billing->supplier->name ?? '' }}
-                                                                        </mark>
+                                                                        href="{{ route('suppliers.show', $construction_material_billing->supplier->id) }}">
+                                                                        {{ $construction_material_billing->supplier->name ?? '' }}
                                                                     </a>
                                                                 </td>
 
@@ -607,14 +595,14 @@
                                                                             data-name="materials"
                                                                             data-id="{{ $construction_material_billing->id }}"
                                                                             data-verified="0">
-                                                                            <i class="fa-solid fa-x"></i>
+                                                                            Verified
                                                                         </a>
                                                                     @else
                                                                         <a href="#" class="verify-link"
                                                                             data-name="materials"
                                                                             data-id="{{ $construction_material_billing->id }}"
                                                                             data-verified="1">
-                                                                            <i class="fa-solid fa-check"></i>
+                                                                            Verify
                                                                         </a>
                                                                     @endif
 
@@ -628,13 +616,14 @@
                                                                 <tr class="">
                                                                     <td colspan="4"
                                                                         class="text-right font-bold bg-info text-white fw-bold">
-                                                                        Total Cost + Cost:</td>
+                                                                        Cost + Service Charge:</td>
 
                                                                     <td colspan="2"
                                                                         class="font-bold bg-info text-white fw-bold">
-                                                                        {{ $site->service_charge }}%
-                                                                        +
+
                                                                         {{ $phase->construction_total_amount }}
+                                                                        +
+                                                                        {{ ($site->service_charge / 100) * $phase->construction_total_amount }}
                                                                         =
                                                                         {{ ($site->service_charge / 100) * $phase->construction_total_amount + $phase->construction_total_amount }}
                                                                     </td>
@@ -662,7 +651,7 @@
                                     <div class="card-body">
                                         <h3 class="card-title-custom mb-4">
                                             <i class="fas fa-hard-hat text-info"></i>
-                                            Labor Bills
+                                            Square Footage Biils
                                         </h3>
                                         <div class="table-responsive">
                                             <table class="table table-hover table-custom">
@@ -683,7 +672,7 @@
                                                         </th>
 
                                                         <th>
-                                                            Edit
+                                                            Actions
                                                         </th>
 
 
@@ -704,15 +693,20 @@
                                                                 </td>
 
                                                                 <td>
-                                                                    <img src="{{ asset($sqft->image_path) }}"alt=""
-                                                                        class="w-20 h-20 rounded-full">
+                                                                    <img data-full="{{ asset($sqft->image_path) }}"
+                                                                        src="{{ asset($sqft->image_path) }}"alt=""
+                                                                        class="w-20 h-20 rounded-full gallery-image">
                                                                 </td>
                                                                 <td>
                                                                     {{ ucwords($sqft->wager_name) }}
                                                                 </td>
 
                                                                 <td>
-                                                                    {{ ucwords($sqft->supplier->name) }}
+                                                                    <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
+                                                                        href="{{ route('suppliers.show', $sqft->supplier->id) }}">
+                                                                        {{ ucwords($sqft->supplier->name) }}
+
+                                                                    </a>
 
                                                                 </td>
 
@@ -750,14 +744,14 @@
                                                                             data-name="sqft"
                                                                             data-id="{{ $sqft->id }}"
                                                                             data-verified="0">
-                                                                            <i class="fa-solid fa-x"></i>
+                                                                            Verified
                                                                         </a>
                                                                     @else
                                                                         <a href="#" class="verify-link"
                                                                             data-name="sqft"
                                                                             data-id="{{ $sqft->id }}"
                                                                             data-verified="1">
-                                                                            <i class="fa-solid fa-check"></i>
+                                                                            Verify
                                                                         </a>
                                                                     @endif
 
@@ -768,14 +762,18 @@
                                                                     <td colspan="7"
                                                                         class="text-right font-bold bg-info text-white fw-bold">
 
-                                                                        Total Amount + Cost
+                                                                        Cost + Service Charge
                                                                     </td>
 
                                                                     <td colspan="2"
                                                                         class="font-bold bg-info text-white fw-bold">
-                                                                        {{ $site->service_charge }}%
-                                                                        +
+
                                                                         {{ $phase->square_footage_total_amount }}
+
+                                                                        +
+
+                                                                        {{ ($site->service_charge / 100) * $phase->square_footage_total_amount }}
+
                                                                         =
                                                                         {{ ($site->service_charge / 100) * $phase->square_footage_total_amount + $phase->square_footage_total_amount }}
                                                                     </td>
@@ -790,51 +788,8 @@
                                                         </tr>
                                                     @endif
 
-
-
                                                 </tbody>
-                                                {{-- <thead>
-                                                    <tr>
-                                                        <th>Role</th>
-                                                        <th>Count</th>
-                                                        <th>Hours</th>
-                                                        <th>Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>
-                                                            <div class="d-flex align-items-center">
-                                                                <i class="fas fa-user-hard-hat text-warning me-2"></i>
-                                                                Mason
-                                                            </div>
-                                                        </td>
-                                                        <td>5</td>
-                                                        <td>40</td>
-                                                        <td>
-                                                            <div class="progress">
-                                                                <div class="progress-bar bg-success"
-                                                                    style="width: 100%"></div>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>
-                                                            <div class="d-flex align-items-center">
-                                                                <i class="fas fa-user text-warning me-2"></i>
-                                                                Helper
-                                                            </div>
-                                                        </td>
-                                                        <td>3</td>
-                                                        <td>40</td>
-                                                        <td>
-                                                            <div class="progress">
-                                                                <div class="progress-bar bg-success"
-                                                                    style="width: 100%"></div>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                </tbody> --}}
+
                                             </table>
                                         </div>
                                     </div>
@@ -862,7 +817,7 @@
                                                         <th> Item Name </th>
                                                         <th> Total Price </th>
                                                         <th>
-                                                            Edit
+                                                            Actions
                                                         </th>
                                                     </tr>
                                                 </thead>
@@ -878,45 +833,47 @@
                                                             <tr>
 
 
-                                                                <td>{{ $daily_expenses->created_at->format('d-M-Y') }}
+                                                                <td>
+                                                                    {{ $daily_expenses->created_at->format('d-M-Y') }}
                                                                 </td>
 
                                                                 <td>
-                                                                    <img src="{{ asset($daily_expenses->bill_photo) }}"
-                                                                        alt="">
+                                                                    <img data-full="{{ asset($daily_expenses->bill_photo) }}"
+                                                                        src="{{ asset($daily_expenses->bill_photo) }}"alt=""
+                                                                        class="w-20 h-20 rounded-full gallery-image">
                                                                 </td>
 
                                                                 <td>
                                                                     {{ ucwords($daily_expenses->item_name) }}
                                                                 </td>
 
+
+
                                                                 <td>
                                                                     {{ $daily_expenses->price }}
                                                                 </td>
 
                                                                 <td>
+
                                                                     <a
                                                                         href="{{ route('daily-expenses.edit', [base64_encode($daily_expenses->id)]) }}">
                                                                         <i
                                                                             class="fa-regular fa-pen-to-square text-xl bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
 
-
-
-
                                                                     @if ($daily_expenses->verified_by_admin)
                                                                         <a href="#" class="verify-link"
                                                                             data-name="expenses"
                                                                             data-id="{{ $daily_expenses->id }}"
                                                                             data-verified="0">
-                                                                            <i class="fa-solid fa-x"></i>
+                                                                            Verified
                                                                         </a>
                                                                     @else
                                                                         <a href="#" class="verify-link"
                                                                             data-name="expenses"
                                                                             data-id="{{ $daily_expenses->id }}"
                                                                             data-verified="1">
-                                                                            <i class="fa-solid fa-check"></i>
+                                                                            Verify
                                                                         </a>
                                                                     @endif
                                                                 </td>
@@ -926,12 +883,13 @@
                                                                 <tr>
                                                                     <td colspan="3"
                                                                         class="text-right font-bold bg-info text-white   fw-bold">
-                                                                        Total Amount:</td>
+                                                                        Cost + Service Charge:</td>
                                                                     <td colspan="2"
                                                                         class="font-bold bg-info text-white  fw-bold">
-                                                                        {{ $site->service_charge }}%
-                                                                        +
+
                                                                         {{ $phase->daily_expenses_total_amount }}
+                                                                        +
+                                                                        {{ ($site->service_charge / 100) * $phase->daily_expenses_total_amount }}
                                                                         =
                                                                         {{ ($site->service_charge / 100) * $phase->daily_expenses_total_amount + $phase->daily_expenses_total_amount }}
                                                                     </td>
@@ -946,44 +904,16 @@
                                                         </tr>
                                                     @endif
 
-
-
                                                 </tbody>
-                                                {{-- <thead>
-                                                    <tr>
-                                                        <th>Check</th>
-                                                        <th>Result</th>
-                                                        <th>Date</th>
-                                                        <th>Inspector</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td>Concrete Strength</td>
-                                                        <td><span class="badge bg-success status-badge">Pass</span></td>
-                                                        <td>2024-02-15</td>
-                                                        <td>
-                                                            <img src="https://via.placeholder.com/30"
-                                                                class="rounded-circle me-2" alt="Inspector">
-                                                            John D.
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Steel Quality</td>
-                                                        <td><span class="badge bg-warning status-badge">Pending</span>
-                                                        </td>
-                                                        <td>2024-02-16</td>
-                                                        <td>
-                                                            <img src="https://via.placeholder.com/30"
-                                                                class="rounded-circle me-2" alt="Inspector">
-                                                            Sarah M.
-                                                        </td>
-                                                    </tr>
-                                                </tbody> --}}
+
                                             </table>
+
                                         </div>
+
                                     </div>
+
                                 </div>
+
                             </div>
 
                             <!-- Progress Table -->
@@ -1003,9 +933,10 @@
                                                         <th>Date</th>
 
                                                         <th> Wager Name </th>
+                                                        <th>Price Per Wager</th>
                                                         <th> Price Per Day </th>
                                                         <th>
-                                                            Edit
+                                                            Actions
                                                         </th>
 
 
@@ -1033,6 +964,10 @@
                                                                 <td>
                                                                     {{ $daily_wager->price_per_day }}
                                                                 </td>
+
+                                                                <td>
+                                                                    {{ $daily_wager->wager_total }}
+                                                                </td>
                                                                 <td>
                                                                     <a
                                                                         href="{{ route('dailywager.edit', [base64_encode($daily_wager->id)]) }}">
@@ -1046,14 +981,14 @@
                                                                             data-name="wager"
                                                                             data-id="{{ $daily_wager->id }}"
                                                                             data-verified="0">
-                                                                            <i class="fa-solid fa-x"></i>
+                                                                            Verified
                                                                         </a>
                                                                     @else
                                                                         <a href="#" class="verify-link"
                                                                             data-name="wager"
                                                                             data-id="{{ $daily_wager->id }}"
                                                                             data-verified="1">
-                                                                            <i class="fa-solid fa-check"></i>
+                                                                            Verify
                                                                         </a>
                                                                     @endif
 
@@ -1063,12 +998,12 @@
                                                             </tr>
                                                             @if ($loop->last)
                                                                 <tr class="">
-                                                                    <td colspan="2"
+                                                                    <td colspan="3"
                                                                         class="text-right font-bold bg-info text-white fw-bold">
-                                                                        Total Amount + Cost</td>
+                                                                        Cost + Service Charge</td>
                                                                     <td colspan="2"
                                                                         class=" font-bold bg-info text-white fw-bold">
-                                                                        {{ $site->service_charge }}%
+                                                                        {{ ($site->service_charge / 100) * $phase->daily_wagers_total_amount }}
                                                                         +
                                                                         {{ $phase->daily_wagers_total_amount }}
                                                                         =
@@ -1123,7 +1058,7 @@
                                                             Supplier
                                                         </th>
                                                         <th>
-                                                            Edit
+                                                            Actions
                                                         </th>
                                                     </tr>
                                                 </thead>
@@ -1149,7 +1084,10 @@
                                                                 </td>
 
                                                                 <td>
-                                                                    {{ ucwords($wager_attendance->dailyWager->supplier->name ?? '') }}
+
+                                                                    <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
+                                                                        href="{{ route('suppliers.show', $wager_attendance->dailyWager->supplier->id) }}">
+                                                                        {{ ucwords($wager_attendance->dailyWager->supplier->name ?? '') }}
                                                                 </td>
 
 
@@ -1196,40 +1134,6 @@
 
 
 
-
-                                                            <td>
-                                                                <!-- No Of Persons -->
-                                                                <div style="">
-                                                                    <input id="no_of_persons" type="number"
-                                                                        name="no_of_persons"
-                                                                        placeholder="No Of Persons"
-                                                                        style="width: 100%; border: 0; outline: 1px solid #dee2e6; border-radius: 5px;" />
-
-                                                                    @error('no_of_persons')
-                                                                        <x-input-error :messages="$message" class="mt-2" />
-                                                                    @enderror
-                                                                </div>
-
-                                                            </td>
-
-                                                            <td>
-                                                                <!-- Wager -->
-                                                                <select class="form-select form-select-sm"
-                                                                    id="daily_wager_id" name="daily_wager_id">
-                                                                    <option value="">Select Wager
-                                                                    </option>
-
-                                                                    @foreach ($wagers as $wager)
-                                                                        <option value="{{ $wager->id }}">
-                                                                            {{ $wager->wager_name }}
-                                                                        </option>
-                                                                    @endforeach
-                                                                </select>
-                                                                @error('daily_wager_id')
-                                                                    <x-input-error :messages="$message" class="mt-2" />
-                                                                @enderror
-                                                            </td>
-
                                                             <td>
 
                                                                 <div>
@@ -1251,6 +1155,39 @@
                                                                 </div>
 
                                                             </td>
+
+                                                            <td>
+                                                                <!-- No Of Persons -->
+                                                                <div style="">
+                                                                    <input id="no_of_persons" type="number"
+                                                                        name="no_of_persons"
+                                                                        placeholder="No Of Persons"
+                                                                        style="width: 100%; border: 0; outline: 1px solid #dee2e6; border-radius: 5px;" />
+
+                                                                    @error('no_of_persons')
+                                                                        <x-input-error :messages="$message" class="mt-2" />
+                                                                    @enderror
+                                                                </div>
+
+                                                            </td>
+
+                                                            <td>
+                                                                <!-- Wager -->
+                                                                <select class="form-select text-black form-select-sm"
+                                                                    id="daily_wager_id" name="daily_wager_id">
+                                                                    <option value="">Select Wager</option>
+
+                                                                    @foreach ($wagers as $wager)
+                                                                        <option value="{{ $wager->id }}">
+                                                                            {{ $wager->wager_name }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                                @error('daily_wager_id')
+                                                                    <x-input-error :messages="$message" class="mt-2" />
+                                                                @enderror
+                                                            </td>
+
 
                                                             <td>
                                                                 <button class="btn  btn-info btn-sm mt-2 text-white">
@@ -1327,20 +1264,19 @@
 
                                             <!-- Amount -->
                                             <div class="form-group">
-                                                <input id="amount" type="number" name="amount"
-                                                    placeholder="Material Price" />
-
+                                                <input type="number" name="amount" id="amount" />
+                                                <label for="amount" class="control-label">Material Price</label>
+                                                <i class="bar"></i>
                                                 @error('amount')
                                                     <x-input-error :messages="$message" class="mt-2" />
                                                 @enderror
                                             </div>
 
+
                                             <div class="row">
                                                 <!-- Item Name -->
                                                 <div class="col-md-6">
-
-
-                                                    <select class="form-select form-select-sm"
+                                                    <select class="form-select text-black form-select-sm"
                                                         id="exampleFormControlSelect3" name="item_name">
                                                         <option value="">Select Item
                                                         </option>
@@ -1357,7 +1293,7 @@
 
                                                 <!-- Supplier -->
                                                 <div class="col-md-6">
-                                                    <select class="form-select form-select-sm"
+                                                    <select class="form-select text-black form-select-sm"
                                                         id="exampleFormControlSelect3" name="supplier_id">
                                                         <option value="">Select Supplier
                                                         </option>
@@ -1453,7 +1389,7 @@
 
                                                 <div class="col-md-6">
                                                     <!-- Type -->
-                                                    <select class="form-select form-select-sm"
+                                                    <select class="form-select text-black form-select-sm"
                                                         id="exampleFormControlSelect3" name="type">
                                                         <option value="">Select Type</option>
                                                         <option value="per_sqr_ft">Per Square Feet</option>
@@ -1468,8 +1404,8 @@
 
                                                 <div class="col-md-6">
                                                     <!-- Select Supplier -->
-                                                    <select class="form-select form-select-sm" id="supplier_id"
-                                                        name="supplier_id">
+                                                    <select class="form-select text-black form-select-sm"
+                                                        id="supplier_id" name="supplier_id">
                                                         <option value="">Select Supplier</option>
                                                         @foreach ($workforce_suppliers as $supplier)
                                                             <option value="{{ $supplier->id }}">
@@ -1551,8 +1487,8 @@
                                             <div class="row">
                                                 <!-- Select Supplier -->
                                                 <div class="">
-                                                    <select class="form-select form-select-sm" id="supplier_id"
-                                                        name="supplier_id">
+                                                    <select class="form-select text-black form-select-sm"
+                                                        id="supplier_id" name="supplier_id">
                                                         <option value="">Select Supplier</option>
                                                         @foreach ($workforce_suppliers as $supplier)
                                                             <option value="{{ $supplier->id }}">
@@ -1723,13 +1659,16 @@
                 <div class="modal-content">
                     <div class="modal-body">
 
-                        <form id="payment_supplierForm" class="forms-sample material-form" enctype="multipart/form-data">
+                        <form id="payment_supplierForm" class="forms-sample material-form"
+                            enctype="multipart/form-data">
 
                             @csrf
 
+
                             {{-- Phase Name --}}
+
                             <div class="form-group">
-                                <input type="number" min="0" name="amount" step="0.01"/>
+                                <input type="number" min="0" name="amount" step="0.01" />
                                 <label for="input" class="control-label">Amount</label><i class="bar"></i>
                                 <x-input-error :messages="$errors->get('amount')" class="mt-2" />
                             </div>
@@ -1742,7 +1681,8 @@
 
                             {{-- Supplier --}}
 
-                            <select class="form-select form-select-sm" id="supplier_id" name="supplier_id">
+                            <select class="form-select text-black form-select-sm" id="supplier_id"
+                                name="supplier_id">
                                 <option value="">Select Supplier</option>
                                 @foreach ($suppliers as $supplier)
                                     <option value="{{ $supplier->id }}">
@@ -1778,6 +1718,13 @@
     @endif
 
 
+
+    <div id="imageModal" class="modal">
+        <div class="modal-content p-2">
+            <span class="close">&times;</span>
+            <img id="modalImage" src="" alt="Full size image">
+        </div>
+    </div>
 
     <script>
         $(document).on('click', '.verify-link', function(e) {
@@ -1828,10 +1775,10 @@
 
                     // Update the UI based on the new verification status
                     if (verified == 1) {
-                        link.html('<i class="fa-solid fa-x"></i>');
+                        link.html('Verified');
                         link.data('verified', 0);
                     } else {
-                        link.html('<i class="fa-solid fa-check"></i>');
+                        link.html('Verify');
                         link.data('verified', 1);
                     }
 
@@ -1878,10 +1825,6 @@
 
         $(document).ready(function() {
 
-
-
-
-
             $('form[id="phaseForm"]').on('submit', function(e) {
                 e.preventDefault();
 
@@ -1912,7 +1855,7 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
-                        }, 1000);
+                        }, 3000);
                     },
                     error: function(response) {
 
@@ -1935,7 +1878,7 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
-                        }, 1000);
+                        }, 3000);
                     }
                 });
             });
@@ -1975,7 +1918,7 @@
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
-                        }, 1000);
+                        }, 3000);
                     },
                     error: function(response) {
 
@@ -1997,7 +1940,7 @@
                         // Auto-hide error message after 5 seconds
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-                        }, 1000);
+                        }, 3000);
                     }
                 });
             });
@@ -2035,7 +1978,7 @@
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
-                        }, 1000);
+                        }, 3000);
                     },
                     error: function(response) {
 
@@ -2058,7 +2001,7 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
-                        }, 1000);
+                        }, 3000);
                     }
                 });
             });
@@ -2096,7 +2039,7 @@
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
-                        }, 1000);
+                        }, 3000);
                     },
                     error: function(response) {
 
@@ -2119,7 +2062,7 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
-                        }, 1000);
+                        }, 3000);
                     }
                 });
             });
@@ -2159,7 +2102,7 @@
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
-                        }, 2000);
+                        }, 3000);
                     },
                     error: function(response) {
                         console.log(response);
@@ -2184,7 +2127,7 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
-                        }, 2000);
+                        }, 3000);
                     }
                 });
             });
@@ -2224,7 +2167,7 @@
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
-                        }, 1000);
+                        }, 3000);
                     },
                     error: function(response) {
                         console.log(response);
@@ -2249,13 +2192,10 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
-                        }, 2000);
+                        }, 3000);
                     }
                 });
             });
-
-
-
 
             $('form[id="payment_supplierForm"]').on('submit', function(e) {
                 e.preventDefault();
@@ -2292,8 +2232,9 @@
                         // Auto-hide success message after 3 seconds
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-                            // location.reload();
-                        }, 1000);
+                            location.reload();
+
+                        }, 3000);
                     },
                     error: function(response) {
 
@@ -2316,7 +2257,7 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
-                        }, 1000);
+                        }, 3000);
                     }
                 });
             });
@@ -2324,6 +2265,37 @@
         });
     </script>
 
+
+    <script>
+        // Get modal element
+        var modal = document.getElementById("imageModal");
+        var modalImg = document.getElementById("modalImage");
+        var closeBtn = document.getElementsByClassName("close")[0];
+
+        // Get all gallery images
+        var galleryImages = document.querySelectorAll(".gallery-image");
+
+        // Add event listener to each image
+        galleryImages.forEach(function(image) {
+            image.addEventListener("click", function() {
+                var fullImagePath = this.getAttribute("data-full");
+                modalImg.src = fullImagePath;
+                modal.style.display = "block"; // Show the modal
+            });
+        });
+
+        // When the user clicks on <span> (close button), close the modal
+        closeBtn.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        // Close the modal when clicking anywhere outside of the modal
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
 
 
     {{-- <form method="POST" action="/upload-photo" enctype="multipart/form-data">

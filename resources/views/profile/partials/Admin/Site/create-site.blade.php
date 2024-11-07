@@ -1,17 +1,16 @@
 <x-app-layout>
 
 
+    <x-breadcrumb :names="['Sites', 'Create Site']" :urls="['admin/sites', 'admin/sites/create']" />
+
+
     <div class="row">
 
-
         <div class="col-md-12 grid-margin stretch-card">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="display-4 text-info">Create Site</h4>
 
-                    @if (session('message'))
-                        {{ session('message') }}
-                    @endif
+            <div class="card">
+
+                <div class="card-body">
 
 
                     <form method="POST" action="{{ route('sites.store') }}" class="forms-sample material-form">
@@ -36,18 +35,6 @@
                             <label for="input" class="control-label">Location</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('location')" class="mt-2" />
                         </div>
-
-                        {{-- <div class="form-group">
-                            <input type="text" name="site_owner_name" />
-                            <label for="input" class="control-label">Site Owner Name</label><i class="bar"></i>
-                            <x-input-error :messages="$errors->get('site_owner_name')" class="mt-2" />
-                        </div> --}}
-
-                        {{-- <div class="form-group">
-                            <input type="text" name="contact_no" />
-                            <label for="input" class="control-label">Contact No</label><i class="bar"></i>
-                            <x-input-error :messages="$errors->get('contact_no')" class="mt-2" />
-                        </div> --}}
 
                         <div class="row">
                             <div class="col-md-6">
@@ -76,15 +63,7 @@
 
                         </div>
 
-                        <div class="mt-4">
-
-                            <a class=" btn btn-success" href="{{ route('sites.index') }}">Back</a>
-
-                            <button class=" btn btn-primary"><span>Submit</span></button>
-
-                        </div>
-
-
+                        <button class=" btn btn-info mt-3"><span>Save</span></button>
 
                     </form>
                 </div>

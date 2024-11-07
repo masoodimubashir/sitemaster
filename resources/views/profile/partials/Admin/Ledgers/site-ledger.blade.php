@@ -1,6 +1,13 @@
 <x-app-layout>
 
 
+     <x-breadcrumb :names="['Dashboard', 'Sites',  ' Ledger']" :urls="[
+        'admin/dashboard',
+        'admin/sites',
+        'admin/site/ledger/' . $id,
+
+    ]" />
+
     <div class="row">
         <div class="col-sm-12">
 
@@ -47,7 +54,7 @@
                                     </h4>
                                 </div>
                             </td>
-                         
+
 
                             <td colspan="4" style="background: #F4F5F7; border:none">
                                 <div class="row">
@@ -74,33 +81,6 @@
                                             <option value="lifetime"
                                                 {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
                                                 All Data</option>
-                                        </select>
-
-                                    </form>
-
-                                    <form class="col" action=" url('admin/ledger/report') }}"
-                                        method="GET" id="ledger-report">
-                                        <select class="form-select form-select-sm bg-white" name="date_filter"
-                                            id="date_filter"
-                                            onchange="document.getElementById('ledger-report').submit();">
-                                            <option value="today"
-                                                {{ request('date_filter') === 'today' ? 'selected' : '' }}>
-                                                Generate Today's Report</option>
-                                            <option value="yesterday"
-                                                {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>
-                                                Generate Yesterday's Report</option>
-                                            <option value="last_week"
-                                                {{ request('date_filter') === 'last_week' ? 'selected' : '' }}>
-                                                Generate Last Week's Report</option>
-                                            <option value="last_month"
-                                                {{ request('date_filter') === 'last_month' ? 'selected' : '' }}>
-                                                Generate Last Month's Report</option>
-                                            <option value="last_year"
-                                                {{ request('date_filter') === 'last_year' ? 'selected' : '' }}>
-                                                Generate Last Year's Report</option>
-                                            <option value="lifetime"
-                                                {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
-                                                Generate Full Report</option>
                                         </select>
 
                                     </form>

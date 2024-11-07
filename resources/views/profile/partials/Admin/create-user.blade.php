@@ -1,6 +1,7 @@
 <x-app-layout>
 
 
+    <x-breadcrumb :names="['Site Engineer', 'Create Engineer']" :urls="['admin/users', 'admin/users/create']" />
 
 
     <div class="row">
@@ -8,13 +9,8 @@
 
         <div class="col-md-12 grid-margin stretch-card">
             <div class="card">
+
                 <div class="card-body">
-
-                    
-
-                    <h4 class="text-3xl text-info">Create Site Engineer</h4>
-
-
                     <form method="POST" action="{{ route('admin.register-user') }}" class="forms-sample material-form">
 
                         @csrf
@@ -41,9 +37,7 @@
                         </div>
 
                         <div class="">
-                            <a class=" btn btn-info" href="{{ route('users.index') }}">Back</a>
-
-                            <button class=" btn btn-primary"><span>Create Site Engineer</span></button>
+                            <button class=" btn btn-info"><span>Create Engineer</span></button>
 
                         </div>
 

@@ -1,32 +1,29 @@
 <x-app-layout>
 
 
+    @if (session('status') === 'client')
+        <x-success-message message="Client Updated Successfully..." />
+    @endif
+
     <div class="row">
+
+        <x-breadcrumb :names="['Clients', 'Edit ' . $client->name]" :urls="['admin/clients', 'admin/clients/' . base64_encode($client->id) . '/edit']" />
 
 
         <div class="col-md-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
 
-                    <h4 class="text-3xl text-primary">Edit Client</h4>
-
-                    @if (session('message'))
-                        <p class="card-description">
-                            {{ session('message') }}
-
-                        </p>
-                    @endif
-
-
-
-                    <form method="POST" action="{{ route('clients.update', [$client->id]) }}" class="forms-sample material-form">
+                    <form method="POST" action="{{ route('clients.update', [$client->id]) }}"
+                        class="forms-sample material-form">
 
                         @csrf
                         @method('PUT')
 
                         <div class="form-group">
                             <input type="text" name="name" value="{{ $client->name }}" />
-                            <label for="input" class="control-label">Name (Site Owner Name)</label><i class="bar"></i>
+                            <label for="input" class="control-label">Name (Site Owner Name)</label><i
+                                class="bar"></i>
                             <x-input-error :messages="$errors->get('name')" class="mt-2" />
                         </div>
 
@@ -45,13 +42,7 @@
 
 
 
-                        <div>
-
-                            <a class=" btn btn-info" href="{{ route('clients.index') }}">Back</a>
-
-                            <button class=" btn btn-primary"><span>Submit</span></button>
-
-                        </div>
+                        <button class=" btn btn-info"><span>Save</span></button>
 
                     </form>
 

@@ -43,7 +43,7 @@ class SupplierController extends Controller
             'is_workforce_provider' => $request->provider_type === 'is_workforce_provider' ? 1 : 0
         ]);
 
-        return redirect()->route('suppliers.index')->with('message', 'supplier created');
+        return redirect()->route('suppliers.index')->with('status', 'supplier');
     }
 
     /**
@@ -88,7 +88,7 @@ class SupplierController extends Controller
         } else {
 
             $supplier->load([
-                'dailyWagers.phase.site',
+                'dailyWagers.phase.wagerAttendances',
                 'squareFootages.phase.site'
             ])
             ->loadSum('dailyWagers', 'price_per_day')
@@ -98,7 +98,8 @@ class SupplierController extends Controller
             $totalSquareFootagesPrice = 0;
 
             foreach ($supplier->dailyWagers as $dailyWager) {
-                $totalDailyWagersPrice += $dailyWager->price_per_day;
+                $expense = $dailyWager->phase->wagerAttendances->sum('no_of_persons') * $dailyWager->price_per_day ;
+                $totalDailyWagersPrice += $expense;
             }
 
             foreach ($supplier->squareFootages as $squareFootage) {
@@ -121,7 +122,7 @@ class SupplierController extends Controller
     public function edit(Supplier $supplier)
     {
         if (!$supplier) {
-            return redirect()->back()->with('error', 'supplier not found');
+            return redirect()->back()->with('status', 'supplier');
         }
 
         return view('profile.partials.Admin.Supplier.edit-supplier', compact('supplier'));
@@ -136,7 +137,7 @@ class SupplierController extends Controller
 
         $supplier->update($request->all());
 
-        return redirect()->route('suppliers.index')->with('message', 'supplier updated');
+        return redirect()->route('suppliers.index')->with('status', 'supplier');
     }
 
     /**

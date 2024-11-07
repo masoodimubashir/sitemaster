@@ -40,7 +40,7 @@ class DailyWagerController extends Controller
         if ($request->ajax()) {
             // Validation rules
             $validator = Validator::make($request->all(), [
-                'price_per_day' => 'required|integer',
+                'price_per_day' => 'required|numeric|max:9999999999',
                 'wager_name' => 'required|string|max:255',
                 'phase_id' => 'required|exists:phases,id',
                 'supplier_id' => 'required|exists:suppliers,id',
@@ -100,7 +100,7 @@ class DailyWagerController extends Controller
     {
 
         $request->validate([
-            'price_per_day' => 'required',
+            'price_per_day' => 'required|decimal:0,2|min:0|between:0,9999999999.99',
             'phase_id' => 'required|exists:phases,id',
             'supplier_id' => 'required|exists:suppliers,id',
             'wager_name' => 'required|string'
@@ -110,7 +110,7 @@ class DailyWagerController extends Controller
 
         $daily_wager->update($request->all());
 
-        return redirect()->back()->with('message', 'wager updated..');
+        return redirect()->route('sites.show', [base64_encode($daily_wager->phase->site->id)])->with('status', 'update');
     }
 
     /**

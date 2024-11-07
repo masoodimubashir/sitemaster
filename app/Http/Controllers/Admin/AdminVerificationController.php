@@ -16,6 +16,7 @@ class AdminVerificationController extends Controller
 
     public function verifyConstructionMaterials($id)
     {
+
         try {
 
             $material = ConstructionMaterialBilling::findOrFail($id);
@@ -38,10 +39,14 @@ class AdminVerificationController extends Controller
     {
 
         try {
+
+
+
+
             $bill = SquareFootageBill::find($id);
 
             $bill->update([
-                'is_verified' => !$bill->varified_by_admin,
+                'verified_by_admin' => !$bill->verified_by_admin,
             ]);
 
             // return response()->json([
@@ -59,6 +64,9 @@ class AdminVerificationController extends Controller
 
 
         try {
+
+
+
             $expense = DailyExpenses::find($id);
 
             $expense->update([
@@ -75,10 +83,13 @@ class AdminVerificationController extends Controller
     {
 
         try {
+
+
+
             $wager = DailyWager::find($id);
 
             $wager->update([
-                'is_verified' => $wager->is_verified ? false : true,
+                'verified_by_admin' => !$wager->verified_by_admin
             ]);
 
             // return response()->json([
@@ -94,10 +105,13 @@ class AdminVerificationController extends Controller
     public function verifyAttendance(string $id)
     {
         try {
+
+
+
             $attendance = WagerAttendance::find($id);
 
             $attendance->update([
-                'is_verified' => $attendance->is_verified ? false : true,
+                'verified_by_admin' => !$attendance->verified_by_admin
             ]);
             // return response()->json([
             //     'message' => 'Verification status updated successfully'

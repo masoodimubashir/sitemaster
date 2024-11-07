@@ -142,8 +142,15 @@ class SitePaymentController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-
-        return view("profile.partials.Admin.Ledgers.site-ledger", compact('payments', 'paginatedLedgers', 'total_paid', 'total_due', 'id', 'total_balance', ));
+        return view("profile.partials.Admin.Ledgers.site-ledger",
+        compact(
+            'payments',
+            'paginatedLedgers',
+            'total_paid',
+            'total_due',
+            'id',
+            'total_balance',
+        ));
     }
 
     private function filterLedgersByDate($ledgers, $dateFilter, $now)

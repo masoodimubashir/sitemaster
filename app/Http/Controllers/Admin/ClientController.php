@@ -43,7 +43,9 @@ class ClientController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'number' => 'required|digits:10|unique:' . Client::class,
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'password' => [
+                Password::min(6)->mixedCase()->required()
+            ],
         ]);
 
         Client::create([
@@ -52,7 +54,7 @@ class ClientController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('clients.index')->with('message', 'Client Created Successfully');
+        return redirect()->route('clients.index')->with('message', 'client');
     }
 
     /**
@@ -80,10 +82,10 @@ class ClientController extends Controller
      */
     public function update(Request $request, string $id)
     {
+
         $request->validate([
             'name' => 'required|string|min:5',
-            'password' => 'sometimes|confirmed',
-            Password::defaults(),
+            'password' => 'sometimes|min:6'
         ]);
 
         $client = Client::find($id);
@@ -99,7 +101,7 @@ class ClientController extends Controller
 
         $client->sites()->update(['site_name' => $request->name]);
 
-        return redirect()->back()->with('message', 'Client updated successfully');
+        return redirect()->back()->with('status', 'client');
     }
 
     /**

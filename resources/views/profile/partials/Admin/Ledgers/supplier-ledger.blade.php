@@ -47,32 +47,8 @@
                                                 </h4>
                                             </div>
                                         </td>
-                                        <td>
-                                            <div class="p-3 d-flex flex-column gap-2 text-info fw-bold">
-                                                <small>
-                                                    <b>
-                                                        Ongoing Sites
-                                                    </b>
-                                                </small>
-                                                <h4>
-                                                    {{ $is_ongoing_count }}
-                                                </h4>
 
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="p-3 d-flex flex-column gap-2 text-info fw-bold">
-                                                <small>
-                                                    <b>
-                                                        Closed Sites
-                                                    </b>
-                                                </small>
-                                                <h4>
-                                                    {{ $is_not_ongoing_count }}
-                                                </h4>
 
-                                            </div>
-                                        </td>
                                         <td colspan="4" style="background: #F4F5F7; border:none">
                                             <div class="row">
                                                 <form class="col" action="{{ url('admin/supplier/ledger/' . $id) }}"
@@ -103,7 +79,7 @@
                                                 </form>
 
 
-                                                <form class="col" action="{{ url('admin/ledger/report') }}"
+                                                {{-- <form class="col" action="{{ url('admin/ledger/report') }}"
                                                     method="GET" id="ledger-report">
                                                     <select class="form-select form-select-sm bg-white"
                                                         name="date_filter" id="date_filter"
@@ -128,7 +104,7 @@
                                                             Generate Full Report</option>
                                                     </select>
 
-                                                </form>
+                                                </form> --}}
 
                                             </div>
                                         </td>
@@ -168,7 +144,7 @@
                                     {{ $ledger['credit'] }}
                                 </td>
 
-                              
+
 
 
                             </tr>

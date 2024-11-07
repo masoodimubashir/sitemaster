@@ -12,6 +12,7 @@ use App\Models\SquareFootageBill;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 
 class PaymentsController extends Controller
 {
@@ -22,58 +23,63 @@ class PaymentsController extends Controller
     {
 
 
-        $is_ongoing_count = Site::where('is_on_going', 1)->count();
-        $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
+        // Base query for ongoing sites
         $ongoingSites = Site::where('is_on_going', 1)->pluck('id');
+        $is_ongoing_count = $ongoingSites->count();
+        $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
 
+        // Get date range parameters
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        $dateFilter = $request->date_filter;
 
-        // $payments = PaymentSupplier::with(['site', 'supplier'])->latest()->paginate(10);
-        // $raw_materials = ConstructionMaterialBilling::with(['phase.site', 'supplier'])->get();
-        // $sgft = SquareFootageBill::with(['phase.site', 'supplier'])->get();
-        // $expenses = DailyExpenses::with(['phase.site',])->get();
-        // $wagers = DailyWager::with(['phase.site', 'supplier', 'phase.wagerAttendances'])->get();
+        // Get the date range based on filter or custom dates
+        $dateRange = $this->getDateRange($dateFilter, $startDate, $endDate);
 
-        // dd($ongoingSites);
-
-        // Fetch payments, raw materials, SGFT, expenses, and wages only for ongoing sites
-        // Fetch payments related to ongoing sites
+        // Build queries with date filtering
         $payments = PaymentSupplier::with(['site', 'supplier'])
         ->whereIn('site_id', $ongoingSites)
-        ->latest()
-        ->get();
+            ->when($dateRange, function ($query, $dateRange) {
+                return $query->whereBetween('created_at', $dateRange);
+            })
+            ->latest()
+            ->get();
 
-        // Fetch raw materials related to ongoing sites
         $raw_materials = ConstructionMaterialBilling::with(['phase.site', 'supplier'])
-        ->whereHas('phase.site', function ($query) use ($ongoingSites) {
-            $query->whereIn('id', $ongoingSites);
+        ->when($dateRange, function ($query, $dateRange) {
+            return $query->whereBetween('created_at', $dateRange);
         })
-        ->get();
+        ->where('verified_by_admin', 1)
+            ->latest()
+            ->get();
 
-        // Fetch square footage bills related to ongoing sites
         $squareFootageBills = SquareFootageBill::with(['phase.site', 'supplier'])
-        ->whereHas('phase.site', function ($query) use ($ongoingSites) {
-            $query->whereIn('id', $ongoingSites);
+        ->when($dateRange, function ($query, $dateRange) {
+            return $query->whereBetween('created_at', $dateRange);
         })
-        ->get();
+        ->where('verified_by_admin', 1)
+            ->latest()
+            ->get();
 
-        // Fetch expenses related to ongoing sites
         $expenses = DailyExpenses::with(['phase.site'])
-        ->whereHas('phase.site', function ($query) use ($ongoingSites) {
-            $query->whereIn('id', $ongoingSites);
+        ->when($dateRange, function ($query, $dateRange) {
+            return $query->whereBetween('created_at', $dateRange);
         })
-        ->get();
+        ->where('verified_by_admin', 1)
+            ->latest()
+            ->get();
 
-        // Fetch wagers related to ongoing sites
         $wagers = DailyWager::with(['phase.site', 'supplier', 'phase.wagerAttendances'])
-        ->whereHas('phase.site', function ($query) use ($ongoingSites) {
-            $query->whereIn('id', $ongoingSites);
+        ->when($dateRange, function ($query, $dateRange) {
+            return $query->whereBetween('created_at', $dateRange);
         })
-        ->get();
+        ->where('verified_by_admin', 1)
+            ->latest()
+            ->get();
 
-        // Initialize ledgers collection
-        $ledgers = collect();
+        // Execute queries and merge results
+        $ledgers = collect()->sortBy('created_at');
 
-        // Merge payments into ledgers
         $ledgers = $ledgers->merge($payments->map(function ($pay) {
             return [
                 'supplier' => $pay->supplier->name ?? '',
@@ -153,37 +159,22 @@ class PaymentsController extends Controller
             ];
         }));
 
-
-        // Date filtering and formatting
-        $dateFilter = $request->get('date_filter', 'today');
-        $now = Carbon::now();
-        $ledgers = $this->filterLedgersByDate($ledgers, $dateFilter, $now);
-        $ledgers = $ledgers->sortBy('created_at')->map(function ($ledger) {
-            $ledger['created_at'] = Carbon::parse($ledger['created_at'])->format('d-M-Y H:i A');
-            return $ledger;
-        });
-
-        // Calculate totals
         $totals = $this->calculateBalances($ledgers);
         $total_paid = $totals['total_paid'];
         $total_due = $totals['total_due'];
         $total_balance = $totals['total_balance'];
-
         // Pagination
-        $perPage = 10;
+        $perPage = $request->get('per_page', 1);
+
         $paginatedLedgers = new LengthAwarePaginator(
             $ledgers->forPage($request->input('page', 1), $perPage),
             $ledgers->count(),
             $perPage,
-            $request->input('page', 1),
+            $request->input('page', 10),
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        // dd($paginatedLedgers);
-
-        // Render the view
         return view("profile.partials.Admin.PaymentSuppliers.payents", compact(
-            'payments',
             'paginatedLedgers',
             'total_paid',
             'total_due',
@@ -191,32 +182,80 @@ class PaymentsController extends Controller
             'is_ongoing_count',
             'is_not_ongoing_count'
         ));
-
     }
 
-    private function filterLedgersByDate($ledgers, $dateFilter, $now)
+    /**
+     * Get date range based on filter or custom dates
+     */
+    private function getDateRange($dateFilter, $startDate = null, $endDate = null)
     {
-        switch ($dateFilter) {
-            case 'yesterday':
-                return $ledgers->filter(fn($ledger) => Carbon::parse($ledger['created_at'])->isYesterday());
-            case 'last_week':
-                return $ledgers->filter(fn($ledger) => Carbon::parse($ledger['created_at'])->isLastWeek());
-            case 'last_month':
-                return $ledgers->filter(fn($ledger) => Carbon::parse($ledger['created_at'])->isLastMonth());
-            case 'last_year':
-                return $ledgers->filter(fn($ledger) => Carbon::parse($ledger['created_at'])->isLastYear());
-            case 'lifetime':
-                return $ledgers;
-            case 'today':
-            default:
-                return $ledgers->filter(fn($ledger) => Carbon::parse($ledger['created_at'])->isToday());
+
+        // If custom dates are provided, use them
+        if ($startDate && $endDate) {
+            return [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay()
+            ];
         }
+
+        $now = Carbon::now();
+
+        return match ($dateFilter) {
+            'today' => [
+                $now->copy()->startOfDay(),
+                $now->copy()->endOfDay()
+            ],
+            'yesterday' => [
+                $now->copy()->subDay()->startOfDay(),
+                $now->copy()->subDay()->endOfDay()
+            ],
+            'this_week' => [
+                $now->copy()->startOfWeek(),
+                $now->copy()->endOfWeek()
+            ],
+            'last_week' => [
+                $now->copy()->subWeek()->startOfWeek(),
+                $now->copy()->subWeek()->endOfWeek()
+            ],
+            'this_month' => [
+                $now->copy()->startOfMonth(),
+                $now->copy()->endOfMonth()
+            ],
+            'last_month' => [
+                $now->copy()->subMonth()->startOfMonth(),
+                $now->copy()->subMonth()->endOfMonth()
+            ],
+            'this_quarter' => [
+                $now->copy()->startOfQuarter(),
+                $now->copy()->endOfQuarter()
+            ],
+            'last_quarter' => [
+                $now->copy()->subQuarter()->startOfQuarter(),
+                $now->copy()->subQuarter()->endOfQuarter()
+            ],
+            'this_year' => [
+                $now->copy()->startOfYear(),
+                $now->copy()->endOfYear()
+            ],
+            'last_year' => [
+                $now->copy()->subYear()->startOfYear(),
+                $now->copy()->subYear()->endOfYear()
+            ],
+            'custom' => $startDate && $endDate ? [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay()
+            ] : null,
+            default => [
+                $now->copy()->startOfDay(),
+                $now->copy()->endOfDay()
+            ]
+        };
     }
+
+
 
     private function calculateBalances($ledgers)
     {
-
-        // dd($ledgers);
 
         $total_amount_payments = 0;
         $total_amount_non_payments = 0;
@@ -238,7 +277,6 @@ class PaymentsController extends Controller
         }
 
         $total_balance = $total_amount_non_payments - $total_amount_payments;
-
 
         return [
             'total_paid' => $total_amount_payments,

@@ -49,7 +49,7 @@ class SquareFootageBillsController extends Controller
             $validator = Validator::make($request->all(), [
                 'image_path' => 'required|mimes:png,jpg,webp,jpeg|max:1024',
                 'wager_name' => 'required|string|max:255',
-                'price' => 'required|numeric|min:0',
+                'price' => 'required|numeric|max:9999999999',
                 'type' => 'required|in:per_sqr_ft,per_unit,full_contract',
                 'multiplier' => 'required|numeric|min:0',
                 'phase_id' => 'required|exists:phases,id',
@@ -124,7 +124,7 @@ class SquareFootageBillsController extends Controller
         $request->validate([
             'image_path' => 'sometimes|mimes:png,jpg,webp,jpeg|max:1024',
             'wager_name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
+            'price' => 'required|numeric|max:9999999999',
             'type' => 'required|in:per_sqr_ft,per_unit,full_contract',
             'multiplier' => 'required|numeric|min:0',
             'phase_id' => 'required|exists:phases,id',
@@ -158,8 +158,8 @@ class SquareFootageBillsController extends Controller
             'supplier_id' => $request->supplier_id,
         ]);
 
-        return redirect()->back()->with('message', 'square footage bill updated');
-
+        return redirect()->route('sites.show', [base64_encode($square_footage_bill->phase->site->id)])
+            ->with('status', 'update');
     }
 
     /**
@@ -177,6 +177,6 @@ class SquareFootageBillsController extends Controller
 
         $square_footage_bill->delete();
 
-        return redirect()->back()->with('message', 'square footage deleted...');
+        return redirect()->back()->with('status', 'delete');
     }
 }

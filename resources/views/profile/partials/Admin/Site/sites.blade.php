@@ -1,6 +1,22 @@
 <x-app-layout>
 
+    <x-breadcrumb :names="['Sites']" :urls="['admin/sites']" />
 
+    @if (session('status') === 'create')
+        <x-success-message message="Site Created..." />
+    @endif
+
+    @if (session('status') === 'verify')
+        <x-success-message message="Site Verification Updated..." />
+    @endif
+
+    @if (session('status') === 'update')
+        <x-success-message message="Site Verification Updated..." />
+    @endif
+
+    @if (session('status') === 'delete')
+        <x-success-message message="Site Verification Updated..." />
+    @endif
 
     <div class="row">
 
@@ -8,25 +24,15 @@
 
             <div class="card-body">
 
-                <div class="flex items-center justify-between">
 
-                    <h4 class="text-xl text-info fw-bold">Sites</h4>
+                <div class="d-flex justify-content-end">
 
-                    <a class="btn btn-info" href="{{ route('sites.create') }}">
-                        <i class="fa-solid fa-building me-2"></i>
-                        Create New Site
+                    <a class="btn btn-success btn-sm" href="{{ url('admin/sites/create') }}">
+                        <i class="fa-solid fa-building mr-2"></i>
+                        Create Site
                     </a>
 
                 </div>
-
-                 @if (session('message'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
-                            {{ session('message') }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    @endif
 
                 <div class="table-responsive mt-4">
 
@@ -68,7 +74,7 @@
 
                                             <a href="{{ route('sites.show', [base64_encode($site->id)]) }}"
                                                 class="fw-bold link-offset-2 link-underline link-underline-opacity-0">
-                                                <mark>{{ ucfirst($site->site_name) }}</mark>
+                                                {{ ucfirst($site->site_name) }}
                                             </a>
 
                                         </td>
@@ -121,8 +127,8 @@
                                                 @method('POST')
 
                                                 <button type="submit"
-                                                    class="badge text-white {{ $site->is_on_going ? 'text-bg-danger' : 'text-bg-warning' }}">
-                                                    {{ $site->is_on_going ? 'Close Site' : 'Open Site' }}
+                                                    class="badge badge-pill text-white {{ $site->is_on_going ? 'text-bg-success' : 'text-bg-warning' }}">
+                                                    {{ $site->is_on_going ? 'Verified' : 'Verify' }}
                                                 </button>
                                             </form>
 

@@ -141,6 +141,11 @@
 
 
 
+ <x-breadcrumb
+        :names="['Dashboard', 'Suppliers', $supplier->name ]"
+        :urls="['admin/dashboard', 'admin/suppliers', 'admin/suppliers/' . $supplier->id]"
+    />
+
     @if ($supplier)
 
 

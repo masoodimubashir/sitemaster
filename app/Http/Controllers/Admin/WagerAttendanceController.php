@@ -40,7 +40,7 @@ class WagerAttendanceController extends Controller
         if ($request->ajax()) {
             // Validation rules
             $validator = Validator::make($request->all(), [
-                'no_of_persons' => 'required|integer|min:1', // Ensure at least one person
+                'no_of_persons' => 'required|integer|min:1',
                 'daily_wager_id' => 'sometimes|exists:daily_wagers,id',
                 'date' => 'sometimes',
                 'phase_id' => 'required|exists:phases,id'
@@ -52,15 +52,14 @@ class WagerAttendanceController extends Controller
             }
 
             try {
-                // Create a new WagerAttendance entry
+                
                 $daily_wager_attendance = new WagerAttendance();
                 $daily_wager_attendance->no_of_persons = $request->no_of_persons;
-                $daily_wager_attendance->daily_wager_id = $request->daily_wager_id; // Nullable
-                $daily_wager_attendance->user_id = auth()->user()->id; // Current authenticated user
-                $daily_wager_attendance->is_present = 1; // Assuming default value
+                $daily_wager_attendance->daily_wager_id = $request->daily_wager_id;
+                $daily_wager_attendance->user_id = auth()->user()->id;
+                $daily_wager_attendance->is_present = 1;
                 $daily_wager_attendance->created_at = $request->date ? $request->date : now();
                 $daily_wager_attendance->phase_id = $request->phase_id;
-                // $daily_wager_attendance->verified_by_admin = true;
 
                 $daily_wager_attendance->save();
 
@@ -101,12 +100,10 @@ class WagerAttendanceController extends Controller
     public function update(Request $request, string $id)
     {
 
-
-
         $request->validate([
-            'no_of_persons' => 'required|integer',
+            'no_of_persons' => 'required|integer|min:1',
             'daily_wager_id' => 'sometimes|exists:daily_wagers,id',
-            'date' => 'sometimes',
+            'date' => 'sometimes|date',
         ]);
 
         $wager_attendance = WagerAttendance::find($id);
@@ -118,7 +115,7 @@ class WagerAttendanceController extends Controller
         $wager_attendance->created_at = $request->date ? $request->date :  now();
         $wager_attendance->save();
 
-        return redirect()->back()->with('message', 'attendance done...');
+        return redirect()->route('sites.show')->with('status', 'update');
     }
 
     /**
@@ -132,6 +129,6 @@ class WagerAttendanceController extends Controller
 
         $daily_wager_attendance->delete();
 
-        return redirect()->back()->with('success', 'wager attendance deleted...');
+        return redirect()->back()->with('status', 'delete');
     }
 }

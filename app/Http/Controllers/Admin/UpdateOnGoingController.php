@@ -16,7 +16,7 @@ class UpdateOnGoingController extends Controller
 
         $site->save();
 
-        return redirect()->back()->with('success', 'Site status updated successfully.');
+        return redirect()->back()->with('status', 'verify');
 
     }
 }

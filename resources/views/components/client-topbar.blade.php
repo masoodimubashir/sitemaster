@@ -31,7 +31,7 @@
         <ul class="navbar-nav ms-auto">
 
 
-            <li class="nav-item dropdown">
+            {{-- <li class="nav-item dropdown">
                 <a class="nav-link count-indicator {{ $notifications ? 'text-danger' : 'text-black' }}"
                     id="notificationDropdown" href="#" data-bs-toggle="dropdown">
                     <i class="icon-bell"> </i>
@@ -61,7 +61,7 @@
                     @endforeach
 
                 </div>
-            </li>
+            </li> --}}
 
 
             <li class="nav-item dropdown d-none d-lg-block user-dropdown">
@@ -76,7 +76,7 @@
 
 
 
-                    <a class="dropdown-item" href="{{ route('user.viewAllNotifications') }}">
+                    <a class="dropdown-item" href=" ">
                         <i class="dropdown-item-icon mdi mdi-power text-primary me-2"></i>
                         {{ __('View Notifications') }}
                     </a>

@@ -1,22 +1,16 @@
 <x-app-layout>
 
+    <x-breadcrumb :names="['View ' . $square_footage_bill->phase->site->site_name, 'Edit ' . $square_footage_bill->wager_name]" :urls="[
+        'admin/sites/' . base64_encode($square_footage_bill->phase->site->id),
+        'admin/square-footage-bills/' . base64_encode($square_footage_bill->id) . '/edit',
+    ]" />
 
     <div class="row">
-
-         @if (session('message'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
-                {{ session('message') }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        @endif
 
         <div class="col-md-12 grid-margin stretch-card">
             <div class="card">
                 <div class="card-body">
 
-                    <h3 class="text-info">Edit Square Footage Bill</h3>
 
                     <form method="POST"
                         action="{{ route('square-footage-bills.update', [base64_encode($square_footage_bill->id)]) }}"
@@ -59,11 +53,14 @@
                         </div>
 
                         <!-- Type -->
-                        <select class="form-select form-select-sm" id="exampleFormControlSelect3" name="type">
+                        <select class="form-select form-select-sm text-black" id="exampleFormControlSelect3" name="type">
                             <option value="">Select Type</option>
-                            <option {{ $square_footage_bill->type === 'per_sqr_ft' ? 'selected' : ''  }} value="per_sqr_ft">Per Square Feet</option>
-                            <option {{ $square_footage_bill->type === 'per_unit' ? 'selected' : ''  }} value="per_unit">Per Unit</option>
-                            <option {{ $square_footage_bill->type === 'full_contract' ? 'selected' : ''  }} value="full_contract">Full Contract
+                            <option {{ $square_footage_bill->type === 'per_sqr_ft' ? 'selected' : '' }}
+                                value="per_sqr_ft">Per Square Feet</option>
+                            <option {{ $square_footage_bill->type === 'per_unit' ? 'selected' : '' }} value="per_unit">
+                                Per Unit</option>
+                            <option {{ $square_footage_bill->type === 'full_contract' ? 'selected' : '' }}
+                                value="full_contract">Full Contract
                             </option>
                         </select>
                         @error('type')
@@ -101,17 +98,7 @@
                             @enderror
                         </div>
 
-                       <div class="flex items-center justify-end mt-4">
-
-                            <div class="button-container">
-
-                                <a class=" btn btn-info"
-                                    href="{{ route('sites.show', [base64_encode($square_footage_bill->phase->site->id)]) }}"><span>Back</span></a>
-
-                                <button class="btn btn-info"><span>Update Billing</span></button>
-
-                            </div>
-                        </div>
+                        <button class="btn btn-info mt-4">Save</button>
 
                     </form>
 

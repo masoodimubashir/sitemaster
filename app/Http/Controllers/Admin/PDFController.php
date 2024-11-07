@@ -29,8 +29,8 @@ class PDFController extends Controller
             'phases.squareFootageBills.supplier' => function ($q) {
                 $q->withTrashed();
             },
-            'phases.dailyWagers.supplier' => function ($q) {
-                $q->withTrashed();
+            'phases.dailyWagers' => function ($q) {
+                $q->with(['wagerAttendances', 'supplier'])->withTrashed()->latest();
             },
             'phases.dailyExpenses' => function ($q) {
                 $q->withTrashed();
@@ -50,13 +50,20 @@ class PDFController extends Controller
         ];
 
         foreach ($site->phases as $phase) {
+
             // Calculate totals for each phase
             $construction_total = $phase->constructionMaterialBillings->sum('amount');
             $daily_expenses_total = $phase->dailyExpenses->sum('price');
-            $daily_wagers_total = $phase->dailyWagers->sum('price_per_day') * $phase->wagerAttendances->sum('no_of_persons');
+
+            foreach ($phase->dailyWagers as $wager) {
+                $phase->daily_wagers_total_amount += $wager->wager_total;
+            }
+
             $square_footage_total = $phase->squareFootageBills->reduce(function ($carry, $bill) {
                 return $carry + ($bill->price * $bill->multiplier);
             }, 0);
+
+            $daily_wagers_total = $phase->daily_wagers_total_amount;
 
             // Calculate total for the phase with service charge
             $phase_total = $construction_total + $daily_expenses_total + $daily_wagers_total + $square_footage_total;
@@ -113,10 +120,7 @@ class PDFController extends Controller
         $pdf->SetFont('Times', '', 12);
         $pdf->SetTitle('Site Info');
         $pdf->infoTable($headers, $data);
-
-        // Table for construction material billings
         $pdf->siteTableData($siteData['phases']);
-
         $pdf->Output();
         exit;
     }
@@ -133,9 +137,10 @@ class PDFController extends Controller
             'squareFootageBills.supplier' => function ($q) {
                 $q->withTrashed();
             },
-            'dailyWagers.supplier' => function ($q) {
-                $q->withTrashed();
+            'dailyWagers' => function ($q) {
+                $q->with(['wagerAttendances', 'supplier'])->withTrashed();
             },
+
             'dailyExpenses' => function ($q) {
                 $q->withTrashed();
             },
@@ -159,16 +164,14 @@ class PDFController extends Controller
         ];
 
 
-
-        // $grand_total_construction_amount = 0;
-        // $grand_total_daily_expenses_amount = 0;
-        // $grand_total_daily_wagers_amount = 0;
-        // $grand_total_square_footage_amount = 0;
+        foreach ($phase->dailyWagers as $wager) {
+            $phase->daily_wagers_total_amount += $wager->wager_total;
+        }
 
         $phaseCosting = [
             'construction_total_amount' => $phase->construction_total_amount = $phase->constructionMaterialBillings->sum('amount'),
             'daily_expenses_total_amount' => $phase->daily_expenses_total_amount = $phase->dailyExpenses->sum('price'),
-            'daily_wagers_total_amount' => $phase->daily_wagers_total_amount = $phase->dailyWagers->sum('price_per_day') * $phase->wagerAttendances->sum('no_of_persons'),
+            'daily_wagers_total_amount' => $phase->daily_wagers_total_amount,
             'daily_wager_attendance_amount' => $phase->daily_wager_attendance_amount = $phase->wagerAttendances->sum('no_of_persons'),
             'square_footage_total_amount' => $phase->square_footage_total_amount = $phase->squareFootageBills->reduce(function ($carry, $bill) {
                 return $carry + ($bill->price * $bill->multiplier);
@@ -178,18 +181,6 @@ class PDFController extends Controller
                 $phase->daily_wagers_total_amount +
                 $phase->square_footage_total_amount,
         ];
-
-        // $grand_total_construction_amount += $phase->construction_total_amount;
-        // $grand_total_daily_expenses_amount += $phase->daily_expenses_total_amount;
-        // $grand_total_daily_wagers_amount += $phase->daily_wagers_total_amount;
-        // $grand_total_square_footage_amount += $phase->square_footage_total_amount;
-
-        // $grand_total_amount = $grand_total_construction_amount +
-        //     $grand_total_daily_expenses_amount +
-        //     $grand_total_daily_wagers_amount +
-        //     $grand_total_square_footage_amount;
-
-        // dd($phaseCosting);
 
         $headers = [
             'box1' => 'Phase Name',
@@ -246,15 +237,63 @@ class PDFController extends Controller
     public function showLedgerPdf(Request $request)
     {
 
-        $payments = PaymentSupplier::with(['site', 'supplier'])->latest()->paginate(10);
-        $raw_materials = ConstructionMaterialBilling::with(['phase.site', 'supplier'])->get();
-        $sgft = SquareFootageBill::with(['phase.site', 'supplier'])->get();
-        $expenses = DailyExpenses::with(['phase.site',])->get();
-        $wagers = DailyWager::with(['phase.site', 'supplier', 'phase.wagerAttendances'])->get();
+        // Get date range parameters
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        $dateFilter = $request->get('date_filter', 'today');
 
-        $ledgers = collect();
+        // Get the date range based on filter or custom dates
+        $dateRange = $this->getDateRange($dateFilter, $startDate, $endDate);
 
-        $ledgers = $ledgers->merge($payments->getCollection()->map(function ($pay) {
+        // Base query for ongoing sites
+        $ongoingSites = Site::where('is_on_going', 1)->pluck('id');
+
+        // Build queries with date filtering
+        $payments = PaymentSupplier::with(['site', 'supplier'])
+            ->whereIn('site_id', $ongoingSites)
+            ->when($dateRange, function ($query, $dateRange) {
+                return $query->whereBetween('created_at', $dateRange);
+            })
+            ->latest()
+            ->get();
+
+        $raw_materials = ConstructionMaterialBilling::with(['phase.site', 'supplier'])
+            ->when($dateRange, function ($query, $dateRange) {
+                return $query->whereBetween('created_at', $dateRange);
+            })
+            ->where('verified_by_admin', 1)
+            ->latest()
+            ->get();
+
+        $squareFootageBills = SquareFootageBill::with(['phase.site', 'supplier'])
+            ->when($dateRange, function ($query, $dateRange) {
+                return $query->whereBetween('created_at', $dateRange);
+            })
+            ->where('verified_by_admin', 1)
+            ->latest()
+            ->get();
+
+        $expenses = DailyExpenses::with(['phase.site'])
+            ->when($dateRange, function ($query, $dateRange) {
+                return $query->whereBetween('created_at', $dateRange);
+            })
+            ->where('verified_by_admin', 1)
+            ->latest()
+            ->get();
+
+        $wagers = DailyWager::with(['phase.site', 'supplier', 'phase.wagerAttendances'])
+            ->when($dateRange, function ($query, $dateRange) {
+                return $query->whereBetween('created_at', $dateRange);
+            })
+            ->where('verified_by_admin', 1)
+            ->latest()
+            ->get();
+
+
+        // Execute queries and merge results
+        $ledgers = collect()->sortBy('created_at');
+
+        $ledgers = $ledgers->merge($payments->map(function ($pay) {
             return [
                 'supplier' => $pay->supplier->name ?? '',
                 'description' => $pay->item_name ?? 'NA',
@@ -269,6 +308,7 @@ class PDFController extends Controller
             ];
         }));
 
+        // Merge raw materials into ledgers
         $ledgers = $ledgers->merge($raw_materials->map(function ($material) {
             return [
                 'supplier' => $material->supplier->name ?? 'NA',
@@ -284,7 +324,8 @@ class PDFController extends Controller
             ];
         }));
 
-        $ledgers = $ledgers->merge($sgft->map(function ($bill) {
+        // Merge square footage bills into ledgers
+        $ledgers = $ledgers->merge($squareFootageBills->map(function ($bill) {
             return [
                 'supplier' => $bill->supplier->name ?? 'NA',
                 'description' => $bill->wager_name ?? 'NA',
@@ -299,6 +340,7 @@ class PDFController extends Controller
             ];
         }));
 
+        // Merge expenses into ledgers
         $ledgers = $ledgers->merge($expenses->map(function ($expense) {
             return [
                 'supplier' => $expense->supplier->name ?? '',
@@ -330,17 +372,6 @@ class PDFController extends Controller
             ];
         }));
 
-        $dateFilter = $request->get('date_filter', 'today');
-
-        $now = Carbon::now();
-
-        $ledgers = $this->filterLedgersByDate($ledgers, $dateFilter, $now);
-
-        $ledgers = $ledgers->sortBy('created_at')->map(function ($ledger) {
-            $ledger['created_at'] = Carbon::parse($ledger['created_at'])->format('d-M-Y H:i A');
-            return $ledger;
-        });
-
         $totals = $this->calculateBalances($ledgers);
         $total_paid = $totals['total_paid'];
         $total_due = $totals['total_due'];
@@ -356,23 +387,68 @@ class PDFController extends Controller
         exit;
     }
 
-    private function filterLedgersByDate($ledgers, $dateFilter, $now)
+    private function getDateRange($dateFilter, $startDate = null, $endDate = null)
     {
-        switch ($dateFilter) {
-            case 'yesterday':
-                return $ledgers->filter(fn($ledger) => Carbon::parse($ledger['created_at'])->isYesterday());
-            case 'last_week':
-                return $ledgers->filter(fn($ledger) => Carbon::parse($ledger['created_at'])->isLastWeek());
-            case 'last_month':
-                return $ledgers->filter(fn($ledger) => Carbon::parse($ledger['created_at'])->isLastMonth());
-            case 'last_year':
-                return $ledgers->filter(fn($ledger) => Carbon::parse($ledger['created_at'])->isLastYear());
-            case 'lifetime':
-                return $ledgers;
-            case 'today':
-            default:
-                return $ledgers->filter(fn($ledger) => Carbon::parse($ledger['created_at'])->isToday());
+        // If custom dates are provided, use them
+        if ($startDate && $endDate) {
+            return [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay()
+            ];
         }
+
+        $now = Carbon::now();
+
+        return match ($dateFilter) {
+            'today' => [
+                $now->copy()->startOfDay(),
+                $now->copy()->endOfDay()
+            ],
+            'yesterday' => [
+                $now->copy()->subDay()->startOfDay(),
+                $now->copy()->subDay()->endOfDay()
+            ],
+            'this_week' => [
+                $now->copy()->startOfWeek(),
+                $now->copy()->endOfWeek()
+            ],
+            'last_week' => [
+                $now->copy()->subWeek()->startOfWeek(),
+                $now->copy()->subWeek()->endOfWeek()
+            ],
+            'this_month' => [
+                $now->copy()->startOfMonth(),
+                $now->copy()->endOfMonth()
+            ],
+            'last_month' => [
+                $now->copy()->subMonth()->startOfMonth(),
+                $now->copy()->subMonth()->endOfMonth()
+            ],
+            'this_quarter' => [
+                $now->copy()->startOfQuarter(),
+                $now->copy()->endOfQuarter()
+            ],
+            'last_quarter' => [
+                $now->copy()->subQuarter()->startOfQuarter(),
+                $now->copy()->subQuarter()->endOfQuarter()
+            ],
+            'this_year' => [
+                $now->copy()->startOfYear(),
+                $now->copy()->endOfYear()
+            ],
+            'last_year' => [
+                $now->copy()->subYear()->startOfYear(),
+                $now->copy()->subYear()->endOfYear()
+            ],
+            'custom' => $startDate && $endDate ? [
+                Carbon::parse($startDate)->startOfDay(),
+                Carbon::parse($endDate)->endOfDay()
+            ] : null,
+            default => [
+                $now->copy()->startOfDay(),
+                $now->copy()->endOfDay()
+            ]
+        };
     }
 
     private function calculateBalances($ledgers)

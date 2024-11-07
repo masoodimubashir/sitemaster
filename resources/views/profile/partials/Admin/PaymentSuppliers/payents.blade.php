@@ -1,13 +1,15 @@
 <x-app-layout>
 
     <style>
-          #messageContainer {
+        #messageContainer {
             position: fixed;
             bottom: 5%;
             right: 45%;
             z-index: 9999999;
         }
     </style>
+
+    <x-breadcrumb :names="['Dashboard', 'Sites', ' Ledger']" :urls="['admin/dashboard', 'admin/sites', 'admin/payments']"></x-breadcrumb>
 
     <div class="row">
         <div class="col-sm-12">
@@ -26,16 +28,12 @@
                         </li>
                     </ul>
 
-                    <div>
-
-                        <a class="btn btn-info text-white" href="#payment-supplier" data-bs-toggle="modal"
+                    {{-- <div> --}}
+                    {{-- <a class="btn btn-info text-white" href="#payment-supplier" data-bs-toggle="modal"
                             role="button">
                             <i class="fas fa-money-bill me-2"></i>Make Payment
-                        </a>
-
-
-
-                    </div>
+                        </a> --}}
+                    {{-- </div> --}}
 
                 </div>
 
@@ -112,10 +110,11 @@
                                             </div>
                                         </td>
                                         <td colspan="4" style="background: #F4F5F7; border:none">
+
                                             <div class="row">
 
-                                                <form class="col" action="{{ route('payments.index') }}"
-                                                    method="GET" id="filterForm">
+                                                <form class="col" action="{{ url('admin/payments') }}" method="GET"
+                                                    id="filterForm">
                                                     <select class="form-select form-select-sm bg-white"
                                                         name="date_filter" id="date_filter"
                                                         onchange="document.getElementById('filterForm').submit();">
@@ -136,7 +135,8 @@
                                                             Last Year</option>
                                                         <option value="lifetime"
                                                             {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
-                                                            All Data</option>
+                                                            All Data
+                                                        </option>
                                                     </select>
 
                                                 </form>
@@ -147,23 +147,17 @@
                                                     <select class="form-select form-select-sm bg-white"
                                                         name="date_filter" id="date_filter"
                                                         onchange="document.getElementById('ledger-report').submit();">
-                                                        <option value="today"
-                                                            {{ request('date_filter') === 'today' ? 'selected' : '' }}>
+                                                        <option value="today">
                                                             Generate Today's Report</option>
-                                                        <option value="yesterday"
-                                                            {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>
+                                                        <option value="yesterday">
                                                             Generate Yesterday's Report</option>
-                                                        <option value="last_week"
-                                                            {{ request('date_filter') === 'last_week' ? 'selected' : '' }}>
+                                                        <option value="last_week">
                                                             Generate Last Week's Report</option>
-                                                        <option value="last_month"
-                                                            {{ request('date_filter') === 'last_month' ? 'selected' : '' }}>
+                                                        <option value="last_month">
                                                             Generate Last Month's Report</option>
-                                                        <option value="last_year"
-                                                            {{ request('date_filter') === 'last_year' ? 'selected' : '' }}>
+                                                        <option value="last_year">
                                                             Generate Last Year's Report</option>
-                                                        <option value="lifetime"
-                                                            {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
+                                                        <option value="lifetime">
                                                             Generate Full Report</option>
                                                     </select>
 
@@ -187,7 +181,6 @@
                                 <tbody>
                                     @foreach ($paginatedLedgers as $key => $ledger)
                                         @php
-
                                             // $balance =  $ledger['amount'] - $ledger['payment_amounts'];
                                         @endphp
                                         <tr>
@@ -219,7 +212,7 @@
                     <div class="tab-pane fade" id="material" role="tabpanel" aria-labelledby="material-tab">
 
                         <div class="table-responsive mt-4">
-                            @if (count($payments))
+                            {{-- @if (count($payments))
 
                                 <table class="table table-bordered">
 
@@ -256,7 +249,7 @@
                             @else
                                 <h1 class="display-4 bg-white p-2 text-center fw-4">No records found..</h1>
 
-                            @endif
+                            @endif --}}
                         </div>
 
                         <div class="mt-4">
@@ -311,14 +304,14 @@
 
 
                         <!-- Is Verified -->
-                        <div class="form-check">
+                        {{-- <div class="form-check">
                             <label class="form-check-label">
                                 <input type="checkbox" class="form-check-input" name="is_verified"> Verify
                             </label>
                             @error('is_verified')
                                 <x-input-error :messages="$message" class="mt-2" />
                             @enderror
-                        </div>
+                        </div> --}}
 
                         {{-- Screenshot --}}
                         <div class="mt-3">
@@ -365,6 +358,7 @@
                     contentType: false,
                     processData: false,
                     success: function(response) {
+
                         form[0].reset();
                         messageContainer.append(`
                         <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
@@ -382,8 +376,6 @@
                         }, 3000);
                     },
                     error: function(response) {
-
-
 
                         if (response.status === 422) {
 

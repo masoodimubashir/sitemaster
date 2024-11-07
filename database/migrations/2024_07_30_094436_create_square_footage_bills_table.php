@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('wager_name');
             $table->decimal('price');
             $table->enum('type', ['per_sqr_ft', 'per_unit', 'full_contract']);
-            $table->decimal('multiplier', 10, 2);
+            $table->decimal('multiplier', 12, 2);
             $table->foreignId('phase_id')->constrained()->cascadeOnDelete();
             $table->foreignId('supplier_id')->constrained()->cascadeOnDelete();
             $table->boolean('verified_by_admin')->default(false);

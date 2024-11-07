@@ -10,6 +10,8 @@ class ClientLogoutController extends Controller
 {
     public function logout(Request $request){
 
+        dd('hi');
+
         Auth::guard('clients')->logout();
 
         $request->session()->invalidate();

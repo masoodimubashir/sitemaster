@@ -1,27 +1,25 @@
 <x-app-layout>
+
+    <x-breadcrumb :names="['Clients']" :urls="['admin/clients']" />
+
+    @if (session('message') === 'client')
+        <x-success-message message='Client Created Succussfully...' />
+    @endif
+
     <div class="row">
         <div class="col-lg-12 grid-margin stretch-card">
             <div class="card-body">
 
-                <div class="flex items-center justify-between">
-                    <h4 class="text-xl text-info fw-bold">Clients</h4>
+                <div class="d-flex justify-content-end">
 
-                    <a class="btn btn-info  text-white" href="{{ route('clients.create') }}">
-                        <i class="fa fa-user me-2"></i>
-                        Create Client
+                    <a class="btn btn-sm btn-success" href="{{ url('admin/clients/create') }}" class="float-right">
+                        <i class="fa fa-user-plus pr-1" aria-hidden="true"></i>
+                        Create Clients
                     </a>
+
                 </div>
 
                 <div class="table-responsive mt-4">
-
-                    @if (session('message'))
-                        <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
-                            {{ session('message') }}
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                    @endif
 
                     @if (count($clients))
                         <table class="table table-bordered">
@@ -57,14 +55,14 @@
 
                         </table>
                     @else
-                         <table class="table table-bordered">
-                    <thead></thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-center text-danger fw-bold">No Records Awailable Yet</td>
-                        </tr>
-                    </tbody>
-                </table>
+                        <table class="table table-bordered">
+                            <thead></thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-center text-danger fw-bold">No Records Awailable Yet</td>
+                                </tr>
+                            </tbody>
+                        </table>
 
 
                     @endif

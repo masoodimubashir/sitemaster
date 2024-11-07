@@ -19,9 +19,7 @@ class UserLedgerController extends Controller
     {
 
 
-
         $payments = PaymentSupplier::with(['site', 'supplier'])->latest()->paginate(10);
-
         $raw_materials = ConstructionMaterialBilling::with(['phase.site', 'supplier'])->get();
         $sgft = SquareFootageBill::with(['phase.site', 'supplier'])->get();
         $expenses = DailyExpenses::with(['phase.site'])->get();
@@ -45,11 +43,12 @@ class UserLedgerController extends Controller
         }));
 
         $ledgers = $ledgers->merge($raw_materials->map(function ($material) {
+            $service_charge_amount = ($material->phase->site->service_charge / 100) * $material->amount;
             return [
                 'supplier' => $material->supplier->name ?? 'NA',
                 'description' => $material->item_name ?? 'NA',
                 'category' => 'Raw Material',
-                'debit' => $material->amount,
+                'debit' => $material->amount + $service_charge_amount,
                 'credit' => 'NA',
                 'phase' => $material->phase->phase_name ?? 'N/A',
                 'site' => $material->phase->site->site_name ?? 'N/A',
@@ -60,11 +59,13 @@ class UserLedgerController extends Controller
         }));
 
         $ledgers = $ledgers->merge($sgft->map(function ($bill) {
+            $total_price = $bill->price * $bill->multiplier;
+            $service_charge_amount = ($bill->phase->site->service_charge / 100) * $total_price;
             return [
                 'supplier' => $bill->supplier->name ?? 'NA',
                 'description' => $bill->wager_name ?? 'NA',
                 'category' => 'Square Footage Bill',
-                'debit' => $bill->price,
+                'debit' => $total_price +  $service_charge_amount,
                 'credit' => 'NA',
                 'phase' => $bill->phase->phase_name ?? 'N/A',
                 'site' => $bill->phase->site->site_name ?? 'N/A',
@@ -75,11 +76,14 @@ class UserLedgerController extends Controller
         }));
 
         $ledgers = $ledgers->merge($expenses->map(function ($expense) {
+
+            $service_charge_amount = ($expense->phase->site->service_charge / 100) * $expense->price;
+
             return [
                 'supplier' => $expense->supplier->name ?? '',
                 'description' => $expense->item_name ?? 'NA',
                 'category' => 'Daily Expense',
-                'debit' => $expense->price,
+                'debit' => $expense->price +  $service_charge_amount,
                 'credit' => 'NA',
                 'phase' => $expense->phase->phase_name ?? 'N/A',
                 'site' => $expense->phase->site->site_name ?? 'N/A',
@@ -91,11 +95,15 @@ class UserLedgerController extends Controller
 
         // Merge daily wagers into ledgers
         $ledgers = $ledgers->merge($wagers->map(function ($wager) {
+
+            $total_price = $wager->phase->wagerAttendances->sum('no_of_persons') * $wager->price_per_day;
+            $service_charge_amount = ($wager->phase->site->service_charge / 100) * $total_price;
+
             return [
                 'supplier' => $wager->supplier->name ?? '',
                 'description' => $wager->wager_name ?? 'NA',
                 'category' => 'Daily Wager',
-                'debit' => $wager->phase->wagerAttendances->sum('no_of_persons') * $wager->price_per_day,
+                'debit' => $total_price + $service_charge_amount,
                 'credit' => 'NA',
                 'phase' => $wager->phase->phase_name ?? 'N/A',
                 'site' => $wager->phase->site->site_name ?? 'N/A',
@@ -105,8 +113,6 @@ class UserLedgerController extends Controller
             ];
         }));
 
-
-        // Filter ledgers by site ID if provided
         $ledgers = $ledgers->filter(fn($ledger) => $ledger['site_id'] == $id);
 
 
@@ -114,37 +120,39 @@ class UserLedgerController extends Controller
 
         $now = Carbon::now();
 
-        // Apply date filter
         $ledgers = $this->filterLedgersByDate($ledgers, $dateFilter, $now);
 
-        // Sort ledgers and format created_at
         $ledgers = $ledgers->sortBy('created_at')->map(function ($ledger) {
             $ledger['created_at'] = Carbon::parse($ledger['created_at'])->format('d-M-Y H:i A');
             return $ledger;
         });
 
-        [$total_balance, $total_debit, $total_credit, $currentBalance, $ledgers] = $this->calculateBalances($ledgers);
+        $site_service_charge = Site::find($id)->service_charge;
+        $totals = $this->calculateBalances($ledgers);
+        $total_paid = $totals['total_paid'];
+        $total_due = $totals['total_due'];
+        $total_balance = $totals['total_balance'];
 
-        $final_total_balance = $total_balance - $total_credit;
-
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
         $perPage = 10;
-
-        // Paginate the ledgers
         $paginatedLedgers = new LengthAwarePaginator(
-            $ledgers->forPage($currentPage, $perPage),
+            $ledgers->forPage($request->input('page', 1), $perPage),
             $ledgers->count(),
             $perPage,
-            $currentPage,
-            ['path' => LengthAwarePaginator::resolveCurrentPath()]
+            $request->input('page', 1),
+            ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        // Count ongoing and not ongoing sites
-        $is_ongoing_count = Site::where('is_on_going', 1)->count();
-        $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
 
-
-        return view("profile.partials.Admin.Ledgers.site-ledger", compact('payments', 'paginatedLedgers', 'final_total_balance', 'total_debit', 'total_credit', 'is_ongoing_count', 'is_not_ongoing_count', 'id'));
+        return view("profile.partials.Admin.Ledgers.site-ledger",
+            compact(
+                'payments',
+                'paginatedLedgers',
+                'total_paid',
+                'total_due',
+                'id',
+                'total_balance',
+            )
+        );
     }
     private function filterLedgersByDate($ledgers, $dateFilter, $now)
     {
@@ -165,33 +173,39 @@ class UserLedgerController extends Controller
         }
     }
 
-    private function calculateBalances($ledgers)
+    private function calculateBalances($ledgers, $site_service_charge = 0)
     {
+
+        // dd($ledgers);
+
+        $total_amount_payments = 0;
+        $total_amount_non_payments = 0;
         $total_balance = 0;
-        $total_debit = 0;
-        $total_credit = 0;
-        $currentBalance = 0;
 
-        $ledgers = $ledgers->map(function ($ledger) use (&$currentBalance, &$total_balance, &$total_debit, &$total_credit) {
-            $debitAmount = $ledger['debit'] === 'NA' ? 0 : $ledger['debit'];
-            $creditAmount = $ledger['credit'] === 'NA' ? 0 : $ledger['credit'];
 
-            if ($debitAmount > 0) {
-                $currentBalance += $debitAmount;
-                $total_debit += $debitAmount;
+        foreach ($ledgers as $item) {
+            switch ($item['category']) {
+                case 'Payments':
+                    $total_amount_payments += is_string($item['credit']) ? floatval($item['credit']) : $item['credit'];
+                    break;
+                case 'Raw Material':
+                case 'Square Footage Bill':
+                case 'Daily Expense':
+                case 'Daily Wager':
+                    $total_amount_non_payments += is_string($item['debit']) ? floatval($item['debit']) : $item['debit'];
+                    break;
             }
+        }
 
-            if ($creditAmount > 0) {
-                $currentBalance -= $creditAmount;
-                $total_credit += $creditAmount;
-            }
+        $total_amount_with_service_charge = ($site_service_charge / 100) * $total_amount_non_payments  + $total_amount_non_payments;
 
-            $total_balance += $currentBalance;
-            $ledger['balance'] = $currentBalance;
+        $total_balance = $total_amount_with_service_charge - $total_amount_payments;
 
-            return $ledger;
-        });
 
-        return [$total_balance, $total_debit, $total_credit, $currentBalance, $ledgers];
+        return [
+            'total_paid' => $total_amount_payments,
+            'total_due' => $total_amount_non_payments,
+            'total_balance' => $total_balance
+        ];
     }
 }

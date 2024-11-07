@@ -137,7 +137,10 @@
     </style>
 
 
-
+  <x-breadcrumb
+        :names="['Dashboard', 'Suppliers', $supplier->name ]"
+        :urls="['admin/dashboard', 'admin/suppliers', 'admin/suppliers/' . $supplier->id]"
+    />
 
     @if ($supplier)
 
@@ -267,7 +270,7 @@
                                         'site_id' => $daily_wager->phase->site->id,
                                         'site_owner_name' => $daily_wager->phase->site->site_owner_name,
                                         'service_charge' => $daily_wager->phase->site->service_charge,
-                                        'amount' => $daily_wager->price_per_day,
+                                        'amount' => $daily_wager->phase->wagerAttendances->sum('no_of_persons') * $daily_wager->price_per_day ,
                                         'total_amount' =>
                                             ($daily_wager->phase->site->service_charge / 100) *
                                                 $daily_wager->price_per_day +
@@ -316,7 +319,18 @@
 
 
                         @if (empty($mergedData))
-                            <div class="alert alert-warning">No Data Available</div>
+                        <table class="table table-bordered">
+                            <thead >
+
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-center fw-bold text-danger">
+                                        No Data Found..
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                         @else
                             <table class="table table-bordered">
                                 <thead>

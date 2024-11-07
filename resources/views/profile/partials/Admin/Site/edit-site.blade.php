@@ -1,18 +1,14 @@
 <x-app-layout>
 
+    <x-breadcrumb :names="['Sites', 'Edit ' . $site->site_name]" :urls="['admin/sites', 'admin/sites/' . base64_encode($site->id) . '/edit']" />
 
     <div class="row">
 
-
         <div class="col-md-12 grid-margin stretch-card">
+
             <div class="card">
+
                 <div class="card-body">
-                    <h4 class="text-3xl text-primary">Edit Supplier</h4>
-
-
-                    @if (session('message'))
-                        {{ session('message') }}
-                    @endif
 
                     <form method="POST" action="{{ route('sites.update', [base64_encode($site->id)]) }}"
                         class="forms-sample material-form">
@@ -62,15 +58,8 @@
                             <x-input-error :messages="$errors->get('user_id')" class="mt-2" />
                         </div>
 
-                        <div class="mt-4">
 
-                            <a class=" btn btn-success" href="{{ route('sites.index') }}"><span>Back</span></a>
-
-                            <button class=" btn btn-primary"><span>Submit</span></button>
-
-                        </div>
-
-
+                        <button class=" btn btn-info mt-3"><span>Save</span></button>
 
                     </form>
                 </div>

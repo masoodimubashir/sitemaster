@@ -101,23 +101,23 @@ class PDF extends Fpdf
     {
 
         if (empty($phases)) {
-            $this->Cell(0, 10, 'No data available', 1);
+            $this->Cell(0, 10, 'No data available', 1, 0, 'C');
             $this->Ln();
             return;
         }
 
-
-        // dd($phases);
-
-
-
         $this->Ln();
-
-
 
         foreach ($phases as $key =>  $phase) {
 
-            // dd($phase);
+            $this->cell(47 * 4, 10, ucwords($phase['phase']), 0, 1, 'C');
+
+            $this->Ln();
+            $this->Ln();
+
+            $this->Cell($this->width, $this->height, 'Phase Costing', 1, 0, 'L');
+
+            $this->Ln();
 
             $phase_total_service_charge_Amount = $this->getServiceChargeAmount($phase['phase_total'], $phase['site_service_charge']);
             $construction_total_amount_with_service_charge =  $this->getServiceChargeAmount($phase['construction_total_amount'], $phase['site_service_charge']) + $phase['construction_total_amount'];
@@ -129,6 +129,7 @@ class PDF extends Fpdf
             $this->Cell($this->width, $this->height, 'Amount', 1, 0, 'L');
             $this->Cell($this->width, $this->height, 'Service Charge', 1, 0, 'L');
             $this->Cell($this->width, $this->height, 'Total', 1, 0, 'L');
+
             $this->Ln();
 
             $this->Cell($this->width, $this->height, 'Raw Material', 1, 0, 'L');
@@ -143,8 +144,6 @@ class PDF extends Fpdf
             $this->Cell($this->width, $this->height, '.....', 1, 0, 'L');
             $this->Cell($this->width, $this->height, $square_footage_total_amount_with_service_charge, 1, 0, 'L');
 
-
-
             $this->Ln();
 
             $this->Cell($this->width, $this->height, 'Daily Expenses', 1, 0, 'L');
@@ -152,16 +151,12 @@ class PDF extends Fpdf
             $this->Cell($this->width, $this->height, '.....', 1, 0, 'L');
             $this->Cell($this->width, $this->height, $daily_expenses_total_amount_with_service_charge, 1, 0, 'L');
 
-
-
             $this->Ln();
 
             $this->Cell($this->width, $this->height, 'Wager', 1, 0, 'L');
             $this->Cell($this->width, $this->height, $phase['daily_wagers_total_amount'], 1, 0, 'L');
             $this->Cell($this->width, $this->height, '.....', 1, 0, 'L');
             $this->Cell($this->width, $this->height, $daily_wagers_total_amount_with_service_charge, 1, 0, 'L');
-
-
 
             $this->Ln();
 
@@ -171,9 +166,10 @@ class PDF extends Fpdf
             $this->Cell($this->width, $this->height, $phase['phase_total_with_service_charge'], 1, 0, 'L');
 
 
+            $this->Ln();
+
             if (!$phase['construction_material_billings']->isEmpty()) {
 
-                $this->cell(47 * 4, 10, ucwords($phase['phase'] . ' Phase'), 0, 1, 'C');
                 $this->cell(47 * 4, 10, ucwords('Construction Materials' . ' Phase'), 0, 1, 'C');
 
                 foreach ($phase['construction_material_billings'] as $m =>  $materials) {
@@ -264,7 +260,7 @@ class PDF extends Fpdf
                     }
                     $this->Cell(62.45, $this->height, $expense->created_at, 1);
                     $this->Cell(62.45, $this->height, $daily_wager->wager_name, 1);
-                    $this->Cell(62.45, $this->height, $daily_wager->price_per_day, 1);
+                    $this->Cell(62.45, $this->height, $daily_wager->wager_total, 1);
                     $this->Ln();
                 }
                 // $this->AddPage();
@@ -308,8 +304,10 @@ class PDF extends Fpdf
     {
 
 
+
+
         if (empty($phases)) {
-            $this->Cell(0, 10, 'No data available', 1);
+            $this->Cell(0, 10, 'No data available', 1, 0,);
             $this->Ln();
             return;
         }
@@ -352,10 +350,8 @@ class PDF extends Fpdf
         $this->Cell($this->width * 2, $this->height, $headers['box7'], 1, 0, 'L');
         $this->Cell($this->width * 2, $this->height, ucwords($phases['location']), 1, 0, 'L');
 
-
         $this->Ln();
         $this->Ln();
-
 
         $this->Cell($this->width, $this->height, '.....', 1, 0, 'L');
         $this->Cell($this->width, $this->height, 'Amount', 1, 0, 'L');
@@ -364,9 +360,7 @@ class PDF extends Fpdf
         $this->Ln();
 
 
-
         // Get Service Charge Amount Of Tables And Total Phase Cost
-
         $total_service_charge_amount = $this->getServiceChargeAmount($phaseCosting['total_amount'], $phases['service_charge']);
         $total_service_charge_with_amount =  $total_service_charge_amount + $phaseCosting['total_amount'];
         $construction_total_amount_with_service_charge =  $this->getServiceChargeAmount($phaseCosting['construction_total_amount'], $phases['service_charge']) + $phaseCosting['construction_total_amount'];
@@ -374,12 +368,11 @@ class PDF extends Fpdf
         $daily_expenses_total_amount_with_service_charge =  $this->getServiceChargeAmount($phaseCosting['daily_expenses_total_amount'], $phases['service_charge']) + $phaseCosting['daily_expenses_total_amount'];
         $daily_wagers_total_amount_with_service_charge =  $this->getServiceChargeAmount($phaseCosting['daily_wagers_total_amount'], $phases['service_charge']) + $phaseCosting['daily_wagers_total_amount'];
 
+
         $this->Cell($this->width, $this->height, 'Raw Material', 1, 0, 'L');
         $this->Cell($this->width, $this->height, $phaseCosting['construction_total_amount'], 1, 0, 'L');
         $this->Cell($this->width, $this->height, '.....', 1, 0, 'L');
         $this->Cell($this->width, $this->height, $construction_total_amount_with_service_charge, 1, 0, 'L');
-
-
 
         $this->Ln();
 
@@ -388,16 +381,12 @@ class PDF extends Fpdf
         $this->Cell($this->width, $this->height, '.....', 1, 0, 'L');
         $this->Cell($this->width, $this->height, $square_footage_total_amount_with_service_charge, 1, 0, 'L');
 
-
-
         $this->Ln();
 
         $this->Cell($this->width, $this->height, 'Daily Expenses', 1, 0, 'L');
         $this->Cell($this->width, $this->height, $phaseCosting['daily_expenses_total_amount'], 1, 0, 'L');
         $this->Cell($this->width, $this->height, '.....', 1, 0, 'L');
         $this->Cell($this->width, $this->height, $daily_expenses_total_amount_with_service_charge, 1, 0, 'L');
-
-
 
         $this->Ln();
 
@@ -406,8 +395,6 @@ class PDF extends Fpdf
         $this->Cell($this->width, $this->height, '.....', 1, 0, 'L');
         $this->Cell($this->width, $this->height, $daily_wagers_total_amount_with_service_charge, 1, 0, 'L');
 
-
-
         $this->Ln();
 
         $this->Cell($this->width, $this->height, 'Sub Total', 1, 0, 'L');
@@ -415,13 +402,7 @@ class PDF extends Fpdf
         $this->Cell($this->width, $this->height, $total_service_charge_amount, 1, 0, 'L');
         $this->Cell($this->width, $this->height, $total_service_charge_with_amount, 1, 0, 'L');
 
-
-
         $this->Ln();
-
-
-
-
 
         $this->AddPage();
 
@@ -480,7 +461,7 @@ class PDF extends Fpdf
                 $sqft_service_charge_amount = $this->getServiceChargeAmount($sqft_total_amount, $phases['service_charge']);
 
 
-                $this->Cell(31.3, $this->height, $sqft_total_amount + $sqft_service_charge_amount , 1);
+                $this->Cell(31.3, $this->height, $sqft_total_amount + $sqft_service_charge_amount, 1);
                 $this->Ln();
             }
             // $this->AddPage();
@@ -528,7 +509,7 @@ class PDF extends Fpdf
                 }
                 $this->Cell(62.45, $this->height, $expense->created_at, 1);
                 $this->Cell(62.45, $this->height, $daily_wager->wager_name, 1);
-                $this->Cell(62.45, $this->height, $daily_wager->price_per_day, 1);
+                $this->Cell(62.45, $this->height, $daily_wager->wager_total, 1);
                 $this->Ln();
             }
             // $this->AddPage();
@@ -539,7 +520,6 @@ class PDF extends Fpdf
             $this->Ln();
 
             $this->cell(47 * 4, 10, ucwords(" Attendance"), 0, 1, 'C');
-
 
             foreach ($phases['wager_attendances'] as $a => $attendance) {
                 if ($a === 0) {
@@ -553,13 +533,12 @@ class PDF extends Fpdf
                 $this->Cell($this->width, $this->height, $attendance->created_at, 1);
                 $this->Cell($this->width, $this->height, $attendance->no_of_persons, 1);
                 $this->Cell($this->width, $this->height, $attendance->dailyWager->wager_name, 1);
-                $this->Cell($this->width, $this->height, $attendance->no_of_persons, 1);
+                $this->Cell($this->width, $this->height, $attendance->dailyWager->supplier->name, 1);
                 // $this->AddPage();
                 // }
                 $this->Ln();
             }
         }
-
 
         // if ($key < count($phases) - 1) {
         //     $this->AddPage();
@@ -576,7 +555,6 @@ class PDF extends Fpdf
             $this->Ln();
             return;
         }
-
 
         $this->Cell($this->width * 4, $this->height, 'Payment History', 0, 0, 'C');
 
@@ -601,6 +579,13 @@ class PDF extends Fpdf
 
     function sitePaymentTable($site)
     {
+
+
+        if (count($site->paymeentSuppliers) <= 0) {
+            $this->Cell(0, 10, 'No Data Awailable', 1, 0, 'C');
+            $this->Ln();
+            return;
+        }
 
         $this->Text(188 / 2, 40, 'SiteMaster');
 
@@ -632,7 +617,6 @@ class PDF extends Fpdf
 
         $this->Ln();
         $this->Ln();
-
 
         foreach ($site->paymeentSuppliers as $key => $site_payment) {
 
@@ -673,24 +657,17 @@ class PDF extends Fpdf
         $this->Cell($this->width * 2.18, $this->height, $total_paid, 1, 0,);
 
         $this->Ln();
-
-        // $this->Cell($this->width * 2.18, $this->height, 'Ongoing Site ', 1, 0,);
-        // $this->Cell($this->width * 2.18, $this->height, $is_ongoing_count, 1, 0,);
-
-        // $this->Ln();
-
-        // $this->Cell($this->width * 2.18, $this->height, 'Closed Site', 1, 0,);
-        // $this->Cell($this->width * 2.18, $this->height, $is_not_ongoing_count, 1, 0,);
-
         $this->Ln();
 
         foreach ($ledgers as $key => $ledger) {
+
+            // $this->Cell($this->width / 1.5, $this->height, $key, 1, 0,);
 
             $this->SetFont('', '', 8);
 
             // $this->Cell($this->width / 1.5, $this->height, $key, 1, 0,);
 
-            if ($key === 1) {
+            if ($key === 0) {
 
                 $this->Cell($this->width / 1.5, $this->height, 'Date', 1, 0,);
                 $this->Cell($this->width / 1.15, $this->height, 'Supplier', 1, 0,);
@@ -701,6 +678,7 @@ class PDF extends Fpdf
                 $this->Cell($this->width / 2.5, $this->height, 'Debit', 1, 0,);
                 $this->Cell($this->width / 3.2, $this->height, 'Credit', 1, 0,);
                 $this->Ln();
+
             }
 
             $this->Cell($this->width / 1.5, $this->height, $ledger['created_at'], 1, 0,);

@@ -1,24 +1,17 @@
 <x-app-layout>
 
+    <x-breadcrumb :names="['View ' . $dialy_expense->phase->site->site_name, 'Edit ' . $dialy_expense->item_name]" :urls="[
+        'admin/sites/' . base64_encode($dialy_expense->phase->site->id),
+        'admin/daily-expenses/' . base64_encode($dialy_expense->id) . '/edit',
+    ]" />
 
     <div class="row">
 
-         @if (session('message'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert" id="alert-box">
-                {{ session('message') }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-        @endif
-
         <div class="col-md-12 grid-margin stretch-card">
+
             <div class="card">
+
                 <div class="card-body">
-
-                    <h3 class="text-info">Edit Daily Expense</h3>
-
-
 
                     <form method="POST" action="{{ route('daily-expenses.update', [$dialy_expense->id]) }}"
                         class="forms-sample material-form" enctype="multipart/form-data">
@@ -48,7 +41,8 @@
 
                         <div class="col-12 mt-3">
 
-                            <input class="form-control" type="file" id="formFile" name="bill_photo" value="{{ $dialy_expense->bill_photo }}">
+                            <input class="form-control" type="file" id="formFile" name="bill_photo"
+                                value="{{ $dialy_expense->bill_photo }}">
                             @error('bill_photo')
                                 <x-input-error :messages="$message" class="mt-2" />
                             @enderror
@@ -64,21 +58,15 @@
                             @enderror
                         </div>
 
-                        <div class="flex items-center justify-end mt-4">
 
-                            <div class="button-container">
-
-                                <a class=" btn btn-info"
-                                    href="{{ route('sites.show', [base64_encode($dialy_expense->phase->site->id)]) }}"><span>Back</span></a>
-
-                                <button class="btn btn-info"><span>Update Billing</span></button>
-
-                            </div>
-                        </div>
+                        <button class="btn btn-info"><span>Save</span></button>
                     </form>
 
                 </div>
+
             </div>
+
+
         </div>
     </div>
 

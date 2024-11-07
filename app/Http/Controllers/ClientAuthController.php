@@ -15,7 +15,6 @@ class ClientAuthController extends Controller
     public function store(Request $request)
     {
 
-        // dd($request->all());
 
         $request->validate([
             'number' => 'required|digits:10',
@@ -24,12 +23,12 @@ class ClientAuthController extends Controller
 
         if (Auth::guard('clients')->attempt($request->only('number', 'password'))) {
 
-            return redirect()->intended('client/dashboard');
+            return redirect()->to('client/dashboard');
 
         }
 
         return back()->withErrors([
-            'number' => 'The provided credentials do not match our records.',
+            'password' => 'The provided credentials do not match our records.',
         ]);
     }
 }

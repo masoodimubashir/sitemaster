@@ -37,7 +37,7 @@ class AdminUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('users.index')->with('message', 'user created successfully');
+        return redirect()->route('users.index')->with('message', 'create');
     }
 
     public function editUser($id) {

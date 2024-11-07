@@ -51,7 +51,7 @@ class ConstructionMaterialBilling extends Controller
 
             $validator = Validator::make($request->all(), [
                 'image' => 'sometimes|mimes:png,jpg,webp|max:1024',
-                'amount' => 'required|numeric',
+                'amount' => 'required|numeric|max:1000000',
                 'item_name' => 'required|string',
                 'supplier_id' => 'required|exists:suppliers,id',
                 'phase_id' => 'required|exists:phases,id',
@@ -118,9 +118,8 @@ class ConstructionMaterialBilling extends Controller
 
         $validatedData = $request->validate([
             'image' => 'sometimes|mimes:png,jpg,webp|max:1024',
-            'amount' => 'required',
+            'amount' => 'required|numeric|max:9999999999',
             'item_name' => 'required',
-            // 'site_id' => 'required|exists:sites,id',
             'supplier_id' => 'required|exists:suppliers,id',
             'phase_id' => 'required|exists:phases,id'
         ]);
@@ -146,14 +145,13 @@ class ConstructionMaterialBilling extends Controller
         $construction_material_billing->item_image_path = $image_path;
         $construction_material_billing->item_name = $validatedData['item_name'];
         $construction_material_billing->verified_by_admin = 1;
-        // $construction_material_billing->site_id = $validatedData['site_id'];
         $construction_material_billing->supplier_id = $validatedData['supplier_id'];
         $construction_material_billing->user_id = auth()->user()->id;
         $construction_material_billing->phase_id = $validatedData['phase_id'];
         $construction_material_billing->save();
 
-        return redirect()->back()
-            ->with('message', 'Construction billing updated successfully');
+        return redirect()->route('sites.show', [base64_encode($construction_material_billing->phase->site->id)])
+            ->with('status', 'update');
     }
 
     /**
