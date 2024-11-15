@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ConstructionMaterialBilling extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'image',
@@ -27,7 +27,7 @@ class ConstructionMaterialBilling extends Model
      */
     public function supplier(): BelongsTo
     {
-        return $this->belongsTo(Supplier::class,);
+        return $this->belongsTo(Supplier::class);
     }
 
     /**

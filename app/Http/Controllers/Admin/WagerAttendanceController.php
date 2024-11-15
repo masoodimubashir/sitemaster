@@ -7,6 +7,7 @@ use App\Models\DailyWager;
 use App\Models\User;
 use App\Models\WagerAttendance;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class WagerAttendanceController extends Controller
@@ -52,7 +53,7 @@ class WagerAttendanceController extends Controller
             }
 
             try {
-                
+
                 $daily_wager_attendance = new WagerAttendance();
                 $daily_wager_attendance->no_of_persons = $request->no_of_persons;
                 $daily_wager_attendance->daily_wager_id = $request->daily_wager_id;
@@ -103,7 +104,7 @@ class WagerAttendanceController extends Controller
         $request->validate([
             'no_of_persons' => 'required|integer|min:1',
             'daily_wager_id' => 'sometimes|exists:daily_wagers,id',
-            'date' => 'sometimes|date',
+            'date' => 'sometimes',
         ]);
 
         $wager_attendance = WagerAttendance::find($id);
@@ -115,7 +116,8 @@ class WagerAttendanceController extends Controller
         $wager_attendance->created_at = $request->date ? $request->date :  now();
         $wager_attendance->save();
 
-        return redirect()->route('sites.show')->with('status', 'update');
+        return redirect()->route('sites.show', [base64_encode($wager_attendance->phase->site->id)])
+            ->with('status', 'update');
     }
 
     /**
@@ -123,12 +125,28 @@ class WagerAttendanceController extends Controller
      */
     public function destroy(string $id)
     {
-        $daily_wager_attendance_id = base64_decode($id);
 
-        $daily_wager_attendance = WagerAttendance::find($daily_wager_attendance_id);
 
-        $daily_wager_attendance->delete();
+        try {
 
-        return redirect()->back()->with('status', 'delete');
+            $daily_wager_attendance = WagerAttendance::find($id);
+
+            if (!$daily_wager_attendance) {
+                return redirect()->back()->with('error', 'Something Went Wrong...');
+            }
+
+            Storage::delete($daily_wager_attendance->item_image_path);
+
+            $daily_wager_attendance->delete();
+
+            return response()->json(['message' => 'Item Deleted...'], 201);
+
+        } catch (\Throwable $th) {
+
+            return response()->json(['error' => 'An unexpected error occurred: '], 500);
+
+        }
+
+
     }
 }

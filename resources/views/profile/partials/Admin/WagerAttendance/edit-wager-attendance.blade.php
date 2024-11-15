@@ -36,14 +36,7 @@
                             <input id="daily_wager_id" type="hidden" name="daily_wager_id"
                                 value="{{ $daily_wager_attendance->daily_wager_id }}" />
 
-                            @error('daily_wager_id')
-                                <x-input-error :messages="$message" class="mt-2" />
-                            @enderror
                         </div>
-                        @error('daily_wager_id')
-                            <x-input-error :messages="$message" class="mt-2" />
-                        @enderror
-
 
                         <div class="mt-4">
                             <input id="phase_id" type="hidden" name="phase_id" placeholder="Phase"
@@ -53,14 +46,16 @@
                             @enderror
                         </div>
 
+
                         <div class="mt-4 ">
-                            <input type="date" name="date" class="form-control">
+                            <label for="date">Select Date</label>
+                            <input type="date" name="date" id="date" class="form-control" style="cursor: pointer">
                             @error('date')
                                 <x-input-error :messages="$message" class="mt-2" />
                             @enderror
                         </div>
 
-                        <!-- Is Present -->
+                        {{-- <!-- Is Present -->
                         <div class="form-check mt-4">
 
                             <div class="custom-control custom-checkbox ">
@@ -73,7 +68,7 @@
                                 <x-input-error :messages="$message" class="mt-2" />
                             @enderror
 
-                        </div>
+                        </div> --}}
 
                         <button class="btn btn-info mt-4"><span>Make Attendance</span></button>
 

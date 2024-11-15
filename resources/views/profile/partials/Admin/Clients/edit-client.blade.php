@@ -1,17 +1,14 @@
 <x-app-layout>
 
+    <x-breadcrumb :names="['Clients', 'Edit ' . $client->name]" :urls="['admin/clients', 'admin/clients/' . base64_encode($client->id) . '/edit']" />
 
-    @if (session('status') === 'client')
-        <x-success-message message="Client Updated Successfully..." />
-    @endif
 
     <div class="row">
 
-        <x-breadcrumb :names="['Clients', 'Edit ' . $client->name]" :urls="['admin/clients', 'admin/clients/' . base64_encode($client->id) . '/edit']" />
-
-
         <div class="col-md-12 grid-margin stretch-card">
+
             <div class="card">
+
                 <div class="card-body">
 
                     <form method="POST" action="{{ route('clients.update', [$client->id]) }}"
@@ -28,6 +25,13 @@
                         </div>
 
                         <div class="form-group">
+                            <input type="number" name="number" min="0" value="{{ $client->number }}" />
+                            <label for="number" class="control-label">Phone Number (Username)</label><i
+                                class="bar"></i>
+                            <x-input-error :messages="$errors->get('number')" class="mt-2" />
+                        </div>
+
+                        <div class="form-group">
                             <input type="text" name="password" value="{{ old('password') }}" />
                             <label for="input" class="control-label">Password</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('password')" class="mt-2" />
@@ -39,8 +43,6 @@
                             <label for="input" class="control-label">Confirm Password</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                         </div>
-
-
 
                         <button class=" btn btn-info"><span>Save</span></button>
 

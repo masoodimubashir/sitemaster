@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Supplier;
 use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
+use Illuminate\Support\Facades\Log;
 
 class SupplierController extends Controller
 {
@@ -43,7 +44,7 @@ class SupplierController extends Controller
             'is_workforce_provider' => $request->provider_type === 'is_workforce_provider' ? 1 : 0
         ]);
 
-        return redirect()->route('suppliers.index')->with('status', 'supplier');
+        return redirect()->route('suppliers.index')->with('status', 'create');
     }
 
     /**
@@ -52,67 +53,105 @@ class SupplierController extends Controller
     public function show(string $id)
     {
 
-        $supplier_id = $id;
+        $supplier = Supplier::with([
+            'constructionMaterialBilling.phase' => function ($query) {
+                $query->whereNull('deleted_at')
+                    ->with(['site' => function ($siteQuery) {
+                        $siteQuery->whereNull('deleted_at');
+                    }]);
+            },
+            'dailyWagers.phase' => function ($query) {
+                $query->whereNull('deleted_at');
+            },
+            'squareFootages.phase' => function ($query) {
+                $query->whereNull('deleted_at')
+                    ->with(['site' => function ($siteQuery) {
+                        $siteQuery->whereNull('deleted_at');
+                    }]);
+            },
+        ])
+            ->withSum('constructionMaterialBilling', 'amount')
+            ->withSum('paymentSuppliers', 'amount')
+            ->find($id);
 
-        $supplier = Supplier::find($supplier_id);
+        $grandTotal = 0;
+
+        $data = collect();
+
+        $data = $data->merge($supplier->constructionMaterialBilling->map(function ($material) {
+            return [
+                'created_at' => $material->created_at,
+                'type' => 'Material',
+                'image' => $material->item_image_path,
+                'item' => $material->item_name,
+                'price_per_unit' => 0,
+                'total_price' => $material->amount,
+                'site' => $material->phase->site->site_name,
+                'site_owner' => $material->phase->site->site_owner_name,
+                'site_id' => $material->phase->site->id
+            ];
+        }));
+
+        $data = $data->merge($supplier->dailyWagers->map(function ($wager) {
+            return [
+                'created_at' => $wager->created_at,
+                'type' => 'Daily Wager',
+                'image' => null,
+                'item' => $wager->wager_name,
+                'price_per_unit' => $wager->price_per_day,
+                'total_price' => $wager->wager_total,
+                'site' => $wager->phase->site->site_name,
+                'site_owner' => $wager->phase->site->site_owner_name,
+                'site_id' => $wager->phase->site->id
+
+            ];
+        }));
+
+        $data = $data->merge($supplier->squareFootages->map(function ($sqft) {
+            return [
+                'created_at' => $sqft->created_at,
+                'type' => 'SQFT',
+                'image' => $sqft->image_path,
+                'item' => $sqft->wager_name,
+                'price_per_unit' => $sqft->price,
+                'total_price' => $sqft->price * $sqft->multiplier,
+                'site' => $sqft->phase->site->site_name,
+                'site_owner' => $sqft->phase->site->site_owner_name,
+                'site_id' => $sqft->phase->site->id
+
+            ];
+        }));
 
         if ($supplier->is_raw_material_provider === 1) {
 
-            $supplier = $supplier->load([
-                'constructionMaterialBilling' => function ($q) {
-                    $q->with(['phase' => function ($q) {
-                        $q->with(['site' => function ($q) {
-                            $q->orderBy('created_at');
-                        }]);
-                    }]);
-                },
-                'paymentSuppliers'
-            ])
-            ->loadSum('constructionMaterialBilling', 'amount')
-            ->loadSum('paymentSuppliers', 'amount');
-
-            $totalBaseAmount = 0;
-
-            foreach ($supplier->constructionMaterialBilling as $billing) {
-                $totalBaseAmount += $billing->amount;
+            foreach ($data as $d) {
+                if ($d['type'] === 'Material') {
+                    $grandTotal += $d['total_price'];
+                }
             }
 
-            $grandTotal = $totalBaseAmount;
-
-            $totalPaymentSuppliers = $supplier->paymentSuppliers_sum_amount;
-            $supplier->total = $grandTotal + $totalPaymentSuppliers;
-
-            $sites = $supplier->constructionMaterialBilling->pluck('phase.site')->unique('id');
-
-            return view('profile.partials.Admin.Supplier.show-supplier_raw_material', compact('supplier', 'sites', 'grandTotal'));
+            return view('profile.partials.Admin.Supplier.show-supplier_raw_material',
+                compact(
+                    'data',
+                    'supplier',
+                    'grandTotal'
+                )
+            );
         } else {
 
-            $supplier->load([
-                'dailyWagers.phase.wagerAttendances',
-                'squareFootages.phase.site'
-            ])
-            ->loadSum('dailyWagers', 'price_per_day')
-            ->loadSum('paymentSuppliers', 'amount');
-
-            $totalDailyWagersPrice = 0;
-            $totalSquareFootagesPrice = 0;
-
-            foreach ($supplier->dailyWagers as $dailyWager) {
-                $expense = $dailyWager->phase->wagerAttendances->sum('no_of_persons') * $dailyWager->price_per_day ;
-                $totalDailyWagersPrice += $expense;
+            foreach ($data as $d) {
+                if ($d['type'] !== 'Material') {
+                    $grandTotal += $d['total_price'];
+                }
             }
 
-            foreach ($supplier->squareFootages as $squareFootage) {
-                $totalSquareFootagesPrice += $squareFootage->price * $squareFootage->multiplier;
-            }
-
-            $totalPrice = $totalDailyWagersPrice + $totalSquareFootagesPrice;
-
-            $totalPaymentSuppliers = $supplier->paymentSuppliers_sum_amount;
-
-            $supplier->total = $totalPrice + $totalPaymentSuppliers;
-
-            return view('profile.partials.Admin.Supplier.show_supplier_workforce', compact('supplier'));
+            return view('profile.partials.Admin.Supplier.show_supplier_workforce',
+                compact(
+                    'data',
+                    'supplier',
+                    'grandTotal',
+                )
+            );
         }
     }
 
@@ -122,7 +161,7 @@ class SupplierController extends Controller
     public function edit(Supplier $supplier)
     {
         if (!$supplier) {
-            return redirect()->back()->with('status', 'supplier');
+            return redirect()->back()->with('status', 'error');
         }
 
         return view('profile.partials.Admin.Supplier.edit-supplier', compact('supplier'));
@@ -137,16 +176,34 @@ class SupplierController extends Controller
 
         $supplier->update($request->all());
 
-        return redirect()->route('suppliers.index')->with('status', 'supplier');
+        return redirect()->route('suppliers.index')->with('status', 'update');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Supplier $supplier)
+    public function destroy($id)
     {
+
+        $supplier = Supplier::find($id);
+
+        if (!$supplier) {
+            return redirect()->back()->with('status', 'error')->with('message', 'Site not found.');
+        }
+
+        $siteHasRecords =  $supplier->is_raw_material_provider ?
+            $supplier->paymentSuppliers()->exists() || $supplier->whereHas('constructionMaterialBilling')->exists() :
+            $supplier->whereHas('constructionMaterialBilling')->exists() ||
+            $supplier->whereHas('squareFootages')->exists() ||
+            $supplier->whereHas('dailyWagers')->exists() ||
+            $supplier->paymentSuppliers()->exists();
+
+        if ($siteHasRecords) {
+            return redirect()->back()->with('status', 'error');
+        }
+
         $supplier->delete();
 
-        return redirect()->back()->with('message', 'supplier deleted');
+        return redirect()->back()->with('status', 'delete')->with('message', 'Site deleted successfully.');
     }
 }

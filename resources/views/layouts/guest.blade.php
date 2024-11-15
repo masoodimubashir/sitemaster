@@ -71,30 +71,27 @@
     <script src="{{ asset('assets/js/hoverable-collapse.js') }}"></script>
     <script src="{{ asset('assets/js/todolist.js') }}"></script>
 
+<script>
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById('password');
+        const passwordIcon = document.getElementById('password-icon');
 
-    <script>
-        function togglePasswordVisibility() {
-            const passwordInput = document.getElementById('password');
-            const passwordIcon = document.getElementById('password-icon');
-
-            if (passwordInput.type === 'password') {
-                passwordInput.type = 'text';
-
-                passwordIcon.classList.remove('fa-eye-slash');
-                passwordIcon.classList.remove('text-info')
-                passwordIcon.classList.add('fa-eye');
-                passwordIcon.classList.add('text-danger')
-
-
-            } else {
-                passwordInput.type = 'password';
-                passwordIcon.classList.remove('fa-eye');
-                passwordIcon.classList.remove('text-danger')
-                passwordIcon.classList.add('fa-eye-slash');
-                passwordIcon.classList.add('text-info')
-            }
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            passwordIcon.classList.remove('fa-eye-slash');
+            passwordIcon.classList.add('fa-eye');
+            passwordIcon.classList.add('text-danger');
+            passwordIcon.style.setProperty('color', '#51B1E1');
+        } else {
+            passwordInput.type = 'password';
+            passwordIcon.classList.remove('fa-eye');
+            passwordIcon.classList.add('fa-eye-slash');
+            passwordIcon.classList.remove('text-danger');
+            passwordIcon.style.removeProperty('color');
         }
-    </script>
+    }
+</script>
+
     <!-- endinject -->
 </body>
 

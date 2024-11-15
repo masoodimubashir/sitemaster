@@ -9,7 +9,7 @@
         }
     </style>
 
-    <x-breadcrumb :names="['Dashboard', 'Sites', ' Ledger']" :urls="['admin/dashboard', 'admin/sites', 'admin/payments']"></x-breadcrumb>
+    <x-breadcrumb :names="['Ledger']" :urls="['admin/payments']"></x-breadcrumb>
 
     <div class="row">
         <div class="col-sm-12">
@@ -96,6 +96,7 @@
 
                                             </div>
                                         </td>
+
                                         <td>
                                             <div class="p-3 d-flex flex-column gap-2 text-info fw-bold">
                                                 <small>
@@ -109,14 +110,15 @@
 
                                             </div>
                                         </td>
+
                                         <td colspan="4" style="background: #F4F5F7; border:none">
 
                                             <div class="row">
 
-                                                <form class="col" action="{{ url('admin/payments') }}" method="GET"
+                                                <form class="col " action="{{ url('admin/payments') }}" method="GET"
                                                     id="filterForm">
-                                                    <select class="form-select form-select-sm bg-white"
-                                                        name="date_filter" id="date_filter"
+                                                    <select class="form-select form-select-sm bg-white text-black"
+                                                        style="cursor: pointer" name="date_filter" id="date_filter"
                                                         onchange="document.getElementById('filterForm').submit();">
                                                         <option value="today"
                                                             {{ request('date_filter') === 'today' ? 'selected' : '' }}>
@@ -124,15 +126,15 @@
                                                         <option value="yesterday"
                                                             {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>
                                                             Yesterday</option>
-                                                        <option value="last_week"
-                                                            {{ request('date_filter') === 'last_week' ? 'selected' : '' }}>
-                                                            Last Week</option>
-                                                        <option value="last_month"
-                                                            {{ request('date_filter') === 'last_month' ? 'selected' : '' }}>
-                                                            Last Month</option>
-                                                        <option value="last_year"
-                                                            {{ request('date_filter') === 'last_year' ? 'selected' : '' }}>
-                                                            Last Year</option>
+                                                        <option value="this_week"
+                                                            {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>
+                                                            This Week</option>
+                                                        <option value="this_month"
+                                                            {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>
+                                                            This Month</option>
+                                                        <option value="this_year"
+                                                            {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>
+                                                            This Year</option>
                                                         <option value="lifetime"
                                                             {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
                                                             All Data
@@ -144,19 +146,19 @@
 
                                                 <form class="col" action="{{ url('admin/ledger/report') }}"
                                                     method="GET" id="ledger-report">
-                                                    <select class="form-select form-select-sm bg-white"
-                                                        name="date_filter" id="date_filter"
+                                                    <select class="form-select form-select-sm bg-white text-black"
+                                                        style="cursor: pointer" name="date_filter" id="date_filter"
                                                         onchange="document.getElementById('ledger-report').submit();">
                                                         <option value="today">
                                                             Generate Today's Report</option>
                                                         <option value="yesterday">
                                                             Generate Yesterday's Report</option>
-                                                        <option value="last_week">
-                                                            Generate Last Week's Report</option>
-                                                        <option value="last_month">
-                                                            Generate Last Month's Report</option>
-                                                        <option value="last_year">
-                                                            Generate Last Year's Report</option>
+                                                        <option value="this_week">
+                                                            Generate This Week's Report</option>
+                                                        <option value="this_month">
+                                                            Generate This Month's Report</option>
+                                                        <option value="this_year">
+                                                            Generate This Year's Report</option>
                                                         <option value="lifetime">
                                                             Generate Full Report</option>
                                                     </select>
@@ -179,27 +181,46 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($paginatedLedgers as $key => $ledger)
-                                        @php
-                                            // $balance =  $ledger['amount'] - $ledger['payment_amounts'];
-                                        @endphp
+                                    @if (count($paginatedLedgers))
+
+
+                                        @foreach ($paginatedLedgers as $key => $ledger)
+                                            @php
+                                                // $balance =  $ledger['amount'] - $ledger['payment_amounts'];
+                                            @endphp
+                                            <tr>
+                                                <td>
+                                                    {{ $ledger['created_at'] }}
+                                                </td>
+                                                <td>
+                                                    {{ ucwords($ledger['supplier']) }}
+                                                </td>
+                                                <td>
+                                                    {{ ucwords($ledger['phase']) }}
+                                                </td>
+                                                <td>
+                                                    {{ ucwords($ledger['site']) }}
+                                                </td>
+                                                <td>
+                                                    {{ $ledger['category'] }}
+                                                </td>
+                                                <td>
+                                                    {{ ucwords($ledger['description']) }}
+                                                </td>
+                                                <td>
+                                                    {{ $ledger['debit'] }}
+                                                </td>
+                                                <td>
+                                                    {{ $ledger['credit'] }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @else
                                         <tr>
-                                            <td>
-                                                {{ $ledger['created_at'] }}
-                                            </td>
-                                            <td>{{ $ledger['category'] === 'Daily Expense' ? $ledger['category'] : ucwords($ledger['supplier']) }}
-                                            </td>
-                                            <td>{{ ucwords($ledger['phase']) }}</td>
-                                            <td>{{ ucwords($ledger['site']) }}</td>
-                                            {{-- <td>{{ $ledger['service_charge'] }}</td> --}}
-                                            <td>{{ $ledger['category'] }}</td>
-                                            <td>{{ ucwords($ledger['description']) }}</td>
-                                            <td>{{ $ledger['debit'] }}</td>
-                                            <td>
-                                                {{ $ledger['credit'] }}
-                                            </td>
+                                            <td class="text-danger fw-bold text-center" colspan="8">No Records
+                                                Awailable...</td>
                                         </tr>
-                                    @endforeach
+                                    @endif
                                 </tbody>
                             </table>
 
@@ -211,8 +232,10 @@
                     </div>
                     <div class="tab-pane fade" id="material" role="tabpanel" aria-labelledby="material-tab">
 
+
                         <div class="table-responsive mt-4">
-                            {{-- @if (count($payments))
+
+                            @if (count($paginatedLedgers))
 
                                 <table class="table table-bordered">
 
@@ -228,33 +251,57 @@
                                     </thead>
 
                                     <tbody>
+                                        @if (count($paginatedLedgers))
 
-                                        @foreach ($payments as $payment)
+
+                                            @foreach ($paginatedLedgers as $key => $ledger)
+                                                @if ($ledger['category'] === 'Payments')
+                                                    <tr>
+                                                        <td>
+                                                            {{ $ledger['created_at'] }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ ucwords($ledger['supplier']) }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ ucwords($ledger['site']) }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ ucwords($ledger['site_owner']) }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ ucwords($ledger['contact_no']) }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ $ledger['credit'] }}
+                                                        </td>
+                                                    </tr>
+                                                @endif
+                                            @endforeach
+                                        @else
                                             <tr>
-
-                                                <td>{{ $payment->created_at->format('d-M-Y') }}</td>
-                                                <td>{{ ucwords($payment->supplier->name) }}</td>
-                                                <td>{{ ucwords($payment->site->site_name) }}</td>
-                                                <td>{{ ucwords($payment->site->site_owner_name) }}</td>
-                                                <td>{{ $payment->site->contact_no }}</td>
-                                                <td>{{ Number::currency($payment->amount, 'INR') }}</td>
-
+                                                <td class="text-danger fw-bold text-center" colspan="8">No Records
+                                                    Awailable...</td>
                                             </tr>
-                                        @endforeach
+                                        @endif
 
                                     </tbody>
 
 
                                 </table>
                             @else
-                                <h1 class="display-4 bg-white p-2 text-center fw-4">No records found..</h1>
+                                <h1 class="display-4 bg-white p-2 text-center fw-3 text-danger">No records found..</h1>
 
-                            @endif --}}
+                            @endif
                         </div>
 
                         <div class="mt-4">
                             {{-- {{ $payments->links() }} --}}
-
                         </div>
                     </div>
                 </div>
@@ -268,7 +315,9 @@
         tabindex="-1">
 
         <div class="modal-dialog modal-dialog-centered">
+
             <div class="modal-content">
+
                 <div class="modal-body">
 
                     <form id="payment_supplierForm" class="forms-sample material-form">
@@ -329,9 +378,11 @@
                     </form>
 
                 </div>
+
             </div>
 
         </div>
+
     </div>
 
     <div id="messageContainer"> </div>

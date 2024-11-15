@@ -31,7 +31,6 @@ class Supplier extends Model
         return $this->hasMany(constructionMaterialBilling::class, 'supplier_id', 'id');
     }
 
-
     /**
      * Get all of the paymentSuppliers for the Supplier
      *
@@ -62,10 +61,5 @@ class Supplier extends Model
         return $this->hasMany(SquareFootageBill::class);
     }
 
-    /**
-     * Get all of the users for the Supplier
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
 
 }

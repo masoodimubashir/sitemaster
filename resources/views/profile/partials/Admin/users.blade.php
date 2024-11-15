@@ -3,8 +3,20 @@
 
     <x-breadcrumb :names="['Site Engineer']" :urls="['admin/users']" />
 
-    @if (session('message') === 'create')
+    @if (session('status') === 'create')
         <x-success-message message="Site Engineer Created..." />
+    @endif
+
+    @if (session('status') === 'update')
+        <x-success-message message="Site Engineer Updated..." />
+    @endif
+
+    @if (session('status') === 'delete')
+        <x-success-message message="Site Engineer Deleted..." />
+    @endif
+
+    @if (session('status') === 'error')
+        <x-success-message message="Sorry! Site Engineer Not Found..." />
     @endif
 
     <div class="row">

@@ -48,8 +48,8 @@
                         </div>
 
                         <div>
-                            <select class="form-select form-select-sm" id="exampleFormControlSelect3" name="user_id">
-                                <option value="">Assign To User</option>
+                            <label for="user_id">Select Site Engineer</label>
+                            <select class="form-select form-select-sm text-black" id="user_id" name="user_id" style="cursor: pointer">
                                 @foreach ($users as $user)
                                     <option {{ $site->user_id === $user->id ? 'selected' : '' }}
                                         value="{{ $user->id }}">{{ ucfirst($user->name) }}</option>

@@ -111,6 +111,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     // Sites Controller
     Route::resource('/sites', SiteController::class);
 
+    //  On Going Site Updated With This Route
     Route::post('sites/update-on-going/{id}', UpdateOnGoingController::class)->name('sites.update-on-going');
 
     Route::resource('/workforce', WorkforceController::class);
@@ -129,7 +130,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
 
     Route::resource('/phase', PhaseController::class);
-    
+
     Route::resource('/payment-bills', PaymentBillsController::class);
 
     Route::get('/site/ledger/{id}', SitePaymentController::class)->name('sites.view-ledger');

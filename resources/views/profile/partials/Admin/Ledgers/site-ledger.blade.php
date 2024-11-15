@@ -1,12 +1,6 @@
 <x-app-layout>
 
-
-     <x-breadcrumb :names="['Dashboard', 'Sites',  ' Ledger']" :urls="[
-        'admin/dashboard',
-        'admin/sites',
-        'admin/site/ledger/' . $id,
-
-    ]" />
+    <x-breadcrumb :names="['Sites', ' Ledger']" :urls="['admin/sites', 'admin/site/ledger/' . $id]" />
 
     <div class="row">
         <div class="col-sm-12">
@@ -69,15 +63,15 @@
                                             <option value="yesterday"
                                                 {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>
                                                 Yesterday</option>
-                                            <option value="last_week"
-                                                {{ request('date_filter') === 'last_week' ? 'selected' : '' }}>
-                                                Last Week</option>
-                                            <option value="last_month"
-                                                {{ request('date_filter') === 'last_month' ? 'selected' : '' }}>
-                                                Last Month</option>
-                                            <option value="last_year"
-                                                {{ request('date_filter') === 'last_year' ? 'selected' : '' }}>
-                                                Last Year</option>
+                                            <option value="this_week"
+                                                {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>
+                                                This Week</option>
+                                            <option value="this_month"
+                                                {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>
+                                                This Month</option>
+                                            <option value="this_year"
+                                                {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>
+                                                This Year</option>
                                             <option value="lifetime"
                                                 {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
                                                 All Data</option>
@@ -101,28 +95,39 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($paginatedLedgers as $key => $ledger)
-                            @php
 
-                                // $balance =  $ledger['amount'] - $ledger['payment_amounts'];
-                            @endphp
+                        @if (count($paginatedLedgers))
+                            @foreach ($paginatedLedgers as $key => $ledger)
+                                @php
+                                    if ($ledger['category'] !== 'Payments') {
+                                        $service_charge_amount = ($ledger['debit'] * $service_charge) / 100;
+                                        $amount_with_service_charge = $service_charge_amount + $ledger['debit'];
+                                    }
+                                @endphp
+
+                                <tr>
+                                    <td>
+                                        {{ $ledger['created_at'] }}
+                                    </td>
+                                    <td>{{ $ledger['category'] === 'Daily Expense' ? $ledger['category'] : ucwords($ledger['supplier']) }}
+                                    </td>
+                                    <td>{{ ucwords($ledger['phase']) }}</td>
+                                    <td>{{ ucwords($ledger['site']) }}</td>
+                                    <td>{{ $ledger['category'] }}</td>
+                                    <td>{{ ucwords($ledger['description']) }}</td>
+                                    <td>{{ $ledger['category'] !== 'Payments' ? $amount_with_service_charge : 0 }}
+                                    </td>
+                                    <td>
+                                        {{ $ledger['credit'] }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @else
                             <tr>
-                                <td>
-                                    {{ $ledger['created_at'] }}
-                                </td>
-                                <td>{{ $ledger['category'] === 'Daily Expense' ? $ledger['category'] : ucwords($ledger['supplier']) }}
-                                </td>
-                                <td>{{ ucwords($ledger['phase']) }}</td>
-                                <td>{{ ucwords($ledger['site']) }}</td>
-                                {{-- <td>{{ $ledger['service_charge'] }}</td> --}}
-                                <td>{{ $ledger['category'] }}</td>
-                                <td>{{ ucwords($ledger['description']) }}</td>
-                                <td>{{ $ledger['debit'] }}</td>
-                                <td>
-                                    {{ $ledger['credit'] }}
-                                </td>
+                                <td class="text-danger fw-bold text-center" colspan="8">No Records Awailable...</td>
                             </tr>
-                        @endforeach
+                        @endif
+
                     </tbody>
                 </table>
 

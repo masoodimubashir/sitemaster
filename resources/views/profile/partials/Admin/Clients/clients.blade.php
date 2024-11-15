@@ -2,8 +2,20 @@
 
     <x-breadcrumb :names="['Clients']" :urls="['admin/clients']" />
 
-    @if (session('message') === 'client')
+    @if (session('status') === 'update')
+        <x-success-message message='Client Updated Succussfully...' />
+    @endif
+
+    @if (session('status') === 'error')
+        <x-success-message message='Sorry! Client Not Found...' />
+    @endif
+
+    @if (session('status') === 'create')
         <x-success-message message='Client Created Succussfully...' />
+    @endif
+
+    @if (session('status') === 'delete')
+        <x-success-message message='Client Deleted Succussfully...' />
     @endif
 
     <div class="row">

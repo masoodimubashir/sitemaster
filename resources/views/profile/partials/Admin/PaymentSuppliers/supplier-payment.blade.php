@@ -1,13 +1,16 @@
 <x-app-layout>
 
+     <x-breadcrumb
+        :names="[ 'View ' . $supplier->name , 'Supplier Payment History']"
+        :urls="[ 'admin/suppliers/' . $supplier->id, 'admin/sites/supplier-payments/' . $supplier->id . '/edit' ]"
+    />
+
     <div class="row">
 
         <div class="col-lg-12 grid-margin stretch-card">
 
-
             <div class="card-body row g-2 text-left">
 
-                <h3 class="mb-4 mt-2 text-info fw-bold">Payment History</h3>
 
                 <table class="table table-bordered table-responsive">
                     <thead>

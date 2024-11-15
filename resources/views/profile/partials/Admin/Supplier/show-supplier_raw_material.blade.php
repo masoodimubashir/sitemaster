@@ -1,96 +1,11 @@
 <x-app-layout>
 
+    @php
+        $balance = $grandTotal - $supplier->payment_suppliers_sum_amount;
+    @endphp
 
-
-
-
-    {{-- Modal --}}
     <style>
-        /* Styles for the modal */
-        .modal {
-            display: none;
-            /* Hidden by default */
-            position: fixed;
-            /* Stay in place */
-            z-index: 1;
-            /* Sit on top */
-            left: 0;
-            top: 0;
-            width: 100%;
-            /* Full width */
-            height: 100%;
-            /* Full height */
-            overflow: auto;
-            /* Enable scroll if needed */
-            background-color: rgba(0, 0, 0, 0.7);
-
-            /* Black w/ opacity */
-        }
-
-        /* .modal-content input[type="text"],
-        .modal-content input[type="number"] {
-            width: 100%;
-            border: 0;
-            outline: 1px solid #dee2e6;
-            font-weight: 400;
-            border-radius: 4px;
-            display: block;
-            background: none;
-            font-size: 0.875rem;
-            border-width: 0;
-            border-color: transparent;
-            line-height: 1.9;
-            -webkit-transition: all 0.28s ease;
-            transition: all 0.28s ease;
-            box-shadow: none;
-        } */
-
-        /* Modal Content */
-        .modal-content {
-            background-color: #fefefe;
-            margin: 50% auto;
-            /* Centered on the screen */
-            padding: 15px;
-            width: 90%;
-            /* Default width for mobile */
-            max-width: 600px;
-            /* Max width for larger screens */
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-        }
-
-
-
-
-        /* Responsive design */
-        @media screen and (min-width: 768px) {
-            .modal-content {
-                margin: 10% auto;
-                /* Adjust margins for larger screens */
-                width: 80%;
-                /* Slightly wider on larger screens */
-            }
-        }
-
-        @media screen and (min-width: 992px) {
-            .modal-content {
-                margin: 15% auto;
-                /* Further adjustment for very large screens */
-                width: 60%;
-                /* Even wider on very large screens */
-            }
-        }
-    </style>
-
-
-    {{-- Accordian --}}
-    <style>
-        /* Accordion container */
+        
         .accordion {
             margin: 0 auto;
         }
@@ -141,117 +56,135 @@
 
 
 
- <x-breadcrumb
-        :names="['Dashboard', 'Suppliers', $supplier->name ]"
-        :urls="['admin/dashboard', 'admin/suppliers', 'admin/suppliers/' . $supplier->id]"
-    />
-
-    @if ($supplier)
+    {{-- <x-breadcrumb :names="['Suppliers', $supplier->name]" :urls="['admin/suppliers', 'admin/suppliers/' . $supplier->id]" /> --}}
 
 
-        <div class=" row ">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex flex-wrap justify-content-start gap-2">
 
-            <div class="col-md-3 ">
-                <button class="btn btn-info btns btn-sm" data-modal="payment-supplier">
+                 <button class="btn btn-info btns"  data-bs-toggle="modal" data-bs-target="#exampleModal">
                     Make Payment
                 </button>
-            </div>
 
-            <div class="col-md-3 ">
-
-                <a href="{{ route('supplier-payments.edit', [$supplier->id]) }}" class="btn btn-info btns btn-sm"
+                <a href="{{ route('supplier-payments.edit', [$supplier->id]) }}" class="btn btn-info btns"
                     data-modal="payment-supplier">
                     View Payments
                 </a>
 
-            </div>
-
-            <div class="col-md-3 ">
-
-                <a href="{{ route('suppliers.view-ledger', [$supplier->id]) }}" class="btn btn-info btns btn-sm"
+                <a href="{{ route('suppliers.view-ledger', [$supplier->id]) }}" class="btn btn-info btns"
                     data-modal="payment-supplier">
                     View Ledger
                 </a>
 
-            </div>
-
-            <div class="col-md-3 ">
-
                 <a href="{{ url('admin/supplier-payment/report', ['id' => base64_encode($supplier->id)]) }}"
-                    class="btn btn-info btn-sm">
+                    class="btn btn-info">
                     Generate Payment Report
                 </a>
 
+
             </div>
-
-
-
         </div>
+    </div>
 
-        <div class="row mt-4">
 
-            <div class=" col-12 col-md-4 mb-1">
+    <div class="row g-4">
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
 
-                <x-general-detail>
-                    <i class="fa fa-map-marker display-4 text-info me-2 fw-bold"></i>
-                    {{ ucfirst($supplier->address) }}
-                </x-general-detail>
+                    <div class="d-flex align-items-center">
+                        <div class=" bg-opacity-10 ">
+                            <i class="fas fa-user text-info fs-3 p-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Supplier</h6>
+                            {{ ucfirst($supplier->name) }}
 
-                <x-general-detail>
-                    <i class="fa fa-user-circle display-4 text-info me-2 fw-bold"></i>
-                    {{ ucfirst($supplier->name) }}
-                </x-general-detail>
-
-                <x-general-detail>
-                    <i class=" display-4 fa fa-credit-card text-info me-2 fw-bold"></i>
-                    Credit
-                    {{ Number::currency($grandTotal ?? 0, 'INR') }}
-                </x-general-detail>
-
-            </div>
-
-            <div class=" col-12 col-md-4 mb-1">
-
-                <x-general-detail>
-
-                    {{ $supplier->is_raw_material_provider ? 'Raw Materialist' : '' }}
-
-                </x-general-detail>
-
-                <x-general-detail>
-                    <i class=" display-4 fa fa-money text-info me-2 fw-bold"></i>
-                    Debit {{ Number::currency($supplier->payment_suppliers_sum_amount ?? 0, 'INR') }}
-                </x-general-detail>
-            </div>
-
-            <div class=" col-12 col-md-4 mb-1">
-
-                <x-general-detail>
-                    <i class="fa fa-mobile display-4 text-info me-2 fw-bold"></i>
-                    <a href="tel:+91-{{ $supplier->contact_no }}">91-{{ ucfirst($supplier->contact_no) }}</a>
-                </x-general-detail>
-                @php
-                    $balance = $grandTotal - $supplier->payment_suppliers_sum_amount;
-                @endphp
-                @if ($balance >= 0)
-                    <x-general-detail :balance="$balance">
-                        <i class=" display-4 fa fa-balance-scale  me-2 text-info  fw-bold"></i>
-                        Balance
-                        {{ Number::currency($balance ?? 0, 'INR') }}
-                    </x-general-detail>
-                @else
-                    <x-general-detail :balance="$balance">
-                        <i class=" display-4 fa fa-balance-scale  me-2 text-danger  fw-bold"></i>
-
-                        Balance
-                        {{ Number::currency($balance ?? 0, 'INR') }}
-                    </x-general-detail>
-                @endif
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class=" bg-opacity-10 ">
 
+                            <i class="fa-solid fa-phone text-info fs-3  p-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Contact</h6>
+                            <h5 class="mb-0">
 
+                                <a href="tel:+91-{{ $supplier->contact_no }}"
+                                    class="text-decoration-none">91-{{ ucfirst($supplier->contact_no) }}</a>
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class=" bg-opacity-10 ">
+                            <i class="fas fa-map-marker-alt text-info fs-3 p-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Location</h6>
+                            {{ ucfirst($supplier->address) }}
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+
+                    <div class="d-flex align-items-center">
+                        <div class=" bg-opacity-10 ">
+                            <i class="fas fa-money-bill text-info fs-3 p-2"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Debit</h6>
+                            {{ Number::currency($supplier->payment_suppliers_sum_amount ?? 0, 'INR') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class=" bg-{{ $balance >= 0 ? '' : '' }} fs-3 p-2">
+                            <i class="fas fa-balance-scale text-{{ $balance >= 0 ? 'info' : 'danger' }}"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-{{ $balance >= 0 ? 'info' : 'danger' }} mb-1">Balance</h6>
+                            <h5 class="mb-0 text-{{ $balance >= 0 ? 'info' : 'danger' }}">
+                                {{ Number::currency($balance, 'INR') }}
+                            </h5>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class=" fs-3 p-2">
+                            <i class="fas fa-credit-card text-info"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Credit</h6>
+                            {{ Number::currency($grandTotal ?? 0, 'INR') }}
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (count($data) >= 0)
 
         <div class="row ">
 
@@ -286,12 +219,12 @@
 
 
                                     <th class="bg-info fw-bold text-white">
-                                        Amount
+                                        Price Per Unit
                                     </th>
 
-                                    {{-- <th class="bg-info fw-bold text-white">
+                                    <th class="bg-info fw-bold text-white">
                                         Total Amount
-                                    </th> --}}
+                                    </th>
 
                                 </tr>
 
@@ -299,39 +232,49 @@
 
                             <tbody>
 
-                                @foreach ($supplier->constructionMaterialBilling as $construction_material_billing)
+                                @foreach ($data as $d)
                                     <tr>
 
                                         <td>
-                                            {{ $construction_material_billing->created_at->format('d-M-Y') }}
+                                            {{ $d['created_at'] }}
                                         </td>
-
+                                        {{--
                                         <td>
-                                            <img src="{{ asset($construction_material_billing->item_image_path) }}"alt=""
-                                                class="w-20 h-20 rounded-full">
-                                        </td>
+                                            {{ $d['type'] }}
 
-                                        <td>
-                                            {{ $construction_material_billing->item_name }}
-                                        </td>
-
-
-                                        <td>
-                                            {{ $construction_material_billing->phase->site->site_name }}
-                                        </td>
-
-                                        <td>
-                                            {{ $construction_material_billing->phase->site->site_owner_name }}
-                                        </td>
-
-
-                                        <td>
-                                            {{ Number::currency($construction_material_billing->amount, 'INR') }}
-                                        </td>
-
-                                        {{-- <td>
-                                            {{ Number::currency($construction_material_billing->total_amount, 'INR') }}
                                         </td> --}}
+
+                                        <td>
+
+                                            @if ($d['image'] !== null)
+                                                <img src="{{ asset($d['image']) }}" alt="">
+                                            @else
+                                                NA
+                                            @endif
+
+                                        </td>
+
+                                        <td>
+                                            {{ $d['item'] }}
+                                        </td>
+
+
+                                        <td>
+                                            {{ $d['site'] }}
+                                        </td>
+
+                                        <td>
+                                            {{ $d['site_owner'] }}
+                                        </td>
+
+                                        <td>
+                                            {{ $d['price_per_unit'] }}
+                                        </td>
+
+                                        <td>
+                                            {{ $d['total_price'] }}
+                                        </td>
+
 
                                     </tr>
                                 @endforeach
@@ -340,27 +283,20 @@
 
                         </table>
 
-                        {{-- Payment Supplier --}}
-                        <div id="payment-supplier" class="modal">
-                            <div class="modal-content">
+                        {{-- <div id="payment-supplier" class="modal">
 
-                                <p>
-                                    Supplier Payment
-                                </p>
+                            <div class="modal-content">
 
                                 <form action="{{ route('supplier-payments.store') }}"
                                     class="forms-sample material-form" method="POST" enctype="multipart/form-data">
 
                                     @csrf
 
-                                    {{-- Phase Name --}}
                                     <div class="form-group">
                                         <input type="number" min="0" name="amount" />
                                         <label for="input" class="control-label">Amount</label><i class="bar"></i>
                                         <x-input-error :messages="$errors->get('amount')" class="mt-2" />
                                     </div>
-
-                                    <!-- Site -->
 
                                     <div class="mt-4">
                                         <select id="site_id" class="form-select form-select-sm" name="site_id">
@@ -377,10 +313,6 @@
                                         @enderror
                                     </div>
 
-
-
-                                    {{-- Supplier --}}
-
                                     <input type="hidden" name="supplier_id" value="{{ $supplier->id }}" />
                                     <x-input-error :messages="$errors->get('supplier_id')" class="mt-2" />
 
@@ -388,9 +320,6 @@
                                         <x-input-error :messages="$message" class="mt-2" />
                                     @enderror
 
-
-
-                                    {{-- Screenshot --}}
                                     <div class="mt-3">
                                         <input class="form-control form-control-md" id="image" type="file"
                                             name="screenshot">
@@ -407,7 +336,7 @@
                                 </form>
 
                             </div>
-                        </div>
+                        </div> --}}
 
                     </div>
 
@@ -425,46 +354,79 @@
 
 
 
+        <!-- Modal -->
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    {{-- <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div> --}}
+                    <div class="modal-body">
+                        <form action="{{ route('supplier-payments.store') }}" class="forms-sample material-form"
+                            method="POST" enctype="multipart/form-data">
+
+                            @csrf
+
+                            {{-- Phase Name --}}
+                            <div class="form-group">
+                                <input type="number" min="0" name="amount" />
+                                <label for="input" class="control-label">Amount</label><i class="bar"></i>
+                                <x-input-error :messages="$errors->get('amount')" class="mt-2" />
+                            </div>
+
+                            <!-- Site -->
+
+                            <div class="mt-4">
+                                <select id="site_id" class="form-select form-select-sm" name="site_id">
+                                    <option value="">Select Site</option>
+                                    @foreach ($data as $d)
+                                        <option value="{{ $d['site_id'] }}">
+                                            {{ $d['site_id'] }} -
+                                            {{ $d['site'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('site_id')
+                                    <x-input-error :messages="$site_id" class="mt-2" />
+                                @enderror
+                            </div>
+
+                            <input type="hidden" name="supplier_id" value="{{ $supplier->id }}" />
+                            <x-input-error :messages="$errors->get('supplier_id')" class="mt-2" />
+
+                            @error('supplier_id')
+                                <x-input-error :messages="$message" class="mt-2" />
+                            @enderror
 
 
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Get all buttons with class 'btn'
-            const buttons = document.querySelectorAll('.btns');
+                            {{-- Screenshot --}}
+                            <div class="mt-3">
+                                <input class="form-control form-control-md" id="image" type="file"
+                                    name="screenshot">
+                            </div>
 
-            // Add click event listeners to each button
-            buttons.forEach(button => {
-                button.addEventListener('click', () => {
-                    // Get the modal ID from the button's data attribute
-                    const modalId = button.getAttribute('data-modal');
-                    const modal = document.getElementById(modalId);
+                            <div class="flex items-center justify-end mt-4">
+                                <x-primary-button>
+                                    {{ __('Pay') }}
+                                </x-primary-button>
+                            </div>
 
-                    // Show the modal
-                    if (modal) {
-                        modal.style.display = 'block';
-                    }
-                });
-            });
 
-            // Close modals when the close button is clicked
-            const closeButtons = document.querySelectorAll('.modal .close');
-            closeButtons.forEach(closeButton => {
-                closeButton.addEventListener('click', () => {
-                    const modal = closeButton.closest('.modal');
-                    if (modal) {
-                        modal.style.display = 'none';
-                    }
-                });
-            });
 
-            // Close modals when clicking outside the modal content
-            window.addEventListener('click', (event) => {
-                if (event.target.classList.contains('modal')) {
-                    event.target.style.display = 'none';
-                }
-            });
-        });
-    </script>
+                        </form>
+                    </div>
+                    {{-- <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary">Save changes</button>
+                    </div> --}}
+                </div>
+            </div>
+        </div>
+
+
+
+
 
 </x-app-layout>

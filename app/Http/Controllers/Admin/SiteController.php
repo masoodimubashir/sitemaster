@@ -13,7 +13,7 @@ use App\Models\Supplier;
 use App\Models\User;
 use App\Notifications\UserSiteNotification;
 
-class SiteController extends Controller
+class   SiteController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -77,48 +77,51 @@ class SiteController extends Controller
         $site_id = base64_decode($id);
 
         $site = Site::with([
-            'phases.constructionMaterialBillings' => function ($q) {
-                $q->with(['supplier' => function ($q) {
-                    $q->withTrashed();
-                }])->latest();
+            'phases' => function ($phase) {
+                $phase->with([
+                    'constructionMaterialBillings' => function ($q) {
+                        $q->with('supplier')
+                            ->whereHas('supplier', function ($q) {
+                                $q->whereNull('deleted_at');
+                            })->latest();
+                    },
+                    'squareFootageBills' => function ($q) {
+                        $q->with('supplier')->whereHas('supplier', function ($q) {
+                            $q->whereNull('deleted_at'); // Filter only those where `deleted_at` is null.
+                        })->latest();
+                    },
+                    'dailyWagers' => function ($q) {
+                        $q->with([
+                            'wagerAttendances',
+                            'supplier'
+                        ])->whereHas('supplier', function ($q) {
+                            $q->whereNull('deleted_at'); // Filter only those where `deleted_at` is null.
+                        })->latest();
+                    },
+                    'dailyExpenses' => function ($q) {
+                        $q->latest();
+                    },
+                    'wagerAttendances' => function ($q) {
+                        $q->with(['dailyWager.supplier'])
+                            ->whereHas('dailyWager.supplier', function ($q) {
+                                $q->whereNull('deleted_at'); // Filter only those where `deleted_at` is null.
+                            })->latest();
+                    },
+                ],);
             },
-            'phases.squareFootageBills' => function ($q) {
-                $q->with('supplier', function ($q) {
-                    $q->withTrashed();
-                })->latest();
-            },
-            'phases.dailyWagers' => function ($q) {
-                $q->with(['wagerAttendances', 'supplier' => function ($q) {
-                    $q->withTrashed();
-                }])->latest();
-            },
-            'phases.dailyExpenses' => function ($q) {
-                $q->withTrashed()->latest();
-            },
-            'phases.wagerAttendances' => function ($q) {
-                $q->with(['dailyWager.supplier' => function ($q) {
-                    $q->withTrashed();
-                }])->withTrashed()->latest();
-            },
-            'paymeentSuppliers'
+            'paymeentSuppliers' => function ($pay) {
+                $pay->where('verified_by_admin', 1);
+            }
         ])->findOrFail($site_id);
 
         $totalPaymentSuppliersAmount = $site->paymeentSuppliers()->sum('amount');
-
-        // $total_construction_amount = 0;
-        // $total_daily_expenses_amount = 0;
-        // $total_daily_wagers_amount = 0;
-        // $total_square_footage_amount = 0;
-        // $service_charge_amount = 0;
 
         $grand_total_amount = 0;
 
         foreach ($site->phases as $phase) {
 
-
-
-
             $phase->construction_total_amount = $phase->constructionMaterialBillings->sum('amount');
+
             $phase->daily_expenses_total_amount = $phase->dailyExpenses->sum('price');
 
             foreach ($phase->dailyWagers as $wager) {
@@ -133,6 +136,7 @@ class SiteController extends Controller
             $phase->construction_total_service_charge_amount = (($site->service_charge / 100) * $phase->construction_total_amount) +  $phase->construction_total_amount;
             $phase->daily_expense_total_service_charge_amount = (($site->service_charge / 100) * $phase->daily_expenses_total_amount) + $phase->daily_expenses_total_amount;
             $phase->daily_wagers_total_service_charge_amount = (($site->service_charge / 100) * $phase->daily_wagers_total_amount) + $phase->daily_wagers_total_amount;
+
 
             // Phase Total Amount
             $phase->phase_total_amount = $phase->construction_total_amount + $phase->daily_expenses_total_amount + $phase->daily_wagers_total_amount + $phase->square_footage_total_amount;
@@ -218,12 +222,31 @@ class SiteController extends Controller
      */
     public function destroy(string $id)
     {
+
         $site_id = base64_decode($id);
 
-        $site = Site::findOrFail($site_id);
+        $site = Site::where('id', $site_id)->first();
+
+        $siteHasRecords =
+            $site->phases()->whereHas('constructionMaterialBillings')->exists() ||
+            $site->phases()->whereHas('squareFootageBills')->exists() ||
+            $site->phases()->whereHas('dailyWagers')->exists() ||
+            $site->phases()->whereHas('dailyExpenses')->exists() ||
+            $site->phases()->whereHas('wagerAttendances')->exists() ||
+            $site->paymeentSuppliers()->exists();
+
+        if ($siteHasRecords) {
+            return redirect()->back()->with('status', 'error');
+        }
+
+        if (!$site) {
+            return redirect()->back()->with('status', 'error');
+        }
+
+        $site->phases()->delete();
 
         $site->delete();
 
-        return redirect()->route('sites.index')->with('status', 'delete');
+        return redirect()->back()->with('status', 'delete');
     }
 }

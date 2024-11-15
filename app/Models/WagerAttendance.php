@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WagerAttendance extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
         'is_present',
@@ -17,6 +17,7 @@ class WagerAttendance extends Model
         'user_id',
         'daily_wager_id' ,
         'phase_id',
+        'verified_by_admin'
     ];
 
     /**

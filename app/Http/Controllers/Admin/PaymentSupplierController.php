@@ -84,9 +84,29 @@ class PaymentSupplierController extends Controller
     public function show(string $id)
     {
 
-        $site = Site::findOrFail($id);
 
-        $site->paymeentSuppliers()->latest()->paginate(10);
+        $site = Site::with([
+            'paymeentSuppliers' => function ($pay) {
+                $pay->where('verified_by_admin', 1)
+                    ->with([
+                        'supplier' => function ($supplier) {
+                            $supplier->whereNull('deleted_at');
+                        },
+                        'site' => function ($site) {
+                            $site->whereNull('deleted_at');
+                        }
+                    ]);
+            },
+            'phases' => function ($phase) {
+                $phase->whereNull('deleted_at');
+            }
+        ])
+            // ->whereHas('phases')
+            // ->whereHas('paymeentSuppliers.supplier', function ($query) {
+            //     $query->whereNull('deleted_at');
+            // })
+            ->latest()
+            ->find($id);
 
         return view('profile.partials.Admin.PaymentSuppliers.site-payment-supplier', compact('site'));
     }
@@ -104,7 +124,7 @@ class PaymentSupplierController extends Controller
             ->paginate(10);
 
 
-        return view('profile.partials.Admin.PaymentSuppliers.supplier-payment', compact('paymentSuppliers'));
+        return view('profile.partials.Admin.PaymentSuppliers.supplier-payment', compact('paymentSuppliers', 'supplier'));
     }
 
     /**

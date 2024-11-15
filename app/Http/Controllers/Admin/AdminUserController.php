@@ -26,9 +26,12 @@ class AdminUserController extends Controller
     {
 
         $request->validate([
-            'name' => 'required|string|max:255',
-            'username' => 'required|string|lowercase|min:5|unique:' . User::class,
-            'password' => ['required', 'confirmed', Password::defaults()],
+            'name' => 'required|string|max:255|min:5',
+            'username' => 'required|string|min:6|unique:' . User::class,
+            'password' => [
+                'required',
+                'confirmed',
+                Password::min(6)->mixedCase()->symbols()],
         ]);
 
         User::create([
@@ -37,7 +40,7 @@ class AdminUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('users.index')->with('message', 'create');
+        return redirect()->route('users.index')->with('status', 'create');
     }
 
     public function editUser($id) {
@@ -46,7 +49,7 @@ class AdminUserController extends Controller
         $user = User::find($id);
 
         if (!$user) {
-            return redirect()->back()->with('message', 'user not found');
+            return redirect()->back()->with('status', 'error');
         }
 
         return view('profile.partials.Admin.edit-user-password', [

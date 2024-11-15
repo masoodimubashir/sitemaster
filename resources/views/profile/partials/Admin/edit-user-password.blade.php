@@ -1,13 +1,12 @@
 <x-app-layout>
 
-    <x-breadcrumb :names="['Site Engineers', 'Update ' . $user->name . ' Paswword']" :urls="['admin/users', 'admin/edit-user/' . $user->id]" />
+    <x-breadcrumb :names="['Site Engineers', 'Update Password']" :urls="['admin/users', 'admin/edit-user/' . $user->id]" />
 
     @if (session('status') === 'password')
         <x-success-message message="Password Updated Successfully" />
     @endif
 
     <div class="row">
-
 
         <div class="col-md-12 grid-margin stretch-card">
 
@@ -16,6 +15,7 @@
                 <div class="card-body">
 
                     <form method="post" action="{{ route('password.update') }}" class="forms-sample material-form">
+
                         @csrf
                         @method('put')
 
@@ -35,16 +35,13 @@
                         <button class=" btn btn-info">{{ __('Save') }}</button>
 
                     </form>
+
                 </div>
+
             </div>
+
         </div>
+
     </div>
-
-    {{-- <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Users') }}
-        </h2>
-    </x-slot> --}}
-
 
 </x-app-layout>

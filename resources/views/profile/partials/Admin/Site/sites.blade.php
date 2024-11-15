@@ -6,16 +6,20 @@
         <x-success-message message="Site Created..." />
     @endif
 
-    @if (session('status') === 'verify')
-        <x-success-message message="Site Verification Updated..." />
-    @endif
-
     @if (session('status') === 'update')
         <x-success-message message="Site Verification Updated..." />
     @endif
 
-    @if (session('status') === 'delete')
+    @if (session('status') === 'verify')
         <x-success-message message="Site Verification Updated..." />
+    @endif
+
+    @if (session('status') === 'delete')
+        <x-success-message message="Site Deleted...." />
+    @endif
+
+    @if (session('status') === 'error')
+        <x-success-message message="Site Cannot Be Deleted...." />
     @endif
 
     <div class="row">
@@ -127,7 +131,7 @@
                                                 @method('POST')
 
                                                 <button type="submit"
-                                                    class="badge badge-pill text-white {{ $site->is_on_going ? 'text-bg-success' : 'text-bg-warning' }}">
+                                                    class="badge badge-pill text-white {{ $site->is_on_going ? 'text-bg-success' : 'text-bg-danger' }}">
                                                     {{ $site->is_on_going ? 'Verified' : 'Verify' }}
                                                 </button>
                                             </form>

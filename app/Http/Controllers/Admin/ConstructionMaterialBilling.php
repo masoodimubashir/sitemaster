@@ -160,14 +160,20 @@ class ConstructionMaterialBilling extends Controller
     public function destroy(string $id)
     {
 
-        $construction_id = base64_decode($id);
+        try {
 
-        $construction_material_billing = ModelsConstructionMaterialBilling::find($construction_id);
+            $construction_material_billing = ModelsConstructionMaterialBilling::find($id);
 
-        Storage::delete($construction_material_billing->item_image_path);
+            Storage::delete($construction_material_billing->item_image_path);
 
-        $construction_material_billing->delete();
+            $construction_material_billing->delete();
 
-        return redirect()->route('construction-material-billings.index')->with('message', 'data deleted succussfully');
+            return response()->json(['message' => 'Item Deleted...'], 201);
+
+
+        } catch (\Throwable $th) {
+            return response()->json(['error' => 'An unexpected error occurred: '], 500);
+
+        }
     }
 }

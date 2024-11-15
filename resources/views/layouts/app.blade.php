@@ -72,8 +72,8 @@
 
 
         .second .active-2 {
-            color: rgb(0, 183, 255) !important;
-            border-bottom: 3px solid rgb(0, 183, 255) !important;
+            color: #00AAB7 !important;
+            border-bottom: 3px solid #00AAB7 !important;
             padding-bottom: 11px !important;
 
 
@@ -96,8 +96,6 @@
             letter-spacing: 2px;
             border-radius: 5px !important;
         }
-
-
 
         .second>>.fa,
         i {
@@ -141,9 +139,6 @@
             opacity: 0.3;
         }
 
-
-
-
         .second .four ol {
             background-color: rgb(51, 0, 80) !important;
         }
@@ -162,7 +157,6 @@
             .second .fa {
                 font-size: 9px !important;
             }
-
 
 
             .second .breadcrumb {

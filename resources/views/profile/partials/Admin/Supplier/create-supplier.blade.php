@@ -15,11 +15,8 @@
 
                         @csrf
 
-
-
-
                         <div class="form-group">
-                            <input type="text" name="name" />
+                            <input type="text" name="name" value="{{ old('name') }}" />
                             <label for="input" class="control-label">Supplier Name</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('name')" class="mt-2" />
 
@@ -27,21 +24,20 @@
 
 
                         <div class="form-group">
-                            <input type="text" name="contact_no" />
+                            <input type="text" name="contact_no" value="{{ old('contact_no') }}" />
                             <label for="number" class="control-label">Contact Number</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('contact_no')" class="mt-2" />
                         </div>
 
 
                         <div class="form-group">
-                            <textarea name="address"></textarea>
+                            <textarea name="address" value="{{ old('address') }}"></textarea>
                             <label for="textarea" class="control-label">Address</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('address')" class="mt-2" />
                         </div>
 
-
-                        <div class="col-md-6 d-flex justify-content-between">
-                            <div class="form-group flex gap-4">
+                        <div>
+                            <div class="form-group ">
                                 <div class="form-check">
                                     <label class="form-check-label">
                                         <input type="radio" class="form-check-input" name="provider_type"
@@ -55,10 +51,16 @@
                                             id="is_workforce_provider22" value="is_workforce_provider"> Workforce
                                         Provider
                                     </label>
-                                </div>
-                            </div>
-                        </div>
 
+                                </div>
+
+                                @error('is_workforce_provider')
+                                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                                @enderror
+
+                            </div>
+
+                        </div>
 
 
                         <button class=" btn btn-info"><span>Save</span></button>

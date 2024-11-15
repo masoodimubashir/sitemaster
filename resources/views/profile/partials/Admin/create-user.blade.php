@@ -16,20 +16,23 @@
                         @csrf
 
                         <div class="form-group">
-                            <input type="text" name="name" />
+                            <input type="text" name="name" value="{{ old('name') }}"/>
                             <label for="input" class="control-label">name</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('name')" class="mt-2" />
                         </div>
+
                         <div class="form-group">
-                            <input type="text" name="username" />
+                            <input type="text" name="username" value="{{ old('username') }}"/>
                             <label for="input" class="control-label">Username</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('username')" class="mt-2" />
                         </div>
+
                         <div class="form-group">
-                            <input type="text" name="password" />
+                            <input type="text" name="password" value="{{ old('password') }}"/>
                             <label for="input" class="control-label">Password</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('password')" class="mt-2" />
                         </div>
+
                         <div class="form-group">
                             <input type="text" name="password_confirmation" />
                             <label for="input" class="control-label">Confirm Password</label><i class="bar"></i>
@@ -37,7 +40,7 @@
                         </div>
 
                         <div class="">
-                            <button class=" btn btn-info"><span>Create Engineer</span></button>
+                            <button class=" btn btn-info"><span>Save</span></button>
 
                         </div>
 

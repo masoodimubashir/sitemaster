@@ -19,19 +19,19 @@
 
 
                         <div class="form-group">
-                            <input type="text" name="site_name" />
+                            <input type="text" name="site_name" value="{{ old('site_name') }}"/>
                             <label for="input" class="control-label">Site Name</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('site_name')" class="mt-2" />
                         </div>
 
                         <div class="form-group">
-                            <input type="number" name="service_charge" placeholder="....10%..." step="0.01" />
+                            <input type="number" name="service_charge" placeholder="....10%..." step="0.01"  value="{{ old('service_charge') }}"/>
                             <label for="input" class="control-label">Service Charge</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('service_charge')" class="mt-2" />
                         </div>
 
                         <div class="form-group">
-                            <input type="text" name="location" />
+                            <input type="text" name="location" value="{{ old('location') }}"/>
                             <label for="input" class="control-label">Location</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('location')" class="mt-2" />
                         </div>
@@ -39,7 +39,7 @@
                         <div class="row">
                             <div class="col-md-6">
 
-                                <select class="form-select form-select-sm" id="exampleFormControlSelect3"
+                                <select class="form-select form-select-sm text-black" style="cursor: pointer" id="exampleFormControlSelect3"
                                     name="user_id">
                                     <option value="">Select Site Enginner</option>
                                     @foreach ($users as $user)
@@ -51,7 +51,7 @@
 
                             <div class="col-md-6">
 
-                                <select class="form-select form-select-sm" id="exampleFormControlSelect3"
+                                <select class="form-select form-select-sm text-black" style="cursor: pointer" id="exampleFormControlSelect3"
                                     name="client_id">
                                     <option value="">Select Client</option>
                                     @foreach ($clients as $client)

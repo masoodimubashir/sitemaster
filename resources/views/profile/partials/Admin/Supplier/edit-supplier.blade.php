@@ -13,7 +13,6 @@
             <div class="card">
                 <div class="card-body">
 
-                    <h4 class="text-3xl text-primary">Create Supplier</h4>
 
                     <form method="POST" action="{{ route('suppliers.update', ['supplier' => $supplier]) }}"
                         class="forms-sample material-form">

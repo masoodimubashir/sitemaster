@@ -7,6 +7,7 @@ use App\Models\DailyWager;
 use App\Models\Site;
 use App\Models\Workforce;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -118,16 +119,30 @@ class DailyWagerController extends Controller
      */
     public function destroy(string $id)
     {
-        $daily_wager_id = base64_decode($id);
 
-        $daily_wager = DailyWager::find($daily_wager_id);
 
-        if (!$daily_wager) {
-            return redirect()->back()->with('error', 'wager not found..');
+        try {
+
+            $daily_wager = DailyWager::find($id);
+
+            if (!$daily_wager) {
+                return redirect()->back()->with('status', 'error');
+            }
+
+            $hasData = $daily_wager->with('supplier')->exists()
+                || $daily_wager->with('phase')->exists()
+                || $daily_wager->with('WagerAttendances')->exists();
+
+            if ($hasData) {
+                return response()->json(['error' => 'Item Cannot Be Deleted'], 404);
+            }
+
+            $daily_wager->delete();
+
+            return response()->json(['message' => 'Item Deleted...'], 201);
+        } catch (\Throwable $th) {
+
+            return response()->json(['error' => 'An unexpected error occurred: '], 500);
         }
-
-        $daily_wager->delete();
-
-        return redirect()->back()->with('message', 'wager deleted...');
     }
 }

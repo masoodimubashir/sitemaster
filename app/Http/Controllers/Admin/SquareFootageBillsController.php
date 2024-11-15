@@ -167,16 +167,25 @@ class SquareFootageBillsController extends Controller
      */
     public function destroy(string $id)
     {
-        $square_footage_bill_id = base64_decode($id);
 
-        $square_footage_bill = SquareFootageBill::find($square_footage_bill_id);
+        try {
 
-        if (!$square_footage_bill_id) {
-            return redirect()->back()->with('error', 'square footage bill deleted');
+            $square_footage_bill = SquareFootageBill::find($id);
+
+            if (!$square_footage_bill) {
+                return redirect()->back()->with('error', 'square footage bill deleted');
+            }
+
+            Storage::delete($square_footage_bill->image_path);
+
+            $square_footage_bill->delete();
+
+            return response()->json(['message' => 'Item Deleted...'], 201);
+        } catch (\Throwable $th) {
+
+            return response()->json(['error' => 'An unexpected error occurred: '], 500);
         }
 
-        $square_footage_bill->delete();
 
-        return redirect()->back()->with('status', 'delete');
     }
 }

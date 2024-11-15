@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DailyExpenses;
+use App\Models\SquareFootageBill;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -104,7 +105,7 @@ class DailyExpensesController extends Controller
         $request->validate([
             'item_name' => 'required|string|max:255',
             'price' => 'required|numeric|max:9999999999',
-            'bill_photo' => 'required|mimes:jpg,jpeg,webp|max:1024',
+            'bill_photo' => 'sometimes|mimes:jpg,jpeg,webp|max:1024',
             'phase_id' => 'required|exists:phases,id',
         ]);
 
@@ -143,6 +144,27 @@ class DailyExpensesController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+
+
+        try {
+
+            $expense = DailyExpenses::find($id);
+
+            if (!$expense) {
+                return redirect()->back()->with('status', 'error');
+            }
+
+            Storage::delete($expense->bill_photo);
+
+            $expense->delete();
+
+            return response()->json(['message' => 'Item Deleted...'], 201);
+            
+        } catch (\Throwable $th) {
+
+            return response()->json(['error' => 'An unexpected error occurred: '], 500);
+        }
+
+
     }
 }

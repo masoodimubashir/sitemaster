@@ -1,11 +1,19 @@
 <x-app-layout>
 
     @if (session('status') === 'update')
-        <x-success-message message="Your Record has been updated" />
+        <x-success-message message="Your Record has been updated..." />
     @endif
 
     @if (session('status') === 'delete')
-        <x-success-message message="Your Record has been deleted" />
+        <x-success-message message="Your Record has been deleted..." />
+    @endif
+
+    @if (session('status') === 'not_found')
+        <x-success-message message="No Site Payments Available..." />
+    @endif
+
+    @if (session('status') === 'error')
+        <x-success-message message="Something went wrong! try again..." />
     @endif
 
     <div id="messageContainer"> </div>
@@ -95,7 +103,7 @@
             bottom: 5%;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 99999;
+            z-index: 999999999;
         }
 
 
@@ -117,12 +125,6 @@
             transform: translateY(-5px);
         }
 
-
-        .custom-tab.active {
-            background: linear-gradient(45deg, #2196F3, #1976D2) !important;
-            color: white !important;
-        }
-
         .progress {
             height: 10px;
             border-radius: 5px;
@@ -142,7 +144,7 @@
         .card-title-custom {
             font-size: 1.2rem;
             font-weight: 600;
-            color: #1976D2;
+            color: #51B1E1;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -313,8 +315,8 @@
                     @foreach ($site->phases as $phase_key => $phase)
                         <li class="nav-item">
 
-                            <a class="nav-link  {{ $phase_key === 0 ? 'active' : '' }}" href="#{{ $phase->id }}"
-                                data-bs-toggle="tab">
+                            <a class="btn bg-white  custom-tab {{ $phase_key === 0 ? 'active' : '' }}"
+                                href="#{{ $phase->id }}" data-bs-toggle="tab">
                                 {{ $phase->phase_name }}
                             </a>
 
@@ -389,7 +391,7 @@
                                 <div class="card stats-card h-100">
                                     <div class="card-body">
                                         <h3 class="card-title-custom mb-4">
-                                            <i class="fas fa-tasks text-info"></i>
+                                            <i class="fas fa-tasks"></i>
                                             Phase Total
                                         </h3>
                                         <div class="table-responsive">
@@ -477,12 +479,13 @@
                                                         </td>
 
                                                         <td>
-                                                            ....
+                                                            ...
                                                         </td>
 
                                                         <td>
 
-                                                            {{-- {{  }} --}}
+                                                            {{ $phase->daily_wagers_total_service_charge_amount }}
+
                                                         </td>
                                                     </tr>
 
@@ -517,7 +520,7 @@
                                 <div class="card stats-card h-100">
                                     <div class="card-body">
                                         <h3 class="card-title-custom mb-4">
-                                            <i class="fas fa-boxes text-info"></i>
+                                            <i class="fas fa-boxes"></i>
                                             Materials
                                         </h3>
                                         <div class="table-responsive">
@@ -548,7 +551,8 @@
                                                                 </td>
 
                                                                 <td>
-                                                                    <img data-full="{{ asset($construction_material_billing->item_image_path) }}"
+                                                                    <img style="cursor: pointer"
+                                                                        data-full="{{ asset($construction_material_billing->item_image_path) }}"
                                                                         src="{{ asset($construction_material_billing->item_image_path) }}"alt=""
                                                                         class="w-20 h-20 rounded-full gallery-image">
                                                                 </td>
@@ -569,36 +573,32 @@
                                                                     <br>
                                                                 </td>
 
-                                                                <td class="space-x-4">
+                                                                <td>
 
                                                                     <a
                                                                         href="{{ route('construction-material-billings.edit', [base64_encode($construction_material_billing->id)]) }}">
                                                                         <i
-                                                                            class="fa-regular fa-pen-to-square text-xl bg-white rounded-full px-2 py-1"></i>
+                                                                            class="fa-regular fa-pen-to-square fs-5  bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
 
-                                                                    {{-- @if ($construction_material_billing->verified_by_admin)
-                                                                        <a
-                                                                            href="{{ route('verifyConstructionMaterials', [$construction_material_billing->id]) }}">
-                                                                            <i class="fa-solid fa-x"></i>
-                                                                        </a>
-                                                                    @else
-                                                                        <a
-                                                                            href="{{ route('verifyConstructionMaterials', [$construction_material_billing]) }}">
-                                                                            <i class="fa-solid fa-check"></i>
-
-                                                                        </a>
-                                                                    @endif --}}
+                                                                    <a href="#" class="delete-link"
+                                                                        data-id="{{ $construction_material_billing->id }}"
+                                                                        data-name="materials">
+                                                                        <i
+                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
+                                                                    </a>
 
                                                                     @if ($construction_material_billing->verified_by_admin)
-                                                                        <a href="#" class="verify-link"
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-info nav-link text-black"
                                                                             data-name="materials"
                                                                             data-id="{{ $construction_material_billing->id }}"
                                                                             data-verified="0">
                                                                             Verified
                                                                         </a>
                                                                     @else
-                                                                        <a href="#" class="verify-link"
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-danger nav-link text-black"
                                                                             data-name="materials"
                                                                             data-id="{{ $construction_material_billing->id }}"
                                                                             data-verified="1">
@@ -650,7 +650,7 @@
                                 <div class="card stats-card h-100">
                                     <div class="card-body">
                                         <h3 class="card-title-custom mb-4">
-                                            <i class="fas fa-hard-hat text-info"></i>
+                                            <i class="fas fa-hard-hat"></i>
                                             Square Footage Biils
                                         </h3>
                                         <div class="table-responsive">
@@ -693,7 +693,8 @@
                                                                 </td>
 
                                                                 <td>
-                                                                    <img data-full="{{ asset($sqft->image_path) }}"
+                                                                    <img style="cursor: pointer"
+                                                                        data-full="{{ asset($sqft->image_path) }}"
                                                                         src="{{ asset($sqft->image_path) }}"alt=""
                                                                         class="w-20 h-20 rounded-full gallery-image">
                                                                 </td>
@@ -738,22 +739,33 @@
 
 
 
+                                                                    <a href="#" class="delete-link"
+                                                                        data-id="{{ $sqft->id }}"
+                                                                        data-name="sqft">
+                                                                        <i
+                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
+                                                                    </a>
+
 
                                                                     @if ($sqft->verified_by_admin)
-                                                                        <a href="#" class="verify-link"
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-info nav-link text-black"
                                                                             data-name="sqft"
                                                                             data-id="{{ $sqft->id }}"
                                                                             data-verified="0">
                                                                             Verified
                                                                         </a>
                                                                     @else
-                                                                        <a href="#" class="verify-link"
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-danger nav-link text-black"
                                                                             data-name="sqft"
                                                                             data-id="{{ $sqft->id }}"
                                                                             data-verified="1">
                                                                             Verify
                                                                         </a>
                                                                     @endif
+
+
 
                                                                 </td>
                                                             </tr>
@@ -803,7 +815,7 @@
                                 <div class="card stats-card h-100">
                                     <div class="card-body">
                                         <h3 class="card-title-custom mb-4">
-                                            <i class="fas fa-clipboard-check text-info"></i>
+                                            <i class="fas fa-clipboard-check"></i>
                                             Daily Expense
                                         </h3>
                                         <div class="table-responsive">
@@ -838,7 +850,8 @@
                                                                 </td>
 
                                                                 <td>
-                                                                    <img data-full="{{ asset($daily_expenses->bill_photo) }}"
+                                                                    <img style="cursor: pointer"
+                                                                        data-full="{{ asset($daily_expenses->bill_photo) }}"
                                                                         src="{{ asset($daily_expenses->bill_photo) }}"alt=""
                                                                         class="w-20 h-20 rounded-full gallery-image">
                                                                 </td>
@@ -861,15 +874,25 @@
                                                                             class="fa-regular fa-pen-to-square text-xl bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
 
+
+                                                                    <a href="#" class="delete-link"
+                                                                        data-id="{{ $daily_expenses->id }}"
+                                                                        data-name="expenses">
+                                                                        <i
+                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
+                                                                    </a>
+
                                                                     @if ($daily_expenses->verified_by_admin)
-                                                                        <a href="#" class="verify-link"
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-info nav-link text-black"
                                                                             data-name="expenses"
                                                                             data-id="{{ $daily_expenses->id }}"
                                                                             data-verified="0">
                                                                             Verified
                                                                         </a>
                                                                     @else
-                                                                        <a href="#" class="verify-link"
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-danger nav-link text-black"
                                                                             data-name="expenses"
                                                                             data-id="{{ $daily_expenses->id }}"
                                                                             data-verified="1">
@@ -921,7 +944,7 @@
                                 <div class="card stats-card">
                                     <div class="card-body">
                                         <h3 class="card-title-custom mb-4">
-                                            <i class="fas fa-user text-info"></i>
+                                            <i class="fas fa-user"></i>
                                             Daily Wager
                                         </h3>
                                         <div class="table-responsive">
@@ -934,7 +957,7 @@
 
                                                         <th> Wager Name </th>
                                                         <th>Price Per Wager</th>
-                                                        <th> Price Per Day </th>
+                                                        <th> Total Price </th>
                                                         <th>
                                                             Actions
                                                         </th>
@@ -953,38 +976,54 @@
                                                             <tr>
 
                                                                 <td>
+
                                                                     {{ $daily_wager->created_at->format('d-M-Y') }}
 
                                                                 </td>
 
                                                                 <td>
+
                                                                     {{ ucwords($daily_wager->wager_name) }}
+
                                                                 </td>
 
                                                                 <td>
+
                                                                     {{ $daily_wager->price_per_day }}
+
                                                                 </td>
 
                                                                 <td>
+
                                                                     {{ $daily_wager->wager_total }}
+
                                                                 </td>
                                                                 <td>
+
                                                                     <a
                                                                         href="{{ route('dailywager.edit', [base64_encode($daily_wager->id)]) }}">
                                                                         <i
                                                                             class="fa-regular fa-pen-to-square text-xl bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
 
+                                                                    <a href="#" class="delete-link"
+                                                                        data-id="{{ $daily_wager->id }}"
+                                                                        data-name="wager">
+                                                                        <i
+                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
+                                                                    </a>
 
                                                                     @if ($daily_wager->verified_by_admin)
-                                                                        <a href="#" class="verify-link"
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-info nav-link text-black"
                                                                             data-name="wager"
                                                                             data-id="{{ $daily_wager->id }}"
                                                                             data-verified="0">
                                                                             Verified
                                                                         </a>
                                                                     @else
-                                                                        <a href="#" class="verify-link"
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-danger nav-link text-black"
                                                                             data-name="wager"
                                                                             data-id="{{ $daily_wager->id }}"
                                                                             data-verified="1">
@@ -992,20 +1031,23 @@
                                                                         </a>
                                                                     @endif
 
-
-
                                                                 </td>
+
                                                             </tr>
+
                                                             @if ($loop->last)
-                                                                <tr class="">
+                                                                <tr>
                                                                     <td colspan="3"
                                                                         class="text-right font-bold bg-info text-white fw-bold">
-                                                                        Cost + Service Charge</td>
+                                                                        Cost + Service Charge
+                                                                    </td>
+
                                                                     <td colspan="2"
                                                                         class=" font-bold bg-info text-white fw-bold">
-                                                                        {{ ($site->service_charge / 100) * $phase->daily_wagers_total_amount }}
-                                                                        +
+
                                                                         {{ $phase->daily_wagers_total_amount }}
+                                                                        +
+                                                                        {{ ($site->service_charge / 100) * $phase->daily_wagers_total_amount }}
                                                                         =
                                                                         {{ ($site->service_charge / 100) * $phase->daily_wagers_total_amount + $phase->daily_wagers_total_amount }}
                                                                     </td>
@@ -1041,7 +1083,7 @@
                                 <div class="card stats-card h-100">
                                     <div class="card-body">
                                         <h3 class="card-title-custom mb-4">
-                                            <i class="fas fa-clipboard-check text-info"></i>
+                                            <i class="fas fa-clipboard-check"></i>
                                             Attendance
                                         </h3>
                                         <div class="table-responsive">
@@ -1098,6 +1140,31 @@
                                                                             class="fa-regular fa-pen-to-square text-xl bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
 
+
+                                                                    <a href="#" class="delete-link"
+                                                                        data-id="{{ $wager_attendance->id }}"
+                                                                        data-name="attendance">
+                                                                        <i
+                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
+                                                                    </a>
+
+                                                                    @if ($wager_attendance->verified_by_admin)
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-info nav-link text-black"
+                                                                            data-name="attendance"
+                                                                            data-id="{{ $wager_attendance->id }}"
+                                                                            data-verified="0">
+                                                                            Verified
+                                                                        </a>
+                                                                    @else
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-danger nav-link text-black"
+                                                                            data-name="attendance"
+                                                                            data-id="{{ $wager_attendance->id }}"
+                                                                            data-verified="1">
+                                                                            Verify
+                                                                        </a>
+                                                                    @endif
 
 
                                                                     {{-- @if ($wager_attendance->verified_by_admin)
@@ -1173,8 +1240,10 @@
 
                                                             <td>
                                                                 <!-- Wager -->
-                                                                <select class="form-select text-black form-select-sm"
-                                                                    id="daily_wager_id" name="daily_wager_id">
+                                                                <select
+                                                                    class="form-select text-black form-select-sm bg-white"
+                                                                    style="cursor: pointer" id="daily_wager_id"
+                                                                    name="daily_wager_id">
                                                                     <option value="">Select Wager</option>
 
                                                                     @foreach ($wagers as $wager)
@@ -1190,7 +1259,7 @@
 
 
                                                             <td>
-                                                                <button class="btn  btn-info btn-sm mt-2 text-white">
+                                                                <button class="btn  btn-info text-white">
                                                                     {{ __('Make Attendance') }}
                                                                 </button>
                                                             </td>
@@ -1721,13 +1790,111 @@
 
     <div id="imageModal" class="modal">
         <div class="modal-content p-2">
-            <span class="close">&times;</span>
+            <div class="close-container d-flex justify-content-end">
+                <span class="close">&times;</span>
+            </div>
             <img id="modalImage" src="" alt="Full size image">
         </div>
     </div>
 
     <script>
+        $(document).on('click', '.delete-link', function(e) {
+            e.preventDefault();
+
+            const link = $(this);
+            const id = link.data('id');
+            const name = link.data('name');
+            const messageContainer = $('#messageContainer');
+            messageContainer.empty();
+
+            let url = '';
+
+            switch (name) {
+                case 'materials':
+                    url = 'construction-material-billings';
+                    break;
+                case 'expenses':
+                    url = 'daily-expenses';
+                    break;
+                case 'sqft':
+                    url = 'square-footage-bills';
+                    break;
+                case 'wager':
+                    url = 'dailywager';
+                    break;
+                case 'attendance':
+                    url = 'daily-wager-attendance'
+                    break;
+                default:
+                    console.error('Invalid name parameter');
+                    return;
+            }
+
+            // Confirm deletion
+            if (!confirm('Are you sure you want to delete this item?')) {
+                return;
+            }
+
+            if (!url) {
+                console.error('URL not set');
+                return;
+            }
+
+            $.ajax({
+                url: `{{ url('admin') }}/${url}/${id}`,
+                type: 'DELETE',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                },
+                success: function(response) {
+                    link.closest('tr').remove();
+
+                    messageContainer.append(`
+            <div class="alert align-items-center text-white bg-success border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                    </div>
+                </div>
+            </div>`);
+
+                    // Auto-remove the alert after 2 seconds
+                    setTimeout(function() {
+                        messageContainer.find('.alert').fadeOut('slow', function() {
+                            $(this).remove();
+                        });
+                    }, 2000);
+                },
+                error: function(error) {
+                    let errorMessage;
+
+                    if (error.status === 404) {
+                        errorMessage = error.responseJSON?.error || 'Resource not found.';
+                    } else {
+                        errorMessage = 'An error occurred. Please try again.';
+                    }
+
+                    messageContainer.append(`
+                                <div class="alert align-items-center text-white bg-danger border-0" role="alert">
+                                     <div class="d-flex">
+                                        <div class="toast-body">
+                                             <strong><i class="fas fa-exclamation-circle me-2"></i></strong>${errorMessage}
+                                         </div>
+                                    </div>
+                                </div> `);
+
+                    setTimeout(function() {
+                        messageContainer.find('.alert').fadeOut('slow', function() {
+                            $(this).remove();
+                        });
+                    }, 2000);
+                }
+            });
+
+        });
+
         $(document).on('click', '.verify-link', function(e) {
+
             e.preventDefault();
 
             const link = $(this);
@@ -1752,9 +1919,12 @@
                 case 'wager':
                     url = 'verify/wagers';
                     break;
+                case 'attendance':
+                    url = 'verify/attendance'
+                    break;
                 default:
                     console.error('Invalid name parameter');
-                    return; // Exit if invalid name
+                    return;
             }
 
             // Make sure url is not empty before proceeding
@@ -1773,13 +1943,18 @@
                 success: function(response) {
                     console.log(response);
 
-                    // Update the UI based on the new verification status
                     if (verified == 1) {
+
                         link.html('Verified');
                         link.data('verified', 0);
+                        link.removeClass('badge-danger').addClass('badge-info');
+
                     } else {
+
                         link.html('Verify');
                         link.data('verified', 1);
+                        link.removeClass('badge-info').addClass('badge-danger');
+
                     }
 
                     // Show success message
@@ -1800,7 +1975,7 @@
                         messageContainer.find('.alert').fadeOut('slow', function() {
                             $(this).remove();
                         });
-                    }, 3000);
+                    }, 2000);
                 },
                 error: function(xhr) {
                     console.error('Error:', xhr);
@@ -1818,7 +1993,7 @@
                         messageContainer.find('.alert').fadeOut('slow', function() {
                             $(this).remove();
                         });
-                    }, 3000);
+                    }, 2000);
                 }
             });
         });
@@ -1855,7 +2030,7 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
-                        }, 3000);
+                        }, 2000);
                     },
                     error: function(response) {
 
@@ -1878,7 +2053,7 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
-                        }, 3000);
+                        }, 2000);
                     }
                 });
             });
@@ -1918,7 +2093,7 @@
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
-                        }, 3000);
+                        }, 2000);
                     },
                     error: function(response) {
 
@@ -1940,7 +2115,7 @@
                         // Auto-hide error message after 5 seconds
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-                        }, 3000);
+                        }, 2000);
                     }
                 });
             });
@@ -1978,7 +2153,7 @@
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
-                        }, 3000);
+                        }, 2000);
                     },
                     error: function(response) {
 
@@ -2001,7 +2176,7 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
-                        }, 3000);
+                        }, 2000);
                     }
                 });
             });
@@ -2039,7 +2214,7 @@
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
-                        }, 3000);
+                        }, 2000);
                     },
                     error: function(response) {
 
@@ -2062,7 +2237,7 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
-                        }, 3000);
+                        }, 2000);
                     }
                 });
             });
@@ -2102,7 +2277,7 @@
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
-                        }, 3000);
+                        }, 2000);
                     },
                     error: function(response) {
                         console.log(response);
@@ -2127,7 +2302,7 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
-                        }, 3000);
+                        }, 2000);
                     }
                 });
             });
@@ -2167,7 +2342,7 @@
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
-                        }, 3000);
+                        }, 2000);
                     },
                     error: function(response) {
                         console.log(response);
@@ -2192,7 +2367,7 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
-                        }, 3000);
+                        }, 2000);
                     }
                 });
             });
@@ -2234,7 +2409,7 @@
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
-                        }, 3000);
+                        }, 2000);
                     },
                     error: function(response) {
 
@@ -2257,7 +2432,7 @@
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
-                        }, 3000);
+                        }, 2000);
                     }
                 });
             });

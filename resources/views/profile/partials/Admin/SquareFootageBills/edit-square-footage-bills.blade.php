@@ -53,8 +53,8 @@
                         </div>
 
                         <!-- Type -->
-                        <select class="form-select form-select-sm text-black" id="exampleFormControlSelect3" name="type">
-                            <option value="">Select Type</option>
+                        <Label for="type">Select Type:</Label>
+                        <select class="form-select form-select-sm text-black" id="type" name="type" style="cursor: pointer">
                             <option {{ $square_footage_bill->type === 'per_sqr_ft' ? 'selected' : '' }}
                                 value="per_sqr_ft">Per Square Feet</option>
                             <option {{ $square_footage_bill->type === 'per_unit' ? 'selected' : '' }} value="per_unit">

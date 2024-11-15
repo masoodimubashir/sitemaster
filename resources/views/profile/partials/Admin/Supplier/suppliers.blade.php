@@ -2,8 +2,20 @@
 
     <x-breadcrumb :names="['Suppliers']" :urls="['admin/suppliers']" />
 
-    @if (session('status') === 'supplier')
-        <x-success-message message="Supplier Created.."/>
+    @if (session('status') === 'update')
+        <x-success-message message='Supplier Updated Succussfully...' />
+    @endif
+
+    @if (session('status') === 'error')
+        <x-success-message message='Something Went Wrong...' />
+    @endif
+
+    @if (session('status') === 'create')
+        <x-success-message message='Supplier Created Succussfully...' />
+    @endif
+
+    @if (session('status') === 'delete')
+        <x-success-message message='Supplier Deleted Succussfully...' />
     @endif
 
     <div class="row">
@@ -60,7 +72,7 @@
                                             <i class="fa-regular fa-pen-to-square text-xl bg-white rounded-full"></i>
                                         </a>
                                         <form id="delete-form-{{ $supplier->id }}"
-                                            action="{{ route('suppliers.destroy', ['supplier' => $supplier]) }}"
+                                            action="{{ route('suppliers.destroy', ['supplier' => $supplier->id]) }}"
                                             method="POST" style="display: none;">
                                             @csrf
                                             @method('DELETE')

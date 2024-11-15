@@ -23,9 +23,9 @@ class AdminVerificationController extends Controller
             $material->verified_by_admin = !$material->verified_by_admin;
             $material->save();
 
-            // return response()->json([
-            //     'message' => 'Verification status updated successfully'
-            // ]);
+            return response()->json([
+                'message' => 'Verification status updated successfully'
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error updating verification status'
@@ -49,9 +49,9 @@ class AdminVerificationController extends Controller
                 'verified_by_admin' => !$bill->verified_by_admin,
             ]);
 
-            // return response()->json([
-            //     'message' => 'Verification status updated successfully'
-            // ]);
+            return response()->json([
+                'message' => 'Verification status updated successfully'
+            ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'Error updating verification status'
@@ -65,13 +65,16 @@ class AdminVerificationController extends Controller
 
         try {
 
-
-
             $expense = DailyExpenses::find($id);
 
             $expense->update([
                 'verified_by_admin' => !$expense->verified_by_admin,
             ]);
+
+            return response()->json([
+                'message' => 'Verification status updated successfully'
+            ]);
+
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'Error updating verification status'
@@ -84,17 +87,16 @@ class AdminVerificationController extends Controller
 
         try {
 
-
-
             $wager = DailyWager::find($id);
 
             $wager->update([
                 'verified_by_admin' => !$wager->verified_by_admin
             ]);
 
-            // return response()->json([
-            //     'message' => 'Verification status updated successfully'
-            // ]);
+            return response()->json([
+                'message' => 'Verification status updated successfully'
+            ]);
+
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => 'Error updating verification status'
@@ -107,19 +109,22 @@ class AdminVerificationController extends Controller
         try {
 
 
-
             $attendance = WagerAttendance::find($id);
 
             $attendance->update([
                 'verified_by_admin' => !$attendance->verified_by_admin
             ]);
-            // return response()->json([
-            //     'message' => 'Verification status updated successfully'
-            // ]);
+
+            return response()->json([
+                'message' => 'Verification status updated successfully'
+            ]);
+
         } catch (\Throwable $th) {
+
             return response()->json([
                 'message' => 'Error updating verification status'
             ], 500);
+
         }
     }
 }

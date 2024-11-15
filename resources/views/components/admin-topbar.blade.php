@@ -47,10 +47,11 @@
 
                     @foreach ($notifications as $key => $notification)
                         <a class="dropdown-item preview-item py-3">
-                           
+
                             <div class="preview-item-content">
                                 <h6 class="preview-subject fw-normal text-dark mb-1">
-                                    {{ $notification->data['message'] }}</h6>
+                                    {{ $notification->data['message'] }}
+                                </h6>
 
                             </div>
                         </a>

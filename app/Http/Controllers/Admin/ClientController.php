@@ -42,9 +42,11 @@ class ClientController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'number' => 'required|digits:10|unique:' . Client::class,
+            'number' => 'required|numeric|digits:10|unique:' . Client::class,
             'password' => [
-                Password::min(6)->mixedCase()->required()
+                'confirmed',
+                'required',
+                Password::min(6)->mixedCase()->symbols()
             ],
         ]);
 
@@ -54,7 +56,7 @@ class ClientController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('clients.index')->with('message', 'client');
+        return redirect()->route('clients.index')->with('status', 'create');
     }
 
     /**
@@ -84,24 +86,36 @@ class ClientController extends Controller
     {
 
         $request->validate([
-            'name' => 'required|string|min:5',
-            'password' => 'sometimes|min:6'
+            'name' => 'required|string|max:255',
+            'number' => [
+                'required',
+                'numeric',
+                'digits:10',
+                'unique:clients,number,' . $id . ',id',
+            ],
+            'password' => [
+                'nullable',
+                'sometimes',
+                Password::min(6)->mixedCase()->symbols(),
+            ],
         ]);
 
+        // Find the client by ID
         $client = Client::find($id);
 
         if (!$client) {
-            return redirect()->back()->with('error', 'Client not found');
+            return redirect()->back()->with('status', 'error');
         }
 
+        // Update the client information
         $client->update([
             'name' => $request->name,
-            'password' => $request->password ?  $request->password : Hash::make($request->password)
+            'number' => $request->number,
+            'password' => $request->password ? Hash::make($request->password) : $client->password
         ]);
 
-        $client->sites()->update(['site_name' => $request->name]);
+        return redirect()->route('clients.index')->with('status', 'update');
 
-        return redirect()->back()->with('status', 'client');
     }
 
     /**
@@ -113,11 +127,11 @@ class ClientController extends Controller
 
         if (!$client) {
 
-            return redirect()->back()->with('error', 'Client Does Not Exist..');
+            return redirect()->back()->with('status', 'error');
         }
 
         $client->delete();
 
-        return redirect()->back()->with('message', 'client has been deleted...');
+        return redirect()->route('clients.index')->with('status', 'delete');
     }
 }

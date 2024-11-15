@@ -1,13 +1,19 @@
 <x-app-layout>
-
-    <x-breadcrumb :names="['Dashboard', 'Sites', $site->site_name, 'View ' . $site->site_name . ' Payments', 'View ' . $site->site_name . ' Ledger']" :urls="[
-        'admin/dashboard',
-        'admin/sites',
-        'admin/sites/' . base64_encode($site->id),
-        'admin/sites/supplier-payments/' . $site->id,
-        'admin/site/ledger/' . $site->id,
-
-    ]" />
+    @if ($site)
+        <x-breadcrumb :names="[
+            'Dashboard',
+            'Sites',
+            $site->site_name,
+            'View ' . $site->site_name . ' Payments',
+            'View ' . $site->site_name . ' Ledger',
+        ]" :urls="[
+            'admin/dashboard',
+            'admin/sites',
+            'admin/sites/' . base64_encode($site->id),
+            'admin/sites/supplier-payments/' . $site->id,
+            'admin/site/ledger/' . $site->id,
+        ]" />
+    @endif
 
     <div class="row">
 
@@ -18,8 +24,6 @@
                 <div class="card-body row g-2 text-left">
 
                     @if ($site)
-
-                        <h3 class="text-info">Payment's History</h3>
 
                         <table class="table table-bordered">
                             <tbody>
@@ -60,25 +64,36 @@
                             <tbody>
                                 @if ($site->paymeentSuppliers->count() > 0)
                                     @foreach ($site->paymeentSuppliers as $payment_supplier)
+                                        @if ($payment_supplier->supplier)
+                                            <tr>
+
+
+                                                <td>{{ $payment_supplier->created_at->format('d-M-Y') }}</td>
+
+                                                <td>
+                                                    <img src="{{ asset($payment_supplier->screenshot) }}"
+                                                        alt="">
+                                                </td>
+
+                                                <td>
+                                                    {{ Ucwords($payment_supplier->supplier->name) }}
+                                                </td>
+
+                                                <td>{{ Number::currency($payment_supplier->amount, 'INR') }}</td>
+
+
+                                            </tr>
+                                        @else
                                         <tr>
-
-
-                                            <td>{{ $payment_supplier->created_at->format('d-M-Y') }}</td>
-
-                                            <td>
-                                                <img src="{{ asset($payment_supplier->screenshot) }}" alt="">
+                                            <td colspan="4" class="text-center text-danger fw-bold">
+                                                No Records Found..
                                             </td>
-
-                                            <td>
-                                                {{ Ucwords($payment_supplier->supplier->name) }}
-                                            </td>
-
-                                            <td>{{ Number::currency($payment_supplier->amount, 'INR') }}</td>
+                                        </tr>
+                                        @endif
                                     @endforeach
-                                    </tr>
                                 @else
                                     <tr>
-                                        <td colspan="3" class="text-center text-danger fw-bold">
+                                        <td colspan="4" class="text-center text-danger fw-bold">
                                             No Records Found....
                                         </td>
                                     </tr>
@@ -87,17 +102,24 @@
                             </tbody>
                         </table>
                     @else
-                        <h3>No Records Found...</h3>
+                        <table class="table table-bordered">
+                            <thead>
+
+                            </thead>
+                            <tbody>
+
+                                <tr>
+                                    <td colspan="3" class="text-center text-danger fw-bold">
+                                        No Records Found....
+                                    </td>
+                                </tr>
+
+                            </tbody>
+                        </table>
                     @endif
                 </div>
             </div>
         </div>
-
-    </div>
-
-
-    </div>
-    </div>
 
     </div>
 
