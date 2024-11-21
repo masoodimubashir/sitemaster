@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Phase;
 use App\Models\Site;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Phar;
@@ -17,7 +18,7 @@ class PhaseController extends Controller
      */
     public function index()
     {
-        $phases = Phase::paginate(10);
+        $phases = Phase::with('site')->paginate(10);
 
         return view('profile.partials.Admin.Phase.phase', compact('phases'));
     }
@@ -40,32 +41,30 @@ class PhaseController extends Controller
     {
 
 
+
         if ($request->ajax()) {
-
-
             $validator = Validator::make($request->all(), [
+                'site_id' => 'required|exists:sites,id',
                 'phase_name' => [
                     'required',
                     'string',
-                    Rule::unique('phases')->where(function ($query) use ($request) {
-                        return $query->where('site_id', $request->site_id);
-                    }),
-                ],
-                'site_id' => 'required|exists:sites,id',
+                    Rule::unique('phases', 'phase_name')
+                        ->where(function ($query) use($request) {
+                            return $query->where('site_id', $request->site_id);
+                        })
+                    ],
             ]);
 
             // Check for validation errors
             if ($validator->fails()) {
-                return response()->json(['errors' => 'Validation Error.. Try Again'], 422);
+                return response()->json(['errors' => 'Phase Already Exists',], 422);
             }
 
             try {
-                // Create the phase after validation passes
                 Phase::create($request->all());
-
                 return response()->json(['message' => 'Phase created successfully.'], 201);
             } catch (\Exception $e) {
-                // Handle any unexpected errors
+                Log::info($e);
                 return response()->json(['error' => 'An unexpected error occurred.'], 500);
             }
         }
@@ -104,9 +103,22 @@ class PhaseController extends Controller
 
         $phase_id = base64_decode($id);
 
+        $phase = Phase::find($phase_id);
+
         $request->validate([
-            'phase_name' => ['required', 'string', Rule::unique(Phase::class)->ignore($phase_id)]
+            'phase_name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('phases')
+                    ->where(function ($query) use ($phase) {
+                        return $query->where('site_id', $phase->site_id);
+                    })
+                    ->ignore($phase_id)
+            ],
         ]);
+
+
 
         $phase = Phase::find($phase_id);
 
@@ -125,7 +137,11 @@ class PhaseController extends Controller
         $phase = Phase::find($phase_id);
 
         if (!$phase) {
-            return redirect()->back()->with('error', ' Something went wrong! Phase cannot be deleted...');
+            return redirect()->back()->with('status', 'not_found');
+        }
+
+        if ($phase->exists_records) {
+            return redirect()->back()->with('status', 'data');
         }
 
         $phase->delete();

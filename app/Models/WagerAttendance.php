@@ -40,4 +40,6 @@ class WagerAttendance extends Model
         return $this->belongsTo(Phase::class);
     }
 
+    
+
 }

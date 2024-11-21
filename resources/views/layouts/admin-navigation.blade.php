@@ -28,6 +28,15 @@
                 <span class="menu-title">Suppliers</span>
             </a>
         </li>
+
+
+        <li class="nav-item">
+            <a class="nav-link {{ Request::is('admin/items') ? 'active' : '' }}" href="{{ url('admin/items') }}">
+                <i class="menu-icon fa-solid fa-boxes-stacked"></i>
+                <span class="menu-title">Items</span>
+            </a>
+        </li>
+
         <li class="nav-item">
             <a class="nav-link {{ request()->routeIs('sites.index') ? 'active' : '' }}"
                 href="{{ route('sites.index') }}">
@@ -35,17 +44,21 @@
                 <span class="menu-title">Site</span>
             </a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link {{ Request::is('admin/payments') ? 'active' : '' }}" href="{{ url('admin/payments') }}">
-                <i class="menu-icon fa fa-indian-rupee"></i>
-                <span class="menu-title">Payments</span>
-            </a>
-        </li>
+
 
         <li class="nav-item">
             <a class="nav-link {{ Request::is('admin/phase') ? 'active' : '' }}" href="{{ url('admin/phase') }}">
                 <i class="menu-icon fas fa-tasks me-2"></i>
                 <span class="menu-title">Phase</span>
+            </a>
+        </li>
+
+
+        <li class="nav-item">
+            <a class="nav-link {{ Request::is('admin/payments') ? 'active' : '' }}"
+                href="{{ url('admin/payments') }}">
+                <i class="menu-icon fa fa-indian-rupee"></i>
+                <span class="menu-title">Payments</span>
             </a>
         </li>
 

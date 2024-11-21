@@ -176,7 +176,7 @@
                     <i class="fas fa-list me-2"></i>View Payments
                 </a>
 
-                <a href="{{ route('sites.view-ledger', $site->id) }}" class="btn btn-info px-4">
+                <a href="{{ url("admin/site/ledger", $site->id) }}" class="btn btn-info px-4">
                     <i class="fas fa-book me-2"></i>View Ledger
                 </a>
 
@@ -399,10 +399,12 @@
 
                                                 <thead>
                                                     <tr>
+
                                                         <th>..</th>
                                                         <th>Amount</th>
                                                         <th> Service Charge {{ $site->service_charge }}%</th>
                                                         <th> Total</th>
+
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -413,13 +415,12 @@
 
                                                     </tr>
                                                     <tr>
+
                                                         <td>
                                                             Materials
-
                                                         </td>
                                                         <td>
                                                             {{ $phase->construction_total_amount }}
-
                                                         </td>
                                                         <td>
                                                             ....
@@ -427,9 +428,11 @@
                                                         <td>
                                                             {{ $phase->construction_total_service_charge_amount }}
                                                         </td>
+
                                                     </tr>
 
                                                     <tr>
+
                                                         <td>
                                                             Square Footage Bills
                                                         </td>
@@ -445,9 +448,11 @@
                                                         <td>
                                                             {{ $phase->sqft_total_service_charge_amount }}
                                                         </td>
+
                                                     </tr>
 
                                                     <tr>
+
                                                         <td>
                                                             Expenses
                                                         </td>
@@ -458,18 +463,17 @@
 
                                                         <td>
                                                             ....
-
                                                         </td>
 
                                                         <td>
                                                             {{ $phase->daily_expense_total_service_charge_amount }}
-
                                                         </td>
 
                                                     </tr>
 
 
                                                     <tr>
+
                                                         <td>
                                                             Wager
                                                         </td>
@@ -483,28 +487,28 @@
                                                         </td>
 
                                                         <td>
-
                                                             {{ $phase->daily_wagers_total_service_charge_amount }}
-
                                                         </td>
+
                                                     </tr>
 
 
                                                     <tr>
+
                                                         <td>Sub Total</td>
 
                                                         <td>
                                                             {{ $phase->phase_total_amount }}
-
                                                         </td>
 
                                                         <td>
-
                                                             {{ $phase->phase_total_service_charge_amount }}
                                                         </td>
+
                                                         <td>
                                                             {{ $phase->phase_total_with_service_charge_amount }}
                                                         </td>
+
                                                     </tr>
 
                                                 </tbody>
@@ -734,7 +738,7 @@
                                                                     <a
                                                                         href="{{ route('square-footage-bills.edit', [base64_encode($sqft->id)]) }}">
                                                                         <i
-                                                                            class="fa-regular fa-pen-to-square text-xl bg-white rounded-full px-2 py-1"></i>
+                                                                            class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
 
 
@@ -871,7 +875,7 @@
                                                                     <a
                                                                         href="{{ route('daily-expenses.edit', [base64_encode($daily_expenses->id)]) }}">
                                                                         <i
-                                                                            class="fa-regular fa-pen-to-square text-xl bg-white rounded-full px-2 py-1"></i>
+                                                                            class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
 
 
@@ -1003,7 +1007,7 @@
                                                                     <a
                                                                         href="{{ route('dailywager.edit', [base64_encode($daily_wager->id)]) }}">
                                                                         <i
-                                                                            class="fa-regular fa-pen-to-square text-xl bg-white rounded-full px-2 py-1"></i>
+                                                                            class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
 
                                                                     <a href="#" class="delete-link"
@@ -1012,7 +1016,7 @@
                                                                         <i
                                                                             class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
-
+{{--
                                                                     @if ($daily_wager->verified_by_admin)
                                                                         <a href="#"
                                                                             class="verify-link ms-3 badge badge-info nav-link text-black"
@@ -1029,7 +1033,7 @@
                                                                             data-verified="1">
                                                                             Verify
                                                                         </a>
-                                                                    @endif
+                                                                    @endif --}}
 
                                                                 </td>
 
@@ -1137,7 +1141,7 @@
                                                                     <a
                                                                         href="{{ route('daily-wager-attendance.edit', [base64_encode($wager_attendance->id)]) }}">
                                                                         <i
-                                                                            class="fa-regular fa-pen-to-square text-xl bg-white rounded-full px-2 py-1"></i>
+                                                                            class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
 
 
@@ -1346,7 +1350,8 @@
                                                 <!-- Item Name -->
                                                 <div class="col-md-6">
                                                     <select class="form-select text-black form-select-sm"
-                                                        id="exampleFormControlSelect3" name="item_name">
+                                                        id="exampleFormControlSelect3" name="item_name"
+                                                        style="cursor: pointer">
                                                         <option value="">Select Item
                                                         </option>
                                                         @foreach ($items as $item)
@@ -1363,7 +1368,8 @@
                                                 <!-- Supplier -->
                                                 <div class="col-md-6">
                                                     <select class="form-select text-black form-select-sm"
-                                                        id="exampleFormControlSelect3" name="supplier_id">
+                                                        id="exampleFormControlSelect3" name="supplier_id"
+                                                        style="cursor: pointer">
                                                         <option value="">Select Supplier
                                                         </option>
                                                         @foreach ($raw_material_providers as $supplier)
@@ -1459,7 +1465,8 @@
                                                 <div class="col-md-6">
                                                     <!-- Type -->
                                                     <select class="form-select text-black form-select-sm"
-                                                        id="exampleFormControlSelect3" name="type">
+                                                        id="exampleFormControlSelect3" name="type"
+                                                        style="cursor: pointer">
                                                         <option value="">Select Type</option>
                                                         <option value="per_sqr_ft">Per Square Feet</option>
                                                         <option value="per_unit">Per Unit</option>
@@ -1474,7 +1481,7 @@
                                                 <div class="col-md-6">
                                                     <!-- Select Supplier -->
                                                     <select class="form-select text-black form-select-sm"
-                                                        id="supplier_id" name="supplier_id">
+                                                        id="supplier_id" name="supplier_id" style="cursor: pointer">
                                                         <option value="">Select Supplier</option>
                                                         @foreach ($workforce_suppliers as $supplier)
                                                             <option value="{{ $supplier->id }}">
@@ -1557,7 +1564,7 @@
                                                 <!-- Select Supplier -->
                                                 <div class="">
                                                     <select class="form-select text-black form-select-sm"
-                                                        id="supplier_id" name="supplier_id">
+                                                        id="supplier_id" name="supplier_id" style="cursor: pointer">
                                                         <option value="">Select Supplier</option>
                                                         @foreach ($workforce_suppliers as $supplier)
                                                             <option value="{{ $supplier->id }}">
@@ -1670,11 +1677,10 @@
                 <thead></thead>
                 <tbody>
                     <tr>
-                        <td class="text-danger fw-bold text-center">No Site Data Awailiable..</td>
+                        <td class="text-danger fw-bold text-center">No Site Data Availiable..</td>
                     </tr>
                 </tbody>
             </table>
-
         @endif
 
         {{-- Phase Form --}}
@@ -1682,7 +1688,9 @@
             tabindex="-1">
 
             <div class="modal-dialog modal-dialog-centered">
+
                 <div class="modal-content">
+
                     <div class="modal-body">
 
                         <form class="forms-sample material-form" id="phaseForm">
@@ -1725,7 +1733,9 @@
             tabindex="-1">
 
             <div class="modal-dialog modal-dialog-centered">
+
                 <div class="modal-content">
+
                     <div class="modal-body">
 
                         <form id="payment_supplierForm" class="forms-sample material-form"
@@ -1733,9 +1743,7 @@
 
                             @csrf
 
-
                             {{-- Phase Name --}}
-
                             <div class="form-group">
                                 <input type="number" min="0" name="amount" step="0.01" />
                                 <label for="input" class="control-label">Amount</label><i class="bar"></i>
@@ -1749,9 +1757,8 @@
                             </div>
 
                             {{-- Supplier --}}
-
                             <select class="form-select text-black form-select-sm" id="supplier_id"
-                                name="supplier_id">
+                                name="supplier_id" style="cursor: pointer">
                                 <option value="">Select Supplier</option>
                                 @foreach ($suppliers as $supplier)
                                     <option value="{{ $supplier->id }}">
@@ -1770,23 +1777,24 @@
                             </div>
 
                             <div class="flex items-center justify-end mt-4">
+
                                 <x-primary-button>
                                     {{ __('Pay') }}
                                 </x-primary-button>
-                            </div>
 
+                            </div>
 
                         </form>
 
                     </div>
+
                 </div>
 
             </div>
+
         </div>
 
     @endif
-
-
 
     <div id="imageModal" class="modal">
         <div class="modal-content p-2">
@@ -1830,7 +1838,6 @@
                     return;
             }
 
-            // Confirm deletion
             if (!confirm('Are you sure you want to delete this item?')) {
                 return;
             }
@@ -1846,26 +1853,29 @@
                 data: {
                     _token: '{{ csrf_token() }}',
                 },
-                success: function(response) {
+                success: function(response, xhr) {
+
+
                     link.closest('tr').remove();
 
                     messageContainer.append(`
-            <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                <div class="d-flex">
-                    <div class="toast-body">
-                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                    </div>
-                </div>
-            </div>`);
+                                 <div class="alert align-items-center text-white bg-success border-0" role="alert">
+                                                 <div class="d-flex">
+                                                     <div class="toast-body">
+                                                         <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                                    </div>
+                                                </div>
+                                    </div>`);
 
-                    // Auto-remove the alert after 2 seconds
                     setTimeout(function() {
                         messageContainer.find('.alert').fadeOut('slow', function() {
                             $(this).remove();
+                            location.reload();
                         });
                     }, 2000);
                 },
                 error: function(error) {
+
                     let errorMessage;
 
                     if (error.status === 404) {
@@ -1886,6 +1896,7 @@
                     setTimeout(function() {
                         messageContainer.find('.alert').fadeOut('slow', function() {
                             $(this).remove();
+                            location.reload();
                         });
                     }, 2000);
                 }
@@ -1959,6 +1970,7 @@
 
                     // Show success message
                     if (response.message) {
+
                         messageContainer.append(`
                     <div class="alert align-items-center text-white bg-success border-0" role="alert">
                         <div class="d-flex">
@@ -1970,12 +1982,12 @@
                 `);
                     }
 
-                    // Auto-remove the alert after 3 seconds
                     setTimeout(function() {
                         messageContainer.find('.alert').fadeOut('slow', function() {
                             $(this).remove();
+                            location.reload();
                         });
-                    }, 2000);
+                    }, 500);
                 },
                 error: function(xhr) {
                     console.error('Error:', xhr);
@@ -1992,8 +2004,10 @@
                     setTimeout(function() {
                         messageContainer.find('.alert').fadeOut('slow', function() {
                             $(this).remove();
+                            location.reload();
+
                         });
-                    }, 2000);
+                    }, 500);
                 }
             });
         });

@@ -7,7 +7,9 @@ use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Rules\Unique;
 
 class AdminUserController extends Controller
 {
@@ -31,7 +33,8 @@ class AdminUserController extends Controller
             'password' => [
                 'required',
                 'confirmed',
-                Password::min(6)->mixedCase()->symbols()],
+                Password::min(6)->mixedCase()->symbols()
+            ],
         ]);
 
         User::create([
@@ -43,7 +46,8 @@ class AdminUserController extends Controller
         return redirect()->route('users.index')->with('status', 'create');
     }
 
-    public function editUser($id) {
+    public function editUser($id)
+    {
 
 
         $user = User::find($id);
@@ -58,4 +62,50 @@ class AdminUserController extends Controller
     }
 
 
+    public function updateUserPassword(Request $request, $id)
+    {
+
+
+        $validated = $request->validateWithBag('updatePassword', [
+            'password' => [
+                'required',
+                'confirmed',
+                Password::min(6)->symbols()->mixedCase(),
+            ],
+        ]);
+
+        $user = User::find($id);
+
+        if (!$user) {
+            return redirect()->back()->with('status', 'error');
+        }
+
+        $user()->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        return redirect()->route('users.index')->with('status', 'update');
+    }
+
+    public  function updateName(Request $request, $id)
+    {
+
+        $user = User::find($id);
+
+        if (!$user) {
+            return redirect()->back()->with('status', 'error');
+        }
+
+        $request->validateWithBag('updateName', [
+            'name' => 'required|string|max:255|min:5',
+            'username' => ['nullable', 'sometimes', 'string', 'min:6', Rule::unique('users')->ignore($user->id)]
+        ]);
+
+        $user->update([
+            'name' => $request->name,
+            'username' => $request->username
+        ]);
+
+        return redirect()->route('users.index')->with('status', 'update');
+    }
 }

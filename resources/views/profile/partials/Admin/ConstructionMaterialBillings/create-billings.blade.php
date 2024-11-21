@@ -63,20 +63,6 @@
                             @enderror
                         </div>
 
-                        {{-- <!-- USers -->
-                        <div class="mt-4">
-                            <select id="user_id" class="block mt-1 w-full rounded-sm" name="user_id">
-                                <option value="">Select User</option>
-
-                                @foreach ($users as $user)
-                                    <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                @endforeach
-                            </select>
-                            @error('user_id')
-                                <x-input-error :messages="$message" class="mt-2" />
-                            @enderror
-                        </div> --}}
-
                         <!-- Phases -->
                         <div class="mt-4">
                             <select id="phase_id" class="block mt-1 w-full rounded-sm" name="phase_id">
@@ -101,31 +87,7 @@
                             @enderror
                         </div>
 
-
-
-                        {{-- <!-- Verified By Admin -->
-                        <div class="mt-4">
-                            <x-input-label for="verified_by_admin" :value="__('Verified By Admin')" />
-                            <x-text-input id="verified_by_admin" class="block mt-1" type="checkbox"
-                                name="verified_by_admin" :value="old('verified_by_admin')" autocomplete="verified_by_admin" />
-                            @error('verified_by_admin')
-                                <x-input-error :messages="$message" class="mt-2" />
-                            @enderror
-                        </div> --}}
-
-
-
-
-
-
-
                         <div class="flex items-center justify-end mt-4">
-
-                            {{-- <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                href="{{ route('login') }}">
-                                {{ __('Already registered?') }}
-                            </a> --}}
-
                             <x-primary-button class="ms-4">
                                 {{ __('Create Billing') }}
                             </x-primary-button>

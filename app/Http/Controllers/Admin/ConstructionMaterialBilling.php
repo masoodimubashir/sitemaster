@@ -164,16 +164,18 @@ class ConstructionMaterialBilling extends Controller
 
             $construction_material_billing = ModelsConstructionMaterialBilling::find($id);
 
+            if ($construction_material_billing->phase()->site()->paymeentSuppliers()->exists()) {
+                return response()->json(['error' => 'This Item Cannot Be Deleted.'], 404);
+            }
+
             Storage::delete($construction_material_billing->item_image_path);
 
             $construction_material_billing->delete();
 
             return response()->json(['message' => 'Item Deleted...'], 201);
 
-
         } catch (\Throwable $th) {
             return response()->json(['error' => 'An unexpected error occurred: '], 500);
-
         }
     }
 }

@@ -176,6 +176,10 @@ class SquareFootageBillsController extends Controller
                 return redirect()->back()->with('error', 'square footage bill deleted');
             }
 
+            if ($square_footage_bill->supplier()->paymeentSuppliers()->exists()) {
+                return response()->json(['error' => 'This Item Cannot Be Deleted..'], 404);
+            }
+
             Storage::delete($square_footage_bill->image_path);
 
             $square_footage_bill->delete();

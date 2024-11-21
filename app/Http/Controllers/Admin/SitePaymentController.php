@@ -24,30 +24,20 @@ class SitePaymentController extends Controller
 
         $dateFilter = $request->get('date_filter', 'today');
 
-        $ongoingSites = Site::where('is_on_going', 1)->pluck('id');
-        $is_ongoing_count = $ongoingSites->count();
-        $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
+        $site = Site::find($id);
 
         [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter);
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
-        $service_charge = Site::find($id)->service_charge;
-
-        $ledgers = $ledgers->filter(fn($ledger) => $ledger['site_id'] == $id)
+        $ledgers = $ledgers->filter(fn($ledger) => $ledger['site_id'] == $site->id)
             ->sortByDesc(function ($d) {
                 return $d['created_at'];
             });
 
-        [$total_paid, $total_due, $total_balance] = $dataService->calculateBalances($ledgers);
+        [$total_paid, $total_due, $total_balance] = $dataService->calculateBalancesWithServiceCharge($ledgers);
 
         $perPage = 10;
-
-        $service_charge_amount = $dataService->getServiceChargeAmount($total_due, $service_charge);
-
-        $total_due = $total_due + $service_charge_amount;
-        $total_balance = $total_due - $total_paid;
-
 
         $paginatedLedgers = new LengthAwarePaginator(
             $ledgers->forPage($request->input('page', 1), $perPage),
@@ -59,13 +49,11 @@ class SitePaymentController extends Controller
 
         return view("profile.partials.Admin.Ledgers.site-ledger",
             compact(
-                'payments',
                 'paginatedLedgers',
                 'total_paid',
                 'total_due',
-                'id',
                 'total_balance',
-                'service_charge'
+                'site'
             )
         );
     }

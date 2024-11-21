@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ConstructionMaterialBilling;
 use App\Http\Controllers\Admin\DailyExpensesController;
 use App\Http\Controllers\Admin\DailyWagerController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\PaymentBillsController;
 use App\Http\Controllers\Admin\PaymentsController;
 use App\Http\Controllers\Admin\PaymentSupplierController;
@@ -94,13 +95,13 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
 
-
     // Admin Enginner Controllers
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
     Route::get('/edit-user/{id}', [AdminUserController::class, 'editUser'])->name('admin.edit-user');
     Route::post('/register', [AdminUserController::class, 'register'])->name('admin.register-user');
     Route::put('/user/update-password/{id}', [AdminUserController::class, 'updateUserPassword'])->name('admin.update-user-password');
+    Route::put('/user/update-name/{id}', [AdminUserController::class, 'updateName'])->name('user.update-name');
 
     // Clents Routes
     Route::resource('/clients', ClientController::class);
@@ -114,7 +115,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     //  On Going Site Updated With This Route
     Route::post('sites/update-on-going/{id}', UpdateOnGoingController::class)->name('sites.update-on-going');
 
-    Route::resource('/workforce', WorkforceController::class);
+    // Route::resource('/workforce', WorkforceController::class);
 
     Route::resource('/construction-material-billings', ConstructionMaterialBilling::class);
 
@@ -128,6 +129,8 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     Route::resource('sites/supplier-payments', PaymentSupplierController::class);
 
+    // Items Controller
+    Route::resource('/items', ItemController::class);
 
     Route::resource('/phase', PhaseController::class);
 
@@ -192,6 +195,7 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
     // View Ledger
     Route::get('/site/ledger/{id}', UserLedgerController::class);
+
 
 
     // Notification Routes

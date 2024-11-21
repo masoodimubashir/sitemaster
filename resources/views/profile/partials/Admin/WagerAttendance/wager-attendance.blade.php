@@ -34,9 +34,9 @@
 
                             <!-- Wager -->
                             <div class="mt-4">
+                                <label for="supplier_id" class="mb-1"
+                                    style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">Select Wager</label>
                                 <select id="daily_wager_id" class="block mt-1 w-full" name="daily_wager_id">
-                                    <option value="">Select Wager</option>
-
                                     @foreach ($wagers as $wager)
                                         <option value="{{ $wager->id }}">{{ $wager->wager_name }}</option>
                                     @endforeach

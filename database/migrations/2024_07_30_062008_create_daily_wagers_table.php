@@ -17,7 +17,7 @@ return new class extends Migration
             $table->decimal('price_per_day',12,2);
             $table->foreignId('phase_id')->constrained()->cascadeOnDelete();
             $table->foreignId('supplier_id')->constrained()->cascadeOnDelete();
-            $table->boolean('verified_by_admin')->default(false);
+            // $table->boolean('verified_by_admin')->default(false);
             $table->softDeletes();
             $table->timestamps();
         });

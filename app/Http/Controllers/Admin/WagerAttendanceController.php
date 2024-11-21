@@ -7,6 +7,7 @@ use App\Models\DailyWager;
 use App\Models\User;
 use App\Models\WagerAttendance;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -61,6 +62,7 @@ class WagerAttendanceController extends Controller
                 $daily_wager_attendance->is_present = 1;
                 $daily_wager_attendance->created_at = $request->date ? $request->date : now();
                 $daily_wager_attendance->phase_id = $request->phase_id;
+                $daily_wager_attendance->verified_by_admin = 1;
 
                 $daily_wager_attendance->save();
 
@@ -135,18 +137,19 @@ class WagerAttendanceController extends Controller
                 return redirect()->back()->with('error', 'Something Went Wrong...');
             }
 
-            Storage::delete($daily_wager_attendance->item_image_path);
+            if (
+                $daily_wager_attendance->dailyWager->supplier->paymentSuppliers()->exists()
+                || $daily_wager_attendance->verified_by_admin === 1
+            ) {
+                return response()->json(['error' => 'This attendance cannot be deleted..'], 404);
+            }
 
             $daily_wager_attendance->delete();
 
             return response()->json(['message' => 'Item Deleted...'], 201);
-
         } catch (\Throwable $th) {
-
+            Log::info($th);
             return response()->json(['error' => 'An unexpected error occurred: '], 500);
-
         }
-
-
     }
 }

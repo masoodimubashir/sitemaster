@@ -36,31 +36,34 @@
                             <x-input-error :messages="$errors->get('address')" class="mt-2" />
                         </div>
 
-                        <div>
-                            <div class="form-group ">
-                                <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input type="radio" class="form-check-input" name="provider_type"
-                                            id="is_raw_material_provider1" value="is_raw_material_provider"> Raw
-                                        Material Provider
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <label class="form-check-label">
-                                        <input type="radio" class="form-check-input" name="provider_type"
-                                            id="is_workforce_provider22" value="is_workforce_provider"> Workforce
-                                        Provider
-                                    </label>
 
-                                </div>
-
-                                @error('is_workforce_provider')
-                                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                        <div class="form-group flex gap-4">
+                            <div class="form-check">
+                                <label class="form-check-label">
+                                    <input type="radio" class="form-check-input" name="provider"
+                                        id="is_raw_material_provider1" value="is_raw_material_provider"
+                                        {{ old('provider') == 'is_raw_material_provider' ? 'checked' : '' }}> Raw
+                                    Material Provider
+                                </label>
+                                @error('provider')
+                                    <span class="text-red-500 fw-bold  text-sm">{{ $message }}</span>
                                 @enderror
+                            </div>
+                            <div class="form-check">
+                                <label class="form-check-label">
+                                    <input type="radio" class="form-check-input" name="provider"
+                                        id="is_workforce_provider22" value="is_workforce_provider"
+                                        {{ old('provider') == 'is_workforce_provider' ? 'checked' : '' }}> Workforce
+                                    Provider
+                                </label>
 
                             </div>
-
                         </div>
+
+
+
+
+
 
 
                         <button class=" btn btn-info"><span>Save</span></button>

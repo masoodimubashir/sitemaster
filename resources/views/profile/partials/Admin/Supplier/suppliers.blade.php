@@ -7,7 +7,7 @@
     @endif
 
     @if (session('status') === 'error')
-        <x-success-message message='Something Went Wrong...' />
+        <x-error-message message='Something Went Wrong...' />
     @endif
 
     @if (session('status') === 'create')
@@ -15,7 +15,7 @@
     @endif
 
     @if (session('status') === 'delete')
-        <x-success-message message='Supplier Deleted Succussfully...' />
+        <x-error-message message='Supplier Deleted Succussfully...' />
     @endif
 
     <div class="row">

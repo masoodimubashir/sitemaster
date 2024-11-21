@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('phases', function (Blueprint $table) {
             $table->id();
-            $table->string('phase_name')->unique();
+            $table->string('phase_name');
             $table->foreignId('site_id');
             $table->softDeletes();
             $table->timestamps();

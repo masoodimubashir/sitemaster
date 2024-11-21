@@ -27,14 +27,6 @@
                                 aria-controls="material" aria-selected="false">Payments History</a>
                         </li>
                     </ul>
-
-                    {{-- <div> --}}
-                    {{-- <a class="btn btn-info text-white" href="#payment-supplier" data-bs-toggle="modal"
-                            role="button">
-                            <i class="fas fa-money-bill me-2"></i>Make Payment
-                        </a> --}}
-                    {{-- </div> --}}
-
                 </div>
 
                 <div class="tab-content mt-3">
@@ -119,7 +111,7 @@
                                                     id="filterForm">
                                                     <select class="form-select form-select-sm bg-white text-black"
                                                         style="cursor: pointer" name="date_filter" id="date_filter"
-                                                        onchange="document.getElementById('filterForm').submit();">
+                                                        onchange="document.getElementById('filterForm').submit();" >
                                                         <option value="today"
                                                             {{ request('date_filter') === 'today' ? 'selected' : '' }}>
                                                             Today</option>
@@ -149,6 +141,7 @@
                                                     <select class="form-select form-select-sm bg-white text-black"
                                                         style="cursor: pointer" name="date_filter" id="date_filter"
                                                         onchange="document.getElementById('ledger-report').submit();">
+                                                        <option value="">Generate Report</option>
                                                         <option value="today">
                                                             Generate Today's Report</option>
                                                         <option value="yesterday">
@@ -285,8 +278,7 @@
                                             @endforeach
                                         @else
                                             <tr>
-                                                <td class="text-danger fw-bold text-center" colspan="8">No Records
-                                                    Awailable...</td>
+                                                <td class="text-danger fw-bold text-center" colspan="8">No Records Available...</td>
                                             </tr>
                                         @endif
 
@@ -296,7 +288,6 @@
                                 </table>
                             @else
                                 <h1 class="display-4 bg-white p-2 text-center fw-3 text-danger">No records found..</h1>
-
                             @endif
                         </div>
 

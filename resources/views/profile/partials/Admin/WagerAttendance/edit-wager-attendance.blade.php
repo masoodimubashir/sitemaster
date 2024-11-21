@@ -48,8 +48,12 @@
 
 
                         <div class="mt-4 ">
-                            <label for="date">Select Date</label>
-                            <input type="date" name="date" id="date" class="form-control" style="cursor: pointer">
+                            <label for="date" class="mb-1"
+                                style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">
+                                Select Date
+                            </label>
+                            <input type="date" name="date" id="date" class="form-control"
+                                style="cursor: pointer">
                             @error('date')
                                 <x-input-error :messages="$message" class="mt-2" />
                             @enderror

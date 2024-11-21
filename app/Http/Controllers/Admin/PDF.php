@@ -259,9 +259,9 @@ class PDF extends Fpdf
 
                 $this->cell(47 * 4, 10, ucwords("Daily Wager"), 0, 1, 'C');
 
-
                 foreach ($phase['daily_wagers'] as $d => $daily_wager) {
                     if ($d === 0) {
+
                         $this->Cell($this->width, $this->height, 'Date', 1);
                         $this->Cell($this->width, $this->height, 'Wager Name', 1);
                         $this->Cell($this->width, $this->height, 'Price Per Day', 1);
@@ -269,10 +269,10 @@ class PDF extends Fpdf
 
                         $this->Ln();
                     }
-                    $this->Cell($this->width, $this->height, $expense->created_at, 1);
+
+                    $this->Cell($this->width, $this->height, $daily_wager->created_at, 1);
                     $this->Cell($this->width, $this->height, $daily_wager->wager_name, 1);
                     $this->Cell($this->width, $this->height, $daily_wager->price_per_day, 1);
-
 
                     $wager_service_charge_amount = $this->getServiceChargeAmount($daily_wager->wager_total, $phase['site_service_charge']);
 
@@ -287,7 +287,6 @@ class PDF extends Fpdf
                 $this->Ln();
 
                 $this->cell(47 * 4, 10, ucwords(" Attendance"), 0, 1, 'C');
-
 
                 foreach ($phase['wager_attendances'] as $a => $attendance) {
                     if ($a === 0) {
@@ -594,7 +593,7 @@ class PDF extends Fpdf
             $this->Cell($this->width, $this->height, $payment->created_at->format('D-M'), 1);
             $this->Cell($this->width, $this->height, $payment->site->site_name, 1);
             $this->Cell($this->width, $this->height, ucwords($payment->site->site_owner_name), 1);
-            $this->Cell($this->width, $this->height, $payment->amount, 1);
+            $this->Cell($this->width, $this->height, $payment->amount, 1, 1);
         }
     }
 
@@ -656,7 +655,7 @@ class PDF extends Fpdf
 
             $this->Cell($this->width * 1.34, $this->height, $site_payment->created_at->format('d-m-y'), 1, 0,);
             $this->Cell($this->width * 1.34, $this->height, $site_payment->supplier->name, 1, 0,);
-            $this->Cell($this->width * 1.34, $this->height, $site_payment->amount, 1, 0,);
+            $this->Cell($this->width * 1.34, $this->height, $site_payment->amount, 1, 1);
         }
     }
 

@@ -17,7 +17,7 @@ class DailyWager extends Model
         'wager_name',
         'supplier_id',
         'phase_id',
-        'verified_by_admin',
+        // 'verified_by_admin',
     ];
 
     /**
@@ -52,12 +52,12 @@ class DailyWager extends Model
 
     public function getWagerTotalAttribute()
     {
-
         return $this->wagerAttendances->sum(function ($attendance) {
-            return $attendance->no_of_persons * $attendance->dailyWager->price_per_day;
+            if ($attendance->verified_by_admin === 1) {
+                return $attendance->no_of_persons * $attendance->dailyWager->price_per_day;
+            }
+            return 0; // Return 0 for unverified attendances
         });
-
-
     }
 
 }

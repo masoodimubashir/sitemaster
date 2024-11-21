@@ -26,17 +26,20 @@ class StoreSupplierRequest extends FormRequest
             'name' => 'required|string',
             'contact_no' => 'required|unique:suppliers,contact_no|string|digits:10',
             'address' => 'required|string',
-            'is_raw_material_provider' => 'required_without:is_workforce_provider|boolean|nullable',
-            'is_workforce_provider' => 'required_without:is_raw_material_provider|boolean|nullable',
+            'provider' => ['required', 'in:is_raw_material_provider,is_workforce_provider'],
         ];
     }
+
 
     public function messages(): array
     {
         return [
-            'is_raw_material_provider.required_without' => 'Please select at least one type of provider.',
-            'is_workforce_provider.required_without' => 'Please select at least one type of provider.',
+            'provider.required' => 'Please select a provider type.',
+            'provider.in' => 'Invalid provider selected.',
         ];
     }
 
+
 }
+
+

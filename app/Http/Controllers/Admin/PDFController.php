@@ -27,11 +27,9 @@ class PDFController extends Controller
             'phases.constructionMaterialBillings' => function ($q) {
                 $q->where('verified_by_admin', 1)
                     ->whereHas('supplier', function ($query) {
-                        // Ensure the supplier is not soft-deleted
                         $query->whereNull('deleted_at');
                     })
-                    ->with('supplier')
-                    ->withTrashed();
+                    ->with('supplier');
             },
             'phases.squareFootageBills' => function ($q) {
                 $q->where('verified_by_admin', 1)
@@ -43,36 +41,29 @@ class PDFController extends Controller
                 $q->withTrashed();
             },
             'phases.dailyWagers' => function ($q) {
-                $q->where('verified_by_admin', 1)
-                    ->whereHas('supplier', function ($query) {
-                        $query->whereNull('deleted_at');
-                    })
+                $q->whereHas('supplier', function ($query) {
+                    $query->whereNull('deleted_at');
+                })
                     ->with([
-                        'wagerAttendances' => function ($q) {
-                            $q->where('verified_by_admin', 1);
-                        },
+                        'wagerAttendances',
                         'supplier' => function ($q) {
                             $q->withoutTrashed();
                         }
                     ])
-                    ->withoutTrashed()
                     ->latest();
             },
             'phases.dailyExpenses' => function ($q) {
                 $q->where('verified_by_admin', 1);
             },
             'phases.wagerAttendances' => function ($q) {
-                $q->where('verified_by_admin', 1)
-                    ->whereHas('dailyWager.supplier', function ($query) {
-                        // Ensure the dailyWager's supplier is not soft-deleted
-                        $query->whereNull('deleted_at');
-                    })
+                $q->whereHas('dailyWager.supplier', function ($query) {
+                    $query->whereNull('deleted_at');
+                })
                     ->with([
                         'dailyWager.supplier' => function ($q) {
                             $q->withoutTrashed();
                         }
-                    ])
-                    ->withTrashed();
+                    ]);
             },
             'paymeentSuppliers' => function ($q) {
                 $q->where('verified_by_admin', 1)
@@ -176,50 +167,41 @@ class PDFController extends Controller
         $phase = Phase::with([
             'constructionMaterialBillings' => function ($q) {
                 $q->where('verified_by_admin', 1)->whereHas('supplier', function ($query) {
-                    // Ensure the supplier is not soft-deleted
                     $query->whereNull('deleted_at');
                 })
-                    ->with('supplier')
-                    ->withoutTrashed();
+                    ->with('supplier');
             },
             'squareFootageBills' => function ($q) {
                 $q->where('verified_by_admin', 1)
                     ->whereHas('supplier', function ($query) {
-                        // Ensure the supplier is not soft-deleted
                         $query->whereNull('deleted_at');
                     })
-                    ->with('supplier')
-                    ->withoutTrashed();
+                    ->with('supplier');
             },
             'dailyWagers' => function ($q) {
-                $q->where('verified_by_admin', 1)
-                    ->whereHas('supplier', function ($query) {
+                $q->whereHas('supplier', function ($query) {
                         $query->whereNull('deleted_at');
                     })
                     ->with([
-                        'wagerAttendances' => function ($q) {
-                            $q->where('verified_by_admin', 1);
-                        },
+                        'wagerAttendances',
                         'supplier' => function ($q) {
                             $q->withoutTrashed();
                         }
                     ])
-                    ->withTrashed()
                     ->latest();
             },
             'dailyExpenses' => function ($q) {
                 $q->where('verified_by_admin', 1);
             },
             'wagerAttendances' => function ($q) {
-                $q->where('verified_by_admin', 1)
-                    ->whereHas('dailyWager.supplier', function ($query) {
-                        // Ensure the dailyWager's supplier is not soft-deleted
-                        $query->whereNull('deleted_at');
-                    })
-                    ->with(['dailyWager.supplier' => function ($q) {
-                        $q->withoutTrashed();
-                    }])
-                    ->withTrashed();
+                $q->whereHas('dailyWager.supplier', function ($query) {
+                    $query->whereNull('deleted_at');
+                })
+                    ->with([
+                        'dailyWager.supplier' => function ($q) {
+                            $q->withoutTrashed();
+                        }
+                    ]);
             }
         ])->findOrFail($phase_id);
 

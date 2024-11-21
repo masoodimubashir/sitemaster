@@ -15,13 +15,23 @@ use App\Models\Site;
 use App\Models\SquareFootageBill;
 use App\Models\Supplier;
 use App\Models\WagerAttendance;
+use App\Services\DataService;
 
 class DashboardController extends Controller
 {
-    public function dashboard()
+    public function dashboard(DataService $dataService)
     {
 
-        $sum_total_payment_amount = 0;
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData('lifetime');
+
+        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
+
+        [$total_paid, $total_due, $total_balance] = $dataService->calculateBalancesWithServiceCharge($ledgers);
+
+        $sum_total_payment_amount = $payments->sum('amount');
+
+        dd($sum_total_payment_amount);
+
         $clients = Client::all();
         $suppliers = Supplier::all();
         $payments = PaymentSupplier::with('supplier', 'site')->get();
@@ -149,7 +159,6 @@ class DashboardController extends Controller
             ];
         }));
 
-        $totalPaymentAmount = $sum_total_payment_amount;
 
         $totalAmount = $data->filter(function ($d) {
             return ($d['category'] !== 'Suppliers' && $d['category'] !== 'Clients') && $d['phase'] !== 'NA';
@@ -179,14 +188,13 @@ class DashboardController extends Controller
         $balance = $totalAmount - $totalPaymentAmount;
         $revenue = $totalAmountWithServiceChargeAmount + $totalPaymentAmount;
         $expenses = $balance + $totalPaymentAmount;
+        $balance_paid_chart = new BalancePaidChart($total_balance, $total_paid);
 
-        $balance_paid_chart = new BalancePaidChart($balance, $totalPaymentAmount);
         $cost_profit_chart = new CostProfitChart($expenses, $revenue);
         $payment_chart = new PaymentChart($payments);
 
-        return view(
-            'profile.partials.Admin.Dashboard.dashboard',
-            compact('data', 'balance_paid_chart', 'opened_sites', 'closed_sites', 'notifications', 'cost_profit_chart', 'payment_chart', 'paymentsTotalAmount')
+        return view('profile.partials.Admin.Dashboard.dashboard',
+            compact('data', 'balance_paid_chart', 'opened_sites', 'closed_sites', 'notifications', 'cost_profit_chart', 'payment_chart', 'sum_total_payment_amount')
         );
     }
 }

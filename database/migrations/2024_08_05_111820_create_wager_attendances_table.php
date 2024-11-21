@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('wager_attendances', function (Blueprint $table) {
             $table->id();
             $table->boolean('is_present')->default(0);
+            $table->boolean('verified_by_admin')->default(0);
             $table->unsignedTinyInteger('no_of_persons');
             $table->foreignId('daily_wager_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();

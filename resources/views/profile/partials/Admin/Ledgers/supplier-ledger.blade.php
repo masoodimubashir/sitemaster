@@ -50,13 +50,13 @@
                                 </div>
                             </td>
 
-
                             <td colspan="4" style="background: #F4F5F7; border:none">
                                 <div class="row">
                                     <form class="col" action="{{ url('admin/supplier/ledger/' . $id) }}"
                                         method="GET" id="filterForm">
-                                        <select class="form-select form-select-sm bg-white" name="date_filter" style="cursor: pointer"
-                                            id="date_filter" onchange="document.getElementById('filterForm').submit();">
+                                        <select class="form-select form-select-sm bg-white text-dark" name="date_filter"
+                                            style="cursor: pointer" id="date_filter" 
+                                            onchange="document.getElementById('filterForm').submit();">
                                             <option value="today"
                                                 {{ request('date_filter') === 'today' ? 'selected' : '' }}>
                                                 Today</option>
@@ -76,37 +76,7 @@
                                                 {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
                                                 All Data</option>
                                         </select>
-
                                     </form>
-
-
-                                    {{-- <form class="col" action="{{ url('admin/ledger/report') }}"
-                                                    method="GET" id="ledger-report">
-                                                    <select class="form-select form-select-sm bg-white"
-                                                        name="date_filter" id="date_filter"
-                                                        onchange="document.getElementById('ledger-report').submit();">
-                                                        <option value="today"
-                                                            {{ request('date_filter') === 'today' ? 'selected' : '' }}>
-                                                            Generate Today's Report</option>
-                                                        <option value="yesterday"
-                                                            {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>
-                                                            Generate Yesterday's Report</option>
-                                                        <option value="last_week"
-                                                            {{ request('date_filter') === 'last_week' ? 'selected' : '' }}>
-                                                            Generate Last Week's Report</option>
-                                                        <option value="last_month"
-                                                            {{ request('date_filter') === 'last_month' ? 'selected' : '' }}>
-                                                            Generate Last Month's Report</option>
-                                                        <option value="last_year"
-                                                            {{ request('date_filter') === 'last_year' ? 'selected' : '' }}>
-                                                            Generate Last Year's Report</option>
-                                                        <option value="lifetime"
-                                                            {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
-                                                            Generate Full Report</option>
-                                                    </select>
-
-                                                </form> --}}
-
                                 </div>
                             </td>
                         </tr>
@@ -119,37 +89,35 @@
                             <th class="bg-info text-white fw-bold">Information</th>
                             <th class="bg-info text-white fw-bold ">Debit</th>
                             <th class="bg-info text-white fw-bold ">Credit</th>
-
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($paginatedLedgers as $key => $ledger)
-                            @php
 
-                                // $balance =  $ledger['amount'] - $ledger['payment_amounts'];
-                            @endphp
+                        @if (count($paginatedLedgers) > 0)
+                            @foreach ($paginatedLedgers as $key => $ledger)
+                                <tr>
+                                    <td>
+                                        {{ $ledger['created_at'] }}
+                                    </td>
+                                    <td>{{ $ledger['category'] === 'Daily Expense' ? $ledger['category'] : ucwords($ledger['supplier']) }}
+                                    </td>
+                                    <td>{{ ucwords($ledger['phase']) }}</td>
+                                    <td>{{ ucwords($ledger['site']) }}</td>
+                                    <td>{{ $ledger['category'] }}</td>
+                                    <td>{{ ucwords($ledger['description']) }}</td>
+                                    <td>{{ $ledger['debit'] }}</td>
+                                    <td>
+                                        {{ $ledger['credit'] }}
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @else
+                                <tr>
+                                    <td  class="text-danger text-center fw-bold" colspan="8">No Records Found</td>
+                                </tr>
+                        @endif
 
-                            <tr>
-                                <td>
-                                    {{ $ledger['created_at'] }}
-                                </td>
-                                <td>{{ $ledger['category'] === 'Daily Expense' ? $ledger['category'] : ucwords($ledger['supplier']) }}
-                                </td>
-                                <td>{{ ucwords($ledger['phase']) }}</td>
-                                <td>{{ ucwords($ledger['site']) }}</td>
-                                {{-- <td>{{ $ledger['service_charge'] }}</td> --}}
-                                <td>{{ $ledger['category'] }}</td>
-                                <td>{{ ucwords($ledger['description']) }}</td>
-                                <td>{{ $ledger['debit'] }}</td>
-                                <td>
-                                    {{ $ledger['credit'] }}
-                                </td>
 
-
-
-
-                            </tr>
-                        @endforeach
 
                     </tbody>
 

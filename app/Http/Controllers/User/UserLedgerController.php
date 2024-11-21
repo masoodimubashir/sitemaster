@@ -3,12 +3,8 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use App\Models\ConstructionMaterialBilling;
-use App\Models\DailyExpenses;
-use App\Models\DailyWager;
-use App\Models\PaymentSupplier;
 use App\Models\Site;
-use App\Models\SquareFootageBill;
+use App\Services\DataService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -16,100 +12,29 @@ use Illuminate\Support\Facades\Log;
 
 class UserLedgerController extends Controller
 {
-    public function __invoke(Request $request, $id)
+    public function __invoke(Request $request, $id, DataService $dataService)
     {
 
+        $dateFilter = $request->get('date_filter', 'today');
 
-        $dateFilter = $request->date_filter;
+        $site = Site::find($id);
 
-        // Base query for ongoing sites
-        $ongoingSites = Site::where('is_on_going', 1)->pluck('id');
+        Log::info($site);
+
+        $ongoingSites = $site->where('is_on_going', 1)->pluck('id');
         $is_ongoing_count = $ongoingSites->count();
-        $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
+        $is_not_ongoing_count = $site->where('is_on_going', 0)->count();
 
-        $site_service_charge = Site::find($id)->service_charge;
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter);
 
-        $dateRange = $this->getDateRange($dateFilter);
+        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
+        $ledgers = $ledgers->filter(fn($ledger) => $ledger['site_id'] == $site->id)
+            ->sortByDesc(function ($d) {
+                return $d['created_at'];
+            });
 
-        $ledgers = $ledgers->merge($payments->map(function ($pay) {
-            return [
-                'supplier' => $pay->supplier->name ?? '',
-                'description' => $pay->item_name ?? 'NA',
-                'category' => 'Payments',
-                'debit' => 'NA',
-                'credit' => $pay->amount,
-                'phase' => $pay->phase->phase_name ?? 'N/A',
-                'site' => $pay->phase->site->site_name ?? 'N/A',
-                'site_id' => $pay->site_id ?? null,
-                'supplier_id' => $pay->supplier_id ?? null,
-                'created_at' => $pay->created_at,
-            ];
-        }));
-
-        $ledgers = $ledgers->merge($raw_materials->map(function ($material) {
-            return [
-                'supplier' => $material->supplier->name ?? 'NA',
-                'description' => $material->item_name ?? 'NA',
-                'category' => 'Raw Material',
-                'debit' => $material->amount,
-                'credit' => 0,
-                'phase' => $material->phase->phase_name ?? 'N/A',
-                'site' => $material->phase->site->site_name ?? 'N/A',
-                'site_id' => $material->phase->site_id ?? null,
-                'supplier_id' => $material->supplier_id ?? null,
-                'created_at' => $material->created_at,
-            ];
-        }));
-
-        $ledgers = $ledgers->merge($squareFootageBills->map(function ($bill) {
-            return [
-                'supplier' => $bill->supplier->name ?? 'NA',
-                'description' => $bill->wager_name ?? 'NA',
-                'category' => 'Square Footage Bill',
-                'debit' => $bill->price * $bill->multiplier,
-                'credit' => 0,
-                'phase' => $bill->phase->phase_name ?? 'N/A',
-                'site' => $bill->phase->site->site_name ?? 'N/A',
-                'site_id' => $bill->phase->site_id ?? null,
-                'supplier_id' => $bill->supplier_id ?? null,
-                'created_at' => $bill->created_at,
-            ];
-        }));
-
-        $ledgers = $ledgers->merge($expenses->map(function ($expense) {
-            return [
-                'supplier' => $expense->supplier->name ?? '',
-                'description' => $expense->item_name ?? 'NA',
-                'category' => 'Daily Expense',
-                'debit' => $expense->price,
-                'credit' => 0,
-                'phase' => $expense->phase->phase_name ?? 'N/A',
-                'site' => $expense->phase->site->site_name ?? 'N/A',
-                'site_id' => $expense->phase->site_id ?? null,
-                'supplier_id' => $expense->supplier_id ?? null,
-                'created_at' => $expense->created_at,
-            ];
-        }));
-
-        $ledgers = $ledgers->merge($wagers->map(function ($wager) {
-            return [
-                'supplier' => $wager->supplier->name ?? '',
-                'description' => $wager->wager_name ?? 'NA',
-                'category' => 'Daily Wager',
-                'debit' => $wager->wager_total,
-                'credit' => 0,
-                'phase' => $wager->phase->phase_name ?? 'N/A',
-                'site' => $wager->phase->site->site_name ?? 'N/A',
-                'site_id' => $wager->phase->site_id ?? null,
-                'supplier_id' => $wager->supplier_id ?? null,
-                'created_at' => $wager->created_at,
-            ];
-        }));
-
-        $ledgers = $ledgers->filter(fn($ledger) => $ledger['site_id'] == $id);
-
-        $totals = $this->calculateBalances($ledgers);
+        [$total_paid, $total_due, $total_balance] = $dataService->calculateBalances($ledgers);
 
         $perPage = 10;
 
@@ -123,12 +48,13 @@ class UserLedgerController extends Controller
 
         return view("profile.partials.Admin.Ledgers.site-ledger",
             compact(
-                'payments',
                 'paginatedLedgers',
                 'total_paid',
                 'total_due',
-                'id',
                 'total_balance',
+                'is_ongoing_count',
+                'is_not_ongoing_count',
+                'site',
             )
         );
     }
@@ -210,7 +136,4 @@ class UserLedgerController extends Controller
             'total_balance' => $total_balance
         ];
     }
-
-
-
 }

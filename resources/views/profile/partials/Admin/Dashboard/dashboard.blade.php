@@ -46,7 +46,7 @@
                                         </div>
                                         <div>
                                             <a class="btn btn-sm btn-info text-white"
-                                                href="{{ route('payments.index') }}">All Payments</a>
+                                                href="{{ url('/admin/payments') }}">All Payments</a>
                                         </div>
                                     </div>
                                     <div class="table-responsive  mt-1">
@@ -69,9 +69,6 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-
-
-
 
                                                 @php
                                                     $count = 0; // Initialize a counter
@@ -149,7 +146,7 @@
 
                                             <div class="col-6">
                                                 <p class="status-summary-ight-white mb-1">
-                                                    Total Amount : {{ Number::currency($paymentsTotalAmount) }}
+                                                    Total Amount : {{ Number::currency($sum_total_payment_amount) }}
                                                 </p>
                                             </div>
                                         </div>
@@ -342,7 +339,7 @@
                                     <div class="list align-items-center pt-3">
                                         <div class="wrapper w-100">
                                             <p class="mb-0">
-                                                <a href="#" class="fw-bold text-primary">Show all
+                                                <a href="{{ route('clients.index') }}" class="fw-bold text-primary">Show all
                                                     <i class="mdi mdi-arrow-right ms-2"></i></a>
                                             </p>
                                         </div>

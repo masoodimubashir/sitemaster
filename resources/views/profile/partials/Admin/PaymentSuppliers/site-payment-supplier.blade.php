@@ -5,13 +5,13 @@
             'Sites',
             $site->site_name,
             'View ' . $site->site_name . ' Payments',
-            'View ' . $site->site_name . ' Ledger',
+            // 'View ' . $site->site_name . ' Ledger',
         ]" :urls="[
             'admin/dashboard',
             'admin/sites',
             'admin/sites/' . base64_encode($site->id),
             'admin/sites/supplier-payments/' . $site->id,
-            'admin/site/ledger/' . $site->id,
+            // 'admin/site/ledger/' . $site->id,
         ]" />
     @endif
 

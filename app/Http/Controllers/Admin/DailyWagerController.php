@@ -128,12 +128,8 @@ class DailyWagerController extends Controller
             if (!$daily_wager) {
                 return redirect()->back()->with('status', 'error');
             }
-
-            $hasData = $daily_wager->with('supplier')->exists()
-                || $daily_wager->with('phase')->exists()
-                || $daily_wager->with('WagerAttendances')->exists();
-
-            if ($hasData) {
+;
+            if ($daily_wager->phase()->site()->paymeentSuppliers()->exists()) {
                 return response()->json(['error' => 'Item Cannot Be Deleted'], 404);
             }
 

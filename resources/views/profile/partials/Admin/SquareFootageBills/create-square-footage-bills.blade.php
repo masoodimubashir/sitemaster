@@ -56,7 +56,7 @@
 
                          <!-- Type -->
                         <div class="mt-4">
-                            <x-input-label for="type" :value="__('Select Type')" />
+                            <label for="supplier_id" class="mb-1" style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">Select Type</label>
                             <select name="type" id="type"  class="block mt-1 w-full rounded-sm">
                                 <option value="per_sqr_ft">Per Square Feet</option>
                                 <option value="per_unit">Per Unit</option>

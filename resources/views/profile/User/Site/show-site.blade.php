@@ -1568,7 +1568,7 @@
                 <thead></thead>
                 <tbody>
                     <tr>
-                        <td class="text-danger fw-bold text-center">No Site Data Awailiable..</td>
+                        <td class="text-danger fw-bold text-center">No Site Data Availiable..</td>
                     </tr>
                 </tbody>
             </table>

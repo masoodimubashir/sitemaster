@@ -15,7 +15,6 @@ class SupplierController extends Controller
      */
     public function index()
     {
-
         $suppliers = Supplier::latest()->paginate(10);
 
         return view('profile.partials.Admin.Supplier.suppliers', compact('suppliers'));
@@ -37,11 +36,11 @@ class SupplierController extends Controller
         $request->validated();
 
         Supplier::create([
-            'name' =>  $request->name,
+            'name' => $request->name,
             'contact_no' => $request->contact_no,
             'address' => $request->address,
-            'is_raw_material_provider' =>  $request->provider_type === 'is_raw_material_provider'  ? 1 : 0,
-            'is_workforce_provider' => $request->provider_type === 'is_workforce_provider' ? 1 : 0
+            'is_raw_material_provider' => $request->provider === 'is_raw_material_provider' ? 1 : 0,
+            'is_workforce_provider' => $request->provider === 'is_workforce_provider' ? 1 : 0,
         ]);
 
         return redirect()->route('suppliers.index')->with('status', 'create');
@@ -174,7 +173,13 @@ class SupplierController extends Controller
     {
         $request->validated();
 
-        $supplier->update($request->all());
+        $supplier->update([
+            'name' => $request->name,
+            'contact_no' => $request->contact_no,
+            'address' => $request->address,
+            'is_raw_material_provider' => $request->provider === 'is_raw_material_provider' ? 1 : 0,
+            'is_workforce_provider' => $request->provider === 'is_workforce_provider' ? 1 : 0,
+        ]);
 
         return redirect()->route('suppliers.index')->with('status', 'update');
     }
@@ -191,12 +196,16 @@ class SupplierController extends Controller
             return redirect()->back()->with('status', 'error')->with('message', 'Site not found.');
         }
 
-        $siteHasRecords =  $supplier->is_raw_material_provider ?
-            $supplier->paymentSuppliers()->exists() || $supplier->whereHas('constructionMaterialBilling')->exists() :
-            $supplier->whereHas('constructionMaterialBilling')->exists() ||
-            $supplier->whereHas('squareFootages')->exists() ||
-            $supplier->whereHas('dailyWagers')->exists() ||
-            $supplier->paymentSuppliers()->exists();
+        if ($supplier->is_raw_material_provider) {
+            $siteHasRecords = $supplier->paymentSuppliers()->exists() || $supplier->constructionMaterialBilling()->exists();
+        }
+
+        if ($supplier->is_workforce_provider) {
+            $siteHasRecords =  $supplier->dailyWagers()->exists() ||
+                $supplier->squareFootages()->exists() ||
+                $supplier->dailyWagers()->exists() ||
+                $supplier->paymentSuppliers()->exists();
+        }
 
         if ($siteHasRecords) {
             return redirect()->back()->with('status', 'error');

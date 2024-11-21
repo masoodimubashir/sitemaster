@@ -53,6 +53,7 @@
 
                         <div class="mt-4">
 
+                            <label for="supplier_id" class="mb-1" style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">Select Supplier</label>
                             <select id="supplier_id" class="form-select form-select-sm text-black" name="supplier_id">
                                 @foreach ($suppliers as $supplier)
                                     <option
@@ -60,7 +61,7 @@
                                         value="{{ $supplier->id }}">{{ $supplier->name }}</option>
                                 @endforeach
                             </select>
-                         
+
                             @error('supplier_id')
                                 <x-input-error :messages="$message" class="mt-2" />
                             @enderror
@@ -79,7 +80,7 @@
 
                         <!-- Item Bill Photo -->
                         <div class="mt-4">
-                            <x-input-label for="image" :value="__('Item Bill')" />
+                            <label for="image" class="mb-1" style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">Item Bill</label>
                             <input class="form-control form-control-md" id="image" type="file" name="image">
                             @error('image')
                                 <x-input-error :messages="$message" class="mt-2" />

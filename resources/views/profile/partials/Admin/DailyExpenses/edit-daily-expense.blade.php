@@ -40,7 +40,7 @@
                         </div>
 
                         <div class="col-12 mt-3">
-
+                            <label for="supplier_id" class="mb-1" style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">Bill</label>
                             <input class="form-control" type="file" id="formFile" name="bill_photo"
                                 value="{{ $dialy_expense->bill_photo }}">
                             @error('bill_photo')

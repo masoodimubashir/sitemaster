@@ -1,14 +1,11 @@
 <x-app-layout>
 
-    <x-breadcrumb :names="['Sites', ' Ledger']" :urls="['admin/sites', 'admin/site/ledger/' . $id]" />
+    <x-breadcrumb :names="['Sites' , $site->site_name , ' Ledger']" :urls="['admin/sites', 'admin/sites/'. base64_encode($site->id)   , 'admin/site/ledger/' . $site->id]" />
 
     <div class="row">
         <div class="col-sm-12">
 
-
-
             <div class="table-responsive mt-4">
-
                 <table class="table table-bordered">
                     <thead>
                         <tr>
@@ -53,10 +50,10 @@
                             <td colspan="4" style="background: #F4F5F7; border:none">
                                 <div class="row">
 
-                                    <form class="col" action="{{ url('admin/site/ledger/' . $id) }}" method="GET"
+                                    <form class="col" action="{{ url('admin/site/ledger/' . $site->id) }}" method="GET"
                                         id="filterForm">
-                                        <select class="form-select form-select-sm bg-white" name="date_filter"
-                                            id="date_filter" onchange="document.getElementById('filterForm').submit();">
+                                        <select class="form-select form-select-sm bg-white text-dark" name="date_filter"
+                                            id="date_filter" onchange="document.getElementById('filterForm').submit();" style="cursor: pointer;">
                                             <option value="today"
                                                 {{ request('date_filter') === 'today' ? 'selected' : '' }}>
                                                 Today</option>
@@ -98,13 +95,6 @@
 
                         @if (count($paginatedLedgers))
                             @foreach ($paginatedLedgers as $key => $ledger)
-                                @php
-                                    if ($ledger['category'] !== 'Payments') {
-                                        $service_charge_amount = ($ledger['debit'] * $service_charge) / 100;
-                                        $amount_with_service_charge = $service_charge_amount + $ledger['debit'];
-                                    }
-                                @endphp
-
                                 <tr>
                                     <td>
                                         {{ $ledger['created_at'] }}
@@ -115,8 +105,7 @@
                                     <td>{{ ucwords($ledger['site']) }}</td>
                                     <td>{{ $ledger['category'] }}</td>
                                     <td>{{ ucwords($ledger['description']) }}</td>
-                                    <td>{{ $ledger['category'] !== 'Payments' ? $amount_with_service_charge : 0 }}
-                                    </td>
+                                    <td>{{ $ledger['category'] !== 'Payments' ? $ledger['total_amount_with_service_charge'] : 0 }}</td>
                                     <td>
                                         {{ $ledger['credit'] }}
                                     </td>

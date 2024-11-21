@@ -39,4 +39,5 @@ class ConstructionMaterialBilling extends Model
     {
         return $this->belongsTo(Phase::class);
     }
+    
 }

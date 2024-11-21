@@ -53,8 +53,11 @@
                         </div>
 
                         <!-- Type -->
-                        <Label for="type">Select Type:</Label>
-                        <select class="form-select form-select-sm text-black" id="type" name="type" style="cursor: pointer">
+                        <label for="date" class="mb-1" style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">
+                            Select Type
+                        </label>
+                        <select class="form-select form-select-sm text-black" id="type" name="type"
+                            style="cursor: pointer">
                             <option {{ $square_footage_bill->type === 'per_sqr_ft' ? 'selected' : '' }}
                                 value="per_sqr_ft">Per Square Feet</option>
                             <option {{ $square_footage_bill->type === 'per_unit' ? 'selected' : '' }} value="per_unit">
@@ -91,7 +94,10 @@
 
                         <!-- Image -->
                         <div class="mt-3">
-                            <label for="image">Item Bill</label>
+                            <label for="date" class="mb-1"
+                                style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">
+                                Item Bill
+                            </label>
                             <input class="form-control form-control-md" id="image" type="file" name="image_path">
                             @error('image_path')
                                 <x-input-error :messages="$message" class="mt-2" />

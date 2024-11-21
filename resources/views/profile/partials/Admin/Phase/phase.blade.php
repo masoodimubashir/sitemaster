@@ -11,11 +11,15 @@
     @endif
 
     @if (session('status') === 'not_found')
-        <x-success-message message="Phase Not Found....." />
+        <x-error-message message="Phase Not Found....." />
     @endif
 
     @if (session('status') === 'delete')
-        <x-success-message message="Phase deleted......" />
+        <x-error-message message="Phase deleted......" />
+    @endif
+
+     @if (session('status') === 'data')
+        <x-error-message message="Phase Cannot Be deleted......" />
     @endif
 
 
@@ -37,6 +41,7 @@
 
                                     <th class="bg-info text-white fw-bold">Date</th>
                                     <th class="bg-info text-white fw-bold">Phase Name</th>
+                                    <th class="bg-info text-white fw-bold">Site Name</th>
                                     <th class="bg-info text-white fw-bold">Actions</th>
 
                                 </tr>
@@ -50,6 +55,10 @@
 
                                         <td>
                                             {{ $phase->created_at->format('D-M') }}
+                                        </td>
+
+                                        <td>
+                                            {{ $phase->site->site_name }}
                                         </td>
 
                                         <td>

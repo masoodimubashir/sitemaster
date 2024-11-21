@@ -154,12 +154,16 @@ class DailyExpensesController extends Controller
                 return redirect()->back()->with('status', 'error');
             }
 
+            if ($expense->supplier()->paymeentSuppliers()->exists()) {
+                return response()->json(['error' => 'This Item Cannot Be Deleted..'], 404);
+            }
+
             Storage::delete($expense->bill_photo);
 
             $expense->delete();
 
             return response()->json(['message' => 'Item Deleted...'], 201);
-            
+
         } catch (\Throwable $th) {
 
             return response()->json(['error' => 'An unexpected error occurred: '], 500);

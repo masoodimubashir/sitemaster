@@ -48,14 +48,16 @@
                         </div>
 
                         <div>
-                            <label for="user_id">Select Site Engineer</label>
-                            <select class="form-select form-select-sm text-black" id="user_id" name="user_id" style="cursor: pointer">
+                            <label for="user_id" class="mb-1" style="font-size: 0.8rem;color: rgba(17, 17, 17, 0.48);">Select Engineer</label>
+                            <select class="form-select form-select-sm text-black" id="user_id" name="user_id"
+                                style="cursor: pointer">
                                 @foreach ($users as $user)
                                     <option {{ $site->user_id === $user->id ? 'selected' : '' }}
                                         value="{{ $user->id }}">{{ ucfirst($user->name) }}</option>
                                 @endforeach
                             </select>
                             <x-input-error :messages="$errors->get('user_id')" class="mt-2" />
+
                         </div>
 
 

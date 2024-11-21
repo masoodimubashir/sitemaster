@@ -73,4 +73,19 @@ class Phase extends Model
     {
         return $this->hasMany(WagerAttendance::class, 'phase_id', 'id');
     }
+
+    public function getExistsRecordsAttribute()
+    {
+
+        if (
+            $this->constructionMaterialBillings()->where('verified_by_admin', 1)->exists() ||
+            $this->squareFootageBills()->where('verified_by_admin', 1)->exists() ||
+            $this->dailyWagers()->exists() ||  $this->dailyExpenses()->where('verified_by_admin', 1)->exists() ||
+            $this->wagerAttendances()->where('verified_by_admin')->exists()
+        ) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

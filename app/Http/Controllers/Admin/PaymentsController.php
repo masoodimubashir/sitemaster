@@ -36,7 +36,7 @@ class PaymentsController extends Controller
 
         [$total_paid, $total_due, $total_balance] = $dataService->calculateBalances($ledgers);
 
-        $perPage = $request->get('per_page', 10);
+        $perPage = $request->get('per_page', 20);
 
         $paginatedLedgers = new LengthAwarePaginator(
             $ledgers->forPage($request->input('page', 1), $perPage),
