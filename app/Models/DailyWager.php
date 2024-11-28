@@ -54,8 +54,10 @@ class DailyWager extends Model
     {
         return $this->wagerAttendances->sum(function ($attendance) {
             if ($attendance->verified_by_admin === 1) {
+                // dd('hi');
                 return $attendance->no_of_persons * $attendance->dailyWager->price_per_day;
             }
+            // dd('hi');
             return 0; // Return 0 for unverified attendances
         });
     }

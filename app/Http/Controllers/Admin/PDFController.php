@@ -44,8 +44,13 @@ class PDFController extends Controller
                 $q->whereHas('supplier', function ($query) {
                     $query->whereNull('deleted_at');
                 })
+                    ->whereHas('wagerAttendances', function ($query) {
+                        $query->where('verified_by_admin', 1); // Only include records where 'verified_by_admin' is 1
+                    })
                     ->with([
-                        'wagerAttendances',
+                        'wagerAttendances' => function ($query) {
+                            $query->where('verified_by_admin', 1); // Make sure to load only the wagerAttendances that are verified by admin
+                        },
                         'supplier' => function ($q) {
                             $q->withoutTrashed();
                         }
@@ -63,7 +68,8 @@ class PDFController extends Controller
                         'dailyWager.supplier' => function ($q) {
                             $q->withoutTrashed();
                         }
-                    ]);
+                    ])
+                    ->where('verified_by_admin', 1);
             },
             'paymeentSuppliers' => function ($q) {
                 $q->where('verified_by_admin', 1)
@@ -180,15 +186,20 @@ class PDFController extends Controller
             },
             'dailyWagers' => function ($q) {
                 $q->whereHas('supplier', function ($query) {
-                        $query->whereNull('deleted_at');
-                    })
-                    ->with([
-                        'wagerAttendances',
-                        'supplier' => function ($q) {
-                            $q->withoutTrashed();
-                        }
-                    ])
-                    ->latest();
+                    $query->whereNull('deleted_at');
+                })
+                ->whereHas('wagerAttendances', function ($query) {
+                    $query->where('verified_by_admin', 1); // Only include records where 'verified_by_admin' is 1
+                })
+                ->with([
+                    'wagerAttendances' => function ($query) {
+                        $query->where('verified_by_admin', 1); // Make sure to load only the wagerAttendances that are verified by admin
+                    },
+                    'supplier' => function ($q) {
+                        $q->withoutTrashed();
+                    }
+                ])
+                ->latest();
             },
             'dailyExpenses' => function ($q) {
                 $q->where('verified_by_admin', 1);
@@ -201,7 +212,7 @@ class PDFController extends Controller
                         'dailyWager.supplier' => function ($q) {
                             $q->withoutTrashed();
                         }
-                    ]);
+                    ])->where('verified_by_admin', 1);
             }
         ])->findOrFail($phase_id);
 
@@ -312,6 +323,11 @@ class PDFController extends Controller
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
         [$total_paid, $total_due, $total_balance] = $dataService->calculateBalances($ledgers);
+
+
+        $ledgers = $ledgers->sortByDesc(function ($d) {
+            return $d['created_at'];
+        });
 
         $pdf = new PDF();
         $pdf->AliasNbPages();

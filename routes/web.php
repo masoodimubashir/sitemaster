@@ -138,7 +138,6 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     Route::get('/site/ledger/{id}', SitePaymentController::class)->name('sites.view-ledger');
 
-
     Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');
 
     Route::resource('/payments', PaymentsController::class);
@@ -163,32 +162,30 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 });
 
 
-
-
 //  -------------------------- User Routes --------------------------
 Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
     // Route::get('/markread', [MarkNotificationAsReadController::class, 'markNotificationAsRead'])->name('user.markAsRead');
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
 
-    Route::get('/sites/{id}', [ViewSiteController::class, 'show'])->name('user-sites.show');
+    Route::get('/sites/{id}', [ViewSiteController::class, 'show'])->name('user.sites.show');
 
-
-    Route::resource('/user-phase', UserPhaseController::class);
+    Route::resource('phase', UserPhaseController::class);
 
     // Construction Material Routes
     Route::post('construction-material-billings', [UserConstuctionMaterialBuildingsController::class, 'store']);
-    // Attendance Routes
-    Route::post('/user-wager-attendance', UserWagerAttendanceController::class);
-
-    // Expenses Routes
-    Route::post('/user-daily-expenses', [UserDailyExpensesController::class, 'store']);
-
-    // Daily Wager Routes
-    Route::post('user-daily-wager', [UserDailyWagerController::class, 'store']);
 
     // Square Footage Routes
-    Route::post('/user-square-footage-bills', [UserSquareFootageBillsController::class, 'store']);
+    Route::post('/square-footage-bills', [UserSquareFootageBillsController::class, 'store']);
+
+    // Expenses Routes
+    Route::post('/daily-expenses', [UserDailyExpensesController::class, 'store']);
+
+    // Daily Wager Routes
+    Route::post('dailywager', [UserDailyWagerController::class, 'store']);
+
+    // Attendance Routes
+    Route::post('/wager-attendance', UserWagerAttendanceController::class);
 
     // Site Payments
     Route::resource('site/payments', UserSitePayments::class);
@@ -196,6 +193,8 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     // View Ledger
     Route::get('/site/ledger/{id}', UserLedgerController::class);
 
+    // Site Payments
+    Route::resource('sites/supplier-payments', PaymentSupplierController::class);
 
 
     // Notification Routes

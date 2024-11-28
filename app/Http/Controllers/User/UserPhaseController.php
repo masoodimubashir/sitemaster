@@ -4,10 +4,8 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Phase;
-use App\Models\Site;
-use App\Models\User;
-use App\Notifications\VerificationNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -35,26 +33,31 @@ class UserPhaseController extends Controller
 
         if ($request->ajax()) {
 
+        Log::info('User', $request->all());
+
+
             $validator = Validator::make($request->all(), [
+                'site_id' => 'required|exists:sites,id',
                 'phase_name' => [
                     'required',
                     'string',
-                    Rule::unique('phases')->where(function ($query) use ($request) {
+                    Rule::unique('phases', 'phase_name')
+                    ->where(function ($query) use ($request) {
                         return $query->where('site_id', $request->site_id);
-                    }),
+                    })
                 ],
-                'site_id' => 'required|exists:sites,id',
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['errors' => 'Validation Error.. Try Again'], 422);
+                return response()->json(['errors' => 'Phase Already Exists',], 422);
             }
 
             try {
+
                 Phase::create($request->all());
                 return response()->json(['message' => 'Phase created successfully.'], 201);
             } catch (\Exception $e) {
-                // Handle any unexpected errors
+
                 return response()->json(['error' => 'An unexpected error occurred.'], 500);
             }
         }

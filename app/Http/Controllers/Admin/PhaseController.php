@@ -55,7 +55,6 @@ class PhaseController extends Controller
                     ],
             ]);
 
-            // Check for validation errors
             if ($validator->fails()) {
                 return response()->json(['errors' => 'Phase Already Exists',], 422);
             }

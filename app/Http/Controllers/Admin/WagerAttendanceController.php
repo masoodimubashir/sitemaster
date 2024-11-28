@@ -40,7 +40,7 @@ class WagerAttendanceController extends Controller
     public function store(Request $request)
     {
         if ($request->ajax()) {
-            // Validation rules
+
             $validator = Validator::make($request->all(), [
                 'no_of_persons' => 'required|integer|min:1',
                 'daily_wager_id' => 'sometimes|exists:daily_wagers,id',
@@ -50,6 +50,7 @@ class WagerAttendanceController extends Controller
 
 
             if ($validator->fails()) {
+                
                 return response()->json(['errors' => 'Validation Error... Try Again!'], 422);
             }
 

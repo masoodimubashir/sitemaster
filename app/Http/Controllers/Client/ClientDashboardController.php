@@ -20,9 +20,10 @@ class ClientDashboardController extends Controller
      */
     public function index()
     {
-        $client = Auth::user();
 
-        $sites = $client->sites()->latest()->paginate(10);
+        $user = auth()->user();
+
+        $sites = $user->sites()->paginate(10);
 
         return view('profile.partials.Client.Dashboard.dashboard', compact('sites'));
     }
@@ -46,78 +47,93 @@ class ClientDashboardController extends Controller
     /**
      * Display the specified resource.
      */
+
+
     public function show(string $id)
     {
 
+
         $site_id = base64_decode($id);
+
         $site = Site::with([
-            'phases.constructionMaterialBillings' => function ($q) {
-                $q->with(['supplier' => function ($q) {
-                    $q->withTrashed();
-                }])->latest();
+            'phases' => function ($phase) {
+                $phase->with([
+                    'constructionMaterialBillings' => function ($q) {
+                        $q->where('verified_by_admin', 1)
+                        ->with('supplier')
+                        ->whereHas('supplier', function ($q) {
+                            $q->whereNull('deleted_at');
+                        })->latest();
+                    },
+                    'squareFootageBills' => function ($q) {
+                        $q->where('verified_by_admin', 1)
+                        ->with('supplier')->whereHas('supplier', function ($q) {
+                            $q->whereNull('deleted_at');
+                        })->latest();
+                    },
+                    'dailyWagers' => function ($q) {
+                        $q->with([
+                            'wagerAttendances',
+                            'supplier'
+                        ])->whereHas('supplier', function ($q) {
+                            $q->whereNull('deleted_at');
+                        })->whereHas('wagerAttendances', function ($attendance) {
+                            $attendance->where('verified_by_admin', 1);
+                        })->latest();
+                    },
+                    'dailyExpenses' => function ($q) {
+                        $q->where('verified_by_admin', 1)
+                        ->latest();
+                    },
+                    'wagerAttendances' => function ($q) {
+                        $q->where('verified_by_admin', 1)
+                        ->with(['dailyWager.supplier'])
+                        ->whereHas('dailyWager.supplier', function ($q) {
+                            $q->whereNull('deleted_at');
+                        })->latest();
+                    },
+                ],);
             },
-            'phases.squareFootageBills' => function ($q) {
-                $q->with('supplier', function ($q) {
-                    $q->withTrashed();
-                })->latest();
-            },
-            'phases.dailyWagers' => function ($q) {
-                $q->with('supplier', function ($q) {
-                    $q->withTrashed();
-                })->latest();
-            },
-            'phases.dailyExpenses' => function ($q) {
-                $q->withTrashed()->latest();
-            },
-            'phases.wagerAttendances' => function ($q) {
-                $q->with(['dailyWager.supplier' => function ($q) {
-                    $q->withTrashed();
-                }])->withTrashed()->latest();
-            },
-            'paymeentSuppliers'
+            'paymeentSuppliers' => function ($pay) {
+                $pay->where('verified_by_admin', 1);
+            }
         ])->findOrFail($site_id);
 
         $totalPaymentSuppliersAmount = $site->paymeentSuppliers()->sum('amount');
 
-        $grand_total_construction_amount = 0;
-        $grand_total_daily_expenses_amount = 0;
-        $grand_total_daily_wagers_amount = 0;
-        $grand_total_square_footage_amount = 0;
-        $phase_service_charge = 0;
+        $grand_total_amount = 0;
 
         foreach ($site->phases as $phase) {
 
             $phase->construction_total_amount = $phase->constructionMaterialBillings->sum('amount');
             $phase->daily_expenses_total_amount = $phase->dailyExpenses->sum('price');
-            $phase->daily_wagers_total_amount = $phase->dailyWagers->sum('price_per_day') *  $phase->wagerAttendances->sum('no_of_persons');
-            $phase->daily_wager_attendance_amount = $phase->wagerAttendances->sum('no_of_persons');
-
-
-            $phase->square_footage_total_amount = $phase->squareFootageBills->reduce(function ($carry, $bill) {
-                return $carry + ($bill->price * $bill->multiplier);
+            $phase->square_footage_total_amount = $phase->squareFootageBills->reduce(function ($sum, $sqft) {
+                return $sum + ($sqft->price * $sqft->multiplier);
             }, 0);
 
-            $phase->total_amount = $phase->construction_total_amount +
-                $phase->daily_expenses_total_amount +
-                $phase->daily_wagers_total_amount +
-                $phase->square_footage_total_amount;
+            foreach ($phase->dailyWagers as $wager) {
+                $phase->daily_wagers_total_amount += $wager->wager_total;
+            }
 
-            $grand_total_construction_amount += $phase->construction_total_amount;
-            $grand_total_daily_expenses_amount += $phase->daily_expenses_total_amount;
-            $grand_total_daily_wagers_amount += $phase->daily_wagers_total_amount;
-            $grand_total_square_footage_amount += $phase->square_footage_total_amount;
+            $phase->construction_total_service_charge_amount = ($site->service_charge / 100) * $phase->construction_total_amount +  $phase->construction_total_amount;
+
+            $phase->daily_expense_total_service_charge_amount = ($site->service_charge / 100) * $phase->daily_expenses_total_amount + $phase->daily_expenses_total_amount;
+
+            $phase->daily_wagers_total_service_charge_amount = ($site->service_charge / 100) * $phase->daily_wagers_total_amount + $phase->daily_wagers_total_amount;
+
+            $phase->sqft_total_service_charge_amount = (($site->service_charge / 100) * $phase->square_footage_total_amount) + $phase->square_footage_total_amount;
+
+
+            $phase->phase_total_amount = $phase->construction_total_amount + $phase->daily_expenses_total_amount + $phase->daily_wagers_total_amount + $phase->square_footage_total_amount;
+
+            $phase->phase_total_service_charge_amount = ($site->service_charge / 100) * $phase->phase_total_amount;
+            $phase->phase_total_with_service_charge_amount = $phase->phase_total_amount + $phase->phase_total_service_charge_amount;
+
+            $grand_total_amount += $phase->phase_total_with_service_charge_amount;
         }
 
-        $grand_total_amount = $grand_total_construction_amount +
-            $grand_total_daily_expenses_amount +
-            $grand_total_daily_wagers_amount +
-            $grand_total_square_footage_amount;
 
-
-        $phase_service_charge = ($site->service_charge / 100) * $grand_total_amount;
-        $grand_total_amount += $phase_service_charge;
         $balance = $grand_total_amount - $totalPaymentSuppliersAmount;
-
 
         $suppliers = Supplier::orderBy('name')->get();
 
@@ -129,9 +145,7 @@ class ClientDashboardController extends Controller
 
         $items = Item::orderBy('item_name')->get();
 
-
-
-        return view('profile.partials.Client.Dashboard.show-client-site',
+        return view('profile.partials.Client.Dashboard.show-site',
             compact(
                 'site',
                 'grand_total_amount',
@@ -141,7 +155,6 @@ class ClientDashboardController extends Controller
                 'wagers',
                 'items',
                 'totalPaymentSuppliersAmount',
-                'phase_service_charge',
                 'balance'
             )
         );

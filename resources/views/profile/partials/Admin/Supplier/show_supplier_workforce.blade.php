@@ -6,6 +6,7 @@
 
 
 
+
     {{-- Accordian --}}
     <style>
         #messageContainer {
@@ -78,7 +79,7 @@
                     Make Payment
                 </button>
 
-                <a href="{{ route('supplier-payments.edit', [$supplier->id]) }}" class="btn btn-info btns"
+                <a href="{{ url('admin/sites/supplier-payments', [$supplier->id]) }}" class="btn btn-info btns"
                     data-modal="payment-supplier">
                     View Payments
                 </a>
@@ -293,61 +294,6 @@
 
                         </table>
 
-                        {{-- <div id="payment-supplier" class="modal">
-
-                            <div class="modal-content">
-
-                                <form action="{{ route('supplier-payments.store') }}"
-                                    class="forms-sample material-form" method="POST" enctype="multipart/form-data">
-
-                                    @csrf
-
-                                    <div class="form-group">
-                                        <input type="number" min="0" name="amount" />
-                                        <label for="input" class="control-label">Amount</label><i class="bar"></i>
-                                        <x-input-error :messages="$errors->get('amount')" class="mt-2" />
-                                    </div>
-
-                                    <div class="mt-4">
-                                        <select id="site_id" class="form-select form-select-sm" name="site_id">
-                                            <option value="">Select Site</option>
-                                            @foreach ($sites as $site)
-                                                <option value="{{ $site->id }}">
-                                                    {{ $site->id }} -
-                                                    {{ $site->site_name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('site_id')
-                                            <x-input-error :messages="$site_id" class="mt-2" />
-                                        @enderror
-                                    </div>
-
-                                    <input type="hidden" name="supplier_id" value="{{ $supplier->id }}" />
-                                    <x-input-error :messages="$errors->get('supplier_id')" class="mt-2" />
-
-                                    @error('supplier_id')
-                                        <x-input-error :messages="$message" class="mt-2" />
-                                    @enderror
-
-                                    <div class="mt-3">
-                                        <input class="form-control form-control-md" id="image" type="file"
-                                            name="screenshot">
-                                    </div>
-
-                                    <div class="flex items-center justify-end mt-4">
-                                        <x-primary-button>
-                                            {{ __('Pay') }}
-                                        </x-primary-button>
-                                    </div>
-
-
-
-                                </form>
-
-                            </div>
-                        </div> --}}
-
                     </div>
 
                 </div>
@@ -447,14 +393,13 @@
                 $('.text-danger').remove();
 
                 $.ajax({
-                    url: '{{ route('supplier-payments.store') }}',
+                    url: '{{ url('admin/sites/supplier-payments') }}',
                     type: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
 
-                        console.log(response);
 
 
                         messageContainer.append(`

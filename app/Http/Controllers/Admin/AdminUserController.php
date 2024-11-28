@@ -80,7 +80,7 @@ class AdminUserController extends Controller
             return redirect()->back()->with('status', 'error');
         }
 
-        $user()->update([
+        $user->update([
             'password' => Hash::make($validated['password']),
         ]);
 

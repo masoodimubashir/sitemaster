@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Models\WagerAttendance;
+use App\Notifications\VerificationNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 
 class UserWagerAttendanceController extends Controller
@@ -14,32 +17,53 @@ class UserWagerAttendanceController extends Controller
      */
     public function __invoke(Request $request)
     {
+
         if ($request->ajax()) {
+            // Validation rules
+            $validator = Validator::make($request->all(), [
+                'no_of_persons' => 'required|integer|min:1',
+                'daily_wager_id' => 'sometimes|exists:daily_wagers,id',
+                'date' => 'sometimes',
+                'phase_id' => 'required|exists:phases,id'
+            ]);
+
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => 'Form Fields Are Missing'], 422);
+            }
+
             try {
 
-                $validatedData = Validator::make($request->all(), [
-                    'no_of_persons' => 'required|integer',
-                    'daily_wager_id' => 'required|exists:daily_wagers,id',
-                    'is_present' => 'sometimes'
-                ]);
-
-                if ($validatedData->fails()) {
-                    return response()->json(['errors' => 'Some Fields Are Missing..'], 422);
-                }
-
                 $daily_wager_attendance = new WagerAttendance();
-
                 $daily_wager_attendance->no_of_persons = $request->no_of_persons;
                 $daily_wager_attendance->daily_wager_id = $request->daily_wager_id;
                 $daily_wager_attendance->user_id = auth()->user()->id;
-                $daily_wager_attendance->is_present = $request->is_present ? 1 : 0;
+                $daily_wager_attendance->is_present = 1;
+                $daily_wager_attendance->created_at = $request->date ? $request->date : now();
+                $daily_wager_attendance->phase_id = $request->phase_id;
+                $daily_wager_attendance->verified_by_admin = 0;
 
                 $daily_wager_attendance->save();
 
-                return response()->json(['success', 'attendance done...'], 200);
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                return response()->json(['errors' => $e->validator->errors()], 422);
+
+                $data = [
+                    'user' => auth()->user()->name,
+                    'item' => $daily_wager_attendance->dailyWager->wager_name
+                ];
+
+                Notification::send(
+                    User::where('role_name', 'admin')->get(),
+                    new VerificationNotification($data)
+                );
+
+                return response()->json(['message' => 'Attendance recorded successfully.'], 201);
+            } catch (\Exception $e) {
+                // Handle any unexpected errors
+                return response()->json(['error' => 'An unexpected error occurred: ' . $e->getMessage()], 500);
             }
         }
+
+        return response()->json(['error' => 'Invalid request'], 400);
     }
+
 }

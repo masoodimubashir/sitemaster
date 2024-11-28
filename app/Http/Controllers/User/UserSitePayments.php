@@ -36,35 +36,46 @@ class UserSitePayments extends Controller
 
 
         if ($request->ajax()) {
+
             $validatedData = Validator::make($request->all(), [
-                'screenshot' => 'required|mimes:png,jpg,webp|max:1024',
+                'screenshot' => 'required|mimes:png,jpg,webp, jpeg|max:1024',
                 'supplier_id' => 'required|exists:suppliers,id',
                 'site_id' => 'required|exists:sites,id',
-                'amount' => 'required|integer|min:1',
+                'amount' => [
+                    'required',
+                    'numeric',
+                    'min:0',
+                    'max:99999999.99',
+                    'regex:/^\d+(\.\d{0,2})?$/'
+                ]
             ]);
 
             if ($validatedData->fails()) {
-                return response()->json(['errors' => 'Validation Error... Try Again!'], 422);
+                return response()->json(['errors' =>  'Form Fields Are Missing...'], 422);
             }
 
             $image_path = null;
 
+            // Handle file upload
             if ($request->hasFile('screenshot')) {
                 $image_path = $request->file('screenshot')->store('SupplierPayment', 'public');
             }
 
             try {
-                PaymentSupplier::create([
+
+                $payments = PaymentSupplier::create([
                     'screenshot' => $image_path,
                     'supplier_id' => $request->supplier_id,
                     'site_id' => $request->site_id,
                     'amount' => $request->amount,
+                    'verified_by_admin' => 0
                 ]);
 
-                return redirect()->back()->with('message', 'Supplier payment created successfully.');
+                // Write payments notofications not done yet
+
+                return response()->json(['message' => 'Supplier payment created successfully.']);
             } catch (\Exception $e) {
-                // Handle any unexpected errors
-                return redirect()->back()->withErrors(['error' => 'An unexpected error occurred: ']);
+                return response()->json(['error' => 'An unexpected error occurred: ']);
             }
         }
     }

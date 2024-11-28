@@ -14,22 +14,22 @@ use Illuminate\Support\Facades\Validator;
 class UserConstuctionMaterialBuildingsController extends Controller
 {
 
+
     public function store(Request $request)
     {
-
         if ($request->ajax()) {
 
 
             $validator = Validator::make($request->all(), [
                 'image' => 'sometimes|mimes:png,jpg,webp|max:1024',
-                'amount' => 'required|numeric',
+                'amount' => 'required|numeric|max:1000000',
                 'item_name' => 'required|string',
                 'supplier_id' => 'required|exists:suppliers,id',
                 'phase_id' => 'required|exists:phases,id',
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['errors' => 'Validation Error.. Try Again'], 422);
+                return response()->json(['errors' => 'Form Fields Are Missing'], 422);
             }
 
             $image_path = null;
@@ -38,24 +38,20 @@ class UserConstuctionMaterialBuildingsController extends Controller
             }
 
             try {
-                // Create the construction billing entry
-                $material = $constructionBilling = new ModelsConstructionMaterialBilling();
-                $constructionBilling->amount = $request->input('amount');
-                $constructionBilling->item_image_path = $image_path;
-                $constructionBilling->item_name = $request->input('item_name');
-                $constructionBilling->verified_by_admin = 1; // or set based on logic
-                $constructionBilling->supplier_id = $request->input('supplier_id');
-                $constructionBilling->user_id = auth()->user()->id;
-                $constructionBilling->phase_id = $request->input('phase_id');
-                $constructionBilling->save();
-
-                $user = auth()->user();
+                $material = new ModelsConstructionMaterialBilling();
+                $material->amount = $request->input('amount');
+                $material->item_image_path = $image_path;
+                $material->item_name = $request->input('item_name');
+                $material->verified_by_admin = 0;
+                $material->supplier_id = $request->input('supplier_id');
+                $material->user_id = auth()->user()->id;
+                $material->phase_id = $request->input('phase_id');
+                $material->save();
 
                 $data = [
-                    'user' => $user->name,
-                    'material' => $material->item_name
+                    'user' => auth()->user()->name,
+                    'item' => $material->item_name
                 ];
-
 
                 Notification::send(
                     User::where('role_name', 'admin')->get(),

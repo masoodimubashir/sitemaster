@@ -4,7 +4,10 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\SquareFootageBill;
+use App\Models\User;
+use App\Notifications\VerificationNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 
 class UserSquareFootageBillsController extends Controller
@@ -15,9 +18,9 @@ class UserSquareFootageBillsController extends Controller
         if ($request->ajax()) {
             // Validation rules
             $validator = Validator::make($request->all(), [
-                'image_path' => 'required|mimes:png,jpg,webp|max:1024',
+                'image_path' => 'required|mimes:png,jpg,webp,jpeg|max:1024',
                 'wager_name' => 'required|string|max:255',
-                'price' => 'required|numeric|min:0',
+                'price' => 'required|numeric|max:9999999999',
                 'type' => 'required|in:per_sqr_ft,per_unit,full_contract',
                 'multiplier' => 'required|numeric|min:0',
                 'phase_id' => 'required|exists:phases,id',
@@ -26,7 +29,7 @@ class UserSquareFootageBillsController extends Controller
 
             // Check for validation errors
             if ($validator->fails()) {
-                return response()->json(['errors' => 'Validation Error.. Try Again!'], 422);
+                return response()->json(['errors' => 'Form Fields Are Missing...'], 422);
             }
 
             $image_path = null;
@@ -38,7 +41,7 @@ class UserSquareFootageBillsController extends Controller
 
             try {
                 // Create the square footage bill
-                SquareFootageBill::create([
+               $sqft =  SquareFootageBill::create([
                     'image_path' => $image_path,
                     'wager_name' => $request->wager_name,
                     'price' => $request->price,
@@ -46,12 +49,23 @@ class UserSquareFootageBillsController extends Controller
                     'multiplier' => $request->type === 'full_contract' ? 1 : $request->multiplier,
                     'phase_id' => $request->phase_id,
                     'supplier_id' => $request->supplier_id,
+                    'verified_by_admin' => 0
                 ]);
 
+
+                $data = [
+                    'user' => auth()->user()->name,
+                    'item' => $sqft->wager_name
+                ];
+
+                Notification::send(
+                    User::where('role_name', 'admin')->get(),
+                    new VerificationNotification($data)
+                );
                 return response()->json(['message' => 'Square footage bill created successfully.'], 201);
             } catch (\Exception $e) {
                 // Handle any unexpected errors
-                return response()->json(['error' => 'An unexpected error occurred: ' . $e->getMessage()], 500);
+                return response()->json(['error' => 'An unexpected error occurred: '], 500);
             }
         }
 

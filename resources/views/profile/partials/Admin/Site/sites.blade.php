@@ -15,11 +15,11 @@
     @endif
 
     @if (session('status') === 'delete')
-        <x-success-message message="Site Deleted...." />
+        <x-error-message message="Site Deleted...." />
     @endif
 
     @if (session('status') === 'error')
-        <x-success-message message="Site Cannot Be Deleted...." />
+        <x-error-message message="Site Cannot Be Deleted...." />
     @endif
 
     <div class="row">

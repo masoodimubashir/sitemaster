@@ -41,7 +41,7 @@
 
                                 <select class="form-select form-select-sm text-black" style="cursor: pointer" id="exampleFormControlSelect3"
                                     name="user_id">
-                                    <option value="">Select Site Enginner</option>
+                                    <option value="">Select Site Engineer</option>
                                     @foreach ($users as $user)
                                         <option value="{{ $user->id }}">{{ ucfirst($user->name) }}</option>
                                     @endforeach

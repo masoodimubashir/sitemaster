@@ -35,7 +35,6 @@ class PaymentSupplierController extends Controller
         if ($request->ajax()) {
 
 
-
             $validatedData = Validator::make($request->all(), [
                 'screenshot' => 'required|mimes:png,jpg,webp, jpeg|max:1024',
                 'supplier_id' => 'required|exists:suppliers,id',
@@ -84,31 +83,11 @@ class PaymentSupplierController extends Controller
     public function show(string $id)
     {
 
+        $supplier = Supplier::find($id);
 
-        $site = Site::with([
-            'paymeentSuppliers' => function ($pay) {
-                $pay->where('verified_by_admin', 1)
-                    ->with([
-                        'supplier' => function ($supplier) {
-                            $supplier->whereNull('deleted_at');
-                        },
-                        'site' => function ($site) {
-                            $site->whereNull('deleted_at');
-                        }
-                    ]);
-            },
-            'phases' => function ($phase) {
-                $phase->whereNull('deleted_at');
-            }
-        ])
-            // ->whereHas('phases')
-            // ->whereHas('paymeentSuppliers.supplier', function ($query) {
-            //     $query->whereNull('deleted_at');
-            // })
-            ->latest()
-            ->find($id);
+        $payments = $supplier->paymentSuppliers()->where('verified_by_admin', 1)->paginate(10);
 
-        return view('profile.partials.Admin.PaymentSuppliers.site-payment-supplier', compact('site'));
+        return view('profile.partials.Admin.PaymentSuppliers.site-payment-supplier', compact('payments', 'supplier'));
     }
 
     /**

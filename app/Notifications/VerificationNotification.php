@@ -48,7 +48,7 @@ class VerificationNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'message' => "{$this->data['material']} was created by {$this->data['user']}"
+            'message' => "{$this->data['item']} was created by {$this->data['user']}"
         ];
     }
 }

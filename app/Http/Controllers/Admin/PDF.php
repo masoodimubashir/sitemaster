@@ -523,7 +523,7 @@ class PDF extends Fpdf
                     $this->Cell($this->width, $this->height, 'Total Price', 1);
                     $this->Ln();
                 }
-                $this->Cell($this->width, $this->height, $expense->created_at, 1);
+                $this->Cell($this->width, $this->height, $daily_wager->created_at, 1);
                 $this->Cell($this->width, $this->height, $daily_wager->wager_name, 1);
                 $this->Cell($this->width, $this->height, $daily_wager->price_per_day, 1);
 
@@ -584,16 +584,18 @@ class PDF extends Fpdf
         foreach ($supplier->paymentSuppliers as $key => $payment) {
             if ($key === 0) {
 
-                $this->Cell($this->width, $this->height, 'Date', 1);
-                $this->Cell($this->width, $this->height, 'Site Name', 1);
-                $this->Cell($this->width, $this->height, 'Site Owner', 1);
-                $this->Cell($this->width, $this->height, 'Amount', 1);
+                $this->Cell($this->width / 1, $this->height, 'Date', 1);
+                $this->Cell($this->width / 1, $this->height, 'Site Name', 1);
+                $this->Cell($this->width / 1, $this->height, 'Site Owner', 1);
+                $this->Cell($this->width / 1, $this->height, 'Supplier', 1);
+                $this->Cell($this->width / 1, $this->height, 'Amount', 1);
                 $this->Ln();
             }
-            $this->Cell($this->width, $this->height, $payment->created_at->format('D-M'), 1);
-            $this->Cell($this->width, $this->height, $payment->site->site_name, 1);
-            $this->Cell($this->width, $this->height, ucwords($payment->site->site_owner_name), 1);
-            $this->Cell($this->width, $this->height, $payment->amount, 1, 1);
+            $this->Cell($this->width / 1, $this->height, $payment->created_at->format('D-M'), 1);
+            $this->Cell($this->width / 1, $this->height, $payment->site->site_name, 1);
+            $this->Cell($this->width / 1, $this->height, ucwords($payment->site->site_owner_name), 1);
+            $this->Cell($this->width / 1, $this->height, ucwords($payment->supplier->name), 1);
+            $this->Cell($this->width / 1, $this->height, $payment->amount, 1, 1);
         }
     }
 
@@ -685,26 +687,20 @@ class PDF extends Fpdf
         $this->Ln();
         $this->Ln();
 
-        foreach ($ledgers as $key => $ledger) {
+        $this->SetFont('', '', 8);
 
-            // $this->Cell($this->width / 1.5, $this->height, $key, 1, 0,);
 
-            $this->SetFont('', '', 8);
+        $this->Cell($this->width / 1.5, $this->height, 'Date', 1, 0,);
+        $this->Cell($this->width / 1.15, $this->height, 'Supplier', 1, 0,);
+        $this->Cell($this->width / 2.5, $this->height, 'Phase', 1, 0,);
+        $this->Cell($this->width / 2, $this->height, 'Site', 1, 0,);
+        $this->Cell($this->width / 1.15, $this->height, 'Type', 1, 0,);
+        $this->Cell($this->width / 2.9, $this->height, 'Information', 1, 0,);
+        $this->Cell($this->width / 2.5, $this->height, 'Debit', 1, 0,);
+        $this->Cell($this->width / 3.2, $this->height, 'Credit', 1, 0,);
+        $this->Ln();
 
-            // $this->Cell($this->width / 1.5, $this->height, $key, 1, 0,);
-
-            if ($key === 0) {
-
-                $this->Cell($this->width / 1.5, $this->height, 'Date', 1, 0,);
-                $this->Cell($this->width / 1.15, $this->height, 'Supplier', 1, 0,);
-                $this->Cell($this->width / 2.5, $this->height, 'Phase', 1, 0,);
-                $this->Cell($this->width / 2, $this->height, 'Site', 1, 0,);
-                $this->Cell($this->width / 1.15, $this->height, 'Type', 1, 0,);
-                $this->Cell($this->width / 2.9, $this->height, 'Information', 1, 0,);
-                $this->Cell($this->width / 2.5, $this->height, 'Debit', 1, 0,);
-                $this->Cell($this->width / 3.2, $this->height, 'Credit', 1, 0,);
-                $this->Ln();
-            }
+        foreach ($ledgers as $ledger) {
 
             $this->Cell($this->width / 1.5, $this->height, $ledger['created_at'], 1, 0,);
             $this->Cell($this->width / 1.15, $this->height,  ucwords($ledger['supplier']), 1, 0,);

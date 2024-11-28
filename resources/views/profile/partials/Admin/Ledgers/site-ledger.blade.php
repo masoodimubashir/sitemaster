@@ -1,6 +1,13 @@
 <x-app-layout>
 
-    <x-breadcrumb :names="['Sites' , $site->site_name , ' Ledger']" :urls="['admin/sites', 'admin/sites/'. base64_encode($site->id)   , 'admin/site/ledger/' . $site->id]" />
+
+    @php
+
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+
+    @endphp
+
+    <x-breadcrumb :names="['Sites', $site->site_name, ' Ledger']" :urls="[$user . '/sites', $user . '/sites/' . base64_encode($site->id), $user . '/site/ledger/' . $site->id]" />
 
     <div class="row">
         <div class="col-sm-12">
@@ -50,10 +57,12 @@
                             <td colspan="4" style="background: #F4F5F7; border:none">
                                 <div class="row">
 
-                                    <form class="col" action="{{ url('admin/site/ledger/' . $site->id) }}" method="GET"
-                                        id="filterForm">
+
+                                    <form class="col" action="{{ url($user . '/site/ledger/' . $site->id) }}"
+                                        method="GET" id="filterForm">
                                         <select class="form-select form-select-sm bg-white text-dark" name="date_filter"
-                                            id="date_filter" onchange="document.getElementById('filterForm').submit();" style="cursor: pointer;">
+                                            id="date_filter" onchange="document.getElementById('filterForm').submit();"
+                                            style="cursor: pointer;">
                                             <option value="today"
                                                 {{ request('date_filter') === 'today' ? 'selected' : '' }}>
                                                 Today</option>
@@ -105,7 +114,8 @@
                                     <td>{{ ucwords($ledger['site']) }}</td>
                                     <td>{{ $ledger['category'] }}</td>
                                     <td>{{ ucwords($ledger['description']) }}</td>
-                                    <td>{{ $ledger['category'] !== 'Payments' ? $ledger['total_amount_with_service_charge'] : 0 }}</td>
+                                    <td>{{ $ledger['category'] !== 'Payments' ? $ledger['total_amount_with_service_charge'] : 0 }}
+                                    </td>
                                     <td>
                                         {{ $ledger['credit'] }}
                                     </td>

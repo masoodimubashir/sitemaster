@@ -172,7 +172,7 @@
                     <i class="fas fa-money-bill me-2"></i>Make Payment
                 </a>
 
-                <a href="{{ route('supplier-payments.show', [$site->id]) }}" class="btn btn-info px-4">
+                <a href="{{ url('admin/sites/supplier-payments', [$site->id]) }}" class="btn btn-info px-4">
                     <i class="fas fa-list me-2"></i>View Payments
                 </a>
 
@@ -2022,10 +2022,11 @@
                 const messageContainer = $('#messageContainer');
                 messageContainer.empty();
 
-                $('.text-danger').remove(); // Clear previous error messages
+
+                $('.text-danger').remove();
 
                 $.ajax({
-                    url: '{{ route('phase.store') }}',
+                    url: '{{ url('admin/phase') }}',
                     type: 'POST',
                     data: formData,
                     contentType: false,

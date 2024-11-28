@@ -12,8 +12,6 @@ class UserDashboardController extends Controller
 
         $user = auth()->user();
 
-        dd($user);
-
         $sites = $user->sites()->paginate(10);
 
         return view('profile.User.Site.site', compact('sites'));
