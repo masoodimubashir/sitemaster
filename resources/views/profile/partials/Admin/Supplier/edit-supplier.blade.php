@@ -1,6 +1,10 @@
 <x-app-layout>
 
-    <x-breadcrumb :names="['Suppliers', 'Edit ' . $supplier->name]" :urls="['admin/suppliers', 'admin/suppliers/' . $supplier->id . '/edit']" />
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
+    <x-breadcrumb :names="['Suppliers', 'Edit ' . $supplier->name]" :urls="[$user . '/suppliers', $user . '/suppliers/' . $supplier->id . '/edit']" />
 
     @if (session('status') === 'supplier')
         <x-success-message message="supplier not found.." />
@@ -14,7 +18,7 @@
                 <div class="card-body">
 
 
-                    <form method="POST" action="{{ route('suppliers.update', ['supplier' => $supplier]) }}"
+                    <form method="POST" action="{{ url($user . '/suppliers',  $supplier->id) }}"
                         class="forms-sample material-form">
 
                         @csrf
@@ -47,7 +51,7 @@
                                 <label class="form-check-label">
                                     <input type="radio" class="form-check-input" name="provider"
                                         id="is_raw_material_provider1" value="is_raw_material_provider"
-                                        {{ $supplier->is_raw_material_provider  ? 'checked' : '' }}> Raw
+                                        {{ $supplier->is_raw_material_provider ? 'checked' : '' }}> Raw
                                     Material Provider
                                 </label>
                                 @error('provider')
@@ -58,7 +62,7 @@
                                 <label class="form-check-label">
                                     <input type="radio" class="form-check-input" name="provider"
                                         id="is_workforce_provider22" value="is_workforce_provider"
-                                        {{  $supplier->is_workforce_provider ? 'checked' : '' }}> Workforce
+                                        {{ $supplier->is_workforce_provider ? 'checked' : '' }}> Workforce
                                     Provider
                                 </label>
 

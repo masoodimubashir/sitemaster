@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Site;
 use App\Services\DataService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -19,6 +18,9 @@ class PaymentsController extends Controller
      */
     public function index(Request $request, DataService $dataService)
     {
+
+
+        // dd($request->all());
 
         $dateFilter = $request->get('date_filter', 'today');
 

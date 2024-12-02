@@ -1,8 +1,13 @@
 <x-app-layout>
 
     @php
+
         $balance = $grandTotal - $supplier->payment_suppliers_sum_amount;
+
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+
     @endphp
+
 
     <style>
         #messageContainer {
@@ -63,35 +68,38 @@
 
 
 
-    {{-- <x-breadcrumb :names="['Suppliers', $supplier->name]" :urls="['admin/suppliers', 'admin/suppliers/' . $supplier->id]" /> --}}
+    <x-breadcrumb :names="['Suppliers', $supplier->name]" :urls="[$user . '/suppliers', $user . '/suppliers/' . $supplier->id]" />
 
 
     <div class="row mb-4">
+
         <div class="col-12">
+
             <div class="d-flex flex-wrap justify-content-start gap-2">
 
                 <button class="btn btn-info btns" data-bs-toggle="modal" data-bs-target="#exampleModal">
                     Make Payment
                 </button>
 
-                <a href="{{ route('supplier-payments.edit', [$supplier->id]) }}" class="btn btn-info btns"
+                <a href="{{ url($user . '/sites/supplier-payments', [$supplier->id]) }}" class="btn btn-info btns"
                     data-modal="payment-supplier">
                     View Payments
                 </a>
 
-                <a href="{{ route('suppliers.view-ledger', [$supplier->id]) }}" class="btn btn-info btns"
+                <a href="{{ url($user . '/supplier/ledger', [$supplier->id]) }}" class="btn btn-info btns"
                     data-modal="payment-supplier">
                     View Ledger
                 </a>
 
-                <a href="{{ url('admin/supplier-payment/report', ['id' => base64_encode($supplier->id)]) }}"
+                <a href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($supplier->id)]) }}"
                     class="btn btn-info">
                     Generate Payment Report
                 </a>
 
-
             </div>
+
         </div>
+        
     </div>
 
 
@@ -288,61 +296,6 @@
 
                         </table>
 
-                        {{-- <div id="payment-supplier" class="modal">
-
-                            <div class="modal-content">
-
-                                <form action="{{ route('supplier-payments.store') }}"
-                                    class="forms-sample material-form" method="POST" enctype="multipart/form-data">
-
-                                    @csrf
-
-                                    <div class="form-group">
-                                        <input type="number" min="0" name="amount" />
-                                        <label for="input" class="control-label">Amount</label><i class="bar"></i>
-                                        <x-input-error :messages="$errors->get('amount')" class="mt-2" />
-                                    </div>
-
-                                    <div class="mt-4">
-                                        <select id="site_id" class="form-select form-select-sm" name="site_id">
-                                            <option value="">Select Site</option>
-                                            @foreach ($sites as $site)
-                                                <option value="{{ $site->id }}">
-                                                    {{ $site->id }} -
-                                                    {{ $site->site_name }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        @error('site_id')
-                                            <x-input-error :messages="$site_id" class="mt-2" />
-                                        @enderror
-                                    </div>
-
-                                    <input type="hidden" name="supplier_id" value="{{ $supplier->id }}" />
-                                    <x-input-error :messages="$errors->get('supplier_id')" class="mt-2" />
-
-                                    @error('supplier_id')
-                                        <x-input-error :messages="$message" class="mt-2" />
-                                    @enderror
-
-                                    <div class="mt-3">
-                                        <input class="form-control form-control-md" id="image" type="file"
-                                            name="screenshot">
-                                    </div>
-
-                                    <div class="flex items-center justify-end mt-4">
-                                        <x-primary-button>
-                                            {{ __('Pay') }}
-                                        </x-primary-button>
-                                    </div>
-
-
-
-                                </form>
-
-                            </div>
-                        </div> --}}
-
                     </div>
 
                 </div>
@@ -368,8 +321,8 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div> --}}
                 <div class="modal-body">
-                    <form action="{{ route('supplier-payments.store') }}" class="forms-sample material-form"
-                        method="POST" enctype="multipart/form-data">
+
+                    <form id="payment_form" class="forms-sample material-form" enctype="multipart/form-data">
 
                         @csrf
 
@@ -399,6 +352,7 @@
 
                         <input type="hidden" name="supplier_id" value="{{ $supplier->id }}" />
                         <x-input-error :messages="$errors->get('supplier_id')" class="mt-2" />
+
 
                         @error('supplier_id')
                             <x-input-error :messages="$message" class="mt-2" />
@@ -436,10 +390,9 @@
 
     </div>
 
-
     <script>
         $(document).ready(function() {
-            $('form[id="payment_supplierForm"]').on('submit', function(e) {
+            $('form[id="payment_form"]').on('submit', function(e) {
                 e.preventDefault();
 
                 const form = $(this);
@@ -450,59 +403,50 @@
                 $('.text-danger').remove();
 
                 $.ajax({
-                    url: '{{ route('supplier-payments.store') }}',
+                    url: '{{ url($user . '/sites/supplier-payments') }}',
                     type: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
-
-                        console.log(response);
-
-
                         messageContainer.append(`
-                        <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+                        <div class="alert align-items-center text-white bg-success border-0" role="alert">
                             <div class="d-flex">
                                 <div class="toast-body">
                                     <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
                                 </div>
                             </div>
                         </div>
-                `);
+                    `);
                         form[0].reset();
 
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-                            location.reload();
-
+                            // Optionally reload or update page content
                         }, 2000);
                     },
                     error: function(response) {
-
                         if (response.status === 422) { // Validation errors
                             messageContainer.append(`
-                        <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-                        ${response.responseJSON.errors}
-
-                        </div>`)
-
+                            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                ${response.responseJSON.errors}
+                            </div>
+                        `);
                         } else {
                             messageContainer.append(`
-                        <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                            An unexpected error occurred. Please try again later.
-
-                        </div>
-                    `);
+                            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                An unexpected error occurred. Please try again later.
+                            </div>
+                        `);
                         }
-                        // Auto-hide error message after 5 seconds
+
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-
                         }, 2000);
                     }
                 });
             });
-        })
+        });
     </script>
 
 

@@ -1,5 +1,9 @@
 <x-app-layout>
 
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
     <x-breadcrumb :names="['View ' . $daily_wager_attendance->phase->site->site_name, 'Edit']" :urls="[
         'admin/sites/' . base64_encode($daily_wager_attendance->phase->site->id),
         'admin/daily-wager-attendance/' . base64_encode($daily_wager_attendance->id) . '/edit',
@@ -14,7 +18,7 @@
 
                 <div class="card-body">
 
-                    <form action="{{ route('daily-wager-attendance.update', [$daily_wager_attendance->id]) }}"
+                    <form action="{{ url($user . '/daily-wager-attendance/' . $daily_wager_attendance->id) }}"
                         method="POST" class="forms-sample material-form">
 
                         @csrf
@@ -52,8 +56,8 @@
                                 style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">
                                 Select Date
                             </label>
-                            <input type="date" name="date" id="date" class="form-control"
-                                style="cursor: pointer">
+                            <input type="date" name="date" class="form-control" max="{{ now()->format('Y-m-d') }}"
+                                required />
                             @error('date')
                                 <x-input-error :messages="$message" class="mt-2" />
                             @enderror

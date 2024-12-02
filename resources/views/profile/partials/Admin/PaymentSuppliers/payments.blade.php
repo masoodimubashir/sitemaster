@@ -1,5 +1,9 @@
 <x-app-layout>
 
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
     <style>
         #messageContainer {
             position: fixed;
@@ -9,10 +13,12 @@
         }
     </style>
 
-    <x-breadcrumb :names="['Ledger']" :urls="['admin/payments']"></x-breadcrumb>
+    <x-breadcrumb :names="['Ledger']" :urls="[$user . '/payments']"></x-breadcrumb>
 
     <div class="row">
+
         <div class="col-sm-12">
+
             <div class="home-tab">
 
                 <div class="d-sm-flex align-items-center justify-content-between border-bottom">
@@ -27,6 +33,7 @@
                                 aria-controls="material" aria-selected="false">Payments History</a>
                         </li>
                     </ul>
+
                 </div>
 
                 <div class="tab-content mt-3">
@@ -107,11 +114,11 @@
 
                                             <div class="row">
 
-                                                <form class="col " action="{{ url('admin/payments') }}" method="GET"
-                                                    id="filterForm">
+                                                <form class="col " action="{{ url($user . '/payments') }}"
+                                                    method="GET" id="filterForm">
                                                     <select class="form-select form-select-sm bg-white text-black"
                                                         style="cursor: pointer" name="date_filter" id="date_filter"
-                                                        onchange="document.getElementById('filterForm').submit();" >
+                                                        onchange="document.getElementById('filterForm').submit();">
                                                         <option value="today"
                                                             {{ request('date_filter') === 'today' ? 'selected' : '' }}>
                                                             Today</option>
@@ -136,7 +143,7 @@
                                                 </form>
 
 
-                                                <form class="col" action="{{ url('admin/ledger/report') }}"
+                                                <form class="col" action="{{ url($user . '/ledger/report') }}"
                                                     method="GET" id="ledger-report">
                                                     <select class="form-select form-select-sm bg-white text-black"
                                                         style="cursor: pointer" name="date_filter" id="date_filter"
@@ -278,7 +285,8 @@
                                             @endforeach
                                         @else
                                             <tr>
-                                                <td class="text-danger fw-bold text-center" colspan="8">No Records Available...</td>
+                                                <td class="text-danger fw-bold text-center" colspan="8">No Records
+                                                    Available...</td>
                                             </tr>
                                         @endif
 

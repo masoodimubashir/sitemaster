@@ -57,7 +57,7 @@ class ViewSiteController extends Controller
                             ->latest();
                     },
                     'wagerAttendances' => function ($q) {
-                        $q->where('verified_by_admin')
+                        $q->where('verified_by_admin', 1)
                             ->with(['dailyWager.supplier'])
                             ->whereHas('dailyWager.supplier', function ($q) {
                                 $q->whereNull('deleted_at');

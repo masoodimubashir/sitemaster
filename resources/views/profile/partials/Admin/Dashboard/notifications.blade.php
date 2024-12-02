@@ -1,6 +1,11 @@
 <x-app-layout>
 
 
+    @php
+
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+
+    @endphp
 
     <div class="row">
 
@@ -25,32 +30,31 @@
             <ul>
                 @if (count($notifications) > 0)
                     @foreach ($notifications as $notification)
-
-                        <li class="row border-b p-2 ">
+                        <li class="row border-b pt-3 pb-3 ">
                             <div class=" col-1 " style="cursor: pointer">
-                                <a class="text-white" href="{{ route('admin.markAsRead', $notification->id) }}">
+                                <a class="text-white" href="{{ url($user . '/markAsRead/' . $notification->id) }}">
                                     <i class="fa-solid fa-x bg-light p-2 rounded"></i>
                                 </a>
                             </div>
                             <div class="col-8  ">
                                 <h1 class="badge badge-info">
-                                    @if ( $notification->type === 'App\Notifications\UserSiteNotification')
+                                    @if ($notification->type === 'App\Notifications\UserSiteNotification')
                                         Site Notification
                                     @else
                                         Verification Notification
                                     @endif
                                 </h1>
-                                <p class=" fw-bold">{{ $notification->data['message'] }}</p>
+                                <p class=" fw-bold">{{ ucwords($notification->data['message']) }}</p>
                             </div>
                             <div class=" col-3  ">
                                 <i class="fa-solid fa-clock text-info"></i>
-                                 {{ $notification->created_at->diffForHumans() }} :
+                                {{ $notification->created_at->diffForHumans() }} :
                                 {{ \Carbon\Carbon::parse($notification->created_at)->format('D-M-Y H:s A ') }}
                             </div>
                         </li>
                     @endforeach
                 @else
-                    <h2 class="text-danger">No Notifications Awailable Yet</h2>
+                    <h2 class="text-danger">No Notifications Available...</h2>
                 @endif
 
             </ul>

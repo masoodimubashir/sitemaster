@@ -1,7 +1,7 @@
 <x-app-layout>
 
     @php
-        $user = auth()->user()->role_name === 'admin' ? 'user' : 'user';
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
     @endphp
 
     @if (session('status') === 'update')
@@ -162,7 +162,11 @@
         }
     </style>
 
-    <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['admin/sites', 'admin/sites/' . base64_encode($site->id)]" />
+    @if ($user === 'admin')
+        <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['admin/sites', 'admin/sites/' . base64_encode($site->id)]" />
+    @else
+        <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['user/dashboard', 'user/sites/' . base64_encode($site->id)]" />
+    @endif
 
     {{-- Action Buttons Section --}}
     <div class="row mb-4">
@@ -584,7 +588,7 @@
                                                                 <td>
 
                                                                     <a
-                                                                        href="{{ route('construction-material-billings.edit', [base64_encode($construction_material_billing->id)]) }}">
+                                                                        href="{{ url('user/construction-material-billings', [base64_encode($construction_material_billing->id)]) }}">
                                                                         <i
                                                                             class="fa-regular fa-pen-to-square fs-5  bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
@@ -714,7 +718,7 @@
 
                                                                 <td>
                                                                     <a
-                                                                        href="{{ route('square-footage-bills.edit', [base64_encode($sqft->id)]) }}">
+                                                                        href="{{ url('user/square-footage-bills/' . base64_encode($sqft->id) . '/edit') }}">
                                                                         <i
                                                                             class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
@@ -825,7 +829,7 @@
                                                                 <td>
 
                                                                     <a
-                                                                        href="{{ route('daily-expenses.edit', [base64_encode($daily_expenses->id)]) }}">
+                                                                        href="{{ url($user . '/daily-expenses/' . base64_encode($daily_expenses->id) . '/edit') }}">
                                                                         <i
                                                                             class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
@@ -932,7 +936,7 @@
                                                                 <td>
 
                                                                     <a
-                                                                        href="{{ route('dailywager.edit', [base64_encode($daily_wager->id)]) }}">
+                                                                        href="{{ url($user . '/dailywager/' . base64_encode($daily_wager->id) . '/edit') }}">
                                                                         <i
                                                                             class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
@@ -1018,8 +1022,7 @@
 
                                                     @if (count($phase->wagerAttendances))
                                                         @foreach ($phase->wagerAttendances as $wager_attendance)
-
-                                                        <tr aria-colspan="4">
+                                                            <tr aria-colspan="4">
 
 
                                                                 <td>{{ $wager_attendance->created_at->format('d-M-Y') }}
@@ -1043,7 +1046,7 @@
                                                                 <td>
 
                                                                     <a
-                                                                        href="{{ route('daily-wager-attendance.edit', [base64_encode($wager_attendance->id)]) }}">
+                                                                        href="{{ url($user . '/daily-wager-attendance/' . base64_encode($wager_attendance->id) . '/edit') }}">
                                                                         <i
                                                                             class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>

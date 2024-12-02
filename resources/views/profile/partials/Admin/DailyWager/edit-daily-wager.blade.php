@@ -1,8 +1,12 @@
 <x-app-layout>
 
-     <x-breadcrumb :names="['View ' . $daily_wager->phase->site->site_name, 'Edit ' . $daily_wager->wager_name]" :urls="[
-        'admin/sites/' . base64_encode($daily_wager->phase->site->id),
-        'admin/dailywager/' . base64_encode($daily_wager->id) . '/edit',
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
+    <x-breadcrumb :names="['View ' . $daily_wager->phase->site->site_name, 'Edit ' . $daily_wager->wager_name]" :urls="[
+        $user . '/sites/' . base64_encode($daily_wager->phase->site->id),
+        $user . '/dailywager/' . base64_encode($daily_wager->id) . '/edit',
     ]" />
 
     <div class="row">
@@ -13,7 +17,7 @@
                 <div class="card-body">
 
 
-                    <form method="POST" action="{{ route('dailywager.update', [$daily_wager->id]) }}"
+                    <form method="POST" action="{{ url($user . '/dailywager/' . $daily_wager->id) }}"
                         class="forms-sample material-form">
 
                         @method('PUT')

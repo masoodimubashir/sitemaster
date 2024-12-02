@@ -1,8 +1,12 @@
 <x-app-layout>
 
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
     <x-breadcrumb :names="['View ' . $dialy_expense->phase->site->site_name, 'Edit ' . $dialy_expense->item_name]" :urls="[
-        'admin/sites/' . base64_encode($dialy_expense->phase->site->id),
-        'admin/daily-expenses/' . base64_encode($dialy_expense->id) . '/edit',
+        $user . '/sites/' . base64_encode($dialy_expense->phase->site->id),
+        $user . '/daily-expenses/' . base64_encode($dialy_expense->id) . '/edit',
     ]" />
 
     <div class="row">
@@ -13,7 +17,7 @@
 
                 <div class="card-body">
 
-                    <form method="POST" action="{{ route('daily-expenses.update', [$dialy_expense->id]) }}"
+                    <form method="POST" action="{{ url($user . '/daily-expenses/' . $dialy_expense->id) }}"
                         class="forms-sample material-form" enctype="multipart/form-data">
 
                         @csrf
@@ -40,7 +44,8 @@
                         </div>
 
                         <div class="col-12 mt-3">
-                            <label for="supplier_id" class="mb-1" style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">Bill</label>
+                            <label for="supplier_id" class="mb-1"
+                                style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">Bill</label>
                             <input class="form-control" type="file" id="formFile" name="bill_photo"
                                 value="{{ $dialy_expense->bill_photo }}">
                             @error('bill_photo')

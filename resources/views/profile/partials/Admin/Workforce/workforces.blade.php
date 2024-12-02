@@ -12,14 +12,6 @@
 
                 <div class="p-6 text-gray-900">
 
-                    @if (session('message'))
-                        {{ session('message') }}
-                    @endif
-
-                    @if (session('error'))
-                        {{ session('error') }}
-                    @endif
-
                     @can('admin')
                         <a class="bg-black  p-2 rounded text-white " href="{{ route('workforce.create') }}">Create
                             Workforce</a>

@@ -15,7 +15,7 @@ class UserWagerAttendanceController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function __invoke(Request $request)
+    public function store(Request $request)
     {
 
         if ($request->ajax()) {
@@ -64,6 +64,44 @@ class UserWagerAttendanceController extends Controller
         }
 
         return response()->json(['error' => 'Invalid request'], 400);
+    }
+
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        $wager_id = base64_decode($id);
+
+        $daily_wager_attendance = WagerAttendance::with('phase.site')->findorFail($wager_id);
+
+        return view('profile.partials.Admin.WagerAttendance.edit-wager-attendance', compact('daily_wager_attendance'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+
+        $request->validate([
+            'no_of_persons' => 'required|integer|min:1',
+            'daily_wager_id' => 'sometimes|exists:daily_wagers,id',
+            'date' => 'sometimes',
+        ]);
+
+        $wager_attendance = WagerAttendance::find($id);
+
+        $wager_attendance->no_of_persons = $request->no_of_persons;
+        $wager_attendance->daily_wager_id = $request->daily_wager_id;
+        $wager_attendance->user_id = auth()->user()->id;
+        $wager_attendance->is_present =  1;
+        $wager_attendance->created_at = $request->date ? $request->date :  now();
+        $wager_attendance->save();
+
+        return redirect()->route('user.sites.show', [base64_encode($wager_attendance->phase->site->id)])
+            ->with('status', 'update');
     }
 
 }

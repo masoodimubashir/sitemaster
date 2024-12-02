@@ -223,7 +223,7 @@ class DataService
             $service_charge_amount = $this->getServiceChargeAmount($expense->price, $expense->phase->site->service_charge);
 
             return [
-                'supplier' => $expense->supplier->name ?? null,
+                'supplier' => $expense->supplier->name ?? 'NA',
                 'description' => $expense->item_name ?? null,
                 'category' => 'Daily Expense',
                 'debit' => $expense->price,
@@ -237,26 +237,29 @@ class DataService
             ];
         }));
 
-        $ledgers = $ledgers->merge($wagers->map(function ($wager) {
+        $ledgers = $ledgers->merge(
+            $wagers
+            ->filter(function ($wager) {
+                return $wager->wagerAttendances->where('verified_by_admin', 1)->isNotEmpty();
+            })
+            ->map(function ($wager) {
+                $service_charge_amount = $this->getServiceChargeAmount($wager->wager_total, $wager->phase->site->service_charge);
 
-            $service_charge_amount = $this->getServiceChargeAmount($wager->wager_total, $wager->phase->site->service_charge);
-
-
-
-            return [
-                'supplier' => $wager->supplier->name ?? '',
-                'description' => $wager->wager_name ?? 0,
-                'category' => 'Daily Wager',
-                'debit' => $wager->wager_total,
-                'credit' => 0,
-                'total_amount_with_service_charge' => $service_charge_amount + $wager->wager_total,
-                'phase' => $wager->phase->phase_name ?? 0,
-                'site' => $wager->phase->site->site_name ?? 0,
-                'site_id' => $wager->phase->site_id ?? null,
-                'supplier_id' => $wager->supplier_id ?? null,
-                'created_at' => $wager->created_at,
-            ];
-        }));
+                return [
+                    'supplier' => $wager->supplier->name ?? '',
+                    'description' => $wager->wager_name ?? 0,
+                    'category' => 'Daily Wager',
+                    'debit' => $wager->wager_total,
+                    'credit' => 0,
+                    'total_amount_with_service_charge' => $service_charge_amount + $wager->wager_total,
+                    'phase' => $wager->phase->phase_name ?? 0,
+                    'site' => $wager->phase->site->site_name ?? 0,
+                    'site_id' => $wager->phase->site_id ?? null,
+                    'supplier_id' => $wager->supplier_id ?? null,
+                    'created_at' => $wager->created_at,
+                ];
+            })
+        );
 
         return $ledgers;
     }

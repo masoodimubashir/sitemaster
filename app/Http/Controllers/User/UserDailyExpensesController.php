@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\VerificationNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class UserDailyExpensesController extends Controller
@@ -65,5 +66,59 @@ class UserDailyExpensesController extends Controller
         }
 
         return response()->json(['error' => 'Invalid request'], 400);
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        $expense_id = base64_decode($id);
+
+        $dialy_expense = DailyExpenses::with('phase.site')->find($expense_id);
+
+        return view('profile.partials.Admin.DailyExpenses.edit-daily-expense', compact('dialy_expense'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, string $id)
+    {
+
+        $request->validate([
+            'item_name' => 'required|string|max:255',
+            'price' => 'required|numeric|max:9999999999',
+            'bill_photo' => 'sometimes|mimes:jpg,jpeg,webp|max:1024',
+            'phase_id' => 'required|exists:phases,id',
+        ]);
+
+        $daily_expense = DailyExpenses::findorFail($id);
+
+        $image_path = null;
+
+        if ($request->hasFile('bill_photo')) {
+
+            if (Storage::disk('public')->exists($daily_expense->bill_photo)) {
+
+                Storage::disk('public')->delete($daily_expense->bill_photo);
+            }
+
+            $image_path = $request->file('bill_photo')->store('Expenses', 'public');
+        } else {
+
+            $image_path = $daily_expense->bill_photo;
+        }
+
+        $daily_expense->update([
+            'item_name' => $request->item_name,
+            'bill_photo' => $image_path,
+            'price' => $request->price,
+            'phase_id' => $request->phase_id,
+            'user_id' => auth()->user()->id
+        ]);
+
+        return redirect()->route('user.sites.show', [base64_encode($daily_expense->phase->site->id)])
+            ->with('status', 'update');
     }
 }

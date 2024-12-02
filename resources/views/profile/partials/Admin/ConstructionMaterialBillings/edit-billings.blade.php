@@ -1,6 +1,12 @@
 <x-app-layout>
 
 
+    @php
+
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+
+    @endphp
+
     <x-breadcrumb :names="[
         'View' . $construction_material_billing->phase->site->site_name,
         'Edit ' . $construction_material_billing->item_name,
@@ -19,7 +25,7 @@
                 <div class="card-body">
 
                     <form method="POST" class="forms-sample material-form"
-                        action="{{ route('construction-material-billings.update', [$construction_material_billing->id]) }}"
+                        action="{{ url($user . '/construction-material-billings', [$construction_material_billing->id]) }}"
                         enctype="multipart/form-data">
 
                         @csrf

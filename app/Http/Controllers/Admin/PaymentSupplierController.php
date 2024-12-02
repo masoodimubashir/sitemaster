@@ -29,11 +29,8 @@ class PaymentSupplierController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the incoming request
-
 
         if ($request->ajax()) {
-
 
             $validatedData = Validator::make($request->all(), [
                 'screenshot' => 'required|mimes:png,jpg,webp, jpeg|max:1024',
@@ -49,7 +46,7 @@ class PaymentSupplierController extends Controller
             ]);
 
             if ($validatedData->fails()) {
-                return response()->json(['errors' =>  'Validation Error Try Agian...'], 422);
+                return response()->json(['errors' =>  'Forms Fields Are Missing..'], 422);
             }
 
             $image_path = null;

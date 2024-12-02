@@ -49,34 +49,34 @@ class ConstructionMaterialBilling extends Controller
         if ($request->ajax()) {
 
 
-            $validator = Validator::make($request->all(), [
-                'image' => 'sometimes|mimes:png,jpg,webp|max:1024',
-                'amount' => 'required|numeric|max:1000000',
-                'item_name' => 'required|string',
-                'supplier_id' => 'required|exists:suppliers,id',
-                'phase_id' => 'required|exists:phases,id',
-            ]);
+            // $validator = Validator::make($request->all(), [
+            //     'image' => 'sometimes|mimes:png,jpg,webp|max:1024',
+            //     'amount' => 'required|numeric|max:1000000',
+            //     'item_name' => 'required|string',
+            //     'supplier_id' => 'required|exists:suppliers,id',
+            //     'phase_id' => 'required|exists:phases,id',
+            // ]);
 
-            if ($validator->fails()) {
-                return response()->json(['errors' => 'Validation Error.. Try Again'], 422);
-            }
+            // if ($validator->fails()) {
+            //     return response()->json(['errors' => 'Validation Error.. Try Again'], 422);
+            // }
 
-            $image_path = null;
-            if ($request->hasFile('image')) {
-                $image_path = $request->file('image')->store('ConstructionBillingImage', 'public');
-            }
+            // $image_path = null;
+            // if ($request->hasFile('image')) {
+            //     $image_path = $request->file('image')->store('ConstructionBillingImage', 'public');
+            // }
 
             try {
-                // Create the construction billing entry
-                $constructionBilling = new ModelsConstructionMaterialBilling();
-                $constructionBilling->amount = $request->input('amount');
-                $constructionBilling->item_image_path = $image_path;
-                $constructionBilling->item_name = $request->input('item_name');
-                $constructionBilling->verified_by_admin = 1; // or set based on logic
-                $constructionBilling->supplier_id = $request->input('supplier_id');
-                $constructionBilling->user_id = auth()->user()->id; // Ensure user is authenticated
-                $constructionBilling->phase_id = $request->input('phase_id');
-                $constructionBilling->save();
+            //     // Create the construction billing entry
+            //     $constructionBilling = new ModelsConstructionMaterialBilling();
+            //     $constructionBilling->amount = $request->input('amount');
+            //     $constructionBilling->item_image_path = $image_path;
+            //     $constructionBilling->item_name = $request->input('item_name');
+            //     $constructionBilling->verified_by_admin = 1; // or set based on logic
+            //     $constructionBilling->supplier_id = $request->input('supplier_id');
+            //     $constructionBilling->user_id = auth()->user()->id; // Ensure user is authenticated
+            //     $constructionBilling->phase_id = $request->input('phase_id');
+            //     $constructionBilling->save();
 
                 return response()->json(['message' => 'Construction billing created successfully'], 201);
             } catch (\Exception $e) {

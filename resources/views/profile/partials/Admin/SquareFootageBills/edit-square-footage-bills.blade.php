@@ -1,8 +1,12 @@
 <x-app-layout>
 
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
     <x-breadcrumb :names="['View ' . $square_footage_bill->phase->site->site_name, 'Edit ' . $square_footage_bill->wager_name]" :urls="[
-        'admin/sites/' . base64_encode($square_footage_bill->phase->site->id),
-        'admin/square-footage-bills/' . base64_encode($square_footage_bill->id) . '/edit',
+        $user . '/sites/' . base64_encode($square_footage_bill->phase->site->id),
+        $user . '/square-footage-bills/' . base64_encode($square_footage_bill->id) . '/edit',
     ]" />
 
     <div class="row">
@@ -13,7 +17,7 @@
 
 
                     <form method="POST"
-                        action="{{ route('square-footage-bills.update', [base64_encode($square_footage_bill->id)]) }}"
+                        action="{{ url('user' . '/square-footage-bills/'.  base64_encode($square_footage_bill->id)) }}"
                         class="forms-sample material-form" enctype="multipart/form-data">
 
                         @method('PUT')

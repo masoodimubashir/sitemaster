@@ -1,6 +1,13 @@
 <x-app-layout>
 
-    <x-breadcrumb :names="['Suppliers']" :urls="['admin/suppliers']" />
+
+    @php
+
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+
+    @endphp
+
+    <x-breadcrumb :names="['Suppliers']" :urls="[$user . '/suppliers']" />
 
     @if (session('status') === 'update')
         <x-success-message message='Supplier Updated Succussfully...' />
@@ -25,7 +32,7 @@
 
             <div class="d-flex justify-content-end">
 
-                <a class="btn btn-sm btn-success" href="{{ url('admin/suppliers/create') }}">
+                <a class="btn btn-sm btn-success" href="{{ url($user . '/suppliers/create') }}">
                     <i class="fa fa-user mr-2"></i>
                     Create Supplier
                 </a>
@@ -49,30 +56,35 @@
                         <tbody>
                             @foreach ($suppliers as $supplier)
                                 <tr>
+
                                     <td>
                                         <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
-                                            href="{{ route('suppliers.show', [$supplier]) }}">
+                                            href="{{ url($user . '/suppliers', [$supplier]) }}">
                                             {{ strtoupper($supplier->name) }}
                                         </a>
                                     </td>
+
                                     <td>
                                         <a href="tel:{{ $supplier->contact_no }}">
                                             +91-{{ $supplier->contact_no }}
                                         </a>
                                     </td>
+
                                     <td>
                                         {{ ucfirst($supplier->address) }}
                                     </td>
+
                                     <td>
                                         {{ $supplier->is_raw_material_provider ? 'Raw Material Provider' : '' }}
                                         {{ $supplier->is_workforce_provider ? 'Workforce Provider' : '' }}
                                     </td>
+
                                     <td class="space-x-4">
-                                        <a href="{{ route('suppliers.edit', ['supplier' => $supplier->id]) }}">
+                                        <a href="{{ url($user . '/suppliers/' . $supplier->id . '/edit') }}">
                                             <i class="fa-regular fa-pen-to-square text-xl bg-white rounded-full"></i>
                                         </a>
                                         <form id="delete-form-{{ $supplier->id }}"
-                                            action="{{ route('suppliers.destroy', ['supplier' => $supplier->id]) }}"
+                                            action="{{ url($user . '/suppliers/destroy', ['supplier' => $supplier->id]) }}"
                                             method="POST" style="display: none;">
                                             @csrf
                                             @method('DELETE')
@@ -83,6 +95,7 @@
                                                 class="fa-solid fa-trash-o text-xl text-red-600 bg-white rounded-full px-2 py-1"></i>
                                         </a>
                                     </td>
+
                                 </tr>
                             @endforeach
 

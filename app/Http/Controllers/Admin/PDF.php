@@ -584,18 +584,18 @@ class PDF extends Fpdf
         foreach ($supplier->paymentSuppliers as $key => $payment) {
             if ($key === 0) {
 
-                $this->Cell($this->width / 1, $this->height, 'Date', 1);
-                $this->Cell($this->width / 1, $this->height, 'Site Name', 1);
-                $this->Cell($this->width / 1, $this->height, 'Site Owner', 1);
-                $this->Cell($this->width / 1, $this->height, 'Supplier', 1);
-                $this->Cell($this->width / 1, $this->height, 'Amount', 1);
+                $this->Cell($this->width / 1.2, $this->height, 'Date', 1);
+                $this->Cell($this->width / 1.2, $this->height, 'Site Name', 1);
+                $this->Cell($this->width / 1.2, $this->height, 'Site Owner', 1);
+                $this->Cell($this->width / 1.2, $this->height, 'Supplier', 1);
+                $this->Cell($this->width / 1.2, $this->height, 'Amount', 1);
                 $this->Ln();
             }
-            $this->Cell($this->width / 1, $this->height, $payment->created_at->format('D-M'), 1);
-            $this->Cell($this->width / 1, $this->height, $payment->site->site_name, 1);
-            $this->Cell($this->width / 1, $this->height, ucwords($payment->site->site_owner_name), 1);
-            $this->Cell($this->width / 1, $this->height, ucwords($payment->supplier->name), 1);
-            $this->Cell($this->width / 1, $this->height, $payment->amount, 1, 1);
+            $this->Cell($this->width / 1.2, $this->height, $payment->created_at->format('D-M'), 1);
+            $this->Cell($this->width / 1.2, $this->height, $payment->site->site_name, 1);
+            $this->Cell($this->width / 1.2, $this->height, ucwords($payment->site->site_owner_name), 1);
+            $this->Cell($this->width / 1.2, $this->height, ucwords($payment->supplier->name), 1);
+            $this->Cell($this->width / 1.2, $this->height, $payment->amount, 1, 1);
         }
     }
 

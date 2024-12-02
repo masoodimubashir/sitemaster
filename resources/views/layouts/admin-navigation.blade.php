@@ -22,8 +22,8 @@
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('suppliers.index') ? 'active' : '' }}"
-                href="{{ route('suppliers.index') }}">
+            <a class="nav-link {{ Request::is('admin/suppliers') ? 'active' : '' }}"
+                href="{{ url('admin/suppliers') }}">
                 <i class="menu-icon fa fa-inbox"></i>
                 <span class="menu-title">Suppliers</span>
             </a>

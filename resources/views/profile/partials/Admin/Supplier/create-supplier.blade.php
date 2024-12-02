@@ -1,5 +1,9 @@
 <x-app-layout>
 
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
     <x-breadcrumb :names="['Suppliers', 'Create Supplier']" :urls="['admin/suppliers', 'admin/suppliers/create']" />
 
 
@@ -11,7 +15,7 @@
 
                 <div class="card-body">
 
-                    <form method="POST" action="{{ route('suppliers.store') }}" class="forms-sample material-form">
+                    <form method="POST" action="{{ url($user . '/suppliers') }}" class="forms-sample material-form">
 
                         @csrf
 

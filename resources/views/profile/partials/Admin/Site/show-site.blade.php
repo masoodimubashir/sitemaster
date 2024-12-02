@@ -176,7 +176,7 @@
                     <i class="fas fa-list me-2"></i>View Payments
                 </a>
 
-                <a href="{{ url("admin/site/ledger", $site->id) }}" class="btn btn-info px-4">
+                <a href="{{ url('admin/site/ledger', $site->id) }}" class="btn btn-info px-4">
                     <i class="fas fa-book me-2"></i>View Ledger
                 </a>
 
@@ -1016,7 +1016,7 @@
                                                                         <i
                                                                             class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
-{{--
+                                                                    {{--
                                                                     @if ($daily_wager->verified_by_admin)
                                                                         <a href="#"
                                                                             class="verify-link ms-3 badge badge-info nav-link text-black"
@@ -1217,9 +1217,10 @@
                                                                 </div>
 
                                                                 <div>
-
                                                                     <input type="date" name="date"
-                                                                        class="form-control">
+                                                                        class="form-control"
+                                                                        max="{{ now()->format('Y-m-d') }}"
+                                                                        required />
                                                                     @error('date')
                                                                         <x-input-error :messages="$message" class="mt-2" />
                                                                     @enderror
@@ -1757,8 +1758,8 @@
                             </div>
 
                             {{-- Supplier --}}
-                            <select class="form-select text-black form-select-sm" id="supplier_id"
-                                name="supplier_id" style="cursor: pointer">
+                            <select class="form-select text-black form-select-sm" id="supplier_id" name="supplier_id"
+                                style="cursor: pointer">
                                 <option value="">Select Supplier</option>
                                 @foreach ($suppliers as $supplier)
                                     <option value="{{ $supplier->id }}">

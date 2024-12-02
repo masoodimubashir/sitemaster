@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\Supplier;
 use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
-use Illuminate\Support\Facades\Log;
+use App\Models\Supplier;
+use Illuminate\Http\Request;
 
-class SupplierController extends Controller
+class UserSupplierController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -43,7 +42,7 @@ class SupplierController extends Controller
             'is_workforce_provider' => $request->provider === 'is_workforce_provider' ? 1 : 0,
         ]);
 
-        return redirect()->to('admin/suppliers')->with('status', 'create');
+        return redirect()->to('user/suppliers')->with('status', 'create');
     }
 
     /**
@@ -52,21 +51,22 @@ class SupplierController extends Controller
     public function show(string $id)
     {
 
+
         $supplier = Supplier::with([
             'constructionMaterialBilling.phase' => function ($query) {
                 $query->whereNull('deleted_at')
-                    ->with(['site' => function ($siteQuery) {
-                        $siteQuery->whereNull('deleted_at');
-                    }]);
+                ->with(['site' => function ($siteQuery) {
+                    $siteQuery->whereNull('deleted_at');
+                }]);
             },
             'dailyWagers.phase' => function ($query) {
                 $query->whereNull('deleted_at');
             },
             'squareFootages.phase' => function ($query) {
                 $query->whereNull('deleted_at')
-                    ->with(['site' => function ($siteQuery) {
-                        $siteQuery->whereNull('deleted_at');
-                    }]);
+                ->with(['site' => function ($siteQuery) {
+                    $siteQuery->whereNull('deleted_at');
+                }]);
             },
         ])
             ->withSum('constructionMaterialBilling', 'amount')
@@ -144,7 +144,8 @@ class SupplierController extends Controller
                 }
             }
 
-            return view('profile.partials.Admin.Supplier.show_supplier_workforce',
+            return view(
+                'profile.partials.Admin.Supplier.show_supplier_workforce',
                 compact(
                     'data',
                     'supplier',
@@ -171,8 +172,8 @@ class SupplierController extends Controller
      */
     public function update(UpdateSupplierRequest $request, Supplier $supplier)
     {
-
         $request->validated();
+
 
         $supplier->update([
             'name' => $request->name,
@@ -182,8 +183,7 @@ class SupplierController extends Controller
             'is_workforce_provider' => $request->provider === 'is_workforce_provider' ? 1 : 0,
         ]);
 
-        return redirect()->to('admin/suppliers')->with('status', 'update');
-
+        return redirect()->to('user/suppliers')->with('status', 'update');
     }
 
     /**
@@ -210,11 +210,11 @@ class SupplierController extends Controller
         }
 
         if ($siteHasRecords) {
-            return redirect()->to('admin/suppliers')->with('status', 'error');
+            return redirect()->to('user/suppliers')->with('status', 'error');
         }
 
         $supplier->delete();
 
-        return redirect()->to('admin/suppliers')->with('status', 'delete')->with('message', 'Site deleted successfully.');
+        return redirect()->to('user/suppliers')->with('status', 'delete')->with('message', 'Site deleted successfully.');
     }
 }
