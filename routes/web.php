@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\PaymentBillsController;
 use App\Http\Controllers\Admin\PaymentsController;
 use App\Http\Controllers\Admin\PaymentSupplierController;
 use App\Http\Controllers\Admin\PDFController;
+use App\Http\Controllers\Admin\PendingPaymentsVerifications;
 use App\Http\Controllers\Admin\PhaseController;
 use App\Http\Controllers\Admin\SiteController;
 use App\Http\Controllers\Admin\SitePaymentController;
@@ -53,10 +54,7 @@ Route::get('/', function () {
 });
 
 
-
-
 Route::middleware(['auth'])->group(function () {});
-
 
 Route::get('/client-login', [ClientAuthController::class, 'login'])->name('client.login');
 Route::post('/client-login', [ClientAuthController::class, 'store'])->name('client.store');
@@ -77,9 +75,12 @@ Route::middleware(['auth:clients', 'isClient'])->prefix('client')->group(functio
 
 });
 
-//-------------------- Admin Routes --------------------------------
 
+//-------------------- Admin Routes --------------------------------
 Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(function () {
+
+    Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+
 
     Route::get('/markAllAsRead', [MarkNotificationAsReadController::class, 'markAllNotificationAsRead'])
         ->name('admin.markAllAsRead');
@@ -87,9 +88,6 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
         ->name('admin.viewAllNotifications');
     Route::get('/markAsRead/{id}', [MarkNotificationAsReadController::class, 'markAsRead'])
         ->name('admin.markAsRead');
-
-    Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
-
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -143,6 +141,10 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');
 
     Route::resource('/payments', PaymentsController::class);
+
+    // Verify Pending Notifications Controller
+    Route::get('/verify-payments', [PendingPaymentsVerifications::class, 'index']);
+    Route::put('/verify-payments', [PendingPaymentsVerifications::class, 'verifyPayment']);
 
     Route::get('/bin-supplier', [TrashController::class, 'trashedSuppliers'])->name('trash.suppliers');
     Route::get('/bin-site', [TrashController::class, 'trashedSites'])->name('trash.sites');

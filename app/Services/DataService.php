@@ -346,6 +346,7 @@ class DataService
         return [$total_paid, $total_due, $total_balance];
     }
 
+
     public function calculateBalancesWithServiceCharge($ledgers)
     {
 

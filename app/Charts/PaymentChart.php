@@ -16,7 +16,7 @@ class PaymentChart extends Chart
     {
         parent::__construct();
 
-        $monthlyTotals = PaymentSupplier::selectRaw('SUM(amount) as total_amount, DATE_FORMAT(created_at, "%M-%y") as month')
+        $monthlyTotals = PaymentSupplier::where('verified_by_admin', 1)->selectRaw('SUM(amount) as total_amount, DATE_FORMAT(created_at, "%M-%y") as month')
             ->groupBy('month')
             ->orderBy('month', 'desc')
             ->get();

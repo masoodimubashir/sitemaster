@@ -139,24 +139,29 @@
                                 <div class="card-body pb-0">
 
                                     <div class="row">
+
                                         <div class="text-white row text-center">
+
                                             <h4 class="card-title card-title-dash text-white mb-4 col-6">
                                                 Monthy Payments
                                             </h4>
 
                                             <div class="col-6">
                                                 <p class="status-summary-ight-white mb-1">
-                                                    Total Amount : {{ Number::currency($sum_total_payment_amount) }}
+                                                    Total Amount : {{ Number::currency($paid) }}
                                                 </p>
                                             </div>
+
                                         </div>
 
                                         <div>
+
                                             <div class="status-summary-chart-wrapper pb-4">
 
                                                 {!! $payment_chart->container() !!}
 
                                             </div>
+
                                         </div>
                                     </div>
                                 </div>
@@ -339,7 +344,8 @@
                                     <div class="list align-items-center pt-3">
                                         <div class="wrapper w-100">
                                             <p class="mb-0">
-                                                <a href="{{ route('clients.index') }}" class="fw-bold text-primary">Show all
+                                                <a href="{{ route('clients.index') }}"
+                                                    class="fw-bold text-primary">Show all
                                                     <i class="mdi mdi-arrow-right ms-2"></i></a>
                                             </p>
                                         </div>
@@ -374,32 +380,35 @@
                                             </div>
                                             <div class="list-wrapper">
                                                 <ul class="todo-list todo-list-rounded">
-                                                    {{-- @if (count($notifications))
-                                                        @foreach ($notifications as $notification)
-                                                            <li class="d-block">
-                                                                <div class="form-check w-100">
-                                                                    <label class="form-check-label">
-                                                                        <input class="checkbox" type="checkbox">
-                                                                        Notify To: {{ $notification->type }}
-                                                                        <i class="input-helper rounded"></i>
-                                                                    </label>
-                                                                    <div class="d-flex mt-2">
-                                                                        <div class="ps-4 text-small me-3">
-                                                                            {{ $notification->data }}
+                                                    @if (count($notifications))
+                                                        @foreach ($notifications as $key => $notification)
+                                                            @if ($key <= 2)
+                                                                <li class="d-block">
+                                                                    <div class="form-check w-100">
+                                                                        <label class="form-check-label">
+                                                                            <input class="checkbox" type="checkbox">
+                                                                            Notify To: {{ $notification->type }}
+                                                                            <i class="input-helper rounded"></i>
+                                                                        </label>
+                                                                        <div class="d-flex mt-2">
+                                                                            <div class="ps-4 text-small me-3">
+                                                                                {{ ucwords($notification->data['message']) }}
 
+                                                                            </div>
+                                                                            <div
+                                                                                class="badge badge-opacity-info text-black fw-bold me-3">
+                                                                                {{ \Carbon\Carbon::parse($notification->created_at)->format('D-M-Y') }}
+                                                                            </div>
+                                                                            <i
+                                                                                class="mdi mdi-flag ms-2 flag-color"></i>
                                                                         </div>
-                                                                        <div
-                                                                            class="badge badge-opacity-info text-black fw-bold me-3">
-                                                                            {{ \Carbon\Carbon::parse($notification->created_at)->format('D-M-Y') }}
-                                                                        </div>
-                                                                        <i class="mdi mdi-flag ms-2 flag-color"></i>
                                                                     </div>
-                                                                </div>
-                                                            </li>
+                                                                </li>
+                                                            @endif
                                                         @endforeach
                                                     @else
                                                         <h6 class="text-danger">No Notifications Awialable....</h6>
-                                                    @endif --}}
+                                                    @endif
 
 
                                                 </ul>

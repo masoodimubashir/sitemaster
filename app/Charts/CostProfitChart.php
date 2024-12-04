@@ -11,13 +11,13 @@ class CostProfitChart extends Chart
      *
      * @return void
      */
-    public function __construct(private  $expense, private  $revenue)
+    public function __construct(private  $revenue, private  $profit)
     {
         parent::__construct();
 
-        $this->labels(['Revenue', 'Expense']);
+        $this->labels(['Revenue', 'Profit']);
 
-        $this->dataset('Site Balance Due Chart', 'pie', [$revenue, $expense])
+        $this->dataset('Site Balance Due Chart', 'pie', [$revenue, $profit])
             ->backgroundColor([
                 '#FFFF00',
                 '#000075',

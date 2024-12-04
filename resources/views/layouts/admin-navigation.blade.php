@@ -62,6 +62,14 @@
             </a>
         </li>
 
+         <li class="nav-item">
+            <a class="nav-link {{ Request::is('admin/verify-payments') ? 'active' : '' }}"
+                href="{{ url('admin/verify-payments') }}">
+                <i class="menu-icon fa fa-indian-rupee"></i>
+                <span class="menu-title">Verify Payments</span>
+            </a>
+        </li>
+
         <li class="nav-item nav-category">Trash</li>
 
         <li class="nav-item">

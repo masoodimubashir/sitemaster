@@ -35,6 +35,7 @@
 
 
             @if (count($users))
+
                 <table class="table table-bordered">
                     <thead>
                         <tr>

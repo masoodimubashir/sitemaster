@@ -18,11 +18,11 @@ class BalancePaidChart extends Chart
     {
         parent::__construct();
 
-        $this->labels(['Paid', 'Balance']);
+        $this->labels(['Balance', 'Paid']);
 
 
 
-        $this->dataset('', 'doughnut', [$paid, $balance])
+        $this->dataset('', 'doughnut', [$balance, $paid])
             ->backgroundColor([
                 'rgb(144, 238, 144)',
                 '#750000',
