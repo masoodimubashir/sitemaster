@@ -1,6 +1,11 @@
 <x-app-layout>
 
-    <x-breadcrumb :names="['Items', 'Create Item']" :urls="['admin/items', 'admin/items/create']" />
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
+
+    <x-breadcrumb :names="['Items', 'Edit ' . $item->item_name]" :urls="[$user . '/items', $user . '/items/create']" />
 
     <div class="row">
 
@@ -10,7 +15,7 @@
 
                 <div class="card-body">
 
-                    <form method="POST" action="{{ route('items.update', [$item->id]) }}" class="forms-sample material-form">
+                    <form method="POST" action="{{ url($user . '/items/' . $item->id) }}" class="forms-sample material-form">
 
                         @csrf
                         @method('PUT')

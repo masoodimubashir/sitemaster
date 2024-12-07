@@ -563,7 +563,7 @@
 
                                                                 <td>
                                                                     <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
-                                                                        href="{{ route('suppliers.show', $construction_material_billing->supplier->id) }}">
+                                                                        href="{{ url('/admin/suppliers', $construction_material_billing->supplier->id) }}">
                                                                         {{ $construction_material_billing->supplier->name ?? '' }}
                                                                     </a>
                                                                 </td>
@@ -708,7 +708,7 @@
 
                                                                 <td>
                                                                     <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
-                                                                        href="{{ route('suppliers.show', $sqft->supplier->id) }}">
+                                                                        href="{{ url('/admin/suppliers', $sqft->supplier->id) }}">
                                                                         {{ ucwords($sqft->supplier->name) }}
 
                                                                     </a>
@@ -1132,7 +1132,7 @@
                                                                 <td>
 
                                                                     <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
-                                                                        href="{{ route('suppliers.show', $wager_attendance->dailyWager->supplier->id) }}">
+                                                                        href="{{ url('/admin/suppliers', $wager_attendance->dailyWager->supplier->id) }}">
                                                                         {{ ucwords($wager_attendance->dailyWager->supplier->name ?? '') }}
                                                                 </td>
 
@@ -1879,6 +1879,7 @@
 
                     let errorMessage;
 
+
                     if (error.status === 404) {
                         errorMessage = error.responseJSON?.error || 'Resource not found.';
                     } else {
@@ -1897,7 +1898,7 @@
                     setTimeout(function() {
                         messageContainer.find('.alert').fadeOut('slow', function() {
                             $(this).remove();
-                            location.reload();
+                            // location.reload();
                         });
                     }, 2000);
                 }
@@ -1953,7 +1954,6 @@
                     verified: verified
                 },
                 success: function(response) {
-                    console.log(response);
 
                     if (verified == 1) {
 
@@ -2399,15 +2399,12 @@
                 $('.text-danger').remove();
 
                 $.ajax({
-                    url: '{{ route('supplier-payments.store') }}',
+                    url: '{{ url('admin/sites/supplier-payments') }}',
                     type: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
-
-                        console.log(response);
-
 
                         messageContainer.append(`
                         <div  class="alert align-items-center text-white bg-success border-0" role="alert" >

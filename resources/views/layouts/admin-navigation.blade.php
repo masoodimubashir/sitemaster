@@ -14,13 +14,16 @@
                 <span class="menu-title">Site Engineers</span>
             </a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('clients.index') ? 'active' : '' }}"
-                href="{{ route('clients.index') }}">
+
+
+         <li class="nav-item">
+            <a class="nav-link {{ Request::is('admin/clients') ? 'active' : '' }}"
+                href="{{ url('admin/clients') }}">
                 <i class="menu-icon fa fa-user"></i>
                 <span class="menu-title">Clients</span>
             </a>
         </li>
+
         <li class="nav-item">
             <a class="nav-link {{ Request::is('admin/suppliers') ? 'active' : '' }}"
                 href="{{ url('admin/suppliers') }}">
@@ -62,11 +65,19 @@
             </a>
         </li>
 
-         <li class="nav-item">
-            <a class="nav-link {{ Request::is('admin/verify-payments') ? 'active' : '' }}"
-                href="{{ url('admin/verify-payments') }}">
+        <li class="nav-item">
+            <a class="nav-link {{ Request::is('admin/pay-verification') ? 'active' : '' }}"
+                href="{{ url('admin/pay-verification') }}">
                 <i class="menu-icon fa fa-indian-rupee"></i>
                 <span class="menu-title">Verify Payments</span>
+            </a>
+        </li>
+
+         <li class="nav-item">
+            <a class="nav-link {{ Request::is('admin/item-verification') ? 'active' : '' }}"
+                href="{{ url('admin/item-verification') }}">
+                <i class="menu-icon fa fa-indian-rupee"></i>
+                <span class="menu-title">Verify Items</span>
             </a>
         </li>
 
@@ -82,6 +93,11 @@
             <a class="nav-link {{ request()->routeIs('trash.sites') ? 'active' : '' }}"
                 href="{{ route('trash.sites') }}">
                 <span class="menu-title">Sites</span></a>
+        </li>
+         <li class="nav-item">
+            <a class="nav-link {{ request()->routeIs('trash.phases') ? 'active' : '' }}"
+                href="{{ route('trash.phases') }}">
+                <span class="menu-title">Phases</span></a>
         </li>
     </ul>
 </nav>

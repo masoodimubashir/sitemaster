@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DailyWager;
+use App\Models\PaymentSupplier;
 use App\Models\Phase;
 use App\Models\Site;
 use App\Models\SquareFootageBill;
@@ -172,24 +173,27 @@ class SquareFootageBillsController extends Controller
 
             $square_footage_bill = SquareFootageBill::find($id);
 
-            if (!$square_footage_bill) {
-                return redirect()->back()->with('error', 'square footage bill deleted');
+            $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($square_footage_bill) {
+                $query->where('site_id', $square_footage_bill->phase->site_id)
+                    ->orWhere('supplier_id', $square_footage_bill->supplier_id);
+            })->exists();
+
+            if ($hasPaymentRecords) {
+                return response()->json(['error' => 'This Item Cannot Be Deleted. Payment records exist.'], 404);
             }
 
-            if ($square_footage_bill->supplier()->paymeentSuppliers()->exists()) {
-                return response()->json(['error' => 'This Item Cannot Be Deleted..'], 404);
+            // Delete the associated image if it exists
+            if ($square_footage_bill->image_path && Storage::exists($square_footage_bill->image_path)) {
+                Storage::delete($square_footage_bill->image_path);
             }
-
-            Storage::delete($square_footage_bill->image_path);
 
             $square_footage_bill->delete();
 
             return response()->json(['message' => 'Item Deleted...'], 201);
+
         } catch (\Throwable $th) {
 
             return response()->json(['error' => 'An unexpected error occurred: '], 500);
         }
-
-
     }
 }

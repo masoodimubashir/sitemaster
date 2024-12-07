@@ -1,6 +1,10 @@
 <x-app-layout>
 
-    <x-breadcrumb :names="['Clients']" :urls="['admin/clients']" />
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
+    <x-breadcrumb :names="['Clients']" :urls="[$user . '/clients']" />
 
     @if (session('status') === 'update')
         <x-success-message message='Client Updated Succussfully...' />
@@ -24,7 +28,7 @@
 
                 <div class="d-flex justify-content-end">
 
-                    <a class="btn btn-sm btn-success" href="{{ url('admin/clients/create') }}" class="float-right">
+                    <a class="btn btn-sm btn-success" href="{{ url($user . '/clients/create') }}" class="float-right">
                         <i class="fa fa-user-plus pr-1" aria-hidden="true"></i>
                         Create Clients
                     </a>
@@ -53,7 +57,7 @@
                                         </td>
 
                                         <td class="space-x-4">
-                                            <a href="{{ route('clients.edit', [base64_encode($client->id)]) }}">
+                                            <a href="{{ url($user . '/clients/' . base64_encode($client->id) . '/edit') }}">
                                                 <i
                                                     class="fa-regular fa-pen-to-square text-xl bg-white rounded-full"></i>
                                             </a>

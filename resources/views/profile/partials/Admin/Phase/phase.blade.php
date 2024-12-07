@@ -10,15 +10,15 @@
         <x-success-message message="Phase Verification Updated...." />
     @endif
 
-    @if (session('status') === 'not_found')
+    {{-- @if (session('status') === 'not_found')
         <x-error-message message="Phase Not Found....." />
-    @endif
+    @endif --}}
 
     @if (session('status') === 'delete')
         <x-error-message message="Phase deleted......" />
     @endif
 
-     @if (session('status') === 'data')
+    @if (session('status') === 'data')
         <x-error-message message="Phase Cannot Be deleted......" />
     @endif
 
@@ -67,13 +67,13 @@
 
                                         <td>
 
-                                            <a href="{{ route('phase.edit', base64_encode($phase->id)) }}">
+                                            <a href="{{ url('admin/phase/' . base64_encode($phase->id) . '/edit') }}">
                                                 <i
                                                     class="fa-regular fa-pen-to-square text-xl bg-white rounded-full"></i>
                                             </a>
 
                                             <form id="delete-form-{{ $phase->id }}"
-                                                action="{{ route('phase.destroy', [base64_encode($phase->id)]) }}"
+                                                action="{{ url('admin/phase/' . base64_encode($phase->id)) }}"
                                                 method="POST" style="display: none;">
                                                 @csrf
                                                 @method('DELETE')

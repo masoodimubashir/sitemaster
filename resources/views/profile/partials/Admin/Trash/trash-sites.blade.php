@@ -3,17 +3,17 @@
     <div class="row">
 
         <div class="col-12 grid-margin stretch-card">
-            <div class="card">
+
                 <div class="card-body">
                     <h4 class="card-title text-3xl text-info fw-bold">Sites</h4>
-                    </p>
-                    <div class="table-responsive">
+
+                    <div class="table-responsive table-bordered mt-4">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Id</th>
-                                    <th>Name</th>
-                                    <th>Restore</th>
+                                    <th class="bg-info fw-bold text-white">Id</th>
+                                    <th class="bg-info fw-bold text-white">Name</th>
+                                    <th class="bg-info fw-bold text-white">Restore</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -37,7 +37,7 @@
                                     @endforeach
                                 @else
                                     <tr>
-                                        <td>No Records Found </td>
+                                        <td colspan="3" class="text-danger text-center fw-bold">No Records Found </td>
                                     </tr>
                                 @endif
                             </tbody>
@@ -49,7 +49,7 @@
 
                     </div>
                 </div>
-            </div>
+
         </div>
     </div>
 

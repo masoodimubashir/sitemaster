@@ -1,6 +1,10 @@
 <x-app-layout>
 
-    <x-breadcrumb :names="['Suppliers', 'View Supplier', 'View Ledger']" :urls="['admin/suppliers', 'admin/suppliers/' . $id]" />
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
+    <x-breadcrumb :names="['Suppliers', 'View Supplier', 'View Ledger']" :urls="[$user . '/suppliers', $user . '/suppliers/' . $id, $user .'/supplier/ledger/' . $id]" />
 
     <div class="row">
 
@@ -52,10 +56,10 @@
 
                             <td colspan="4" style="background: #F4F5F7; border:none">
                                 <div class="row">
-                                    <form class="col" action="{{ url('admin/supplier/ledger/' . $id) }}"
+                                    <form class="col" action="{{ url($user . '/supplier/ledger/' . $id) }}"
                                         method="GET" id="filterForm">
                                         <select class="form-select form-select-sm bg-white text-dark" name="date_filter"
-                                            style="cursor: pointer" id="date_filter" 
+                                            style="cursor: pointer" id="date_filter"
                                             onchange="document.getElementById('filterForm').submit();">
                                             <option value="today"
                                                 {{ request('date_filter') === 'today' ? 'selected' : '' }}>
@@ -112,9 +116,9 @@
                                 </tr>
                             @endforeach
                         @else
-                                <tr>
-                                    <td  class="text-danger text-center fw-bold" colspan="8">No Records Found</td>
-                                </tr>
+                            <tr>
+                                <td class="text-danger text-center fw-bold" colspan="8">No Records Found</td>
+                            </tr>
                         @endif
 
 

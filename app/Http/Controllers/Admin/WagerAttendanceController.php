@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DailyWager;
+use App\Models\PaymentSupplier;
 use App\Models\User;
 use App\Models\WagerAttendance;
 use Illuminate\Http\Request;
@@ -50,7 +51,7 @@ class WagerAttendanceController extends Controller
 
 
             if ($validator->fails()) {
-                
+
                 return response()->json(['errors' => 'Validation Error... Try Again!'], 422);
             }
 
@@ -134,23 +135,21 @@ class WagerAttendanceController extends Controller
 
             $daily_wager_attendance = WagerAttendance::find($id);
 
-            if (!$daily_wager_attendance) {
-                return redirect()->back()->with('error', 'Something Went Wrong...');
-            }
 
-            if (
-                $daily_wager_attendance->dailyWager->supplier->paymentSuppliers()->exists()
-                || $daily_wager_attendance->verified_by_admin === 1
-            ) {
-                return response()->json(['error' => 'This attendance cannot be deleted..'], 404);
+            $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($daily_wager_attendance) {
+                $query->where('site_id', $daily_wager_attendance->phase->site_id)
+                    ->orWhere('supplier_id', $daily_wager_attendance->dailyWager->supplier->supplier_id);
+            })->exists();
+
+            if ($hasPaymentRecords) {
+                return response()->json(['error' => 'This Item Cannot Be Deleted. Payment records exist.'], 404);
             }
 
             $daily_wager_attendance->delete();
 
             return response()->json(['message' => 'Item Deleted...'], 201);
-        } catch (\Throwable $th) {
-            Log::info($th);
-            return response()->json(['error' => 'An unexpected error occurred: '], 500);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Something Went Wrong Try Again'], 500);
         }
     }
 }

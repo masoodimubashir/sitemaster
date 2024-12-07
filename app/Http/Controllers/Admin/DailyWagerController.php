@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DailyWager;
+use App\Models\PaymentSupplier;
 use App\Models\Site;
 use App\Models\Workforce;
 use Illuminate\Http\Request;
@@ -125,20 +126,22 @@ class DailyWagerController extends Controller
 
             $daily_wager = DailyWager::find($id);
 
-            if (!$daily_wager) {
-                return redirect()->back()->with('status', 'error');
-            }
-;
-            if ($daily_wager->phase()->site()->paymeentSuppliers()->exists()) {
-                return response()->json(['error' => 'Item Cannot Be Deleted'], 404);
+
+            $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($daily_wager) {
+                $query->where('site_id', $daily_wager->phase->site_id)
+                ->orWhere('supplier_id', $daily_wager->supplier_id);
+            })->exists();
+
+            if ($hasPaymentRecords) {
+                return response()->json(['error' => 'This Item Cannot Be Deleted. Payment records exist.'], 404);
             }
 
             $daily_wager->delete();
 
-            return response()->json(['message' => 'Item Deleted...'], 201);
-        } catch (\Throwable $th) {
-
-            return response()->json(['error' => 'An unexpected error occurred: '], 500);
+            return response()->json(['message' => 'Item Deleted Successfully...'], 201);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['error' => 'Something Went Wrong Try Again'], 500);
         }
     }
 }
+

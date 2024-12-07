@@ -1,6 +1,6 @@
 <x-app-layout>
 
-    <x-breadcrumb :names="['Sites', 'Edit ' . $phase->phase_name]" :urls="['admin/sites', 'admin/sites/' . base64_encode($phase->id) . '/edit']" />
+    <x-breadcrumb :names="['Phase', 'Edit ' . $phase->phase_name]" :urls="['admin/phase', 'admin/phase/' . base64_encode($phase->id) . '/edit']" />
 
     <div class="row">
 

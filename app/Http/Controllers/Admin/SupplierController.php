@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Supplier;
 use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
+use App\Models\PaymentSupplier;
 use Illuminate\Support\Facades\Log;
 
 class SupplierController extends Controller
@@ -53,21 +54,40 @@ class SupplierController extends Controller
     {
 
         $supplier = Supplier::with([
-            'constructionMaterialBilling.phase' => function ($query) {
-                $query->whereNull('deleted_at')
-                    ->with(['site' => function ($siteQuery) {
-                        $siteQuery->whereNull('deleted_at');
-                    }]);
+            'constructionMaterialBilling' => function ($query) {
+                $query->where('verified_by_admin', 1)
+                    ->with([
+                        'phase' => function ($phase) {
+                            $phase->whereNull('deleted_at')
+                                ->with([
+                                    'site' => function ($siteQuery) {
+                                        $siteQuery->whereNull('deleted_at');
+                                    }
+                                ]);
+                        }
+                    ]);
             },
-            'dailyWagers.phase' => function ($query) {
-                $query->whereNull('deleted_at');
+            'dailyWagers' => function ($daily_wager) {
+                $daily_wager->with([
+                    'phase' => function ($phase) {
+                        $phase->whereNull('deleted_at');
+                    },
+                    'wagerAttendances'
+                ]);
             },
-            'squareFootages.phase' => function ($query) {
-                $query->whereNull('deleted_at')
-                    ->with(['site' => function ($siteQuery) {
-                        $siteQuery->whereNull('deleted_at');
-                    }]);
-            },
+            'squareFootages' => function ($sqft) {
+                $sqft->where('verified_by_admin', 1)
+                    ->with([
+                        'phase' => function ($phase) {
+                            $phase->whereNull('deleted_at')
+                                ->with([
+                                    'site' => function ($siteQuery) {
+                                        $siteQuery->whereNull('deleted_at');
+                                    }
+                                ]);
+                        },
+                    ]);
+            }
         ])
             ->withSum('constructionMaterialBilling', 'amount')
             ->withSum('paymentSuppliers', 'amount')
@@ -121,6 +141,11 @@ class SupplierController extends Controller
             ];
         }));
 
+        $sites = collect($data)
+        ->unique('site')
+        ->values()
+        ->all();
+
         if ($supplier->is_raw_material_provider === 1) {
 
             foreach ($data as $d) {
@@ -133,7 +158,8 @@ class SupplierController extends Controller
                 compact(
                     'data',
                     'supplier',
-                    'grandTotal'
+                    'grandTotal',
+                    'sites'
                 )
             );
         } else {
@@ -149,6 +175,7 @@ class SupplierController extends Controller
                     'data',
                     'supplier',
                     'grandTotal',
+                    'sites'
                 )
             );
         }
@@ -183,7 +210,6 @@ class SupplierController extends Controller
         ]);
 
         return redirect()->to('admin/suppliers')->with('status', 'update');
-
     }
 
     /**
@@ -195,26 +221,20 @@ class SupplierController extends Controller
         $supplier = Supplier::find($id);
 
         if (!$supplier) {
-            return redirect()->back()->with('status', 'error')->with('message', 'Site not found.');
+            return redirect()->back()->with('status', 'error');
         }
 
-        if ($supplier->is_raw_material_provider) {
-            $siteHasRecords = $supplier->paymentSuppliers()->exists() || $supplier->constructionMaterialBilling()->exists();
-        }
+        $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($supplier) {
+            $query->where('site_id', $supplier->phase->site_id)
+                ->orWhere('supplier_id', $supplier->supplier_id);
+        })->exists();
 
-        if ($supplier->is_workforce_provider) {
-            $siteHasRecords =  $supplier->dailyWagers()->exists() ||
-                $supplier->squareFootages()->exists() ||
-                $supplier->dailyWagers()->exists() ||
-                $supplier->paymentSuppliers()->exists();
-        }
-
-        if ($siteHasRecords) {
-            return redirect()->to('admin/suppliers')->with('status', 'error');
+        if ($hasPaymentRecords) {
+            return response()->json(['status' => 'error'], 404);
         }
 
         $supplier->delete();
 
-        return redirect()->to('admin/suppliers')->with('status', 'delete')->with('message', 'Site deleted successfully.');
+        return redirect()->to('admin/suppliers')->with('status', 'delete');
     }
 }

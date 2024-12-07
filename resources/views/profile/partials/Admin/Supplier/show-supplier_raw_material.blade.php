@@ -96,10 +96,16 @@
                     Generate Payment Report
                 </a>
 
+               @if ($user === 'admin')
+ <a href="{{ url($user . '/unverified-supplier-payments/' . $supplier->id) }}" class="btn btn-info">
+                    Unverified Payments
+                </a>
+               @endif
+
             </div>
 
         </div>
-        
+
     </div>
 
 
@@ -422,7 +428,6 @@
 
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-                            // Optionally reload or update page content
                         }, 2000);
                     },
                     error: function(response) {

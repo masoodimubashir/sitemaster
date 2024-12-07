@@ -4,7 +4,9 @@
 
         <div class="col-12 grid-margin stretch-card">
             <div class="card-body">
-                <h4 class="card-title text-3xl text-info fw-bold">Suppliers</h4>
+
+                <h4 class="card-title text-3xl text-info fw-bold">Phases</h4>
+
                 <div class="table-responsive table-bordered mt-4">
                     <table class="table">
                         <thead>
@@ -15,20 +17,21 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (count($suppliers))
-                                @foreach ($suppliers as $key => $supplier)
+                            @if (count($phases))
+                                @foreach ($phases as $key => $phase)
                                     <tr>
-
                                         <td>{{ $key }}</td>
-                                        <td>{{ ucfirst($supplier->name) }}</td>
+                                        <td>
+                                            <mark class="fw-bold link-offset-2 link-underline link-underline-opacity-0">
+                                                {{ ucfirst($phase->phase_name) }}
+                                            </mark>
+                                        </td>
                                         <td>
                                             <a
-                                                href="{{ route('trash.restore', ['model_name' => 'supplier', 'id' => $supplier->id]) }}">
+                                                href="{{ route('trash.restore', ['model_name' => 'phase', 'id' => $phase->id]) }}">
                                                 <i class="fa fa-history display-5 text-success"></i>
-
                                             </a>
                                         </td>
-
                                     </tr>
                                 @endforeach
                             @else
@@ -41,7 +44,7 @@
 
                     </table>
 
-                    {{ $suppliers->links() }}
+                    {{ $phases->links() }}
 
                 </div>
             </div>

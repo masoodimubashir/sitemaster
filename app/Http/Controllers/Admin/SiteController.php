@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateSiteRequest;
 use App\Models\Client;
 use App\Models\DailyWager;
 use App\Models\Item;
+use App\Models\PaymentSupplier;
 use App\Models\Phase;
 use App\Models\Site;
 use App\Models\Supplier;
@@ -234,19 +235,11 @@ class   SiteController extends Controller
 
         $site = Site::where('id', $site_id)->first();
 
-        $siteHasRecords =
-            $site->phases()->whereHas('constructionMaterialBillings')->exists() ||
-            $site->phases()->whereHas('squareFootageBills')->exists() ||
-            $site->phases()->whereHas('dailyWagers')->exists() ||
-            $site->phases()->whereHas('dailyExpenses')->exists() ||
-            $site->phases()->whereHas('wagerAttendances')->exists() ||
-            $site->paymeentSuppliers()->exists();
+        $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($site) {
+            $query->where('site_id', $site->id)->first();
+        })->exists();
 
-        if ($siteHasRecords) {
-            return redirect()->back()->with('status', 'error');
-        }
-
-        if (!$site) {
+        if ($hasPaymentRecords) {
             return redirect()->back()->with('status', 'error');
         }
 

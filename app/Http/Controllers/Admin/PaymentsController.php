@@ -20,19 +20,22 @@ class PaymentsController extends Controller
     {
 
 
-        // dd($request->all());
-
-        $dateFilter = $request->get('date_filter', 'today');
+        $dateFilter = $request->input('date_filter', 'today');
+        $site_id = $request->input('site_id', 'all');
 
         $ongoingSites = Site::where('is_on_going', 1)->pluck('id');
         $is_ongoing_count = $ongoingSites->count();
         $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter);
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id);
 
-        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
-
-        $ledgers = $ledgers->sortByDesc(function ($d) {
+        $ledgers = $dataService->makeData(
+            $payments,
+            $raw_materials,
+            $squareFootageBills,
+            $expenses,
+            $wagers
+        )->sortByDesc(function ($d) {
             return $d['created_at'];
         });
 

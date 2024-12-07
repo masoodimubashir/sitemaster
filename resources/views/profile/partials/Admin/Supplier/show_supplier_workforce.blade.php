@@ -75,6 +75,7 @@
 
 
 
+
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex flex-wrap justify-content-start gap-2">
@@ -97,6 +98,12 @@
                     class="btn btn-info">
                     Generate Payment Report
                 </a>
+
+                @if ($user === 'admin')
+                    <a href="{{ url($user . '/unverified-supplier-payments/' . $supplier->id) }}" class="btn btn-info">
+                        Unverified Payments
+                    </a>
+                @endif
 
 
             </div>
@@ -343,7 +350,7 @@
                         <div class="mt-4">
                             <select id="site_id" class="form-select form-select-sm" name="site_id">
                                 <option value="">Select Site</option>
-                                @foreach ($data as $d)
+                                @foreach ($sites as $d)
                                     <option value="{{ $d['site_id'] }}">
                                         {{ $d['site_id'] }} -
                                         {{ $d['site'] }}
@@ -427,7 +434,7 @@
 
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-                            // Optionally reload or update page content
+                            location.reload();
                         }, 2000);
                     },
                     error: function(response) {

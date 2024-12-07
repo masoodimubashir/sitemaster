@@ -46,7 +46,7 @@
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
-                                        <td>
+                                        <td colspan="1">
                                             <div class="p-3 d-flex flex-column gap-2 text-danger">
                                                 <small>
                                                     <b>
@@ -58,7 +58,7 @@
                                                 </h4>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td colspan="1">
                                             <div class="p-3 d-flex flex-column gap-2 text-warning">
                                                 <small>
                                                     <b>
@@ -70,7 +70,7 @@
                                                 </h4>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td colspan="1">
                                             <div class="p-3 d-flex flex-column gap-2 text-success">
                                                 <small>
                                                     <b>
@@ -82,7 +82,7 @@
                                                 </h4>
                                             </div>
                                         </td>
-                                        <td>
+                                        <td colspan="1">
                                             <div class="p-3 d-flex flex-column gap-2 text-info fw-bold">
                                                 <small>
                                                     <b>
@@ -110,15 +110,40 @@
                                             </div>
                                         </td>
 
-                                        <td colspan="4" style="background: #F4F5F7; border:none">
+                                        <td colspan="6" style="background: #F4F5F7; border:none">
 
                                             <div class="row">
+                                                {{--
+                                                <form method="GET" action="{{ url($user . '/payments') }}">
+                                                    <select name="site_id">
+                                                        <option value="">All Sites</option>
+                                                        @foreach ($paginatedLedgers as $site)
+                                                            <option value="{{ $site['site_id'] }}">
+                                                                {{ $site['site'] }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button type="submit">Filter</button>
+                                                </form> --}}
 
                                                 <form class="col " action="{{ url($user . '/payments') }}"
                                                     method="GET" id="filterForm">
+
+                                                    <select name="site_id">
+                                                        <option value="all"
+                                                            {{ request('site_id') == 'all' ? 'selected' : '' }}>
+                                                            All Sites
+                                                        </option>
+                                                        @foreach ($paginatedLedgers as $site)
+                                                            <option value="{{ $site['site_id'] }}"
+                                                                {{ request('site_id') == $site['site_id'] ? 'selected' : '' }}>
+                                                                {{ $site['site'] }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+
                                                     <select class="form-select form-select-sm bg-white text-black"
-                                                        style="cursor: pointer" name="date_filter" id="date_filter"
-                                                        onchange="document.getElementById('filterForm').submit();">
+                                                        style="cursor: pointer" name="date_filter" id="date_filter">
                                                         <option value="today"
                                                             {{ request('date_filter') === 'today' ? 'selected' : '' }}>
                                                             Today</option>
@@ -140,10 +165,12 @@
                                                         </option>
                                                     </select>
 
+                                                    <button type="submit">Filter</button>
+
                                                 </form>
 
 
-                                                <form class="col" action="{{ url($user . '/ledger/report') }}"
+                                                {{-- <form class="col" action="{{ url($user . '') }}"
                                                     method="GET" id="ledger-report">
                                                     <select class="form-select form-select-sm bg-white text-black"
                                                         style="cursor: pointer" name="date_filter" id="date_filter"
@@ -163,8 +190,18 @@
                                                             Generate Full Report</option>
                                                     </select>
 
-                                                </form>
+                                                </form> --}}
 
+                                                <form class="col" action="{{ url($user . '/ledger/report') }}"
+                                                    method="GET">
+                                                    <input type="hidden" name="site_id"
+                                                        value="{{ request('site_id', 'all') }}">
+                                                    <input type="hidden" name="date_filter"
+                                                        value="{{ request('date_filter', 'today') }}">
+                                                    <button type="submit" class="btn btn-info text-white">
+                                                        Generate PDF Report
+                                                    </button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>

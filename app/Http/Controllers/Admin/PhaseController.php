@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\PaymentSupplier;
 use App\Models\Phase;
 use App\Models\Site;
 use Illuminate\Http\Request;
@@ -135,11 +136,11 @@ class PhaseController extends Controller
 
         $phase = Phase::find($phase_id);
 
-        if (!$phase) {
-            return redirect()->back()->with('status', 'not_found');
-        }
+        $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($phase) {
+            $query->where('site_id', $phase->site_id);
+        })->exists();
 
-        if ($phase->exists_records) {
+        if ($hasPaymentRecords) {
             return redirect()->back()->with('status', 'data');
         }
 

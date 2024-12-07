@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DailyExpensesController;
 use App\Http\Controllers\Admin\DailyWagerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ItemController;
+use App\Http\Controllers\Admin\ItemsVerificationController;
 use App\Http\Controllers\Admin\PaymentBillsController;
 use App\Http\Controllers\Admin\PaymentsController;
 use App\Http\Controllers\Admin\PaymentSupplierController;
@@ -20,6 +21,7 @@ use App\Http\Controllers\Admin\SquareFootageBillsController;
 use App\Http\Controllers\Admin\SupplierController;
 use App\Http\Controllers\Admin\SupplierPaymentController;
 use App\Http\Controllers\Admin\TrashController;
+use App\Http\Controllers\Admin\UnverifiedSupplierPayments;
 use App\Http\Controllers\Admin\UpdateOnGoingController;
 use App\Http\Controllers\Admin\WagerAttendanceController;
 use App\Http\Controllers\Admin\WorkforceController;
@@ -102,7 +104,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::put('/user/update-password/{id}', [AdminUserController::class, 'updateUserPassword'])->name('admin.update-user-password');
     Route::put('/user/update-name/{id}', [AdminUserController::class, 'updateName'])->name('user.update-name');
 
-    // Clents Routes
+    // Client Controller
     Route::resource('/clients', ClientController::class);
 
     // Suppliers Routes
@@ -140,16 +142,17 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     // View Supplier Ledger
     Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');
 
+    // Payments Controller
     Route::resource('/payments', PaymentsController::class);
 
-    // Verify Pending Notifications Controller
-    Route::get('/verify-payments', [PendingPaymentsVerifications::class, 'index']);
-    Route::put('/verify-payments', [PendingPaymentsVerifications::class, 'verifyPayment']);
+    //  All Controllers For Soft Deletes
+    Route::get('/trashed-supplier', [TrashController::class, 'trashedSuppliers'])->name('trash.suppliers');
+    Route::get('/trashed-site', [TrashController::class, 'trashedSites'])->name('trash.sites');
+    Route::get('phase/trashed-phases/abc', [TrashController::class, 'trashedPhase'])->name('trash.phases');
+    Route::get('/trashed-{model_name}/{id}', [TrashController::class, 'restore'])->name('trash.restore');
 
-    Route::get('/bin-supplier', [TrashController::class, 'trashedSuppliers'])->name('trash.suppliers');
-    Route::get('/bin-site', [TrashController::class, 'trashedSites'])->name('trash.sites');
-    Route::get('/bin/{model_name}/{id}', [TrashController::class, 'restore'])->name('trash.restore');
 
+    // Generating PDF'S Here
     // DownLoad PDF Controller
     Route::get('/download-site/report/{id}', [PDFController::class, 'showSitePdf']);
     Route::get('/download-phase/report/{id}', [PDFController::class, 'showPhasePdf']);
@@ -163,6 +166,15 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::post('verify/expenses/{id}', [AdminVerificationController::class, 'verifyExpenses'])->name('verifyExpenses');
     Route::post('verify/wagers/{id}', [AdminVerificationController::class, 'verifyDailyWagers'])->name('verifyDailyWagers');
     Route::post('verify/attendance/{id}', [AdminVerificationController::class, 'verifyAttendance'])->name('verifyAttendance');
+
+    // Verify Controllers For Pending Payments
+    Route::get('/pay-verification', [PendingPaymentsVerifications::class, 'index']);
+    Route::put('/verify-payments', [PendingPaymentsVerifications::class, 'verifyPayment']);
+    Route::get('/unverified-supplier-payments/{id}', UnverifiedSupplierPayments::class);
+
+    // Verification Controller For Items
+    Route::get('/item-verification', [ItemsVerificationController::class, 'index']);
+    Route::get('/verify-items', [ItemsVerificationController::class, 'verifyItems']);
 });
 
 
@@ -179,6 +191,14 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
     // User Supplier Controller
     Route::resource('/suppliers', UserSupplierController::class);
+
+    // Client Controller
+    Route::resource('/clients', ClientController::class);
+
+
+    // Items Controller
+    Route::resource('/items', ItemController::class);
+
 
     // Construction Material Routes
     Route::post('/construction-material-billings', [UserConstuctionMaterialBuildingsController::class, 'store']);
@@ -203,7 +223,7 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     // Attendance Routes
     Route::post('/daily-wager-attendance', [UserWagerAttendanceController::class, 'store']);
     Route::get('/daily-wager-attendance/{id}/edit', [UserWagerAttendanceController::class, 'edit']);
-    Route::put('/daily-wager-attendance/{id}',[UserWagerAttendanceController::class, 'update']);
+    Route::put('/daily-wager-attendance/{id}', [UserWagerAttendanceController::class, 'update']);
 
     // Site Payments
     Route::resource('site/payments', UserSitePayments::class);

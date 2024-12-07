@@ -1,7 +1,12 @@
 <x-app-layout>
 
 
-    <x-breadcrumb :names="['Clients', 'Create Client']" :urls="['admin/clients', 'admin/clients/create']" />
+
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
+    <x-breadcrumb :names="['Clients', 'Create Client']" :urls="[$user . '/clients', $user . '/clients/create']" />
 
     <div class="row">
 
@@ -12,7 +17,7 @@
 
                 <div class="card-body">
 
-                    <form method="POST" action="{{ route('clients.store') }}" class="forms-sample material-form">
+                    <form method="POST" action="{{ url($user . '/clients') }}" class="forms-sample material-form">
 
                         @csrf
 

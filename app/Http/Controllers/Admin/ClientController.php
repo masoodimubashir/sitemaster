@@ -56,7 +56,11 @@ class ClientController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return redirect()->route('clients.index')->with('status', 'create');
+        if (auth()->user()->role_name === 'admin') {
+            return redirect()->to('/admin/clients')->with('status', 'create');
+        } else {
+            return redirect()->to('/user/clients')->with('status', 'create');
+        }
     }
 
     /**
@@ -100,11 +104,13 @@ class ClientController extends Controller
             ],
         ]);
 
-        // Find the client by ID
+        // // Find the client by ID
         $client = Client::find($id);
 
-        if (!$client) {
-            return redirect()->back()->with('status', 'error');
+        if (!$client && auth()->user()->role_name === 'admin') {
+            return redirect()->to('/admin/clients')->with('status', 'error');
+        } elseif (!$client && auth()->user()->role_name === 'user') {
+            return redirect()->to('/user/clients')->with('status', 'error');
         }
 
         // Update the client information
@@ -114,8 +120,11 @@ class ClientController extends Controller
             'password' => $request->password ? Hash::make($request->password) : $client->password
         ]);
 
-        return redirect()->route('clients.index')->with('status', 'update');
-
+        if (auth()->user()->role_name === 'admin') {
+            return redirect()->to('/admin/clients')->with('status', 'update');
+        } else {
+            return redirect()->to('/user/clients')->with('status', 'update');
+        }
     }
 
     /**
@@ -132,6 +141,10 @@ class ClientController extends Controller
 
         $client->delete();
 
-        return redirect()->route('clients.index')->with('status', 'delete');
+        if (auth()->user()->role_name === 'admin') {
+            return redirect()->to('/admin/clients')->with('status', 'delete');
+        } else {
+            return redirect()->to('/user/clients')->with('status', 'delete');
+        }
     }
 }

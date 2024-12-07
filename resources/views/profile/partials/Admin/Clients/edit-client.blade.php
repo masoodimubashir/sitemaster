@@ -1,6 +1,12 @@
 <x-app-layout>
 
-    <x-breadcrumb :names="['Clients', 'Edit ' . $client->name]" :urls="['admin/clients', 'admin/clients/' . base64_encode($client->id) . '/edit']" />
+
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
+
+    <x-breadcrumb :names="['Clients', 'Edit ' . $client->name]" :urls="[$user . '/clients', $user . '/clients/' . base64_encode($client->id) . '/edit']" />
 
 
     <div class="row">
@@ -11,7 +17,7 @@
 
                 <div class="card-body">
 
-                    <form method="POST" action="{{ route('clients.update', [$client->id]) }}"
+                    <form method="POST" action="{{ url($user . '/clients/' . $client->id) }}"
                         class="forms-sample material-form">
 
                         @csrf

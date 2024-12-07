@@ -33,14 +33,19 @@ class ItemController extends Controller
      */
     public function store(Request $request)
     {
+
+
         $request->validate([
             'item_name' => 'required|string|unique:items,item_name'
         ]);
 
         Item::create($request->all());
 
-        return redirect()->route('items.index')->with('status', 'create');
-
+        if (auth()->user()->role_name === 'admin') {
+            return redirect()->to('admin/items')->with('status', 'create');
+        } else {
+            return redirect()->to('user/items')->with('status', 'create');
+        }
     }
 
     /**
@@ -62,7 +67,8 @@ class ItemController extends Controller
             return redirect()->route('items.index')->with('status', 'error');
         }
 
-        return view('profile.partials.Admin.Item.edit-item', compact( 'item'));
+
+        return view('profile.partials.Admin.Item.edit-item', compact('item'));
     }
 
     /**
@@ -84,7 +90,11 @@ class ItemController extends Controller
             'item_name' => $request->item_name
         ]);
 
-        return redirect()->route('items.index')->with('status', 'update');
+        if (auth()->user()->role_name === 'admin') {
+            return redirect()->to('admin/items')->with('status', 'update');
+        } else {
+            return redirect()->to('user/items')->with('status', 'update');
+        }
     }
 
     /**
@@ -103,11 +113,15 @@ class ItemController extends Controller
 
         if ($hasData) {
             return redirect()->back()->with('status', 'null');
-
         }
 
         $item->delete();
 
-        return redirect()->back()->with('status', 'delete');
+        if (auth()->user()->role_name === 'admin') {
+            return redirect()->to('admin/items')->with('status', 'delete');
+        } else {
+            return redirect()->to('user/items')->with('status', 'delete');
+        }
+
     }
 }

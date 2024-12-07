@@ -1,6 +1,10 @@
 <x-app-layout>
 
-    <x-breadcrumb :names="['Items']" :urls="['admin/items']" />
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
+    <x-breadcrumb :names="['Items']" :urls="[$user . '/items']" />
 
     @if (session('status') === 'create')
         <x-success-message message="Item Created..." />
@@ -18,7 +22,7 @@
         <x-error-message message="Sorry! Item Not Found..." />
     @endif
 
-      @if (session('status') === 'null')
+    @if (session('status') === 'null')
         <x-error-message message="This Item Cannot Be deleted" />
     @endif
 
@@ -27,7 +31,7 @@
 
         <div class="d-flex justify-content-end">
 
-            <a class="btn btn-sm btn-success" href="{{ url('admin/items/create') }}" class="float-right">
+            <a class="btn btn-sm btn-success" href="{{ url($user . '/items/create') }}" class="float-right">
                 <i class="fa-solid fa-boxes-stacked pr-2"></i>
                 Create Item
             </a>
@@ -58,21 +62,20 @@
 
 
                                 <td class="space-x-4">
-                                    <a href="{{ route('items.edit', [$item->id]) }}">
+                                    <a href="{{ url($user . '/items/' . $item->id . '/edit' ) }}">
                                         <i class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full "></i>
                                     </a>
 
                                     <form id="delete-form-{{ $item->id }}"
-                                        action="{{ route('items.destroy', [$item->id]) }}" method="POST"
+                                        action="{{ url($user . '/items/' . $item->id) }}" method="POST"
                                         style="display: none;">
                                         @csrf
                                         @method('DELETE')
                                     </form>
 
-                                    <a href="#"
+                                    <a href="{{ url($user . '/items/' . $item->id) }}"
                                         onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this supplier?')) document.getElementById('delete-form-{{ $item->id }}').submit();">
-                                        <i
-                                            class="fa-solid fa-trash-o fs-5 text-red-600 bg-white rounded-full"></i>
+                                        <i class="fa-solid fa-trash-o fs-5 text-red-600 bg-white rounded-full"></i>
                                     </a>
                                 </td>
 

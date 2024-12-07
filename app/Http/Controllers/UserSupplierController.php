@@ -51,23 +51,41 @@ class UserSupplierController extends Controller
     public function show(string $id)
     {
 
-
         $supplier = Supplier::with([
-            'constructionMaterialBilling.phase' => function ($query) {
-                $query->whereNull('deleted_at')
-                ->with(['site' => function ($siteQuery) {
-                    $siteQuery->whereNull('deleted_at');
-                }]);
+            'constructionMaterialBilling' => function ($query) {
+                $query->where('verified_by_admin', 1)
+                ->with([
+                    'phase' => function ($phase) {
+                        $phase->whereNull('deleted_at')
+                        ->with([
+                            'site' => function ($siteQuery) {
+                                $siteQuery->whereNull('deleted_at');
+                            }
+                        ]);
+                    }
+                ]);
             },
-            'dailyWagers.phase' => function ($query) {
-                $query->whereNull('deleted_at');
+            'dailyWagers' => function ($daily_wager) {
+                $daily_wager->with([
+                    'phase' => function ($phase) {
+                        $phase->whereNull('deleted_at');
+                    },
+                    'wagerAttendances'
+                ]);
             },
-            'squareFootages.phase' => function ($query) {
-                $query->whereNull('deleted_at')
-                ->with(['site' => function ($siteQuery) {
-                    $siteQuery->whereNull('deleted_at');
-                }]);
-            },
+            'squareFootages' => function ($sqft) {
+                $sqft->where('verified_by_admin', 1)
+                ->with([
+                    'phase' => function ($phase) {
+                        $phase->whereNull('deleted_at')
+                        ->with([
+                            'site' => function ($siteQuery) {
+                                $siteQuery->whereNull('deleted_at');
+                            }
+                        ]);
+                    },
+                ]);
+            }
         ])
             ->withSum('constructionMaterialBilling', 'amount')
             ->withSum('paymentSuppliers', 'amount')
@@ -121,6 +139,11 @@ class UserSupplierController extends Controller
             ];
         }));
 
+        $sites = collect($data)
+            ->unique('site')
+            ->values()
+            ->all();
+
         if ($supplier->is_raw_material_provider === 1) {
 
             foreach ($data as $d) {
@@ -133,7 +156,8 @@ class UserSupplierController extends Controller
                 compact(
                     'data',
                     'supplier',
-                    'grandTotal'
+                    'grandTotal',
+                    'sites',
                 )
             );
         } else {
@@ -144,12 +168,12 @@ class UserSupplierController extends Controller
                 }
             }
 
-            return view(
-                'profile.partials.Admin.Supplier.show_supplier_workforce',
+            return view('profile.partials.Admin.Supplier.show_supplier_workforce',
                 compact(
                     'data',
                     'supplier',
                     'grandTotal',
+                    'sites',
                 )
             );
         }
