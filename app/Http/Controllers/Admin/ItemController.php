@@ -34,18 +34,32 @@ class ItemController extends Controller
     public function store(Request $request)
     {
 
-
-        $request->validate([
-            'item_name' => 'required|string|unique:items,item_name'
+        $validatedData = $request->validate([
+            'items' => 'required|array',
+            'items.*.item_name' => 'required|string|max:255'
+        ], [
+            'items.*.item_name.required' => 'The item name field is required.',
+            'items.*.item_name.max' => 'The item name must not exceed 255 characters.'
         ]);
 
-        Item::create($request->all());
+        $itemsToCreate = [];
+        foreach ($validatedData['items'] as $itemData) {
+            $itemsToCreate[] = [
+                'item_name' => $itemData['item_name'],
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+        }
+
+        // Bulk insert
+        Item::insert($itemsToCreate);
 
         if (auth()->user()->role_name === 'admin') {
             return redirect()->to('admin/items')->with('status', 'create');
         } else {
             return redirect()->to('user/items')->with('status', 'create');
         }
+
     }
 
     /**
@@ -122,6 +136,5 @@ class ItemController extends Controller
         } else {
             return redirect()->to('user/items')->with('status', 'delete');
         }
-
     }
 }

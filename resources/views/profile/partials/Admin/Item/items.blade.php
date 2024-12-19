@@ -62,6 +62,7 @@
 
 
                                 <td class="space-x-4">
+                                    
                                     <a href="{{ url($user . '/items/' . $item->id . '/edit' ) }}">
                                         <i class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full "></i>
                                     </a>
@@ -77,6 +78,7 @@
                                         onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this supplier?')) document.getElementById('delete-form-{{ $item->id }}').submit();">
                                         <i class="fa-solid fa-trash-o fs-5 text-red-600 bg-white rounded-full"></i>
                                     </a>
+
                                 </td>
 
                             </tr>
@@ -91,7 +93,7 @@
                     <thead></thead>
                     <tbody>
                         <tr>
-                            <td class="text-center text-danger fw-bold">No Records Awailable Yet</td>
+                            <td class="text-center text-danger fw-bold">No Records Available Yet</td>
                         </tr>
                     </tbody>
                 </table>

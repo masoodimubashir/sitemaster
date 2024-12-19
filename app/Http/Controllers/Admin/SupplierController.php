@@ -220,17 +220,17 @@ class SupplierController extends Controller
 
         $supplier = Supplier::find($id);
 
+
         if (!$supplier) {
             return redirect()->back()->with('status', 'error');
         }
 
         $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($supplier) {
-            $query->where('site_id', $supplier->phase->site_id)
-                ->orWhere('supplier_id', $supplier->supplier_id);
+            $query->orWhere('supplier_id', $supplier->id);
         })->exists();
 
         if ($hasPaymentRecords) {
-            return response()->json(['status' => 'error'], 404);
+            return redirect()->to('admin/suppliers')->with('status' , 'error');
         }
 
         $supplier->delete();

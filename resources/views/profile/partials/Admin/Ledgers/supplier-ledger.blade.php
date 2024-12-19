@@ -4,7 +4,7 @@
         $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
     @endphp
 
-    <x-breadcrumb :names="['Suppliers', 'View Supplier', 'View Ledger']" :urls="[$user . '/suppliers', $user . '/suppliers/' . $id, $user .'/supplier/ledger/' . $id]" />
+    <x-breadcrumb :names="['Suppliers', 'View Supplier', 'View Ledger']" :urls="[$user . '/suppliers', $user . '/suppliers/' . $id, $user . '/supplier/ledger/' . $id]" />
 
     <div class="row">
 
@@ -56,34 +56,37 @@
 
                             <td colspan="4" style="background: #F4F5F7; border:none">
                                 <div class="row">
-                                    <form class="col" action="{{ url($user . '/supplier/ledger/' . $id) }}"
-                                        method="GET" id="filterForm">
-                                        <select class="form-select form-select-sm bg-white text-dark" name="date_filter"
-                                            style="cursor: pointer" id="date_filter"
+
+                                    <form action="{{ url($user . '/supplier/ledger/' . $id) }}"
+                                        class="d-flex flex-column flex-md-row gap-2 w-100" method="GET"
+                                        id="filterForm">
+
+
+                                        <select style="cursor: pointer"
+                                            class="bg-white text-black form-select form-select-sm mt-2" name="site_id"
                                             onchange="document.getElementById('filterForm').submit();">
-                                            <option value="today"
-                                                {{ request('date_filter') === 'today' ? 'selected' : '' }}>
-                                                Today</option>
-                                            <option value="yesterday"
-                                                {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>
-                                                Yesterday</option>
-                                            <option value="this_week"
-                                                {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>
-                                                This Week</option>
-                                            <option value="this_month"
-                                                {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>
-                                                This Month</option>
-                                            <option value="this_year"
-                                                {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>
-                                                This Year</option>
-                                            <option value="lifetime"
-                                                {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
-                                                All Data</option>
+                                            <option value="all" {{ request('site_id') === 'all' ? 'selected' : '' }}>
+                                                All Sites
+                                            </option>
+                                            @foreach ($sites as $site)
+                                                <option value="{{ $site['site_id'] }}"
+                                                    {{ request('site_id') == $site['site_id'] ? 'selected' : '' }}>
+                                                    {{ $site['site'] }}
+                                                </option>
+                                            @endforeach
                                         </select>
+
+                                        <div class="d-flex gap-2">
+                                            <button type="button" class="btn btn-success  text-white mt-2"
+                                                onclick="resetForm()">Reset</button>
+                                        </div>
+
                                     </form>
                                 </div>
                             </td>
                         </tr>
+
+
                         <tr>
                             <th class="bg-info text-white fw-bold ">Date | Time</th>
                             <th class="bg-info text-white fw-bold ">Supplier Name</th>
@@ -103,7 +106,7 @@
                                     <td>
                                         {{ $ledger['created_at'] }}
                                     </td>
-                                    <td>{{ $ledger['category'] === 'Daily Expense' ? $ledger['category'] : ucwords($ledger['supplier']) }}
+                                    <td>{{ ucwords($ledger['supplier']) }}
                                     </td>
                                     <td>{{ ucwords($ledger['phase']) }}</td>
                                     <td>{{ ucwords($ledger['site']) }}</td>
@@ -137,6 +140,13 @@
 
     </div>
 
+    <script>
+        function resetForm() {
+            // Reset select fields to default values
+            document.querySelector('select[name="site_id"]').value = 'all';
 
+            window.location.href = "{{ url($user . '/supplier/ledger/' . $id) }}";
+        }
+    </script>
 
 </x-app-layout>

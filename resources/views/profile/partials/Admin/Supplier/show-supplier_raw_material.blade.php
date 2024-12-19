@@ -81,7 +81,7 @@
                     Make Payment
                 </button>
 
-                <a href="{{ url($user . '/sites/supplier-payments', [$supplier->id]) }}" class="btn btn-info btns"
+                <a href="{{ url($user . '/supplier/payments', [$supplier->id]) }}" class="btn btn-info btns"
                     data-modal="payment-supplier">
                     View Payments
                 </a>
@@ -96,11 +96,11 @@
                     Generate Payment Report
                 </a>
 
-               @if ($user === 'admin')
- <a href="{{ url($user . '/unverified-supplier-payments/' . $supplier->id) }}" class="btn btn-info">
-                    Unverified Payments
-                </a>
-               @endif
+                @if ($user === 'admin')
+                    <a href="{{ url($user . '/unverified-supplier-payments/' . $supplier->id) }}" class="btn btn-info">
+                        Unverified Payments
+                    </a>
+                @endif
 
             </div>
 

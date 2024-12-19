@@ -162,6 +162,23 @@
         }
     </style>
 
+
+    <style>
+        /* Active tab styling */
+        .nav-pills .nav-link {
+            background: white;
+            /* Default inactive color */
+            color: black;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #51B1E1;
+            /* Bright blue for active tab */
+            color: white;
+        }
+    </style>
+
     @if ($user === 'admin')
         <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['admin/sites', 'admin/sites/' . base64_encode($site->id)]" />
     @else
@@ -180,7 +197,7 @@
                     <i class="fas fa-money-bill me-2"></i>Make Payment
                 </a>
 
-                <a href="{{ route('supplier-payments.show', [$site->id]) }}" class="btn btn-info px-4">
+                <a href="{{ url('user/sites/payments', [$site->id]) }}" class="btn btn-info px-4">
                     <i class="fas fa-list me-2"></i>View Payments
                 </a>
 
@@ -320,16 +337,16 @@
 
                 <ul class="nav nav-pills mb-4">
 
-                    @foreach ($site->phases as $phase_key => $phase)
-                        <li class="nav-item">
-
-                            <a class="btn bg-white  custom-tab {{ $phase_key === 0 ? 'active' : '' }}"
-                                href="#{{ $phase->id }}" data-bs-toggle="tab">
-                                {{ $phase->phase_name }}
-                            </a>
-
-                        </li>
-                    @endforeach
+                    <ul class="nav nav-pills mb-4">
+                        @foreach ($site->phases as $phase_key => $phase)
+                            <li class="nav-item">
+                                <a class="nav-link {{ $phase_key === 0 ? 'active' : '' }}" href="#{{ $phase->id }}"
+                                    data-bs-toggle="tab" onclick="setActiveTab('{{ $phase->id }}')">
+                                    {{ $phase->phase_name }}
+                                </a>
+                            </li>
+                        @endforeach
+                    </ul>
 
                 </ul>
             </div>
@@ -1109,18 +1126,21 @@
                                                             </td>
 
                                                             <td>
+
                                                                 <!-- Wager -->
                                                                 <select
                                                                     class="form-select text-black form-select-sm bg-white"
                                                                     style="cursor: pointer" id="daily_wager_id"
                                                                     name="daily_wager_id">
+
                                                                     <option value="">Select Wager</option>
 
                                                                     @foreach ($wagers as $wager)
-                                                                        <option value="{{ $wager->id }}">
-                                                                            {{ $wager->wager_name }}
+                                                                        <option value="{{ $wager['id'] }}">
+                                                                            {{ $wager['name'] }}
                                                                         </option>
                                                                     @endforeach
+
                                                                 </select>
                                                                 @error('daily_wager_id')
                                                                     <x-input-error :messages="$message" class="mt-2" />
@@ -2208,7 +2228,7 @@
                 $('.text-danger').text('');
 
                 $.ajax({
-                    url: '{{ url('user/wager-attendance') }} ',
+                    url: '{{ url('user/daily-wager-attendance') }} ',
                     type: 'POST',
                     data: formData,
                     contentType: false,
@@ -2439,5 +2459,34 @@
     </script> --}}
 
 
+    <script>
+        function setActiveTab(tabId) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.nav-link').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Add active class to the clicked tab
+            const activeTab = document.querySelector(`a[href="#${tabId}"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+
+            // Store the active tab in localStorage
+            localStorage.setItem('activeTab', tabId);
+        }
+
+        // Restore the active tab on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const activeTab = localStorage.getItem('activeTab');
+            if (activeTab) {
+                // Trigger click on the saved tab to restore its state
+                const tabElement = document.querySelector(`a[href="#${activeTab}"]`);
+                if (tabElement) {
+                    tabElement.classList.add('active');
+                }
+            }
+        });
+    </script>
 
 </x-app-layout>

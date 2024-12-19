@@ -41,6 +41,90 @@
                     <div class="tab-pane fade show active" id="workforce" role="tabpanel"
                         aria-labelledby="workforce-tab">
 
+                        <div class="row">
+                            <div class="col-12 col-md-10 d-flex flex-column flex-md-row gap-2 align-items-center">
+
+                                <form class="d-flex flex-column flex-md-row gap-2 w-100"
+                                    action="{{ url($user . '/payments') }}" method="GET" id="filterForm">
+
+                                    <select style="cursor: pointer"
+                                        class="bg-white text-black form-select form-select-sm" name="site_id" onchange="document.getElementById('filterForm').submit();">
+                                        <option value="all" {{ request('site_id') === 'all' ? 'selected' : '' }}>
+                                            All Sites
+                                        </option>
+                                        @foreach ($sites as $site)
+                                            <option value="{{ $site['site_id'] }}"
+                                                {{ request('site_id') == $site['site_id'] ? 'selected' : '' }}>
+                                                {{ $site['site'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+
+
+                                    <select style="cursor: pointer"
+                                        class="bg-white text-black form-select form-select-sm" name="supplier_id" onchange="document.getElementById('filterForm').submit();">
+                                        <option value="all" {{ request('supplier_id') == 'all' ? 'selected' : '' }}>
+                                            All Suppliers
+                                        </option>
+                                            @foreach ($suppliers as $supplier)
+                                                <option value="{{ $supplier['supplier_id'] }}"
+                                                    {{ request('supplier_id') == $supplier['supplier_id'] ? 'selected' : '' }}>
+                                                    {{ $supplier['supplier'] }}
+                                                </option>
+                                            @endforeach
+                                    </select>
+
+                                    <select style="cursor: pointer"
+                                        class="bg-white text-black form-select form-select-sm" name="date_filter"
+                                        id="date_filter" onchange="document.getElementById('filterForm').submit();">
+                                        <option value="today"
+                                            {{ request('date_filter') === 'today' ? 'selected' : '' }}>
+                                            Today</option>
+                                        <option value="yesterday"
+                                            {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>
+                                            Yesterday</option>
+                                        <option value="this_week"
+                                            {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>
+                                            This Week</option>
+                                        <option value="this_month"
+                                            {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>
+                                            This Month</option>
+                                        <option value="this_year"
+                                            {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>
+                                            This Year</option>
+                                        <option value="lifetime"
+                                            {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
+                                            All Data
+                                        </option>
+                                    </select>
+
+                                    <div class="d-flex gap-2">
+                                        {{-- <button type="submit" class="btn btn-info text-white mt-2">Filter</button> --}}
+                                        <button type="button" class="btn btn-success  text-white mt-2"
+                                            onclick="resetForm()">Reset</button>
+                                    </div>
+
+                                </form>
+                            </div>
+
+                            <div
+                                class="col-12 col-md-2 d-flex justify-content-start justify-content-md-end align-items-center">
+                                <form action="{{ url($user . '/ledger/report') }}" method="GET">
+                                    <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
+                                    <input type="hidden" name="date_filter"
+                                        value="{{ request('date_filter', 'today') }}">
+                                    <input type="hidden" name="supplier_id"
+                                        value="{{ request('supplier_id', 'all') }}">
+                                    <button type="submit" class="btn btn-info text-white btn-sm">
+                                        Generate PDF Report
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+
+
+
                         <div class="table-responsive mt-4">
 
                             <table class="table table-bordered">
@@ -113,95 +197,8 @@
                                         <td colspan="6" style="background: #F4F5F7; border:none">
 
                                             <div class="row">
-                                                {{--
-                                                <form method="GET" action="{{ url($user . '/payments') }}">
-                                                    <select name="site_id">
-                                                        <option value="">All Sites</option>
-                                                        @foreach ($paginatedLedgers as $site)
-                                                            <option value="{{ $site['site_id'] }}">
-                                                                {{ $site['site'] }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    <button type="submit">Filter</button>
-                                                </form> --}}
-
-                                                <form class="col " action="{{ url($user . '/payments') }}"
-                                                    method="GET" id="filterForm">
-
-                                                    <select name="site_id">
-                                                        <option value="all"
-                                                            {{ request('site_id') == 'all' ? 'selected' : '' }}>
-                                                            All Sites
-                                                        </option>
-                                                        @foreach ($paginatedLedgers as $site)
-                                                            <option value="{{ $site['site_id'] }}"
-                                                                {{ request('site_id') == $site['site_id'] ? 'selected' : '' }}>
-                                                                {{ $site['site'] }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-
-                                                    <select class="form-select form-select-sm bg-white text-black"
-                                                        style="cursor: pointer" name="date_filter" id="date_filter">
-                                                        <option value="today"
-                                                            {{ request('date_filter') === 'today' ? 'selected' : '' }}>
-                                                            Today</option>
-                                                        <option value="yesterday"
-                                                            {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>
-                                                            Yesterday</option>
-                                                        <option value="this_week"
-                                                            {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>
-                                                            This Week</option>
-                                                        <option value="this_month"
-                                                            {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>
-                                                            This Month</option>
-                                                        <option value="this_year"
-                                                            {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>
-                                                            This Year</option>
-                                                        <option value="lifetime"
-                                                            {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
-                                                            All Data
-                                                        </option>
-                                                    </select>
-
-                                                    <button type="submit">Filter</button>
-
-                                                </form>
 
 
-                                                {{-- <form class="col" action="{{ url($user . '') }}"
-                                                    method="GET" id="ledger-report">
-                                                    <select class="form-select form-select-sm bg-white text-black"
-                                                        style="cursor: pointer" name="date_filter" id="date_filter"
-                                                        onchange="document.getElementById('ledger-report').submit();">
-                                                        <option value="">Generate Report</option>
-                                                        <option value="today">
-                                                            Generate Today's Report</option>
-                                                        <option value="yesterday">
-                                                            Generate Yesterday's Report</option>
-                                                        <option value="this_week">
-                                                            Generate This Week's Report</option>
-                                                        <option value="this_month">
-                                                            Generate This Month's Report</option>
-                                                        <option value="this_year">
-                                                            Generate This Year's Report</option>
-                                                        <option value="lifetime">
-                                                            Generate Full Report</option>
-                                                    </select>
-
-                                                </form> --}}
-
-                                                <form class="col" action="{{ url($user . '/ledger/report') }}"
-                                                    method="GET">
-                                                    <input type="hidden" name="site_id"
-                                                        value="{{ request('site_id', 'all') }}">
-                                                    <input type="hidden" name="date_filter"
-                                                        value="{{ request('date_filter', 'today') }}">
-                                                    <button type="submit" class="btn btn-info text-white">
-                                                        Generate PDF Report
-                                                    </button>
-                                                </form>
                                             </div>
                                         </td>
                                     </tr>
@@ -255,7 +252,7 @@
                                     @else
                                         <tr>
                                             <td class="text-danger fw-bold text-center" colspan="8">No Records
-                                                Awailable...</td>
+                                                Available...</td>
                                         </tr>
                                     @endif
                                 </tbody>
@@ -423,6 +420,7 @@
 
     <div id="messageContainer"> </div>
 
+                    {{-- // url: '{{ route('supplier-payments.store') }}', --}}
 
     <script>
         $(document).ready(function() {
@@ -439,7 +437,6 @@
                 $('.text-danger').remove(); // Clear previous error messages
 
                 $.ajax({
-                    url: '{{ route('supplier-payments.store') }}',
                     type: 'POST',
                     data: formData,
                     contentType: false,
@@ -489,5 +486,17 @@
                 });
             });
         })
+    </script>
+
+    <script>
+        function resetForm() {
+            // Reset select fields to default values
+            document.querySelector('select[name="site_id"]').value = 'all';
+            document.querySelector('select[name="date_filter"]').value = 'today';
+            document.querySelector('select[name="supplier_id"]').value = 'all';
+
+            // Optional: If you want to actually clear the URL parameters
+            window.location.href = "{{ url($user . '/payments') }}";
+        }
     </script>
 </x-app-layout>

@@ -16,9 +16,8 @@
         </li>
 
 
-         <li class="nav-item">
-            <a class="nav-link {{ Request::is('admin/clients') ? 'active' : '' }}"
-                href="{{ url('admin/clients') }}">
+        <li class="nav-item">
+            <a class="nav-link {{ Request::is('admin/clients') ? 'active' : '' }}" href="{{ url('admin/clients') }}">
                 <i class="menu-icon fa fa-user"></i>
                 <span class="menu-title">Clients</span>
             </a>
@@ -60,8 +59,8 @@
         <li class="nav-item">
             <a class="nav-link {{ Request::is('admin/payments') ? 'active' : '' }}"
                 href="{{ url('admin/payments') }}">
-                <i class="menu-icon fa fa-indian-rupee"></i>
-                <span class="menu-title">Payments</span>
+                <i class="menu-icon fa-solid fa-book"></i>
+                <span class="menu-title">Ledger</span>
             </a>
         </li>
 
@@ -73,7 +72,7 @@
             </a>
         </li>
 
-         <li class="nav-item">
+        <li class="nav-item">
             <a class="nav-link {{ Request::is('admin/item-verification') ? 'active' : '' }}"
                 href="{{ url('admin/item-verification') }}">
                 <i class="menu-icon fa fa-indian-rupee"></i>
@@ -94,7 +93,7 @@
                 href="{{ route('trash.sites') }}">
                 <span class="menu-title">Sites</span></a>
         </li>
-         <li class="nav-item">
+        <li class="nav-item">
             <a class="nav-link {{ request()->routeIs('trash.phases') ? 'active' : '' }}"
                 href="{{ route('trash.phases') }}">
                 <span class="menu-title">Phases</span></a>

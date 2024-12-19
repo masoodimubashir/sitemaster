@@ -53,12 +53,11 @@ class DailyWager extends Model
     public function getWagerTotalAttribute()
     {
         return $this->wagerAttendances
-        ->filter(function ($attendance) {
-            return $attendance->verified_by_admin === 1;
-        })
+            ->filter(function ($attendance) {
+                return $attendance->verified_by_admin === 1;
+            })
             ->sum(function ($attendance) {
                 return $attendance->no_of_persons * $attendance->dailyWager->price_per_day;
             });
     }
-
 }

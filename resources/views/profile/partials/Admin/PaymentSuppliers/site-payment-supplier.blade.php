@@ -6,20 +6,19 @@
 
     @endphp
 
-
     @if ($user === 'admin')
-        <x-breadcrumb :names="['Dashboard', 'View' . $supplier->name, 'View ' . $supplier->name . ' Payments']"
+        <x-breadcrumb :names="['Dashboard', 'View' .$site->site_name, 'View ' . $site->name . ' Payments']"
             :urls="[
             'admin/dashboard',
-            'admin/suppliers/' . $supplier->id,
-            'admin/sites/supplier-payments/' . $supplier->id,
+            'admin/sites/'. base64_encode($site->id),
+            'admin/sites/payments/' . $site->id,
         ]" />
     @else
-        <x-breadcrumb :names="['Sites', $supplier->name, 'View ' . $supplier->name . ' Payments']"
+        <x-breadcrumb :names="['Sites', 'View ' .$site->site_name ,'View ' .$site->site_name . ' Payments']"
             :urls="[
             'user/dashboard',
-            'user/sites/' . base64_encode($supplier->id),
-            'user/sites/supplier-payments/' . $supplier->id,
+            'user/sites/' . base64_encode($site->id),
+            'user/sites/payments/' . $site->id,
         ]" />
     @endif
 
@@ -115,7 +114,7 @@
                                 @endforeach
                             @else
                                 <tr>
-                                    <td colspan="4" class="text-center text-danger fw-bold">
+                                    <td colspan="6" class="text-center text-danger fw-bold">
                                         No Records Found....
                                     </td>
                                 </tr>
@@ -128,7 +127,7 @@
                         <tbody>
 
                             <tr>
-                                <td colspan="3" class="text-center text-danger fw-bold">
+                                <td colspan="6" class="text-center text-danger fw-bold">
                                     No Records Found....
                                 </td>
                             </tr>
@@ -142,3 +141,6 @@
     </div>
 
 </x-app-layout>
+
+
+

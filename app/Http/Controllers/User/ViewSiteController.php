@@ -3,23 +3,22 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreSiteRequest;
 use App\Models\DailyWager;
 use App\Models\Item;
 use App\Models\Site;
 use App\Models\Supplier;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\UpdateSiteRequest;
+use App\Models\Client;
+use App\Models\PaymentSupplier;
 
 class ViewSiteController extends Controller
 {
 
-
-
-
     /**
      * Display the specified resource.
      */
-
 
     public function show(string $id)
     {
@@ -48,8 +47,6 @@ class ViewSiteController extends Controller
                             'supplier'
                         ])->whereHas('supplier', function ($q) {
                             $q->whereNull('deleted_at');
-                        })->whereHas('wagerAttendances', function ($attendance) {
-                            $attendance->where('verified_by_admin', 1);
                         })->latest();
                     },
                     'dailyExpenses' => function ($q) {
@@ -113,7 +110,14 @@ class ViewSiteController extends Controller
 
         $raw_material_providers = Supplier::where('is_raw_material_provider', 1)->orderBy('name')->get();
 
-        $wagers = DailyWager::orderBy('wager_name')->get();
+        $wagers = $site->phases->flatMap(function ($phase) {
+            return $phase->dailyWagers->map(function ($wager) {
+                return [
+                    'id' => $wager->id,
+                    'name' => $wager->wager_name,
+                ];
+            });
+        })->values()->toArray();
 
         $items = Item::orderBy('item_name')->get();
 
@@ -130,5 +134,109 @@ class ViewSiteController extends Controller
                 'balance'
             )
         );
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     */
+    public function create()
+    {
+        $users = User::where([
+            'role_name' => 'site_engineer'
+        ])->orderBy('id', 'desc')->get();
+
+        $clients = Client::orderBy('name')->get();
+
+        return view('profile.partials.Admin.Site.create-site', compact('clients', 'users'));
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     */
+    public function store(StoreSiteRequest $request)
+    {
+
+        $request->validated();
+
+        $user = User::find($request->user_id);
+
+        $client = Client::find($request->client_id);
+
+        $site = Site::create([
+            'site_name' => $request->site_name,
+            'service_charge' => $request->service_charge,
+            'location' => $request->location,
+            'site_owner_name' => $client->name,
+            'contact_no' => $client->number,
+            'user_id' => $request->user_id,
+            'client_id' => $request->client_id,
+            'is_on_going' => true
+        ]);
+
+
+        // $user->notify(new UserSiteNotification());
+
+        return redirect()->route('sites.index')->with('status', 'create');
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(string $id)
+    {
+        $site_id = base64_decode($id);
+
+        $site = Site::find($site_id);
+
+        $users = User::where([
+            'role_name' => 'site_engineer',
+        ])->orderBy('id', 'desc')->get();
+
+        if (!$site) {
+            return redirect()->back()->with('message', 'site not found');
+        }
+
+        return view('profile.partials.Admin.Site.edit-site', compact('site', 'users'));
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateSiteRequest $request, string $id)
+    {
+        $site_id = base64_decode($id);
+
+        $request->validated();
+
+        $site = Site::find($site_id);
+
+        $site->update($request->all());
+
+        return redirect()->route('sites.index')->with('status', 'update');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(string $id)
+    {
+
+        $site_id = base64_decode($id);
+
+        $site = Site::where('id', $site_id)->first();
+
+        $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($site) {
+            $query->where('site_id', $site->id)->first();
+        })->exists();
+
+        if ($hasPaymentRecords) {
+            return redirect()->back()->with('status', 'error');
+        }
+
+        $site->phases()->delete();
+
+        $site->delete();
+
+        return redirect()->back()->with('status', 'delete');
     }
 }

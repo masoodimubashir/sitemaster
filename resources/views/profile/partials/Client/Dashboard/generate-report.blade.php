@@ -673,7 +673,7 @@
         @endif
     @else
         <h1>
-            No site Record Awailable
+            No site Record Available
         </h1>
     @endif
 

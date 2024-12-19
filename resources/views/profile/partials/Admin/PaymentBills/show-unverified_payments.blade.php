@@ -1,7 +1,7 @@
 <x-app-layout>
 
 
-    <x-breadcrumb :names="['Site Engineer']" :urls="['admin/users']" />
+    <x-breadcrumb :names="['Verify Payments']" :urls="['admin/pay-verification']" />
 
     <div class="row">
 
@@ -15,6 +15,7 @@
                             <td class="bg-info fw-bold text-white">Date</td>
                             <td class="bg-info fw-bold text-white">Amount</td>
                             <td class="bg-info fw-bold text-white">Supplier Name</td>
+                            <td class="bg-info fw-bold text-white">Site</td>
                             <td class="bg-info fw-bold text-white">Site Owner Name</td>
                             <td class="bg-info fw-bold text-white">Action</td>
 
@@ -26,6 +27,7 @@
                                 <td>{{ $pay->created_at }}</td>
                                 <td>{{ $pay->amount }}</td>
                                 <td>{{ $pay->supplier->name }}</td>
+                                <td>{{ $pay->site->site_name }}</td>
                                 <td>{{ $pay->site->site_owner_name }}</td>
                                 <td>
 
@@ -55,7 +57,7 @@
                     <thead></thead>
                     <tbody>
                         <tr>
-                            <td class="text-center text-danger fw-bold">No Records Awailable Yet</td>
+                            <td class="text-center text-danger fw-bold">No Records Available Yet</td>
                         </tr>
                     </tbody>
                 </table>

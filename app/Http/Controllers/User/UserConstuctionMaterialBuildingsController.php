@@ -23,7 +23,7 @@ class UserConstuctionMaterialBuildingsController extends Controller
 
 
             $validator = Validator::make($request->all(), [
-                'image' => 'sometimes|mimes:png,jpg,webp|max:1024',
+                'image' => 'required|mimes:png,jpg,webp|max:1024',
                 'amount' => 'required|numeric|max:1000000',
                 'item_name' => 'required|string',
                 'supplier_id' => 'required|exists:suppliers,id',

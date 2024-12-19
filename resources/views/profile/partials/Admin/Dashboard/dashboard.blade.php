@@ -135,20 +135,20 @@
                 <div class="col-lg-4 d-flex flex-column">
                     <div class="row flex-grow">
                         <div class="col-md-6 col-lg-12 grid-margin stretch-card">
-                            <div class="card bg-primary card-rounded">
+                            <div class="card card-rounded">
                                 <div class="card-body pb-0">
 
                                     <div class="row">
 
-                                        <div class="text-white row text-center">
+                                        <div class="text-black row text-center">
 
-                                            <h4 class="card-title card-title-dash text-white mb-4 col-6">
+                                            <h4 class="card-title card-title-dash  mb-4 col-6">
                                                 Monthy Payments
                                             </h4>
 
                                             <div class="col-6">
-                                                <p class="status-summary-ight-white mb-1">
-                                                    Total Amount : {{ Number::currency($paid) }}
+                                                <p class=" mb-1">
+                                                    Total Amount : {{ Number::currency($paid, 'INR') }}
                                                 </p>
                                             </div>
 
@@ -257,7 +257,7 @@
                                 <div class="d-flex align-items-center justify-content-between mb-3">
                                     <h4 class="card-title card-title-dash">Suppliers</h4>
                                     <a class="btn btn-info btn-sm text-white mb-0 me-0"
-                                        href="{{ route('suppliers.create') }}">
+                                        href="{{ url('/admin/suppliers/create') }}">
                                         <i class="mdi mdi-account-plus me-1"></i>
                                     </a>
                                 </div>
@@ -302,7 +302,7 @@
                                     <div class="list align-items-center pt-3">
                                         <div class="wrapper w-100">
                                             <p class="mb-0">
-                                                <a href="{{ route('suppliers.index') }}"
+                                                <a href="{{ url('/admin/suppliers') }}"
                                                     class="fw-bold text-primary">Show all
                                                     <i class="mdi mdi-arrow-right ms-2"></i></a>
                                             </p>
@@ -318,7 +318,7 @@
                                     <div class="d-flex align-items-center justify-content-between mb-3">
                                         <h4 class="card-title card-title-dash">Clients</h4>
                                         <a class="btn btn-info btn-sm text-white mb-0 me-0"
-                                            href="{{ route('clients.create') }}">
+                                            href="{{ url('/admin/clients/create') }}">
                                             <i class="mdi mdi-account-plus me-1"></i>
                                         </a>
                                     </div>
@@ -344,7 +344,7 @@
                                     <div class="list align-items-center pt-3">
                                         <div class="wrapper w-100">
                                             <p class="mb-0">
-                                                <a href="{{ route('clients.index') }}"
+                                                <a href="{{ url('/admin/clients') }}"
                                                     class="fw-bold text-primary">Show all
                                                     <i class="mdi mdi-arrow-right ms-2"></i></a>
                                             </p>

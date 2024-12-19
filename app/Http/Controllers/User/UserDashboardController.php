@@ -3,8 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use Illuminate\Http\Request;
+
 
 class UserDashboardController extends Controller
 {
@@ -16,4 +15,7 @@ class UserDashboardController extends Controller
 
         return view('profile.User.Site.site', compact('sites'));
     }
+
+
+
 }

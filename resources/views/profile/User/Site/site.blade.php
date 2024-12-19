@@ -28,6 +28,15 @@
 
             <div class="card-body">
 
+                <div class="d-flex justify-content-end">
+
+                    <a class="btn btn-success btn-sm" href="{{ url('user/sites/create') }}">
+                        <i class="fa-solid fa-building mr-2"></i>
+                        Create Site
+                    </a>
+
+                </div>
+
                 <div class="table-responsive mt-4">
 
                     @if (count($sites))
@@ -64,7 +73,7 @@
 
                                         <td title=" View {{ $site->site_name }} details...">
 
-                                            <a href="{{ route('user.sites.show', [base64_encode($site->id)]) }}"
+                                            <a href="{{ url('user/sites/' . base64_encode($site->id)) }}"
                                                 class="fw-bold link-offset-2 link-underline link-underline-opacity-0">
                                                 {{ ucfirst($site->site_name) }}
                                             </a>

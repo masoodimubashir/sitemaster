@@ -16,11 +16,13 @@ class UserLedgerController extends Controller
     public function __invoke(Request $request, string $id, DataService $dataService)
     {
 
-        $dateFilter = $request->get('date_filter', 'today');
+        $dateFilter = $request->get('date_filter', 'lifetime');
+        $site_id = $request->input('site_id', $id);
+        $supplier_id = $request->input('supplier_id', 'all');
 
         $site = Site::find($id);
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter);
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id);
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
@@ -41,15 +43,17 @@ class UserLedgerController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
+        $suppliers = $paginatedLedgers->unique('supplier_id');
+
         return view("profile.partials.Admin.Ledgers.site-ledger",
             compact(
                 'paginatedLedgers',
                 'total_paid',
                 'total_due',
                 'total_balance',
-                'site'
+                'site',
+                'suppliers'
             )
         );
     }
-
 }

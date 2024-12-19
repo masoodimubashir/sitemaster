@@ -5,7 +5,7 @@
     @endphp
 
 
-    <x-breadcrumb :names="['Items', 'Edit ' . $item->item_name]" :urls="[$user . '/items', $user . '/items/create']" />
+    <x-breadcrumb :names="['Items', 'Edit ' . $item->item_name]" :urls="[$user . '/items', $user . '/items/' . $item->id . '/edit']" />
 
     <div class="row">
 

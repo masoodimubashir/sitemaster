@@ -21,6 +21,7 @@ class DailyWagerController extends Controller
     {
 
         $daily_wagers = DailyWager::latest()->paginate(10);
+
         return view('profile.partials.Admin.DailyWager.daily-wager', compact('daily_wagers'));
     }
 
@@ -30,6 +31,7 @@ class DailyWagerController extends Controller
     public function create()
     {
         $sites = Site::orderBy('site_name')->get();
+
         return view('profile.partials.Admin.DailyWager.create-daily-wager', compact('sites'));
     }
 
@@ -40,7 +42,7 @@ class DailyWagerController extends Controller
     public function store(Request $request)
     {
         if ($request->ajax()) {
-            // Validation rules
+            
             $validator = Validator::make($request->all(), [
                 'price_per_day' => 'required|numeric|max:9999999999',
                 'wager_name' => 'required|string|max:255',

@@ -23,12 +23,10 @@ class DashboardController extends Controller
     {
 
         //  Get Notification Of the Authenticated User
-
         $notifications = auth()->user()->unreadNotifications;
 
-
         //  Get All The Data
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData('lifetime');
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData('lifetime', 'all', 'all');
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 

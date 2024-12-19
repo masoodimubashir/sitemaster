@@ -42,13 +42,15 @@ class WagerAttendanceController extends Controller
     {
         if ($request->ajax()) {
 
+            dd($request->all());
+
+
             $validator = Validator::make($request->all(), [
                 'no_of_persons' => 'required|integer|min:1',
                 'daily_wager_id' => 'sometimes|exists:daily_wagers,id',
                 'date' => 'sometimes',
                 'phase_id' => 'required|exists:phases,id'
             ]);
-
 
             if ($validator->fails()) {
 
@@ -69,8 +71,9 @@ class WagerAttendanceController extends Controller
                 $daily_wager_attendance->save();
 
                 return response()->json(['message' => 'Attendance recorded successfully.'], 201);
+
             } catch (\Exception $e) {
-                // Handle any unexpected errors
+                
                 return response()->json(['error' => 'An unexpected error occurred: ' . $e->getMessage()], 500);
             }
         }

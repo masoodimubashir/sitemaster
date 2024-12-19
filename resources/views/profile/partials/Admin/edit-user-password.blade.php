@@ -52,14 +52,14 @@
                         @method('put')
 
                         <div class="form-group">
-                            <input type="password" name="password" />
+                            <input type="text" name="password" />
                             <label for="input" class="control-label">New Password</label><i class="bar"></i>
                             <x-input-error :messages="$errors->updatePassword->get('password')" class="mt-2" />
 
 
                         </div>
                         <div class="form-group">
-                            <input type="password" name="password_confirmation" />
+                            <input type="text" name="password_confirmation" />
                             <label for="input" class="control-label">Confirm Password</label><i class="bar"></i>
                             <x-input-error :messages="$errors->updatePassword->get('password_confirmation')" class="mt-2" />
                         </div>

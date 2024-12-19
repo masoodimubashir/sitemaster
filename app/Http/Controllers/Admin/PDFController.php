@@ -318,9 +318,11 @@ class PDFController extends Controller
 
         $dateFilter = $request->get('date_filter', 'today');
         $site_id = $request->input('site_id', 'all');
+        $supplier_id = $request->input('supplier_id', 'all');
 
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id);
+
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id);
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 

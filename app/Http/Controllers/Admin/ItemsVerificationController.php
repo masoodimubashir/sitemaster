@@ -11,6 +11,7 @@ use App\Models\WagerAttendance;
 use App\Services\DataService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 
 class ItemsVerificationController extends Controller
 {
@@ -27,6 +28,10 @@ class ItemsVerificationController extends Controller
             })
             ->whereHas('phase.site', function ($site) {
                 $site->whereNull('deleted_at');
+            })->when(request('site_id') && request('site_id') !== 'all', function ($query) {
+                return $query->whereHas('phase.site', function ($siteQuery) {
+                    $siteQuery->where('id', request('site_id'));
+                });
             })
             ->latest()
             ->get();
@@ -51,9 +56,15 @@ class ItemsVerificationController extends Controller
             })
             ->whereHas('phase.site', function ($site) {
                 $site->whereNull('deleted_at');
+            })->when(request('site_id') && request('site_id') !== 'all', function ($query) {
+                return $query->whereHas('phase.site', function ($siteQuery) {
+                    $siteQuery->where('id', request('site_id'));
+                });
             })
             ->latest()
             ->get();
+
+
 
         $expenses = DailyExpenses::with([
             'phase' => function ($phase) {
@@ -69,39 +80,50 @@ class ItemsVerificationController extends Controller
             })
             ->whereHas('phase.site', function ($site) {
                 $site->whereNull('deleted_at');
+            })->when(request('site_id') && request('site_id') !== 'all', function ($query) {
+                return $query->whereHas('phase.site', function ($siteQuery) {
+                    $siteQuery->where('id', request('site_id'));
+                });
             })
             ->latest()
             ->get();
 
-        $wagers = DailyWager::with([
-            'phase' => function ($phase) {
-                $phase->with([
-                    'site' => function ($site) {
-                        $site->withoutTrashed();
-                    },
-                    'wagerAttendances'
-                ])->withoutTrashed();
-            },
-            'supplier' => function ($supplier) {
-                $supplier->withoutTrashed();
-            },
-        ])
-            ->whereHas('phase', function ($phase) {
-                $phase->whereNull('deleted_at');
-            })
-            ->whereHas('supplier', function ($supplier) {
-                $supplier->whereNull('deleted_at');
-            })
-            ->whereHas('phase.site', function ($site) {
-                $site->whereNull('deleted_at');
+        // $wagers = DailyWager::with([
+        //     'phase' => function ($phase) {
+        //         $phase->with([
+        //             'site' => function ($site) {
+        //                 $site->withoutTrashed();
+        //             },
+        //             'wagerAttendances'
+        //         ])->withoutTrashed();
+        //     },
+        //     'supplier' => function ($supplier) {
+        //         $supplier->withoutTrashed();
+        //     },
+        // ])
+        //     ->whereHas('phase', function ($phase) {
+        //         $phase->whereNull('deleted_at');
+        //     })
+        //     ->whereHas('supplier', function ($supplier) {
+        //         $supplier->whereNull('deleted_at');
+        //     })
+        //     ->whereHas('phase.site', function ($site) {
+        //         $site->whereNull('deleted_at');
+        //     })->when(request('supplier_id') && request('supplier_id') != 'all', function ($phaseuery) {
+        //         return $phaseuery->where('supplier_id', request('supplier_id'));
+        //     })
+        //     ->latest()
+        //     ->get();
+
+
+        $wager_attendance = WagerAttendance::with('dailyWager')
+            ->when(request('site_id') && request('site_id') !== 'all', function ($query) {
+                return $query->whereHas('phase.site', function ($siteQuery) {
+                    $siteQuery->where('id', request('site_id'));
+                });
             })
             ->latest()
             ->get();
-
-
-        $wager_attendance = WagerAttendance::with('dailyWager')->latest()->get();
-
-
 
 
         $data = collect();
@@ -197,8 +219,11 @@ class ItemsVerificationController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
+        $sites = $paginatedData->unique('site_id');
+
         return view("profile.partials.Admin.Site.show_unverified_items", compact(
             'paginatedData',
+            'sites',
         ));
     }
 

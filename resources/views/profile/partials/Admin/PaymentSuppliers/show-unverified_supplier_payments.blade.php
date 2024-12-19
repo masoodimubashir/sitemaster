@@ -59,7 +59,7 @@
                     <thead></thead>
                     <tbody>
                         <tr>
-                            <td class="text-center text-danger fw-bold">No Records Awailable Yet</td>
+                            <td class="text-center text-danger fw-bold">No Records Available Yet</td>
                         </tr>
                     </tbody>
                 </table>

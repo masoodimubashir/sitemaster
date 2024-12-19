@@ -143,6 +143,23 @@
         }
     </style>
 
+
+    <style>
+        /* Active tab styling */
+        .nav-pills .nav-link {
+            background: white;
+            /* Default inactive color */
+            color: black;
+            transition: background-color 0.3s ease;
+        }
+
+        .nav-pills .nav-link.active {
+            background-color: #51B1E1;
+            /* Bright blue for active tab */
+            color: white;
+        }
+    </style>
+
     <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['client/dashboard', 'client/dashboard/' . base64_encode($site->id)]" />
 
     {{-- Action Buttons Section --}}
@@ -150,13 +167,13 @@
         <div class="col-12">
             <div class="d-flex flex-wrap justify-content-start gap-2">
 
-                <a href="{{ route('supplier-payments.show', [$site->id]) }}" class="btn btn-info px-4">
+                {{-- <a href="{{ route('supplier-payments.show', [$site->id]) }}" class="btn btn-info px-4">
                     <i class="fas fa-list me-2"></i>View Payments
-                </a>
+                </a> --}}
 
-                <a href="{{ url('client/site/ledger', $site->id) }}" class="btn btn-info px-4">
+                {{-- <a href="{{ url('client/site/ledger', $site->id) }}" class="btn btn-info px-4">
                     <i class="fas fa-book me-2"></i>View Ledger
-                </a>
+                </a> --}}
 
                 <a href="{{ url('client/download-site/report', ['id' => base64_encode($site->id)]) }}"
                     class="btn btn-info px-4">
@@ -289,18 +306,14 @@
             <div class="card-body mt-3">
 
                 <ul class="nav nav-pills mb-4">
-
                     @foreach ($site->phases as $phase_key => $phase)
                         <li class="nav-item">
-
-                            <a class="btn bg-white  custom-tab {{ $phase_key === 0 ? 'active' : '' }}"
-                                href="#{{ $phase->id }}" data-bs-toggle="tab">
+                            <a class="nav-link {{ $phase_key === 0 ? 'active' : '' }}" href="#{{ $phase->id }}"
+                                data-bs-toggle="tab" onclick="setActiveTab('{{ $phase->id }}')">
                                 {{ $phase->phase_name }}
                             </a>
-
                         </li>
                     @endforeach
-
                 </ul>
             </div>
 
@@ -886,8 +899,7 @@
 
                                                     @if (count($phase->wagerAttendances))
                                                         @foreach ($phase->wagerAttendances as $wager_attendance)
-
-                                                        <tr aria-colspan="4">
+                                                            <tr aria-colspan="4">
 
 
                                                                 <td>{{ $wager_attendance->created_at->format('d-M-Y') }}
@@ -966,8 +978,6 @@
 
 
                     </div>
-
-
                 @endforeach
 
             </div>
@@ -1106,6 +1116,34 @@
         });
     </script> --}}
 
+    <script>
+        function setActiveTab(tabId) {
+            // Remove active class from all tabs
+            document.querySelectorAll('.nav-link').forEach(tab => {
+                tab.classList.remove('active');
+            });
 
+            // Add active class to the clicked tab
+            const activeTab = document.querySelector(`a[href="#${tabId}"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+
+            // Store the active tab in localStorage
+            localStorage.setItem('activeTab', tabId);
+        }
+
+        // Restore the active tab on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const activeTab = localStorage.getItem('activeTab');
+            if (activeTab) {
+                // Trigger click on the saved tab to restore its state
+                const tabElement = document.querySelector(`a[href="#${activeTab}"]`);
+                if (tabElement) {
+                    tabElement.classList.add('active');
+                }
+            }
+        });
+    </script>
 
 </x-app-layout>

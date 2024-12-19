@@ -84,7 +84,7 @@
                                             <i class="fa-regular fa-pen-to-square text-xl bg-white rounded-full"></i>
                                         </a>
                                         <form id="delete-form-{{ $supplier->id }}"
-                                            action="{{ url($user . '/suppliers/destroy', ['supplier' => $supplier->id]) }}"
+                                            action="{{ url($user . '/suppliers/' . $supplier->id) }}"
                                             method="POST" style="display: none;">
                                             @csrf
                                             @method('DELETE')

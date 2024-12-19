@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\ItemsVerificationController;
 use App\Http\Controllers\Admin\PaymentBillsController;
 use App\Http\Controllers\Admin\PaymentsController;
+use App\Http\Controllers\Admin\PaymentSiteController;
 use App\Http\Controllers\Admin\PaymentSupplierController;
 use App\Http\Controllers\Admin\PDFController;
 use App\Http\Controllers\Admin\PendingPaymentsVerifications;
@@ -128,7 +129,8 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     Route::resource('/daily-wager-attendance', WagerAttendanceController::class);
 
-    Route::resource('sites/supplier-payments', PaymentSupplierController::class);
+    Route::resource('supplier/payments', PaymentSupplierController::class);
+    Route::get('sites/payments/{id}', PaymentSiteController::class);
 
     // Items Controller
     Route::resource('/items', ItemController::class);
@@ -184,7 +186,9 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     // Route::get('/markread', [MarkNotificationAsReadController::class, 'markNotificationAsRead'])->name('user.markAsRead');
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
 
-    Route::get('/sites/{id}', [ViewSiteController::class, 'show'])->name('user.sites.show');
+    // Site Controllers
+    Route::get('/sites/create', [ViewSiteController::class, 'create']);
+    Route::get('/sites/{id}', [ViewSiteController::class, 'show']);
 
     // Phase Controller
     Route::resource('phase', UserPhaseController::class);
@@ -195,10 +199,8 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     // Client Controller
     Route::resource('/clients', ClientController::class);
 
-
     // Items Controller
     Route::resource('/items', ItemController::class);
-
 
     // Construction Material Routes
     Route::post('/construction-material-billings', [UserConstuctionMaterialBuildingsController::class, 'store']);
@@ -232,8 +234,8 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::get('/site/ledger/{id}', UserLedgerController::class);
 
     // Site Payments
-    Route::resource('sites/supplier-payments', PaymentSupplierController::class);
-
+    Route::resource('supplier/payments', PaymentSupplierController::class);
+    Route::get('sites/payments/{id}', PaymentSiteController::class);
 
     // View Supplier Ledger
     Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');
@@ -248,7 +250,6 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
         ->name('user.viewAllNotifications');
     Route::get('/markAsRead/{id}', [MarkNotificationAsReadController::class, 'markAsRead'])
         ->name('user.markAsRead');
-
 
     // Generate PDF Routes
     Route::get('/download-site/report/{id}', [PDFController::class, 'showSitePdf']);

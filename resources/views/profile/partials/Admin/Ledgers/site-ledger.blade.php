@@ -10,10 +10,13 @@
     <x-breadcrumb :names="['Sites', $site->site_name, ' Ledger']" :urls="[$user . '/sites', $user . '/sites/' . base64_encode($site->id), $user . '/site/ledger/' . $site->id]" />
 
     <div class="row">
+
         <div class="col-sm-12">
 
             <div class="table-responsive mt-4">
+
                 <table class="table table-bordered">
+
                     <thead>
                         <tr>
                             <td>
@@ -55,37 +58,32 @@
 
 
                             <td colspan="4" style="background: #F4F5F7; border:none">
-                                <div class="row">
 
+                                <form class="d-flex flex-column flex-md-row gap-2 w-100"
+                                    action="{{ url($user . '/site/ledger/' . $site->id) }}" method="GET"
+                                    id="filterForm">
 
-                                    <form class="col" action="{{ url($user . '/site/ledger/' . $site->id) }}"
-                                        method="GET" id="filterForm">
-                                        <select class="form-select form-select-sm bg-white text-dark" name="date_filter"
-                                            id="date_filter" onchange="document.getElementById('filterForm').submit();"
-                                            style="cursor: pointer;">
-                                            <option value="today"
-                                                {{ request('date_filter') === 'today' ? 'selected' : '' }}>
-                                                Today</option>
-                                            <option value="yesterday"
-                                                {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>
-                                                Yesterday</option>
-                                            <option value="this_week"
-                                                {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>
-                                                This Week</option>
-                                            <option value="this_month"
-                                                {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>
-                                                This Month</option>
-                                            <option value="this_year"
-                                                {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>
-                                                This Year</option>
-                                            <option value="lifetime"
-                                                {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
-                                                All Data</option>
-                                        </select>
+                                    <select style="cursor: pointer"
+                                        class="bg-white text-black form-select form-select-sm mt-2" name="supplier_id"
+                                        onchange="document.getElementById('filterForm').submit();">
+                                        <option value="all" {{ request('supplier_id') == 'all' ? 'selected' : '' }}>
+                                            All Suppliers
+                                        </option>
+                                        @foreach ($suppliers as $supplier)
+                                            <option value="{{ $supplier['supplier_id'] }}"
+                                                {{ request('supplier_id') == $supplier['supplier_id'] ? 'selected' : '' }}>
+                                                {{ $supplier['supplier'] }}
+                                            </option>
+                                        @endforeach
+                                    </select>
 
-                                    </form>
+                                    <div class="d-flex gap-2">
+                                        <button type="button" class="btn btn-success text-white mt-2"
+                                            onclick="resetForm()">Reset</button>
+                                    </div>
 
-                                </div>
+                                </form>
+
                             </td>
                         </tr>
                         <tr>
@@ -123,7 +121,7 @@
                             @endforeach
                         @else
                             <tr>
-                                <td class="text-danger fw-bold text-center" colspan="8">No Records Awailable...</td>
+                                <td class="text-danger fw-bold text-center" colspan="8">No Records Available...</td>
                             </tr>
                         @endif
 
@@ -139,5 +137,14 @@
             </div>
 
         </div>
+
     </div>
+
+    <script>
+        function resetForm() {
+            document.querySelector('select[name="supplier_id"]').value = 'all';
+            window.location.href = "{{ url($user . '/site/ledger/' . $site->id) }}";
+        }
+    </script>
+
 </x-app-layout>

@@ -8,6 +8,8 @@ use App\Models\DailyExpenses;
 use App\Models\DailyWager;
 use App\Models\PaymentSupplier;
 use App\Models\SquareFootageBill;
+use App\Models\Supplier;
+use Illuminate\Support\Facades\Log;
 
 class DataService
 {
@@ -18,7 +20,7 @@ class DataService
      */
     public function __construct() {}
 
-    public function getData($dateFilter, $site_id)
+    public function getData($dateFilter, $site_id, $supplier_id)
     {
 
         $dateRange = $this->filterByDate($dateFilter);
@@ -42,13 +44,16 @@ class DataService
                 if ($dateFilter !== 'lifetime' && $dateRange) {
                     return $query->whereBetween('created_at', $dateRange);
                 }
-            })->when(!$site_id == 'all', function ($query) use ($site_id) {
-                return $query->whereHas('site', function ($siteQuery) use ($site_id) {
-                    $siteQuery->where('id', $site_id);
-                });
+            })
+            ->when($site_id && $site_id !== 'all', function ($query) use ($site_id) {
+                return $query->where('site_id', $site_id);
+            })
+            ->when($supplier_id && $supplier_id != 'all', function ($query) use ($supplier_id) {
+                return $query->where('supplier_id', $supplier_id);
             })
             ->latest()
             ->get();
+
 
         $raw_materials = ConstructionMaterialBilling::with(['phase.site', 'supplier'])
             ->whereHas('phase', function ($phase) {
@@ -71,6 +76,8 @@ class DataService
                         $siteQuery->where('id', $site_id);
                     });
                 });
+            })->when($supplier_id && $supplier_id != 'all', function ($query) use ($supplier_id) {
+                return $query->where('supplier_id', $supplier_id);
             })
             ->latest()
             ->get();
@@ -108,6 +115,8 @@ class DataService
                         $siteQuery->where('id', $site_id);
                     });
                 });
+            })->when($supplier_id && $supplier_id != 'all', function ($query) use ($supplier_id) {
+                return $query->where('supplier_id', $supplier_id);
             })
             ->latest()
             ->get();
@@ -177,6 +186,8 @@ class DataService
                         $siteQuery->where('id', $site_id);
                     });
                 });
+            })->when($supplier_id && $supplier_id != 'all', function ($query) use ($supplier_id) {
+                return $query->where('supplier_id', $supplier_id);
             })
             ->latest()
             ->get();

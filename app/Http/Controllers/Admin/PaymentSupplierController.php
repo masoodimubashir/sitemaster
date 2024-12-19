@@ -84,7 +84,7 @@ class PaymentSupplierController extends Controller
 
         $payments = $supplier->paymentSuppliers()->where('verified_by_admin', 1)->paginate(10);
 
-        return view('profile.partials.Admin.PaymentSuppliers.site-payment-supplier', compact('payments', 'supplier'));
+        return view('profile.partials.Admin.PaymentSuppliers.supplier-payment', compact('payments', 'supplier'));
     }
 
     /**
