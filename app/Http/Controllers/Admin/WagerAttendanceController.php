@@ -42,7 +42,6 @@ class WagerAttendanceController extends Controller
     {
         if ($request->ajax()) {
 
-            dd($request->all());
 
 
             $validator = Validator::make($request->all(), [
