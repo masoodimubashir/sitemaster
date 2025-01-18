@@ -25,8 +25,9 @@ use App\Http\Controllers\Admin\TrashController;
 use App\Http\Controllers\Admin\UnverifiedSupplierPayments;
 use App\Http\Controllers\Admin\UpdateOnGoingController;
 use App\Http\Controllers\Admin\WagerAttendanceController;
-use App\Http\Controllers\Admin\WorkforceController;
+use App\Http\Controllers\AttendanceSheetController;
 use App\Http\Controllers\Client\ClientDashboardController;
+use App\Http\Controllers\Client\ClientLedgerController;
 use App\Http\Controllers\Client\ClientLogoutController;
 use App\Http\Controllers\Client\GenerateReportController;
 use App\Http\Controllers\ClientAuthController;
@@ -43,6 +44,9 @@ use App\Http\Controllers\User\UserSquareFootageBillsController;
 use App\Http\Controllers\User\UserWagerAttendanceController;
 use App\Http\Controllers\User\ViewSiteController;
 use App\Http\Controllers\UserSupplierController;
+use App\Http\Controllers\WagersController;
+use App\Http\Controllers\WagersSheetController;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Route;
 
 
@@ -68,6 +72,7 @@ Route::middleware(['auth:clients', 'isClient'])->prefix('client')->group(functio
     Route::resource('dashboard', ClientDashboardController::class);
 
     Route::post('/logout', [ClientLogoutController::class, 'logout'])->name('client.logout');
+    Route::get('/ledger', [ClientLedgerController::class, 'index']);
 
     Route::get('/generate-report/{id}', GenerateReportController::class)->name('generate-report');
     Route::get('/download-site/report/{id}', [PDFController::class, 'showSitePdf']);
@@ -154,7 +159,6 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::get('/trashed-{model_name}/{id}', [TrashController::class, 'restore'])->name('trash.restore');
 
 
-    // Generating PDF'S Here
     // DownLoad PDF Controller
     Route::get('/download-site/report/{id}', [PDFController::class, 'showSitePdf']);
     Route::get('/download-phase/report/{id}', [PDFController::class, 'showPhasePdf']);
@@ -177,6 +181,8 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     // Verification Controller For Items
     Route::get('/item-verification', [ItemsVerificationController::class, 'index']);
     Route::get('/verify-items', [ItemsVerificationController::class, 'verifyItems']);
+
+    Route::get('wager-attendance', [AttendanceSheetController::class, 'index']);
 });
 
 
@@ -187,6 +193,8 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
 
     // Site Controllers
+
+
     Route::get('/sites/create', [ViewSiteController::class, 'create']);
     Route::get('/sites/{id}', [ViewSiteController::class, 'show']);
 
@@ -257,8 +265,19 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::get('/supplier-payment/report/{id}', [PDFController::class, 'showSupplierPaymentPdf']);
     Route::get('/site-payment/report/{id}', [PDFController::class, 'showSitePaymentPdf']);
     Route::get('/ledger/report', [PDFController::class, 'showLedgerPdf']);
+
+    
+    Route::get('wager-attendance', [AttendanceSheetController::class, 'index']);
 });
 
+
+
+
+// Routes accessible to both admin and site engineers
+Route::middleware(['isAdmin', 'isUser'])->group(function () {
+    
+
+});
 
 
 require __DIR__ . '/auth.php';

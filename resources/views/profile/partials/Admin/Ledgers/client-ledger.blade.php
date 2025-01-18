@@ -13,7 +13,7 @@
         }
     </style>
 
-    <x-breadcrumb :names="['Ledger']" :urls="[$user . '/payments']"></x-breadcrumb>
+    <x-breadcrumb :names="['Ledger']" :urls="['/client/ledger']"></x-breadcrumb>
 
     <div class="row">
 
@@ -45,7 +45,7 @@
                             <div class="col-12 col-md-10 d-flex flex-column flex-md-row gap-2 align-items-center">
 
                                 <form class="d-flex flex-column flex-md-row gap-2 w-100"
-                                    action="{{ url($user . '/payments') }}" method="GET" id="filterForm">
+                                    action="{{ url('/client/ledger') }}" method="GET" id="filterForm">
 
                                     <select style="cursor: pointer"
                                         class="bg-white text-black form-select form-select-sm" name="site_id"
@@ -124,7 +124,7 @@
 
                             <div
                                 class="col-12 col-md-2 d-flex justify-content-start justify-content-md-end align-items-center">
-                                <form action="{{ url($user . '/ledger/report') }}" method="GET">
+                                <form action="{{ url('/client/ledger') }}" method="GET">
                                     <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
                                     <input type="hidden" name="date_filter"
                                         value="{{ request('date_filter', 'today') }}">
@@ -524,7 +524,7 @@
             document.querySelector('select[name="supplier_id"]').value = 'all';
             document.querySelector('select[name="wager_id"]').value = 'all';
             // Optional: If you want to actually clear the URL parameters
-            window.location.href = "{{ url($user . '/payments') }}";
+            window.location.href = "{{ url('/client/ledger') }}";
         }
     </script>
 </x-app-layout>

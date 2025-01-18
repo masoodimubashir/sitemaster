@@ -661,7 +661,7 @@ class PDF extends Fpdf
         }
     }
 
-    function ledgerTable($ledgers, $total_paid, $total_due, $total_balance)
+    function ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance)
     {
 
         $this->SetMargins(3, 0, 3);
@@ -685,6 +685,11 @@ class PDF extends Fpdf
         $this->Cell($this->width * 2.18, $this->height, $total_paid, 1, 0,);
 
         $this->Ln();
+
+        $this->Cell($this->width * 2.18, $this->height, 'Effective Balance', 1, 0,);
+        $this->Cell($this->width * 2.18, $this->height, $effective_balance, 1, 0,);
+
+        $this->Ln();
         $this->Ln();
 
         $this->SetFont('', '', 8);
@@ -694,8 +699,8 @@ class PDF extends Fpdf
         $this->Cell($this->width / 1.15, $this->height, 'Supplier', 1, 0,);
         $this->Cell($this->width / 2.5, $this->height, 'Phase', 1, 0,);
         $this->Cell($this->width / 2, $this->height, 'Site', 1, 0,);
-        $this->Cell($this->width / 1.15, $this->height, 'Type', 1, 0,);
-        $this->Cell($this->width / 2.9, $this->height, 'Information', 1, 0,);
+        $this->Cell($this->width / 1.7, $this->height, 'Type', 1, 0,);
+        $this->Cell($this->width / 1.6, $this->height, 'Information', 1, 0,);
         $this->Cell($this->width / 2.5, $this->height, 'Debit', 1, 0,);
         $this->Cell($this->width / 3.2, $this->height, 'Credit', 1, 0,);
         $this->Ln();
@@ -706,8 +711,8 @@ class PDF extends Fpdf
             $this->Cell($this->width / 1.15, $this->height,  ucwords($ledger['supplier']), 1, 0,);
             $this->Cell($this->width / 2.5, $this->height, ucwords($ledger['phase']), 1, 0,);
             $this->Cell($this->width / 2, $this->height, ucwords($ledger['site']), 1, 0,);
-            $this->Cell($this->width / 1.15, $this->height, $ledger['category'], 1, 0,);
-            $this->Cell($this->width / 2.9, $this->height, ucwords($ledger['description']), 1, 0,);
+            $this->Cell($this->width / 1.7, $this->height, $ledger['category'], 1, 0,);
+            $this->Cell($this->width / 1.6, $this->height, ucwords($ledger['description']), 1, 0,);
             $this->Cell($this->width / 2.5, $this->height, $ledger['debit'], 1, 0,);
             $this->Cell($this->width / 3.2, $this->height, $ledger['credit'], 1, 0,);
             $this->Ln();

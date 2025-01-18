@@ -69,7 +69,7 @@ class   SiteController extends Controller
 
         return redirect()->route('sites.index')->with('status', 'create');
     }
-
+    
     /**
      * Display the specified resource.
      */
@@ -79,45 +79,37 @@ class   SiteController extends Controller
         $site_id = base64_decode($id);
 
         $site = Site::with([
-            'phases' => function ($phase) {
-                $phase->with([
-                    'constructionMaterialBillings' => function ($q) {
-                        $q->with('supplier')
-                            ->whereHas('supplier', function ($q) {
-                                $q->whereNull('deleted_at');
-                            })->latest();
-                    },
-                    'squareFootageBills' => function ($q) {
-                        $q->with('supplier')->whereHas('supplier', function ($q) {
-                            $q->whereNull('deleted_at');
-                        })->latest();
-                    },
-                    'dailyWagers' => function ($q) {
-                        $q->with([
-                            'wagerAttendances',
-                            'supplier'
-                        ])->whereHas('supplier', function ($q) {
-                            $q->whereNull('deleted_at');
-                        })->latest();
-                    },
-                    'dailyExpenses' => function ($q) {
-                        $q->latest();
-                    },
-                    'wagerAttendances' => function ($q) {
-                        $q->with(['dailyWager.supplier'])
-                            ->whereHas('dailyWager.supplier', function ($q) {
-                                $q->whereNull('deleted_at');
-                            })->latest();
-                    },
-                ],);
+            'phases.constructionMaterialBillings' => function($query) {
+                $query->with('supplier')
+                      ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+                      ->latest();
             },
-            'paymeentSuppliers' => function ($pay) {
-                $pay->where('verified_by_admin', 1);
+            'phases.squareFootageBills' => function($query) {
+                $query->with('supplier')
+                      ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+                      ->latest();
+            },
+            'phases.dailyWagers' => function($query) {
+                $query->with(['wagerAttendances', 'supplier'])
+                      ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+                      ->latest();
+            },
+            'phases.dailyExpenses' => function($query) {
+                $query->latest();
+            },
+            'phases.wagerAttendances' => function($query) {
+                $query->with('dailyWager.supplier')
+                      ->whereHas('dailyWager.supplier', fn($q) => $q->whereNull('deleted_at'))
+                      ->latest();
+            },
+            'paymeentSuppliers' => function($query) {
+                $query->where('verified_by_admin', 1);
             }
         ])->findOrFail($site_id);
 
-        $totalPaymentSuppliersAmount = $site->paymeentSuppliers()->sum('amount');
-
+        $totalPaymentSuppliersAmount = $site->paymeentSuppliers()
+            ->where('verified_by_admin', 1)
+            ->sum('amount');
         $grand_total_amount = 0;
 
         foreach ($site->phases as $phase) {

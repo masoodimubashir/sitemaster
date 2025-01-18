@@ -409,7 +409,7 @@
                 $('.text-danger').remove();
 
                 $.ajax({
-                    url: '{{ url($user . '/sites/supplier-payments') }}',
+                    url: '{{ url($user . '/supplier/payments') }}',
                     type: 'POST',
                     data: formData,
                     contentType: false,
@@ -432,6 +432,9 @@
                     },
                     error: function(response) {
                         if (response.status === 422) { // Validation errors
+
+                            
+
                             messageContainer.append(`
                             <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
                                 ${response.responseJSON.errors}

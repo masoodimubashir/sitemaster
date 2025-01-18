@@ -26,21 +26,39 @@ class DashboardController extends Controller
         $notifications = auth()->user()->unreadNotifications;
 
         //  Get All The Data
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData('lifetime', 'all', 'all');
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData('lifetime', 'all', 'all', 'all');
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
-        [$total_paid, $total_due, $total_balance] = $dataService->calculateBalances($ledgers);
 
-        $data = $dataService->calculateBalancesWithServiceCharge($ledgers);
+        
+        $balances = $dataService->calculateAllBalances($ledgers);
 
-        $paid = $total_paid;
-        $balance_without_service_charge = $total_balance;
-        $balance_with_service_charge = $data[2];
+        // Access the values
+        $withoutServiceCharge = $balances['without_service_charge'];
+        $withServiceCharge = $balances['with_service_charge'];
+
+        // Get specific totals
+        $balance_without_service_charge = $withoutServiceCharge['balance'];
+        $balance_with_service_charge = $withServiceCharge['balance'];
+
+
+        $paid = $withoutServiceCharge['paid'];
+
+        $total_due = $withServiceCharge['due'];
+        $total_balance = $withServiceCharge['balance'];
+
+
+
+        // $data = $dataService->calculateBalancesWithServiceCharge($ledgers);
+
+        // $paid = $total_paid;
+        // $balance_without_service_charge = $total_balance;
+        // $balance_with_service_charge = $data[2];
 
         $balance_paid_chart = new BalancePaidChart($balance_without_service_charge, $paid);
 
-        $revenue = $data[0] + $paid;
+        $revenue = $balance_without_service_charge + $paid;
         $profit = $revenue - $balance_with_service_charge;
 
         $cost_profit_chart = new CostProfitChart($revenue, $profit);
@@ -50,12 +68,7 @@ class DashboardController extends Controller
         $clients = Client::all();
         $suppliers = Supplier::all();
         $payments = PaymentSupplier::with('supplier', 'site')->get();
-        // $rawMaterials = ConstructionMaterialBilling::with('phase')->get();
-        // $squareFootageBills = SquareFootageBill::with('phase')->get();
-        // $expenses = DailyExpenses::with('phase')->get();
-        // $dailyWagers = DailyWager::with('phase')->get();
-        // $wager_attendances = WagerAttendance::all();
-
+       
 
         // // Get all sites with opened and closed counts
         $opened_sites = Site::where('is_on_going', 1)->count();
@@ -100,104 +113,6 @@ class DashboardController extends Controller
                 'sum_total_payment_amount' => $sum_total_payment_amount
             ];
         }));
-
-        // // Merge raw materials into data
-        // $data = $data->merge($rawMaterials->map(function ($material) {
-        //     return [
-        //         'amount' => $material->amount ?? 0,
-        //         'supplier' => $material->supplier->name ?? 'NA',
-        //         'description' => $material->item_name ?? 'NA',
-        //         'category' => 'Raw Material',
-        //         'debit' => $material->amount,
-        //         'credit' => 'NA',
-        //         'phase' => $material->phase->phase_name ?? 'NA',
-        //         'site' => $material->phase->site->site_name ?? 'NA',
-        //         'site_service_charge' => $material->phase->site->service_charge ?? 0,
-        //         'site_id' => $material->phase->site_id ?? null,
-        //         'supplier_id' => $material->supplier_id ?? null,
-        //         'created_at' => $material->created_at,
-        //     ];
-        // }));
-
-        // // Merge square footage bills into data
-        // $data = $data->merge($squareFootageBills->map(function ($bill) {
-        //     return [
-        //         'amount' => $bill->price ?? 0,
-        //         'supplier' => $bill->supplier->name ?? 'NA',
-        //         'description' => $bill->wager_name ?? 'NA',
-        //         'category' => 'Square Footage Bill',
-        //         'debit' => $bill->price,
-        //         'credit' => 'NA',
-        //         'phase' => $bill->phase->phase_name ?? 'NA',
-        //         'site' => $bill->phase->site->site_name ?? 'NA',
-        //         'site_service_charge' => $bill->phase->site->service_charge ?? 0,
-        //         'site_id' => $bill->phase->site_id ?? null,
-        //         'supplier_id' => $bill->supplier_id ?? null,
-        //         'created_at' => $bill->created_at,
-        //     ];
-        // }));
-
-        // // Merge daily expenses into data
-        // $data = $data->merge($expenses->map(function ($expense) {
-        //     return [
-        //         'amount' => $expense->price ?? 0,
-        //         'supplier' => $expense->supplier->name ?? '',
-        //         'description' => $expense->item_name ?? 'NA',
-        //         'category' => 'Daily Expense',
-        //         'debit' => $expense->price,
-        //         'credit' => 'NA',
-        //         'phase' => $expense->phase->phase_name ?? 'NA',
-        //         'site' => $expense->phase->site->site_name ?? 'NA',
-        //         'site_service_charge' => $expense->phase->site->service_charge ?? 0,
-        //         'site_id' => $expense->phase->site_id ?? null,
-        //         'supplier_id' => $expense->supplier_id ?? null,
-        //         'created_at' => $expense->created_at,
-        //     ];
-        // }));
-
-        // // Merge daily wagers into data
-        // $data = $data->merge($dailyWagers->map(function ($wager) use ($wager_attendances) {
-        //     return [
-        //         'amount' => $wager->price_per_day ?? 0,
-        //         'supplier' => $wager->supplier->name ?? '',
-        //         'description' => $wager->wager_name ?? 'NA',
-        //         'category' => 'Daily Wager',
-        //         'debit' => $wager->phase->wagerAttendances->sum('no_of_persons') * $wager->price_per_day,
-        //         'credit' => 'NA',
-        //         'phase' => $wager->phase->phase_name ?? 'NA',
-        //         'site' => $wager->phase->site->site_name ?? 'NA',
-        //         'site_service_charge' => $wager->phase->site->service_charge ?? 0,
-        //         'site_id' => $wager->phase->site_id ?? null,
-        //         'supplier_id' => $wager->supplier_id ?? null,
-        //         'created_at' => $wager->created_at,
-        //     ];
-        // }));
-
-
-        // $totalAmount = $data->filter(function ($d) {
-        //     return ($d['category'] !== 'Suppliers' && $d['category'] !== 'Clients') && $d['phase'] !== 'NA';
-        // })->sum('amount');
-
-        // $filteredData = $data->filter(function ($d) {
-        //     return ($d['category'] !== 'Suppliers' && $d['category'] !== 'Clients') && $d['phase'] !== 'NA';
-        // });
-
-        // $payments = $data->filter(function ($d) {
-        //     return $d['category'] === 'Payments';
-        // });
-
-        // $paymentsTotalAmount = $payments->sum('amount');
-
-        // $totalAmountWithServiceChargeAmount = 0;
-
-        // foreach ($filteredData as $record) {
-
-        //     $serviceChargeAmount = ($record['amount'] * $record['site_service_charge']);
-
-        //     $totalAmount = $record['amount'] + $serviceChargeAmount / 100;
-
-        //     $totalAmountWithServiceChargeAmount += $totalAmount;
-        // }
 
 
         return view('profile.partials.Admin.Dashboard.dashboard',

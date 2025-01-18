@@ -34,9 +34,23 @@
         <li class="nav-item">
             <a class="nav-link {{ Request::is('user/payments') ? 'active' : '' }}" href="{{ url('user/payments') }}">
                 <i class="menu-icon fa fa-indian-rupee"></i>
-                <span class="menu-title">Payments</span>
+                <span class="menu-title">Ledger</span>
             </a>
         </li>
+
+        
+     
+
+        <li class="nav-item">
+            <a class="nav-link {{ Request::is('user/wager-attendance') ? 'active' : '' }}"
+                href="{{ url('user/wager-attendance') }}">
+                <i class="menu-icon fa-solid fa-calendar-days"></i>
+                <span class="menu-title">Attendance</span>
+            </a>
+        </li>
+
+
+        
 
     </ul>
 

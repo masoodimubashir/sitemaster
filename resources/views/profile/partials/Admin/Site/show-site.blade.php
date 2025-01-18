@@ -373,7 +373,16 @@
 
                                     <a class="btn" data-bs-toggle="modal" role="button"
                                         href="#modal-square-footage-bills{{ $phase->id }}">
-                                        Square Footage </a>
+                                        Contractor </a>
+
+                                </li>
+
+                                <li class="nav-item dropdown-button">
+
+                                    <a class="btn" data-bs-toggle="modal" role="button"
+                                        href="#modal-daily-expenses{{ $phase->id }}">
+                                        Expenditure
+                                    </a>
 
                                 </li>
 
@@ -384,14 +393,7 @@
                                 </li>
 
 
-                                <li class="nav-item dropdown-button">
 
-                                    <a class="btn" data-bs-toggle="modal" role="button"
-                                        href="#modal-daily-expenses{{ $phase->id }}">
-                                        Daily Expenses
-                                    </a>
-
-                                </li>
 
                             </ul>
 
@@ -448,7 +450,7 @@
                                                     <tr>
 
                                                         <td>
-                                                            Square Footage Bills
+                                                            Contracts
                                                         </td>
 
                                                         <td>
@@ -669,7 +671,7 @@
                                     <div class="card-body">
                                         <h3 class="card-title-custom mb-4">
                                             <i class="fas fa-hard-hat"></i>
-                                            Square Footage Biils
+                                            Contracts
                                         </h3>
                                         <div class="table-responsive">
                                             <table class="table table-hover table-custom">
@@ -834,7 +836,7 @@
                                     <div class="card-body">
                                         <h3 class="card-title-custom mb-4">
                                             <i class="fas fa-clipboard-check"></i>
-                                            Daily Expense
+                                            Daily Expenses
                                         </h3>
                                         <div class="table-responsive">
                                             <table class="table table-hover table-custom">
@@ -854,7 +856,7 @@
                                                 <tbody>
 
 
-                                                    {{-- Square Footage --}}
+                                                    {{-- Contractor --}}
 
 
 
@@ -868,10 +870,10 @@
                                                                 </td>
 
                                                                 <td>
-                                                                    <img style="cursor: pointer"
-                                                                        data-full="{{ asset($daily_expenses->bill_photo) }}"
-                                                                        src="{{ asset($daily_expenses->bill_photo) }}"alt=""
-                                                                        class="w-20 h-20 rounded-full gallery-image">
+                                                                    <img src="{{ asset('storage/' . $daily_expenses->bill_photo) }}"
+                                                                        alt="{{ asset('storage/' . $daily_expenses->bill_photo) }}"
+                                                                        class="w-20 h-20 rounded-full cursor-pointer"
+                                                                        data-full="{{ asset('storage/' . $daily_expenses->bill_photo) }}">
                                                                 </td>
 
                                                                 <td>
@@ -1074,17 +1076,13 @@
                                                         @endforeach
                                                     @else
                                                         <tr>
-                                                            <td colspan="3"
+                                                            <td colspan="4"
                                                                 class="text-center text-danger fw-bold">
                                                                 No
                                                                 Records Found</td>
                                                             <td>
                                                         </tr>
                                                     @endif
-
-
-
-
 
 
                                                 </tbody>
@@ -1268,9 +1266,9 @@
                                                                     <option value="">Select Wager</option>
 
                                                                     @foreach ($wagers as $wager)
-                                                                            <option value="{{ $wager['id'] }}">
-                                                                                {{ $wager['name'] }}
-                                                                            </option>
+                                                                        <option value="{{ $wager['id'] }}">
+                                                                            {{ $wager['name'] }}
+                                                                        </option>
                                                                     @endforeach
 
                                                                 </select>
@@ -2231,6 +2229,9 @@
                     contentType: false,
                     processData: false,
                     success: function(response) {
+
+                        
+
                         messageContainer.append(`
                         <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
                             <div class="d-flex">
@@ -2250,6 +2251,9 @@
                         }, 2000);
                     },
                     error: function(response) {
+
+                        console.log(response);
+
 
                         if (response.status === 422) { // Validation errors
                             messageContainer.append(`
@@ -2416,12 +2420,15 @@
                 $('.text-danger').remove();
 
                 $.ajax({
-                    url: '{{ url('admin/sites/supplier-payments') }}',
+                    url: '{{ url('admin/payments') }}',
                     type: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
+
+                        console.log(response);
+                        
 
                         messageContainer.append(`
                         <div  class="alert align-items-center text-white bg-success border-0" role="alert" >

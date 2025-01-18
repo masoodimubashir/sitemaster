@@ -188,18 +188,18 @@ class PDFController extends Controller
                 $q->whereHas('supplier', function ($query) {
                     $query->whereNull('deleted_at');
                 })
-                ->whereHas('wagerAttendances', function ($query) {
-                    $query->where('verified_by_admin', 1); // Only include records where 'verified_by_admin' is 1
-                })
-                ->with([
-                    'wagerAttendances' => function ($query) {
-                        $query->where('verified_by_admin', 1); // Make sure to load only the wagerAttendances that are verified by admin
-                    },
-                    'supplier' => function ($q) {
-                        $q->withoutTrashed();
-                    }
-                ])
-                ->latest();
+                    ->whereHas('wagerAttendances', function ($query) {
+                        $query->where('verified_by_admin', 1); // Only include records where 'verified_by_admin' is 1
+                    })
+                    ->with([
+                        'wagerAttendances' => function ($query) {
+                            $query->where('verified_by_admin', 1); // Make sure to load only the wagerAttendances that are verified by admin
+                        },
+                        'supplier' => function ($q) {
+                            $q->withoutTrashed();
+                        }
+                    ])
+                    ->latest();
             },
             'dailyExpenses' => function ($q) {
                 $q->where('verified_by_admin', 1);
@@ -275,7 +275,9 @@ class PDFController extends Controller
     {
 
 
-        $supplier = Supplier::with('paymentSuppliers')->latest()->find(base64_decode($id));
+        $supplier = Supplier::with(['paymentSuppliers' => function ($q) {
+            $q->where('verified_by_admin', 1);
+        }])->latest()->find(base64_decode($id));
 
         $pdf = new PDF();
         $pdf->AliasNbPages();
@@ -319,14 +321,28 @@ class PDFController extends Controller
         $dateFilter = $request->get('date_filter', 'today');
         $site_id = $request->input('site_id', 'all');
         $supplier_id = $request->input('supplier_id', 'all');
+        $wager_id = $request->input('wager_id', 'all');
 
-
-
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id);
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
-        [$total_paid, $total_due, $total_balance] = $dataService->calculateBalances($ledgers);
+        // [$total_paid, $total_due, $total_balance] = $dataService->calculateBalances($ledgers);
+
+
+        $balances = $dataService->calculateAllBalances($ledgers);
+
+        // Access the values
+        $withoutServiceCharge = $balances['without_service_charge'];
+        $withServiceCharge = $balances['with_service_charge'];
+
+        // Get specific totals
+        $effective_balance = $withoutServiceCharge['balance'];
+
+        $total_paid = $withServiceCharge['paid'];
+        $total_due = $withServiceCharge['due'];
+        $total_balance = $withServiceCharge['balance'];
+
 
 
         $ledgers = $ledgers->sortByDesc(function ($d) {
@@ -338,7 +354,7 @@ class PDFController extends Controller
         $pdf->AddPage();
         $pdf->SetFont('Times', '', 12);
         $pdf->SetTitle('Supplier Payment History');
-        $pdf->ledgerTable($ledgers, $total_paid, $total_due, $total_balance);
+        $pdf->ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance);
         $pdf->Output();
         exit;
     }

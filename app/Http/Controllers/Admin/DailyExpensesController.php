@@ -7,6 +7,7 @@ use App\Models\DailyExpenses;
 use App\Models\PaymentSupplier;
 use App\Models\SquareFootageBill;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -35,11 +36,12 @@ class DailyExpensesController extends Controller
     public function store(Request $request)
     {
         if ($request->ajax()) {
+
             // Validation rules
             $validator = Validator::make($request->all(), [
-                'item_name' => 'required|string|max:255',
+                'item_name' => 'required|string',
                 'price' => 'required|numeric|max:9999999999',
-                'bill_photo' => 'required|image|mimes:jpg,jpeg,webp|max:1024',
+                'bill_photo' => 'required|image|mimes:jpg,jpeg,webp,png|max:1024',
                 'phase_id' => 'required|exists:phases,id',
             ]);
 

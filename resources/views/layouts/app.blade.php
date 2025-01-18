@@ -65,6 +65,8 @@
         integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
         crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+    <link href = "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.css" rel = "stylesheet">
+
     <style>
         .second a:hover {
             color: rgb(0, 183, 255) !important;
@@ -256,6 +258,11 @@
     <script src="{{ asset('assets/js/dashboard.js') }}"></script>
     <!-- <script src="assets/js/Chart.roundedBarCharts.js')}}"></script> -->
     <!-- End custom js for this page-->
+
+    <script src = "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js" ></script>
+
+    @stack('scripts')
+
 </body>
 
 </html>

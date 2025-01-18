@@ -93,7 +93,7 @@
                                                                 </td>
                                                                 <td>
                                                                     <div class="d-flex">
-                                                                        <img src="{{ asset($data[$i]['screenshot']) }}"
+                                                                        <img src="{{ asset('storage/' . $data[$i]['screenshot']) }}"
                                                                             alt="">
                                                                     </div>
                                                                 </td>

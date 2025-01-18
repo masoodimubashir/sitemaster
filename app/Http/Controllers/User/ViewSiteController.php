@@ -101,7 +101,6 @@ class ViewSiteController extends Controller
 
         }
 
-
         $balance = $grand_total_amount - $totalPaymentSuppliersAmount;
 
         $suppliers = Supplier::orderBy('name')->get();

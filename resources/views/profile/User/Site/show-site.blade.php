@@ -2300,9 +2300,6 @@
                     processData: false,
                     success: function(response) {
 
-                        console.log(response);
-
-
                         messageContainer.append(`
                         <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
                             <div class="d-flex">
@@ -2323,7 +2320,12 @@
                     },
                     error: function(response) {
 
+                        console.log(response.responseJSON.errors);
+
+
                         if (response.status === 422) { // Validation errors
+
+
                             messageContainer.append(`
                         <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
                         ${response.responseJSON.errors}

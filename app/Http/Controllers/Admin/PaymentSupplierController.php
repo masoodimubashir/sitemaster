@@ -41,7 +41,6 @@ class PaymentSupplierController extends Controller
                     'numeric',
                     'min:0',
                     'max:99999999.99',
-                    'regex:/^\d+(\.\d{0,2})?$/'
                 ]
             ]);
 
@@ -64,7 +63,7 @@ class PaymentSupplierController extends Controller
                     'supplier_id' => $request->supplier_id,
                     'site_id' => $request->site_id,
                     'amount' => $request->amount,
-                    'verified_by_admin' => true
+                    'verified_by_admin' => 0
                 ]);
 
                 return response()->json(['message' => 'Supplier payment created successfully.']);

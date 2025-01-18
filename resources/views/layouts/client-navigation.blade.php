@@ -6,5 +6,17 @@
                 <span class="menu-title">Report</span>
             </a>
         </li>
+
+
+        <li class="nav-item">
+            <a class="nav-link {{ request()->is('client/ledger') ? 'active' : '' }}" href="{{ url('client/ledger') }}">
+                <i class="menu-icon fa-solid fa-book"></i>
+                <span class="menu-title">Ledger</span>
+            </a>
+        </li>
+
+
     </ul>
+
+
 </nav>

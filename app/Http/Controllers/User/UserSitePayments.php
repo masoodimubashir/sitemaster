@@ -32,51 +32,38 @@ class UserSitePayments extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the incoming request
 
 
-        if ($request->ajax()) {
+        try {
 
-            $validatedData = Validator::make($request->all(), [
-                'screenshot' => 'required|mimes:png,jpg,webp, jpeg|max:1024',
-                'supplier_id' => 'required|exists:suppliers,id',
-                'site_id' => 'required|exists:sites,id',
-                'amount' => [
-                    'required',
-                    'numeric',
-                    'min:0',
-                    'max:99999999.99',
-                    'regex:/^\d+(\.\d{0,2})?$/'
-                ]
+
+            $request->validate([
+                'amount' => 'required|numeric',
+                'site_id' => 'required',
+                'supplier_id' => 'required',
+                'screenshot' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
-            if ($validatedData->fails()) {
-                return response()->json(['errors' =>  'Form Fields Are Missing...'], 422);
-            }
-
-            $image_path = null;
-
-            // Handle file upload
             if ($request->hasFile('screenshot')) {
-                $image_path = $request->file('screenshot')->store('SupplierPayment', 'public');
+
+                $image = $request->file('screenshot');
+                $imageName = time() . '.' . $image->getClientOriginalExtension();
+                $path = $request->file('screenshot')->storeAs('Payments', $imageName, 'public');
             }
 
-            try {
+            $payment = new PaymentSupplier();
+            $payment->amount = $request->input('amount');
+            $payment->site_id = $request->input('site_id');
+            $payment->supplier_id = $request->input('supplier_id');
+            $payment->verified_by_admin = 1;
+            $payment->screenshot = $path;
+            $payment->save();
 
-                $payments = PaymentSupplier::create([
-                    'screenshot' => $image_path,
-                    'supplier_id' => $request->supplier_id,
-                    'site_id' => $request->site_id,
-                    'amount' => $request->amount,
-                    'verified_by_admin' => 0
-                ]);
-
-                // Write payments notofications not done yet
-
-                return response()->json(['message' => 'Supplier payment created successfully.']);
-            } catch (\Exception $e) {
-                return response()->json(['error' => 'An unexpected error occurred: ']);
-            }
+            return response()->json(['message' => 'Payment created successfully']);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'error' => 'An error occurred while creating the payment.'
+            ]);
         }
     }
 

@@ -7,19 +7,9 @@
     @endphp
 
     @if ($user === 'admin')
-        <x-breadcrumb :names="['Dashboard', 'View' .$site->site_name, 'View ' . $site->name . ' Payments']"
-            :urls="[
-            'admin/dashboard',
-            'admin/sites/'. base64_encode($site->id),
-            'admin/sites/payments/' . $site->id,
-        ]" />
+        <x-breadcrumb :names="['Dashboard', 'View' . $site->site_name, 'View ' . $site->name . ' Payments']" :urls="['admin/dashboard', 'admin/sites/' . base64_encode($site->id), 'admin/sites/payments/' . $site->id]" />
     @else
-        <x-breadcrumb :names="['Sites', 'View ' .$site->site_name ,'View ' .$site->site_name . ' Payments']"
-            :urls="[
-            'user/dashboard',
-            'user/sites/' . base64_encode($site->id),
-            'user/sites/payments/' . $site->id,
-        ]" />
+        <x-breadcrumb :names="['Sites', 'View ' . $site->site_name, 'View ' . $site->site_name . ' Payments']" :urls="['user/dashboard', 'user/sites/' . base64_encode($site->id), 'user/sites/payments/' . $site->id]" />
     @endif
 
     <div class="row">
@@ -81,14 +71,20 @@
                                             <td>{{ $payment_supplier->created_at->format('d-M-Y') }}</td>
 
                                             <td>
-                                                <img src="{{ asset($payment_supplier->screenshot) }}" alt="">
+                                                <!-- Image with click handler -->
+                                                <img src="{{ asset('storage/' . $payment_supplier->screenshot) }}"
+                                                    alt="Payment Screenshot" class="img-fluid cursor-pointer"
+                                                    data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
+                                                    onclick="showImagePreview(this.src)">
+
+
                                             </td>
 
                                             <td>
                                                 {{ Ucwords($payment_supplier->site->site_name) }}
                                             </td>
 
-                                              <td>
+                                            <td>
                                                 {{ Ucwords($payment_supplier->site->site_owner_name) }}
                                             </td>
 
@@ -140,7 +136,25 @@
 
     </div>
 
+    <!-- Modal -->
+    <div class="modal fade" id="imagePreviewModal" tabindex="-1">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Payment Screenshot</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="previewImage" src="" class="img-fluid" alt="Preview">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showImagePreview(src) {
+            document.getElementById('previewImage').src = src;
+        }
+    </script>
+
 </x-app-layout>
-
-
-

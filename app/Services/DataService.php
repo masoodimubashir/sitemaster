@@ -8,77 +8,52 @@ use App\Models\DailyExpenses;
 use App\Models\DailyWager;
 use App\Models\PaymentSupplier;
 use App\Models\SquareFootageBill;
-use App\Models\Supplier;
-use Illuminate\Support\Facades\Log;
 
 class DataService
 {
-
 
     /**
      * Create a new class instance.
      */
     public function __construct() {}
 
-    public function getData($dateFilter, $site_id, $supplier_id)
+
+    public function getData($dateFilter, $site_id, $supplier_id, $wager_id)
     {
 
         $dateRange = $this->filterByDate($dateFilter);
 
-        $payments = PaymentSupplier::with([
-            'site' => function ($site) {
-                $site->with(['phases'])->withoutTrashed();
-            },
-            'supplier' => function ($supplier) {
-                $supplier->withoutTrashed();
-            }
-        ])->whereHas('site', function ($site) {
-            $site->whereNull('deleted_at');
-        })->whereHas('supplier', function ($supplier) {
-            $supplier->whereNull('deleted_at');
-        })->whereHas('site.phases', function ($phase) {
-            $phase->whereNull('deleted_at');
-        })->where('verified_by_admin', 1)
-            ->when($dateFilter, function ($query) use ($dateRange, $dateFilter) {
+        
 
-                if ($dateFilter !== 'lifetime' && $dateRange) {
-                    return $query->whereBetween('created_at', $dateRange);
-                }
-            })
-            ->when($site_id && $site_id !== 'all', function ($query) use ($site_id) {
-                return $query->where('site_id', $site_id);
-            })
-            ->when($supplier_id && $supplier_id != 'all', function ($query) use ($supplier_id) {
-                return $query->where('supplier_id', $supplier_id);
-            })
+        // First get the wager to find associated supplier_id
+        $wager = null;
+        if ($wager_id && $wager_id !== 'all') {
+            $wager = DailyWager::find($wager_id);
+            $supplier_id = $wager?->supplier_id;
+        }
+
+
+        // Now query all tables with the supplier_id if wager exists
+        $payments = PaymentSupplier::with(['site.phases', 'supplier'])
+            ->whereHas('site', fn($q) => $q->whereNull('deleted_at'))
+            ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+            ->whereHas('site.phases', fn($q) => $q->whereNull('deleted_at'))
+            ->where('verified_by_admin', 1)
+            ->when($dateFilter !== 'lifetime' && $dateRange, fn($q) => $q->whereBetween('created_at', $dateRange))
+            ->when($site_id !== 'all', fn($q) => $q->where('site_id', $site_id))
+            ->when($supplier_id && $supplier_id != 'all', fn($q) => $q->where('supplier_id', $supplier_id))
             ->latest()
             ->get();
 
 
         $raw_materials = ConstructionMaterialBilling::with(['phase.site', 'supplier'])
-            ->whereHas('phase', function ($phase) {
-                $phase->whereNull('deleted_at');
-            })
-            ->whereHas('supplier', function ($supplier) {
-                $supplier->whereNull('deleted_at');
-            })
-            ->whereHas('phase.site', function ($site) {
-                $site->whereNull('deleted_at');
-            })
+            ->whereHas('phase', fn($q) => $q->whereNull('deleted_at'))
+            ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+            ->whereHas('phase.site', fn($q) => $q->whereNull('deleted_at'))
             ->where('verified_by_admin', 1)
-            ->when($dateFilter, function ($query) use ($dateRange, $dateFilter) {
-                if ($dateFilter !== 'lifetime' && $dateRange) {
-                    return $query->whereBetween('created_at', $dateRange);
-                }
-            })->when($site_id !== 'all', function ($q) use ($site_id) {
-                return $q->whereHas('phase', function ($phaseQuery) use ($site_id) {
-                    $phaseQuery->whereHas('site', function ($siteQuery) use ($site_id) {
-                        $siteQuery->where('id', $site_id);
-                    });
-                });
-            })->when($supplier_id && $supplier_id != 'all', function ($query) use ($supplier_id) {
-                return $query->where('supplier_id', $supplier_id);
-            })
+            ->when($dateFilter !== 'lifetime' && $dateRange, fn($q) => $q->whereBetween('created_at', $dateRange))
+            ->when($site_id !== 'all', fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
+            ->when($supplier_id && $supplier_id != 'all', fn($q) => $q->where('supplier_id', $supplier_id))
             ->latest()
             ->get();
 
@@ -121,6 +96,8 @@ class DataService
             ->latest()
             ->get();
 
+
+
         $expenses = DailyExpenses::with([
             'phase' => function ($phase) {
                 $phase->with([
@@ -151,49 +128,26 @@ class DataService
             ->latest()
             ->get();
 
-        $wagers = DailyWager::with([
-            'phase' => function ($phase) {
-                $phase->with([
-                    'site' => function ($site) {
-                        $site->withoutTrashed();
-                    },
-                    'wagerAttendances' => function ($q) {
-                        $q->where('verified_by_admin', 1);
-                    }
-                ])->withoutTrashed();
-            },
-            'supplier' => function ($supplier) {
-                $supplier->withoutTrashed();
-            },
-        ])
-            ->whereHas('phase', function ($phase) {
-                $phase->whereNull('deleted_at');
-            })
-            ->whereHas('supplier', function ($supplier) {
-                $supplier->whereNull('deleted_at');
-            })
-            ->whereHas('phase.site', function ($site) {
-                $site->whereNull('deleted_at');
-            })
-            ->when($dateFilter, function ($query) use ($dateRange, $dateFilter) {
 
-                if ($dateFilter !== 'lifetime' && $dateRange) {
-                    return $query->whereBetween('created_at', $dateRange);
-                }
-            })->when($site_id !== 'all', function ($q) use ($site_id) {
-                return $q->whereHas('phase', function ($phaseQuery) use ($site_id) {
-                    $phaseQuery->whereHas('site', function ($siteQuery) use ($site_id) {
-                        $siteQuery->where('id', $site_id);
-                    });
-                });
-            })->when($supplier_id && $supplier_id != 'all', function ($query) use ($supplier_id) {
-                return $query->where('supplier_id', $supplier_id);
-            })
+
+        $wagers = DailyWager::with([
+            'phase.site',
+            'supplier',
+            'wagerAttendances' => fn($q) => $q->where('verified_by_admin', 1)
+        ])
+            ->whereHas('phase', fn($q) => $q->whereNull('deleted_at'))
+            ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+            ->whereHas('phase.site', fn($q) => $q->whereNull('deleted_at'))
+            ->when($dateFilter !== 'lifetime' && $dateRange, fn($q) => $q->whereBetween('created_at', $dateRange))
+            ->when($site_id !== 'all', fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
+            ->when($supplier_id && $supplier_id != 'all', fn($q) => $q->where('supplier_id', $supplier_id))
+            ->when($wager_id && $wager_id !== 'all', fn($q) => $q->where('id', $wager_id))
             ->latest()
             ->get();
 
         return [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers];
     }
+
 
     public  function makeData($payments = null, $raw_materials = null, $squareFootageBills = null, $expenses = null, $wagers = null)
     {
@@ -201,6 +155,7 @@ class DataService
         $ledgers = collect();
 
         $ledgers = $ledgers->merge($payments->map(function ($pay) {
+
             return [
                 'supplier' => $pay->supplier->name ?? '',
                 'description' => $pay->item_name ?? 'NA',
@@ -278,12 +233,15 @@ class DataService
         $ledgers = $ledgers->merge(
             $wagers
                 ->filter(function ($wager) {
+
                     return $wager->wagerAttendances->where('verified_by_admin', 1)->isNotEmpty();
                 })
                 ->map(function ($wager) {
+
                     $service_charge_amount = $this->getServiceChargeAmount($wager->wager_total, $wager->phase->site->service_charge);
 
                     return [
+                        'wager_id' => $wager->id,
                         'supplier' => $wager->supplier->name ?? '',
                         'description' => $wager->wager_name ?? 0,
                         'category' => 'Daily Wager',
@@ -299,6 +257,8 @@ class DataService
                 })
         );
 
+
+
         return $ledgers;
     }
 
@@ -306,7 +266,7 @@ class DataService
     /**
      * Get date range based on filter or custom dates
      */
-    private  function filterByDate($dateFilter)
+    public  function filterByDate($dateFilter)
     {
         $now = Carbon::now();
 
@@ -353,36 +313,82 @@ class DataService
         }
     }
 
-    /**
-     * Get Due, Credit and Balancene based on filter Of The Models
-     */
 
-    public function calculateBalances($ledgers)
+    public function calculateAllBalances($ledgers)
     {
-
-        $total_paid = 0;
-        $total_due = 0;
-        $total_balance = 0;
-
+        $totals = [
+            'without_service_charge' => [
+                'paid' => 0,
+                'due' => 0,
+                'balance' => 0
+            ],
+            'with_service_charge' => [
+                'paid' => 0,
+                'due' => 0,
+                'balance' => 0
+            ]
+        ];
 
         foreach ($ledgers as $item) {
+            $credit = is_string($item['credit']) ? floatval($item['credit']) : $item['credit'];
+
             switch ($item['category']) {
                 case 'Payments':
-                    $total_paid += is_string($item['credit']) ? floatval($item['credit']) : $item['credit'];
+                    $totals['without_service_charge']['paid'] += $credit;
+                    $totals['with_service_charge']['paid'] += $credit;
                     break;
+
                 case 'Raw Material':
                 case 'Square Footage Bill':
                 case 'Daily Expense':
                 case 'Daily Wager':
-                    $total_due += is_string($item['debit']) ? floatval($item['debit']) : $item['debit'];
+                    $debit = is_string($item['debit']) ? floatval($item['debit']) : $item['debit'];
+                    $totals['without_service_charge']['due'] += $debit;
+                    $totals['with_service_charge']['due'] += $item['total_amount_with_service_charge'];
                     break;
             }
         }
 
-        $total_balance = $total_due - $total_paid;
+        // Calculate final balances
+        $totals['without_service_charge']['balance'] =
+            $totals['without_service_charge']['due'] - $totals['without_service_charge']['paid'];
 
-        return [$total_paid, $total_due, $total_balance];
+        $totals['with_service_charge']['balance'] =
+            $totals['with_service_charge']['due'] - $totals['with_service_charge']['paid'];
+
+        return $totals;
     }
+
+    /**
+     * Get Due, Credit and Balancene based on filter Of The Models
+     */
+
+    // public function calculateBalances($ledgers)
+    // {
+
+    //     $total_paid = 0;
+    //     $total_due = 0;
+    //     $total_balance = 0;
+
+
+    //     foreach ($ledgers as $item) {
+    //         switch ($item['category']) {
+    //             case 'Payments':
+    //                 $total_paid += is_string($item['credit']) ? floatval($item['credit']) : $item['credit'];
+    //                 break;
+    //             case 'Raw Material':
+    //             case 'Square Footage Bill':
+    //             case 'Daily Expense':
+    //             case 'Daily Wager':
+    //                 $total_due += is_string($item['debit']) ? floatval($item['debit']) : $item['debit'];
+    //                 break;
+    //         }
+    //     }
+
+    //     $total_balance = $total_due - $total_paid;
+
+    //     return [$total_paid, $total_due, $total_balance];
+    // }
 
 
     public function calculateBalancesWithServiceCharge($ledgers)
