@@ -70,8 +70,6 @@
 
                                         </td>
 
-
-
                                         <td> {{ $site->created_at->format('d-M-Y') }} </td>
 
                                         <td title=" View {{ $site->site_name }} details...">

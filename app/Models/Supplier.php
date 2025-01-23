@@ -28,7 +28,7 @@ class Supplier extends Model
      */
     public function constructionMaterialBilling(): HasMany
     {
-        return $this->hasMany(constructionMaterialBilling::class, 'supplier_id', 'id');
+        return $this->hasMany(ConstructionMaterialBilling::class, 'supplier_id', 'id');
     }
 
     /**

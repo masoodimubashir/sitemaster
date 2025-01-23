@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\PaymentSupplier;
+use App\Models\Site;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -107,5 +109,25 @@ class AdminUserController extends Controller
         ]);
 
         return redirect()->route('users.index')->with('status', 'update');
+    }
+
+    public function deleteUser($id)
+    {
+
+        $user = User::find($id);
+
+        $hasPaymentRecords = Site::whereHas('user', function ($query) use ($id) {
+            $query->where('user_id', $id);
+        })->exists();
+
+        dd($hasPaymentRecords);
+
+        if ($hasPaymentRecords) {
+            return redirect()->back()->with('status', 'error');
+        }
+
+        $user->delete();
+
+        return redirect()->route('users.index')->with('status', 'delete');
     }
 }

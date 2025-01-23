@@ -37,7 +37,7 @@
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
     <!-- Scripts -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    {{-- @vite(['resources/css/app.css', 'resources/js/app.js']) --}}
 
     <!-- plugins:css -->
     <link rel="stylesheet" href="{{ asset('assets/vendors/feather/feather.css') }}">
@@ -199,9 +199,9 @@
         @if (auth()->user()->role_name === 'admin')
             @include('layouts.admin-navigation')
         @elseif (auth()->user()->role_name === 'site_engineer')
-            @include('layouts.user-navigation')
+            {{-- @include('layouts.user-navigation') --}}
         @else
-            @include('layouts.client-navigation')
+            {{-- @include('layouts.client-navigation') --}}
         @endif
         <!-- partial:partials/_sidebar.html -->
 

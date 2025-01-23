@@ -11,6 +11,8 @@
         <div class="col-md-12 grid-margin stretch-card">
 
 
+
+
             <div class="card">
                 <div class="card-body">
                     <form method="post" action="{{ route('user.update-name', [$user->id]) }}"

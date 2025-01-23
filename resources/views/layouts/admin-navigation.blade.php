@@ -9,8 +9,7 @@
         <li class="nav-item nav-category">Tabs</li>
 
         <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('users.index') ? 'active' : '' }}"
-                href="{{ route('users.index') }}">
+            <a class="nav-link {{ request()->routeIs('users.index') ? 'active' : '' }}" href="{{ route('users.index') }}">
                 <i class="fa-solid fa-helmet-safety menu-icon"></i>
                 <span class="menu-title">Site Engineers</span>
             </a>
@@ -18,15 +17,14 @@
 
 
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('admin/clients') ? 'active' : '' }}" href="{{ url('admin/clients') }}">
+            <a class="nav-link" href="{{ url('/admin/clients') }}">
                 <i class="menu-icon fa fa-user"></i>
                 <span class="menu-title">Clients</span>
             </a>
         </li>
 
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('admin/suppliers') ? 'active' : '' }}"
-                href="{{ url('admin/suppliers') }}">
+            <a class="nav-link {{ request()->is('admin/suppliers') ? 'active' : '' }}" href="{{ url('admin/suppliers') }}">
                 <i class="menu-icon fa fa-inbox"></i>
                 <span class="menu-title">Suppliers</span>
             </a>
@@ -68,6 +66,14 @@
                 href="{{ url('admin/payments') }}">
                 <i class="menu-icon fa-solid fa-book"></i>
                 <span class="menu-title">Ledger</span>
+            </a>
+        </li>
+
+        <li class="nav-item">
+            <a class="nav-link {{ request()->is('admin/manage-payments') ? 'active' : '' }}"
+                href="{{ url('admin/manage-payment') }}">
+                <i class="menu-icon fa-solid fa-book"></i>
+                <span class="menu-title">Payment Manager</span>
             </a>
         </li>
 

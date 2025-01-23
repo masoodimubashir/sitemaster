@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminPaymentController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminVerificationController;
 use App\Http\Controllers\Admin\ClientController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Admin\DailyWagerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\ItemsVerificationController;
+use App\Http\Controllers\Admin\PaymentBankController;
 use App\Http\Controllers\Admin\PaymentBillsController;
 use App\Http\Controllers\Admin\PaymentsController;
 use App\Http\Controllers\Admin\PaymentSiteController;
@@ -109,6 +111,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::post('/register', [AdminUserController::class, 'register'])->name('admin.register-user');
     Route::put('/user/update-password/{id}', [AdminUserController::class, 'updateUserPassword'])->name('admin.update-user-password');
     Route::put('/user/update-name/{id}', [AdminUserController::class, 'updateName'])->name('user.update-name');
+    Route::delete('/user/delete/{id}', [AdminUserController::class, 'deleteUser'])->name('admin.delete-user');
 
     // Client Controller
     Route::resource('/clients', ClientController::class);
@@ -183,6 +186,13 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::get('/verify-items', [ItemsVerificationController::class, 'verifyItems']);
 
     Route::get('wager-attendance', [AttendanceSheetController::class, 'index']);
+
+    // Route For Managing Payments By Admin
+
+    Route::get('/manage-payment', [PaymentBankController::class, 'index']);
+    Route::post('/manage-payment', [PaymentBankController::class, 'store']);
+    Route::get('/manage-payment/{id}/edit', [PaymentBankController::class, 'edit'])->name('payments.edit');
+    Route::post('/manage-payment/update', [PaymentBankController::class, 'update'])->name('payments.update');
 });
 
 
@@ -199,7 +209,7 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::get('/sites/{id}', [ViewSiteController::class, 'show']);
 
     // Phase Controller
-    Route::resource('phase', UserPhaseController::class);
+    Route::resource('/phase', UserPhaseController::class);
 
     // User Supplier Controller
     Route::resource('/suppliers', UserSupplierController::class);
@@ -266,7 +276,7 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::get('/site-payment/report/{id}', [PDFController::class, 'showSitePaymentPdf']);
     Route::get('/ledger/report', [PDFController::class, 'showLedgerPdf']);
 
-    
+
     Route::get('wager-attendance', [AttendanceSheetController::class, 'index']);
 });
 
@@ -274,10 +284,7 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
 
 // Routes accessible to both admin and site engineers
-Route::middleware(['isAdmin', 'isUser'])->group(function () {
-    
-
-});
+Route::middleware(['isAdmin', 'isUser'])->group(function () {});
 
 
 require __DIR__ . '/auth.php';

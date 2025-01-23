@@ -163,12 +163,14 @@ class   SiteController extends Controller
         $raw_material_providers = Supplier::where('is_raw_material_provider', 1)->orderBy('name')->get();
 
         $wagers = $site->phases->flatMap(function ($phase) {
+            
             return $phase->dailyWagers->map(function ($wager) {
                 return [
                     'id' => $wager->id,
                     'name' => $wager->wager_name,
                 ];
             });
+
         })->values()->toArray();
 
 

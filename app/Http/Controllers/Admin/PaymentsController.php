@@ -39,8 +39,6 @@ class PaymentsController extends Controller
         [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
 
 
-
-
         $ledgers = $dataService->makeData(
             $payments,
             $raw_materials,
@@ -50,7 +48,6 @@ class PaymentsController extends Controller
         )->sortByDesc(function ($d) {
             return $d['created_at'];
         });
-
 
 
         // [$total_paid, $total_due, $total_balance] = $dataService->calculateBalances($ledgers);
@@ -68,9 +65,7 @@ class PaymentsController extends Controller
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
 
-
         $perPage = $request->get('per_page', 20);
-
 
         $paginatedLedgers = new LengthAwarePaginator(
             $ledgers->forPage($request->input('page', 1), $perPage),
@@ -80,11 +75,8 @@ class PaymentsController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-
-
         $suppliers = $paginatedLedgers->unique('supplier_id');
         $sites = $paginatedLedgers->unique('site_id');
-
 
         $wagers = $paginatedLedgers->map(function ($ledger) {
             $ledger['wager_id'] = isset($ledger['wager_id']) ? $ledger['wager_id'] : null;
