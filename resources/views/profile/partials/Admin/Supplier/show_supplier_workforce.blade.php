@@ -1,8 +1,6 @@
 <x-app-layout>
 
     @php
-        $balance = $grandTotal - $supplier->payment_suppliers_sum_amount;
-
         $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
     @endphp
 
@@ -84,10 +82,7 @@
                     Make Payment
                 </button>
 
-                <a href="{{ url($user . '/supplier/payments', [$supplier->id]) }}" class="btn btn-info btns"
-                    data-modal="payment-supplier">
-                    View Payments
-                </a>
+              
 
                 <a href="{{ url($user . '/supplier/ledger', [$supplier->id]) }}" class="btn btn-info btns"
                     data-modal="payment-supplier">
@@ -97,6 +92,11 @@
                 <a href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($supplier->id)]) }}"
                     class="btn btn-info">
                     Generate Payment Report
+                </a>
+
+                <a href="{{ url($user . '/supplier/payments', [$supplier->id]) }}" class="btn btn-info btns"
+                    data-modal="payment-supplier">
+                    View Payments
                 </a>
 
                 @if ($user === 'admin')
@@ -166,7 +166,7 @@
                         </div>
                         <div>
                             <h6 class="text-muted mb-1">Debit</h6>
-                            {{ Number::currency($supplier->payment_suppliers_sum_amount ?? 0, 'INR') }}
+                            {{ Number::currency($totalDebit ?? 0, 'INR') }}
                         </div>
                     </div>
                 </div>
@@ -193,7 +193,7 @@
                         </div>
                         <div>
                             <h6 class="text-muted mb-1">Credit</h6>
-                            {{ Number::currency($grandTotal ?? 0, 'INR') }}
+                            {{ Number::currency($totalCredit ?? 0, 'INR') }}
 
                         </div>
                     </div>
@@ -261,7 +261,7 @@
                                             <td>
 
                                                 @if ($d['image'] !== null)
-                                                    <img src="{{ asset($d['image']) }}" alt="">
+                                                    <img src="{{ asset('storage/' . $d['image']) }}" alt="">
                                                 @else
                                                     NA
                                                 @endif
@@ -415,7 +415,7 @@
                 $('.text-danger').remove();
 
                 $.ajax({
-                    url: '{{ url($user . '/sites/supplier-payments') }}',
+                    url: '{{ url($user . '/supplier/payments') }}',
                     type: 'POST',
                     data: formData,
                     contentType: false,

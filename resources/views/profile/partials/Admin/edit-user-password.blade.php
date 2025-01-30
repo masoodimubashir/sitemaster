@@ -10,11 +10,10 @@
 
         <div class="col-md-12 grid-margin stretch-card">
 
-
-
-
             <div class="card">
+               
                 <div class="card-body">
+               
                     <form method="post" action="{{ route('user.update-name', [$user->id]) }}"
                         class="forms-sample material-form">
 
@@ -36,7 +35,9 @@
                         <button class=" btn btn-info">{{ __('Save') }}</button>
 
                     </form>
+
                 </div>
+                
             </div>
 
         </div>

@@ -62,9 +62,9 @@
 
 
                                 <td class="space-x-4">
-                                    
+
                                     <a href="{{ url($user . '/items/' . $item->id . '/edit' ) }}">
-                                        <i class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full "></i>
+                                        <i class="fa-regular fa-pen-to-square bg-white rounded-full "></i>
                                     </a>
 
                                     <form id="delete-form-{{ $item->id }}"
@@ -76,7 +76,7 @@
 
                                     <a href="{{ url($user . '/items/' . $item->id) }}"
                                         onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this supplier?')) document.getElementById('delete-form-{{ $item->id }}').submit();">
-                                        <i class="fa-solid fa-trash-o fs-5 text-red-600 bg-white rounded-full"></i>
+                                        <i class="fa-solid fa-trash-o  text-red-600 bg-white rounded-full"></i>
                                     </a>
 
                                 </td>

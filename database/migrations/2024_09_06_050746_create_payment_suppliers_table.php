@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('payment_suppliers', function (Blueprint $table) {
             $table->id();
             $table->string('screenshot');
-            $table->foreignId('site_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('supplier_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('site_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->foreignId('supplier_id')->nullable()->constrained()->cascadeOnDelete();
             $table->decimal('amount',8,2);
             $table->boolean('verified_by_admin')->default(false);
             $table->softDeletes();

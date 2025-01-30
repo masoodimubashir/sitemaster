@@ -136,8 +136,9 @@
 
                                             <td>{{ $payment_supplier->created_at->format('d-M-Y') }}</td>
 
+
                                             <td>
-                                                <img src="{{ asset($payment_supplier->screenshot) }}" alt="">
+                                                <img src="{{ asset('storage/' . $payment_supplier->screenshot) }}" alt="">
                                             </td>
 
                                             <td>

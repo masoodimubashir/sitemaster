@@ -7,6 +7,7 @@ use App\Models\PaymentSupplier;
 use App\Models\Site;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class PaymentSupplierController extends Controller
@@ -32,7 +33,9 @@ class PaymentSupplierController extends Controller
 
         if ($request->ajax()) {
 
+
             $validatedData = Validator::make($request->all(), [
+
                 'screenshot' => 'required|mimes:png,jpg,webp, jpeg|max:1024',
                 'supplier_id' => 'required|exists:suppliers,id',
                 'site_id' => 'required|exists:sites,id',
@@ -42,6 +45,7 @@ class PaymentSupplierController extends Controller
                     'min:0',
                     'max:99999999.99',
                 ]
+
             ]);
 
             if ($validatedData->fails()) {
@@ -50,25 +54,30 @@ class PaymentSupplierController extends Controller
 
             $image_path = null;
 
-            // Handle file upload
             if ($request->hasFile('screenshot')) {
+
                 $image_path = $request->file('screenshot')->store('SupplierPayment', 'public');
+            
             }
 
             try {
 
-                // Create the payment supplier entry
                 PaymentSupplier::create([
                     'screenshot' => $image_path,
                     'supplier_id' => $request->supplier_id,
                     'site_id' => $request->site_id,
                     'amount' => $request->amount,
-                    'verified_by_admin' => 0
+                    'verified_by_admin' => Auth::user()->role_name === 'admin' ? 1 : 0
                 ]);
 
-                return response()->json(['message' => 'Supplier payment created successfully.']);
+                return response()->json([
+                    'message' => 'Supplier payment created successfully.'
+                ]);
+
             } catch (\Exception $e) {
+
                 return response()->json(['error' => 'An unexpected error occurred: ']);
+
             }
         }
     }

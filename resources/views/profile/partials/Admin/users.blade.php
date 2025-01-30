@@ -24,7 +24,7 @@
         <div class="d-flex justify-content-end">
 
             <a class="btn btn-sm btn-success" href="{{ url('admin/users/create') }}" class="float-right">
-                <i class="fa fa-user-plus pr-1" aria-hidden="true"></i>
+                <i class="fa fa-user-plus pe-1" aria-hidden="true"></i>
                 Create Engineer
             </a>
 
@@ -44,7 +44,7 @@
 
                             <th class="bg-info fw-bold text-white"> Name </th>
                             <th class="bg-info fw-bold text-white"> Username </th>
-                            <th class="bg-info fw-bold text-white"> Projects Assigned </th>
+                            {{-- <th class="bg-info fw-bold text-white"> Projects Assigned </th> --}}
                             <th class="bg-info fw-bold text-white"> Actions</th>
 
                         </tr>
@@ -58,12 +58,12 @@
                                     {{ $user->username }}
                                 </td>
 
-                                <td>
+                                {{-- <td>
                                     <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal"
                                         data-bs-target="#exampleModal">
                                         View Sites
                                     </button>
-                                </td>
+                                </td> --}}
 
                                 <div class="modal fade" id="exampleModal" tabindex="-1"
                                     aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -98,23 +98,24 @@
                                     </div>
                                 </div>
 
-                                <td class="space-x-4 d-flex">
+                                <td class="d-flex gap-3 align-items-center justify-content-start">
 
-                                    <a href="{{ route('admin.edit-user', ['id' => $user->id]) }}">
-                                        <i class="fa-regular fa-pen-to-square text-xl bg-white rounded-full "></i>
-
+                                    <a href="{{ route('admin.edit-user', ['id' => $user->id]) }}"
+                                        class="btn btn-link p-0">
+                                        <i class="fa-regular fa-pen-to-square text-xl bg-white rounded-full"></i>
                                     </a>
 
                                     <form action="{{ route('admin.delete-user', ['id' => $user->id]) }}" method="POST"
                                         onsubmit="return confirm('Are you sure you want to delete this user?');">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="bg-white rounded-full">
-                                            <i class="fa-regular fa-trash-can text-xl text-danger"></i>
+                                        <button type="submit" class="btn btn-link p-0">
+                                            <i class="fa-regular fa-trash-can text-danger"></i>
                                         </button>
                                     </form>
-                                    
+
                                 </td>
+
 
                             </tr>
                         @endforeach

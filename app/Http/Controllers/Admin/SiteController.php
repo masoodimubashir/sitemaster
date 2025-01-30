@@ -6,10 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSiteRequest;
 use App\Http\Requests\UpdateSiteRequest;
 use App\Models\Client;
-use App\Models\DailyWager;
 use App\Models\Item;
 use App\Models\PaymentSupplier;
-use App\Models\Phase;
 use App\Models\Site;
 use App\Models\Supplier;
 use App\Models\User;
@@ -69,7 +67,7 @@ class   SiteController extends Controller
 
         return redirect()->route('sites.index')->with('status', 'create');
     }
-    
+
     /**
      * Display the specified resource.
      */
@@ -104,8 +102,11 @@ class   SiteController extends Controller
             },
             'paymeentSuppliers' => function($query) {
                 $query->where('verified_by_admin', 1);
-            }
+            },
+
         ])->findOrFail($site_id);
+
+
 
         $totalPaymentSuppliersAmount = $site->paymeentSuppliers()
             ->where('verified_by_admin', 1)
@@ -163,7 +164,7 @@ class   SiteController extends Controller
         $raw_material_providers = Supplier::where('is_raw_material_provider', 1)->orderBy('name')->get();
 
         $wagers = $site->phases->flatMap(function ($phase) {
-            
+
             return $phase->dailyWagers->map(function ($wager) {
                 return [
                     'id' => $wager->id,

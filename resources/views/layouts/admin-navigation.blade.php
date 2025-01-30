@@ -1,3 +1,10 @@
+
+
+
+
+
+
+
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
     <ul class="nav">
         <li class="nav-item">
@@ -8,8 +15,8 @@
         </li>
         <li class="nav-item nav-category">Tabs</li>
 
-        <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('users.index') ? 'active' : '' }}" href="{{ route('users.index') }}">
+        <li class="nav-item ">
+            <a class="nav-link" href="{{ route('users.index') }}">
                 <i class="fa-solid fa-helmet-safety menu-icon"></i>
                 <span class="menu-title">Site Engineers</span>
             </a>
@@ -24,7 +31,7 @@
         </li>
 
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('admin/suppliers') ? 'active' : '' }}" href="{{ url('admin/suppliers') }}">
+            <a class="nav-link" href="{{ url('admin/suppliers') }}">
                 <i class="menu-icon fa fa-inbox"></i>
                 <span class="menu-title">Suppliers</span>
             </a>
@@ -38,7 +45,7 @@
         </li>
 
         <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('sites.index') ? 'active' : '' }}"
+            <a class="nav-link"
                 href="{{ route('sites.index') }}">
                 <i class="menu-icon fa fa-building"></i>
                 <span class="menu-title">Site</span>
@@ -47,14 +54,14 @@
 
 
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('admin/phase') ? 'active' : '' }}" href="{{ url('admin/phase') }}">
+            <a class="nav-link" href="{{ url('admin/phase') }}">
                 <i class="menu-icon fas fa-tasks me-2"></i>
                 <span class="menu-title">Phase</span>
             </a>
         </li>
 
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('admin/wager-attendance') ? 'active' : '' }}"
+            <a class="nav-link"
                 href="{{ url('admin/wager-attendance') }}">
                 <i class="menu-icon fa-solid fa-calendar-days"></i>
                 <span class="menu-title">Attendance</span>
@@ -62,7 +69,7 @@
         </li>
 
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('admin/payments') ? 'active' : '' }}"
+            <a class="nav-link"
                 href="{{ url('admin/payments') }}">
                 <i class="menu-icon fa-solid fa-book"></i>
                 <span class="menu-title">Ledger</span>
@@ -70,7 +77,7 @@
         </li>
 
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('admin/manage-payments') ? 'active' : '' }}"
+            <a class="nav-link"
                 href="{{ url('admin/manage-payment') }}">
                 <i class="menu-icon fa-solid fa-book"></i>
                 <span class="menu-title">Payment Manager</span>
@@ -80,7 +87,7 @@
         <li class="nav-item nav-category">Verifications</li>
 
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('admin/pay-verification') ? 'active' : '' }}"
+            <a class="nav-link"
                 href="{{ url('admin/pay-verification') }}">
                 <i class="menu-icon fa fa-indian-rupee"></i>
                 <span class="menu-title">Verify Payments</span>
@@ -88,7 +95,7 @@
         </li>
 
         <li class="nav-item">
-            <a class="nav-link {{ request()->is('admin/item-verification') ? 'active' : '' }}"
+            <a class="nav-link"
                 href="{{ url('admin/item-verification') }}">
                 <i class="menu-icon fa fa-indian-rupee"></i>
                 <span class="menu-title">Verify Items</span>
@@ -98,18 +105,18 @@
         <li class="nav-item nav-category">Trash</li>
 
         <li class="nav-item">
-            <a class="nav-link" {{ request()->routeIs('trash.suppliers') ? 'active' : '' }}
+            <a class="nav-link"
                 href="{{ route('trash.suppliers') }}">
                 <span class="menu-title">Suppliers</span>
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('trash.sites') ? 'active' : '' }}"
+            <a class="nav-link"
                 href="{{ route('trash.sites') }}">
                 <span class="menu-title">Sites</span></a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('trash.phases') ? 'active' : '' }}"
+            <a class="nav-link"
                 href="{{ route('trash.phases') }}">
                 <span class="menu-title">Phases</span></a>
         </li>

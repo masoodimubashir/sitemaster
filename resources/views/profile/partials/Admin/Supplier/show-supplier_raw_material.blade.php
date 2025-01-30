@@ -2,8 +2,6 @@
 
     @php
 
-        $balance = $grandTotal - $supplier->payment_suppliers_sum_amount;
-
         $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
 
     @endphp
@@ -165,7 +163,7 @@
                         </div>
                         <div>
                             <h6 class="text-muted mb-1">Debit</h6>
-                            {{ Number::currency($supplier->payment_suppliers_sum_amount ?? 0, 'INR') }}
+                            {{ Number::currency($totalDebit ?? 0, 'INR') }}
                         </div>
                     </div>
 
@@ -193,7 +191,7 @@
                         </div>
                         <div>
                             <h6 class="text-muted mb-1">Credit</h6>
-                            {{ Number::currency($grandTotal ?? 0, 'INR') }}
+                            {{ Number::currency($totalCredit ?? 0, 'INR') }}
 
                         </div>
                     </div>
@@ -260,7 +258,7 @@
                                             <td>
 
                                                 @if ($d['image'] !== null)
-                                                    <img src="{{ asset($d['image']) }}" alt="">
+                                                    <img src="{{ asset('storage/' . $d['image']) }}" alt="">
                                                 @else
                                                     NA
                                                 @endif
@@ -433,7 +431,7 @@
                     error: function(response) {
                         if (response.status === 422) { // Validation errors
 
-                            
+
 
                             messageContainer.append(`
                             <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">

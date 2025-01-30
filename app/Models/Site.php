@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Site extends Model
@@ -63,6 +64,14 @@ class Site extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    /**
+     * Polymorphic relationship to AdminPayment.
+     */
+    public function adminPayments(): MorphMany
+    {
+        return $this->morphMany(AdminPayment::class, 'entity');
     }
 
 }

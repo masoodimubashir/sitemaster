@@ -129,7 +129,7 @@
                                                 @method('POST')
 
                                                 <button type="submit"
-                                                    class="badge badge-pill text-white {{ $site->is_on_going ? 'text-bg-success' : 'text-bg-danger' }}">
+                                                    class="badge badge-pill btn text-white {{ $site->is_on_going ? 'text-bg-success' : 'text-bg-danger' }}">
                                                     {{ $site->is_on_going ? 'Verified' : 'Verify' }}
                                                 </button>
                                             </form>

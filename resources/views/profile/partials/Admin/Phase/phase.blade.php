@@ -54,7 +54,7 @@
 
 
                                         <td>
-                                            {{ $phase->created_at->format('D-M') }}
+                                            {{ $phase->created_at->format('D-m-Y') }}
                                         </td>
 
                                         <td>

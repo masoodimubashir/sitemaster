@@ -50,9 +50,8 @@
                                         {{ old('provider') == 'is_raw_material_provider' ? 'checked' : '' }}> Raw
                                     Material Provider
                                 </label>
-                                @error('provider')
-                                    <span class="text-red-500 fw-bold  text-sm">{{ $message }}</span>
-                                @enderror
+
+
                             </div>
 
                             <div class="form-check">
@@ -64,6 +63,8 @@
                                 </label>
 
                             </div>
+                            <x-input-error :messages="$errors->get('provider')" class="mt-2" />
+
                         </div>
 
                         <button class=" btn btn-info"><span>Save</span></button>

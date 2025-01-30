@@ -69,19 +69,6 @@
             cursor: pointer;
         }
 
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            border: 1px solid lightgray;
-            border-radius: 10px;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            min-width: 160px;
-            background: white;
-        }
 
         .dropdown-content li {
             padding: 10px 20px;
@@ -106,15 +93,6 @@
             z-index: 999999999;
         }
 
-
-        .phase-header {
-            background: linear-gradient(45deg, #2196F3, #1976D2);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-        }
-
         .stats-card {
             border: none;
             box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
@@ -125,16 +103,6 @@
             transform: translateY(-5px);
         }
 
-        .progress {
-            height: 10px;
-            border-radius: 5px;
-        }
-
-        .status-badge {
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-weight: 500;
-        }
 
         .table-custom th {
             background-color: #f8f9fa;
@@ -150,12 +118,7 @@
             gap: 10px;
         }
 
-        .quick-stats {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
+
     </style>
 
     <style>
@@ -353,11 +316,11 @@
                                 Generate Phase PDF
                             </a>
 
+
                             <button class="btn btn-sm btn-info text-white dropdown-toggle" type="button"
                                 id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                                 Make Entry
                             </button>
-
 
 
                             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
@@ -572,9 +535,10 @@
 
                                                                 <td>
                                                                     <img style="cursor: pointer"
-                                                                        data-full="{{ asset($construction_material_billing->item_image_path) }}"
-                                                                        src="{{ asset($construction_material_billing->item_image_path) }}"alt=""
-                                                                        class="w-20 h-20 rounded-full gallery-image">
+                                                                         data-full="{{ asset('storage/' . $construction_material_billing->item_image_path) }}"
+                                                                         src="{{ asset('storage/' . $construction_material_billing->item_image_path) }}"
+                                                                         alt=""
+                                                                         class="w-20 h-20 rounded-full gallery-image">
                                                                 </td>
 
                                                                 <td>
@@ -714,9 +678,9 @@
 
                                                                 <td>
                                                                     <img style="cursor: pointer"
-                                                                        data-full="{{ asset($sqft->image_path) }}"
-                                                                        src="{{ asset($sqft->image_path) }}"alt=""
-                                                                        class="w-20 h-20 rounded-full gallery-image">
+                                                                         data-full="{{ asset('storage/'.$sqft->image_path) }}"
+                                                                         src="{{ asset('storage/'.$sqft->image_path) }}" alt=""
+                                                                         class="w-20 h-20 rounded-full gallery-image">
                                                                 </td>
                                                                 <td>
                                                                     {{ ucwords($sqft->wager_name) }}
@@ -1322,13 +1286,13 @@
                                                     </tr>
                                                 </tbody> --}}
                                             </table>
-                            
+
                                         </div>
-                            
+
                                     </div>
-                            
+
                                 </div>
-                            
+
                             </div>
 
                         </div>
@@ -2231,7 +2195,7 @@
                     processData: false,
                     success: function(response) {
 
-                        
+
 
                         messageContainer.append(`
                         <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
@@ -2429,7 +2393,7 @@
                     success: function(response) {
 
                         console.log(response);
-                        
+
 
                         messageContainer.append(`
                         <div  class="alert align-items-center text-white bg-success border-0" role="alert" >

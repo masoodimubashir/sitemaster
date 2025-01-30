@@ -15,37 +15,53 @@ class SupplierPaymentController extends Controller
     {
 
 
+        //  Get The Data From The Request 
         $dateFilter = $request->get('date_filter', 'lifetime');
         $site_id = $request->input('site_id', 'all');
         $supplier_id = $request->input('supplier_id', $id);
+        $wager_id = $request->input('wager_id', 'all');
 
+        // Get ongoing sites is ongoing count  and is not ongoing count
         $ongoingSites = Site::where('is_on_going', 1)->pluck('id');
         $is_ongoing_count = $ongoingSites->count();
         $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id);
+        // Get All the data on the arguments given
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
 
+
+        // Prepare the data for the view
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
+        // Sort the data by created_at
         $ledgers = $ledgers->sortByDesc(function ($d) {
-                return $d['created_at'];
-            });
+            return $d['created_at'];
+        })->whereNotNull('supplier_id');
 
-        [$total_paid, $total_due, $total_balance] = $dataService->calculateBalances($ledgers);
+        // Get the unique sites
+        $sites = $ledgers->unique('site_id');
 
-        $perPage = 10;
+        //  Calculate the balances
+        $balances = $dataService->calculateAllBalances($ledgers);
 
+        // Access the values
+        $withoutServiceCharge = $balances['without_service_charge'];
+
+        $total_paid = $withoutServiceCharge['paid'];
+        $total_due = $withoutServiceCharge['due'];
+        $total_balance = $withoutServiceCharge['balance'];
+
+        // Paginate the data
         $paginatedLedgers = new LengthAwarePaginator(
-            $ledgers->forPage($request->input('page', 1), $perPage),
+            $ledgers->forPage($request->input('page', 1), 10),
             $ledgers->count(),
-            $perPage,
+            10,
             $request->input('page', 1),
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $sites = $paginatedLedgers->unique('site_id');
-
-        return view("profile.partials.Admin.Ledgers.supplier-ledger",
+        return view(
+            "profile.partials.Admin.Ledgers.supplier-ledger",
             compact(
                 'payments',
                 'paginatedLedgers',
@@ -57,7 +73,4 @@ class SupplierPaymentController extends Controller
             )
         );
     }
-
-
-
 }

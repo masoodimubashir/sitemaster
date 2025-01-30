@@ -5,13 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentSupplier;
 use App\Models\Site;
-use App\Models\Supplier;
 use App\Services\DataService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use PhpParser\Node\Stmt\TryCatch;
 
 class PaymentsController extends Controller
 {
@@ -30,14 +27,17 @@ class PaymentsController extends Controller
         $supplier_id = $request->input('supplier_id', 'all');
         $wager_id = $request->input('wager_id', 'all');
 
-
         $ongoingSites = Site::where('is_on_going', 1)->pluck('id');
         $is_ongoing_count = $ongoingSites->count();
         $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
-
-
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
-
+        
+        [
+            $payments,
+            $raw_materials,
+            $squareFootageBills,
+            $expenses,
+            $wagers
+        ] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
 
         $ledgers = $dataService->makeData(
             $payments,
@@ -48,9 +48,6 @@ class PaymentsController extends Controller
         )->sortByDesc(function ($d) {
             return $d['created_at'];
         });
-
-
-        // [$total_paid, $total_due, $total_balance] = $dataService->calculateBalances($ledgers);
 
         $balances = $dataService->calculateAllBalances($ledgers);
 

@@ -362,7 +362,7 @@
                         </div>
 
                         <div class="mt-4">
-                            {{-- {{ $payments->links() }} --}}
+                            {{ $paginatedLedgers->links() }}
                         </div>
                     </div>
                 </div>

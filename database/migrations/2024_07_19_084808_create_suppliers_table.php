@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('name');
             $table->boolean('is_raw_material_provider');
             $table->boolean('is_workforce_provider');
-            // $table->boolean('is_verified')->default(false);
             $table->string('contact_no', 10)->unique();
             $table->string('address');
             $table->softDeletes();

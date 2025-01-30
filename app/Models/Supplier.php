@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Supplier extends Model
@@ -59,6 +60,15 @@ class Supplier extends Model
     public function squareFootages(): HasMany
     {
         return $this->hasMany(SquareFootageBill::class);
+    }
+
+
+    /**
+     * Polymorphic relationship to AdminPayment.
+     */
+    public function adminPayments(): MorphMany
+    {
+        return $this->morphMany(AdminPayment::class, 'entity');
     }
 
 

@@ -3,17 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class PaymentBank extends Model
 {
-    protected $fillable = [
-        'from',
-        'from_type',
-        'to',
-        'to_type',
-        'amount',
-        'is_on_going'
-    ];
 
-    
+
 }

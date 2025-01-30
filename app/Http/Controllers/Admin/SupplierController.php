@@ -52,7 +52,6 @@ class SupplierController extends Controller
      */
     public function show(string $id)
     {
-
         $supplier = Supplier::with([
             'constructionMaterialBilling' => function ($query) {
                 $query->where('verified_by_admin', 1)
@@ -85,18 +84,18 @@ class SupplierController extends Controller
                                         $siteQuery->whereNull('deleted_at');
                                     }
                                 ]);
-                        },
+                        }
                     ]);
+            },
+            'paymentSuppliers' => function ($payment) {
+                $payment->where('verified_by_admin', 1);
             }
         ])
-            ->withSum('constructionMaterialBilling', 'amount')
-            ->withSum('paymentSuppliers', 'amount')
             ->find($id);
-
-        $grandTotal = 0;
 
         $data = collect();
 
+        // Merge Construction Materials (Debit)
         $data = $data->merge($supplier->constructionMaterialBilling->map(function ($material) {
             return [
                 'created_at' => $material->created_at,
@@ -105,12 +104,14 @@ class SupplierController extends Controller
                 'item' => $material->item_name,
                 'price_per_unit' => 0,
                 'total_price' => $material->amount,
+                'transaction_type' => 'debit',
                 'site' => $material->phase->site->site_name,
                 'site_owner' => $material->phase->site->site_owner_name,
                 'site_id' => $material->phase->site->id
             ];
         }));
 
+        // Merge Daily Wagers (Debit)
         $data = $data->merge($supplier->dailyWagers->map(function ($wager) {
             return [
                 'created_at' => $wager->created_at,
@@ -119,13 +120,14 @@ class SupplierController extends Controller
                 'item' => $wager->wager_name,
                 'price_per_unit' => $wager->price_per_day,
                 'total_price' => $wager->wager_total,
+                'transaction_type' => 'debit',
                 'site' => $wager->phase->site->site_name,
                 'site_owner' => $wager->phase->site->site_owner_name,
                 'site_id' => $wager->phase->site->id
-
             ];
         }));
 
+        // Merge Square Footages (Debit)
         $data = $data->merge($supplier->squareFootages->map(function ($sqft) {
             return [
                 'created_at' => $sqft->created_at,
@@ -134,51 +136,56 @@ class SupplierController extends Controller
                 'item' => $sqft->wager_name,
                 'price_per_unit' => $sqft->price,
                 'total_price' => $sqft->price * $sqft->multiplier,
+                'transaction_type' => 'debit',
                 'site' => $sqft->phase->site->site_name,
                 'site_owner' => $sqft->phase->site->site_owner_name,
                 'site_id' => $sqft->phase->site->id
-
             ];
         }));
 
+        // Merge Payments (Credit)
+        $data = $data->merge($supplier->paymentSuppliers->map(function ($payment) {
+            return [
+                'created_at' => $payment->created_at,
+                'type' => 'Payment',
+                'image' => $payment->screenshot,
+                'item' => 'Payment',
+                'price_per_unit' => 0,
+                'total_price' => $payment->amount,
+                'transaction_type' => 'credit',
+                'site' => $payment->site->site_name,
+                'site_owner' => $payment->site->site_owner_name,
+                'site_id' => $payment->site->id,
+            ];
+        }));
+
+        // Calculate totals
+        $totalDebit = $data->where('transaction_type', 'debit')->sum('total_price');
+        $totalCredit = $data->where('transaction_type', 'credit')->sum('total_price');
+
+        $balance = $totalDebit - $totalCredit;
+
         $sites = collect($data)
-        ->unique('site')
-        ->values()
-        ->all();
+            ->unique('site')
+            ->whereNotNull('site')
+            ->values()
+            ->all();
+
+        $data = [
+            'data' => $data,
+            'supplier' => $supplier,
+            'totalDebit' => $totalDebit,
+            'totalCredit' => $totalCredit,
+            'balance' => $balance,
+            'sites' => $sites
+        ];
 
         if ($supplier->is_raw_material_provider === 1) {
-
-            foreach ($data as $d) {
-                if ($d['type'] === 'Material') {
-                    $grandTotal += $d['total_price'];
-                }
-            }
-
-            return view('profile.partials.Admin.Supplier.show-supplier_raw_material',
-                compact(
-                    'data',
-                    'supplier',
-                    'grandTotal',
-                    'sites'
-                )
-            );
-        } else {
-
-            foreach ($data as $d) {
-                if ($d['type'] !== 'Material') {
-                    $grandTotal += $d['total_price'];
-                }
-            }
-
-            return view('profile.partials.Admin.Supplier.show_supplier_workforce',
-                compact(
-                    'data',
-                    'supplier',
-                    'grandTotal',
-                    'sites'
-                )
-            );
+            return view('profile.partials.Admin.Supplier.show-supplier_raw_material', $data);
         }
+
+        return view('profile.partials.Admin.Supplier.show_supplier_workforce', $data);
+
     }
 
     /**
@@ -230,7 +237,7 @@ class SupplierController extends Controller
         })->exists();
 
         if ($hasPaymentRecords) {
-            return redirect()->to('admin/suppliers')->with('status' , 'error');
+            return redirect()->to('admin/suppliers')->with('status', 'error');
         }
 
         $supplier->delete();

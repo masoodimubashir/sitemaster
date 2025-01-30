@@ -11,14 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('payment_banks', function (Blueprint $table) {
+        Schema::create('admin_payments', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('from');
-            $table->string('from_type');
-            $table->unsignedBigInteger('to');
-            $table->string('to_type');
+            $table->morphs('entity');
             $table->decimal('amount', 10, 2);
-            $table->boolean('is_on_going')->default(false);
+            $table->enum('payment_type', ['site', 'supplier']);
             $table->timestamps();
         });
     }
@@ -28,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('payment_banks');
+        Schema::dropIfExists('admin_payments');
     }
 };

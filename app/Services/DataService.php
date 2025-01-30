@@ -2,12 +2,12 @@
 
 namespace App\Services;
 
-use Carbon\Carbon;
 use App\Models\ConstructionMaterialBilling;
 use App\Models\DailyExpenses;
 use App\Models\DailyWager;
 use App\Models\PaymentSupplier;
 use App\Models\SquareFootageBill;
+use Carbon\Carbon;
 
 class DataService
 {
@@ -15,7 +15,9 @@ class DataService
     /**
      * Create a new class instance.
      */
-    public function __construct() {}
+    public function __construct()
+    {
+    }
 
 
     public function getData($dateFilter, $site_id, $supplier_id, $wager_id)
@@ -23,18 +25,19 @@ class DataService
 
         $dateRange = $this->filterByDate($dateFilter);
 
-        
-
-        // First get the wager to find associated supplier_id
         $wager = null;
+
         if ($wager_id && $wager_id !== 'all') {
             $wager = DailyWager::find($wager_id);
             $supplier_id = $wager?->supplier_id;
         }
 
-
-        // Now query all tables with the supplier_id if wager exists
-        $payments = PaymentSupplier::with(['site.phases', 'supplier'])
+        $payments = PaymentSupplier::with([
+            'site.phases',
+            'supplier',
+            'site.adminPayments',
+            'supplier.adminPayments',
+        ])
             ->whereHas('site', fn($q) => $q->whereNull('deleted_at'))
             ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
             ->whereHas('site.phases', fn($q) => $q->whereNull('deleted_at'))
@@ -97,7 +100,6 @@ class DataService
             ->get();
 
 
-
         $expenses = DailyExpenses::with([
             'phase' => function ($phase) {
                 $phase->with([
@@ -129,7 +131,6 @@ class DataService
             ->get();
 
 
-
         $wagers = DailyWager::with([
             'phase.site',
             'supplier',
@@ -146,30 +147,88 @@ class DataService
             ->get();
 
         return [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers];
+
     }
 
+    /**
+     * Get date range based on filter or custom dates
+     */
+    public function filterByDate($dateFilter)
+    {
+        $now = Carbon::now();
 
-    public  function makeData($payments = null, $raw_materials = null, $squareFootageBills = null, $expenses = null, $wagers = null)
+        switch ($dateFilter) {
+
+            case 'today':
+                return [
+                    $now->copy()->startOfDay()->toDateTimeString(),
+                    $now->copy()->endOfDay()->toDateTimeString()
+                ];
+
+            case 'yesterday':
+                return [
+                    $now->copy()->subDay()->startOfDay()->toDateTimeString(),
+                    $now->copy()->subDay()->endOfDay()->toDateTimeString()
+                ];
+
+            case 'this_week':
+                return [
+                    $now->copy()->startOfWeek()->toDateTimeString(),
+                    $now->copy()->endOfWeek()->toDateTimeString()
+                ];
+
+            case 'this_month':
+                return [
+                    $now->copy()->startOfMonth()->toDateTimeString(),
+                    $now->copy()->endOfMonth()->toDateTimeString()
+                ];
+
+            case 'this_year':
+                return [
+                    $now->copy()->startOfYear()->toDateTimeString(),
+                    $now->copy()->endOfYear()->toDateTimeString()
+                ];
+
+            case 'lifetime':
+                return null;
+
+            default:
+                return [
+                    $now->copy()->startOfDay()->toDateTimeString(),
+                    $now->copy()->endOfDay()->toDateTimeString()
+                ];
+        }
+    }
+
+    public function makeData($payments = null, $raw_materials = null, $squareFootageBills = null, $expenses = null, $wagers = null)
     {
 
         $ledgers = collect();
 
         $ledgers = $ledgers->merge($payments->map(function ($pay) {
 
+            $sitePaymentsTotal = $pay->site ? $pay->site->adminPayments->sum('amount') : 0;
+            $supplierPaymentsTotal = $pay->supplier ? $pay->supplier->adminPayments->sum('amount') : 0;
+
             return [
+
                 'supplier' => $pay->supplier->name ?? '',
                 'description' => $pay->item_name ?? 'NA',
                 'category' => 'Payments',
                 'debit' => 'NA',
                 'credit' => $pay->amount,
                 'phase' => $pay->phase->phase_name ?? 'NA',
-                'site' => $pay->site->site_name ?? 0,
+                'site' => $pay->site->site_name ?? 'NA',
                 'site_owner' => $pay->site->site_owner_name,
                 'contact_no' => $pay->site->contact_no,
                 'site_id' => $pay->site_id ?? null,
                 'supplier_id' => $pay->supplier_id ?? null,
+                'site_payments_total' => $sitePaymentsTotal,
+                'supplier_payments_total' => $supplierPaymentsTotal,
                 'created_at' => $pay->created_at,
+
             ];
+
         }));
 
         $ledgers = $ledgers->merge($raw_materials->map(function ($material) {
@@ -258,62 +317,47 @@ class DataService
         );
 
 
-
         return $ledgers;
     }
 
-
-    /**
-     * Get date range based on filter or custom dates
-     */
-    public  function filterByDate($dateFilter)
+    public function getServiceChargeAmount($amount, $service_charge)
     {
-        $now = Carbon::now();
 
-        switch ($dateFilter) {
+        $service_charge_amount = ($amount * $service_charge) / 100;
 
-            case 'today':
-                return [
-                    $now->copy()->startOfDay()->toDateTimeString(),  // Ensure proper format for SQL query
-                    $now->copy()->endOfDay()->toDateTimeString()
-                ];
-
-            case 'yesterday':
-                return [
-                    $now->copy()->subDay()->startOfDay()->toDateTimeString(),
-                    $now->copy()->subDay()->endOfDay()->toDateTimeString()
-                ];
-
-            case 'this_week':
-                return [
-                    $now->copy()->startOfWeek()->toDateTimeString(),
-                    $now->copy()->endOfWeek()->toDateTimeString()
-                ];
-
-            case 'this_month':
-                return [
-                    $now->copy()->startOfMonth()->toDateTimeString(),
-                    $now->copy()->endOfMonth()->toDateTimeString()
-                ];
-
-            case 'this_year':
-                return [
-                    $now->copy()->startOfYear()->toDateTimeString(),
-                    $now->copy()->endOfYear()->toDateTimeString()
-                ];
-
-            case 'lifetime':
-                return null;
-
-            default:
-                return [
-                    $now->copy()->startOfDay()->toDateTimeString(),
-                    $now->copy()->endOfDay()->toDateTimeString()
-                ];
-        }
+        return $service_charge_amount;
     }
 
+    /**
+     * Get Due, Credit and Balancene based on filter Of The Models
+     */
 
+    // public function calculateBalances($ledgers)
+    // {
+
+    //     $total_paid = 0;
+    //     $total_due = 0;
+    //     $total_balance = 0;
+
+
+    //     foreach ($ledgers as $item) {
+    //         switch ($item['category']) {
+    //             case 'Payments':
+    //                 $total_paid += is_string($item['credit']) ? floatval($item['credit']) : $item['credit'];
+    //                 break;
+    //             case 'Raw Material':
+    //             case 'Square Footage Bill':
+    //             case 'Daily Expense':
+    //             case 'Daily Wager':
+    //                 $total_due += is_string($item['debit']) ? floatval($item['debit']) : $item['debit'];
+    //                 break;
+    //         }
+    //     }
+
+    //     $total_balance = $total_due - $total_paid;
+
+    //     return [$total_paid, $total_due, $total_balance];
+    // }
     public function calculateAllBalances($ledgers)
     {
         $totals = [
@@ -359,36 +403,7 @@ class DataService
         return $totals;
     }
 
-    /**
-     * Get Due, Credit and Balancene based on filter Of The Models
-     */
 
-    // public function calculateBalances($ledgers)
-    // {
-
-    //     $total_paid = 0;
-    //     $total_due = 0;
-    //     $total_balance = 0;
-
-
-    //     foreach ($ledgers as $item) {
-    //         switch ($item['category']) {
-    //             case 'Payments':
-    //                 $total_paid += is_string($item['credit']) ? floatval($item['credit']) : $item['credit'];
-    //                 break;
-    //             case 'Raw Material':
-    //             case 'Square Footage Bill':
-    //             case 'Daily Expense':
-    //             case 'Daily Wager':
-    //                 $total_due += is_string($item['debit']) ? floatval($item['debit']) : $item['debit'];
-    //                 break;
-    //         }
-    //     }
-
-    //     $total_balance = $total_due - $total_paid;
-
-    //     return [$total_paid, $total_due, $total_balance];
-    // }
 
 
     public function calculateBalancesWithServiceCharge($ledgers)
@@ -416,13 +431,5 @@ class DataService
         $total_balance = $total_due - $total_paid;
 
         return [$total_paid, $total_due, $total_balance];
-    }
-
-    public function getServiceChargeAmount($amount, $service_charge)
-    {
-
-        $service_charge_amount = ($amount * $service_charge) / 100;
-
-        return $service_charge_amount;
     }
 }
