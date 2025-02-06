@@ -40,9 +40,9 @@ class Site extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function paymeentSuppliers(): HasMany
+    public function payments(): HasMany
     {
-        return $this->hasMany(PaymentSupplier::class);
+        return $this->hasMany( Payment::class, 'site_id', 'id');
     }
 
     /**

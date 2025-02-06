@@ -224,13 +224,13 @@
 
                                     <th class="bg-info fw-bold text-white"> Item </th>
 
-                                    <th class="bg-info fw-bold text-white">
-                                        Site Name
-                                    </th>
+{{--                                    <th class="bg-info fw-bold text-white">--}}
+{{--                                        Site Name--}}
+{{--                                    </th>--}}
 
-                                    <th class="bg-info fw-bold text-white">
-                                        Site Owner
-                                    </th>
+{{--                                    <th class="bg-info fw-bold text-white">--}}
+{{--                                        Site Owner--}}
+{{--                                    </th>--}}
 
                                     {{-- <th class="bg-info fw-bold text-white">
                                         Price Per Unit
@@ -269,13 +269,13 @@
                                                 {{ $d['item'] }}
                                             </td>
 
-                                            <td>
-                                                {{ $d['site'] }}
-                                            </td>
+{{--                                            <td>--}}
+{{--                                                {{ $d['site'] }}--}}
+{{--                                            </td>--}}
 
-                                            <td>
-                                                {{ $d['site_owner'] }}
-                                            </td>
+{{--                                            <td>--}}
+{{--                                                {{ $d['site_owner'] }}--}}
+{{--                                            </td>--}}
 
                                             {{-- <td>
                                                 {{ $d['price_per_unit'] }}
@@ -337,30 +337,28 @@
                             <x-input-error :messages="$errors->get('amount')" class="mt-2" />
                         </div>
 
-                        <!-- Site -->
 
-                        <div class="mt-4">
-                            <select id="site_id" class="form-select form-select-sm" name="site_id">
-                                <option value="">Select Site</option>
-                                @foreach ($data as $d)
-                                    <option value="{{ $d['site_id'] }}">
-                                        {{ $d['site_id'] }} -
-                                        {{ $d['site'] }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('site_id')
-                                <x-input-error :messages="$site_id" class="mt-2" />
-                            @enderror
-                        </div>
 
                         <input type="hidden" name="supplier_id" value="{{ $supplier->id }}" />
                         <x-input-error :messages="$errors->get('supplier_id')" class="mt-2" />
 
 
-                        @error('supplier_id')
-                            <x-input-error :messages="$message" class="mt-2" />
-                        @enderror
+
+                        <div class="row g-3 mt-4">
+                            <div class="col-auto">
+                                <label for="option1">
+                                    <input type="radio" name="payment_mode" id="option1" value="0" checked>
+                                    Sent
+                                </label>
+                            </div>
+
+                            <div class="col-auto">
+                                <label for="option2">
+                                    <input type="radio" name="payment_mode" id="option2" value="1">
+                                    Received
+                                </label>
+                            </div>
+                        </div>
 
 
 

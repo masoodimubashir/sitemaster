@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Models\ConstructionMaterialBilling;
 use App\Models\DailyExpenses;
 use App\Models\DailyWager;
+use App\Models\Payment;
 use App\Models\PaymentSupplier;
 use App\Models\SquareFootageBill;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class DataService
 {
@@ -32,15 +34,36 @@ class DataService
             $supplier_id = $wager?->supplier_id;
         }
 
-        $payments = PaymentSupplier::with([
-            'site.phases',
-            'supplier',
-            'site.adminPayments',
-            'supplier.adminPayments',
-        ])
-            ->whereHas('site', fn($q) => $q->whereNull('deleted_at'))
-            ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-            ->whereHas('site.phases', fn($q) => $q->whereNull('deleted_at'))
+//        $payments = PaymentSupplier::with([
+//            'site.phases',
+//            'supplier',
+//            'site.adminPayments',
+//            'supplier.adminPayments',
+//        ])
+//            ->whereHas('site', fn($q) => $q->whereNull('deleted_at'))
+//            ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+//            ->whereHas('site.phases', fn($q) => $q->whereNull('deleted_at'))
+//            ->where('verified_by_admin', 1)
+//            ->when($dateFilter !== 'lifetime' && $dateRange, fn($q) => $q->whereBetween('created_at', $dateRange))
+//            ->when($site_id !== 'all', fn($q) => $q->where('site_id', $site_id))
+//            ->when($supplier_id && $supplier_id != 'all', fn($q) => $q->where('supplier_id', $supplier_id))
+//            ->latest()
+//            ->get();l
+
+//        dd();
+
+        $payments = Payment::query()
+            ->with([
+                'supplier' => function ($query) {
+                    $query->whereNull('deleted_at')
+                        ->withSum('adminPayments', 'amount');
+                },
+                'site' => function ($query) {
+                    $query->whereNull('deleted_at')
+                        ->where('is_on_going', 1)
+                        ->withSum('adminPayments', 'amount');
+                },
+            ])
             ->where('verified_by_admin', 1)
             ->when($dateFilter !== 'lifetime' && $dateRange, fn($q) => $q->whereBetween('created_at', $dateRange))
             ->when($site_id !== 'all', fn($q) => $q->where('site_id', $site_id))
@@ -159,11 +182,11 @@ class DataService
 
         switch ($dateFilter) {
 
-            case 'today':
-                return [
-                    $now->copy()->startOfDay()->toDateTimeString(),
-                    $now->copy()->endOfDay()->toDateTimeString()
-                ];
+//            case 'today':
+//                return [
+//                    $now->copy()->startOfDay()->toDateTimeString(),
+//                    $now->copy()->endOfDay()->toDateTimeString()
+//                ];
 
             case 'yesterday':
                 return [
@@ -205,31 +228,88 @@ class DataService
 
         $ledgers = collect();
 
-        $ledgers = $ledgers->merge($payments->map(function ($pay) {
+//        $total_amount = 0;
+//
+//        $ledgers = $payments->map(function ($pay) use ($total_amount) {
+//
+//
+////            dd($pay->site->admin_payments_sum_amount );
+//
+////            dd($pay->supplier);
+//
+//
+//            $admin_site_total_amount = $pay->site->admin_payments_sum_amount ?? 0;
+//
+//            $admin_supplier_total_amount = $pay->supplier->admin_payments_sum_amount ?? 0;
+//
+////            dd();
+//
+//            $sitePaymentsTotal = $admin_site_total_amount + ($pay->amount ?? 0);
+//
+////            dd($sitePaymentsTotal);
+//
+//            $supplierPaymentsTotal = $admin_supplier_total_amount + ($pay->amount ?? 0);
+//
+////            dd($supplierPaymentsTotal);
+//
+//            $total_amount += $supplierPaymentsTotal;
+//
+//
+//            return [
+//                'date' => $pay->created_at,
+//                'supplier' => $pay->supplier->name ?? 'NA',
+//                'supplier_id' => $pay->supplier_id,
+//                'site' => $pay->site->site_name ?? 'NA',
+//                'site_id' => $pay->site_id,
+//                'phase' => $pay->phase->phase_name ?? 'NA',
+//                'description' => $pay->description ?? 'NA',
+//                'category' => 'Payment',
+//                'payment_mode' => $pay->payment_mode ?? 'NA',
+//                'credit' => $admin_site_total_amount + $admin_supplier_total_amount ?? 0,
+//                'debit' => 'NA',
+//                'site_payments_total' => $sitePaymentsTotal,
+//                'supplier_payments_total' => $supplierPaymentsTotal,
+//                'total_amount' => $total_amount,
+//                'site_owner' => $pay->site->site_owner_name ?? 'NA',
+//                'contact_no' => $pay->site->contact_no ?? 'NA',
+//                'created_at' => $pay->created_at,
+//            ];
+//        });
 
-            $sitePaymentsTotal = $pay->site ? $pay->site->adminPayments->sum('amount') : 0;
-            $supplierPaymentsTotal = $pay->supplier ? $pay->supplier->adminPayments->sum('amount') : 0;
+
+        $credit = 0;
+        $ledgers = $ledgers->merge($payments->map(function ($pay) use (&$credit) {
+
+            $admin_payment_supplier_amount = $pay->supplier->admin_payments_sum_amount ?? null;
+            $admin_payment_site_amount = $pay->site->admin_payments_sum_amount ?? null;
+
+            $site_total = $admin_payment_site_amount + $pay->amount;
+            $supplier_total = $admin_payment_supplier_amount + $pay->amount;
+
+            $credit += $site_total + $supplier_total;
 
             return [
-
-                'supplier' => $pay->supplier->name ?? '',
-                'description' => $pay->item_name ?? 'NA',
-                'category' => 'Payments',
-                'debit' => 'NA',
-                'credit' => $pay->amount,
-                'phase' => $pay->phase->phase_name ?? 'NA',
-                'site' => $pay->site->site_name ?? 'NA',
-                'site_owner' => $pay->site->site_owner_name,
-                'contact_no' => $pay->site->contact_no,
-                'site_id' => $pay->site_id ?? null,
-                'supplier_id' => $pay->supplier_id ?? null,
-                'site_payments_total' => $sitePaymentsTotal,
-                'supplier_payments_total' => $supplierPaymentsTotal,
-                'created_at' => $pay->created_at,
-
+                'admin_payment_supplier_amount' => $admin_payment_supplier_amount,
+                'admin_payment_site_amount' => $admin_payment_site_amount,
+                'site_total' => $site_total,
+                'supplier_total' => $supplier_total,
+                'payment_mode' => $pay->payment_mode,
+                'site_id' => $pay->site->site_name ?? 'NA',
+                'supplier_id' => $pay->supplier->name ?? 'NA',
+                 [
+                    'entity_type' => $pay->supplier ? $pay->supplier->name : $pay->site->site_name,
+                     'entity_id' => $pay->entity_id,
+                     'amount' => $pay->amount
+                ]
             ];
 
+
         }));
+
+//        dd($credit);
+
+
+//        dd($ledgers);
 
         $ledgers = $ledgers->merge($raw_materials->map(function ($material) {
 
@@ -402,8 +482,6 @@ class DataService
 
         return $totals;
     }
-
-
 
 
     public function calculateBalancesWithServiceCharge($ledgers)

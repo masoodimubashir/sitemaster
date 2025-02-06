@@ -175,7 +175,7 @@
 
                                         <td>
                                             <div class="p-3 d-flex flex-column gap-2 text-info fw-bold">
-                                                
+
                                                 <small>
                                                     <b>
                                                         Effective Balance
@@ -233,12 +233,17 @@
                                     <tr>
                                         <th class="bg-info text-white fw-bold ">Date | Time</th>
                                         <th class="bg-info text-white fw-bold ">Supplier Name</th>
+
                                         <th class="bg-info text-white fw-bold ">Phase</th>
                                         <th class="bg-info text-white fw-bold ">Site Name</th>
                                         <th class="bg-info text-white fw-bold ">Type</th>
                                         <th class="bg-info text-white fw-bold">Information</th>
                                         <th class="bg-info text-white fw-bold ">Debit</th>
-                                        <th class="bg-info text-white fw-bold ">Credit</th>
+                                        <th class="bg-info fw-bold text-white">Site Total</th>
+                                        <th class="bg-info fw-bold text-white">Supplier Total</th>
+                                        <th class="bg-info fw-bold text-white">Payment Mode</th>
+                                        <th>Totals Site</th>
+{{--                                        <th class="bg-info text-white fw-bold ">Credit</th>--}}
 
                                     </tr>
                                 </thead>
@@ -254,6 +259,7 @@
                                                 <td>
                                                     {{ $ledger['created_at'] }}
                                                 </td>
+
                                                 <td>
                                                     {{ ucwords($ledger['supplier']) }}
                                                 </td>
@@ -272,9 +278,25 @@
                                                 <td>
                                                     {{ $ledger['debit'] }}
                                                 </td>
+
+                                                <td>
+                                                    {{ $ledger['site_payments_total'] }}
+                                                </td>
+
+                                                <td>
+                                                    {{ $ledger['supplier_payments_total'] }}
+                                                </td>
+                                                <td>
+                                                    {{ $ledger['payment_mode'] }}
+                                                </td>
+
                                                 <td>
                                                     {{ $ledger['credit'] }}
                                                 </td>
+
+                                                {{--                                                <td>--}}
+{{--                                                    {{ $ledger['credit'] }}--}}
+{{--                                                </td>--}}
                                             </tr>
                                         @endforeach
                                     @else
@@ -303,7 +325,11 @@
 
                                     <thead>
                                         <tr>
+
                                             <th class="bg-info fw-bold text-white">Date</th>
+                                            <th class="bg-info fw-bold text-white">Site Total</th>
+                                            <th class="bg-info fw-bold text-white">Supplier Total</th>
+                                            <th class="bg-info fw-bold text-white">Payment Mode</th>
                                             <th class="bg-info fw-bold text-white"> Supplier </th>
                                             <th class="bg-info fw-bold text-white"> Site Name </th>
                                             <th class="bg-info fw-bold text-white"> Site Owner </th>
@@ -313,14 +339,34 @@
                                     </thead>
 
                                     <tbody>
+
                                         @if (count($paginatedLedgers))
 
 
                                             @foreach ($paginatedLedgers as $key => $ledger)
+
+
                                                 @if ($ledger['category'] === 'Payments')
+
+
                                                     <tr>
                                                         <td>
                                                             {{ $ledger['created_at'] }}
+                                                        </td>
+
+
+
+                                                        <td>
+                                                            {{ $ledger['payment_mode'] }}
+                                                        </td>
+
+
+                                                        <td>
+                                                            {{ $ledger['site_payments_total'] }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ $ledger['supplier_payments_total'] }}
                                                         </td>
 
                                                         <td>

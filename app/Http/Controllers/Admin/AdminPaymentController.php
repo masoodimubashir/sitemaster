@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\AdminPaymentResource;
 use App\Models\AdminPayment;
 use App\Models\Site;
 use App\Models\Supplier;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpFoundation\Response;
 
 class AdminPaymentController extends Controller
 {
@@ -40,6 +42,7 @@ class AdminPaymentController extends Controller
             ->latest()
             ->paginate(10);
 
+
         $total_amount = AdminPayment::sum('amount');
 
         return view('profile.partials.Admin.PaymentSuppliers.manage-payments', compact(
@@ -53,9 +56,11 @@ class AdminPaymentController extends Controller
     {
         try {
 
+
             $validated = Validator::make($request->all(), [
                 'amount' => 'required|numeric|min:1',
                 'entity' => 'required',
+                'transaction_type' => 'required|in:1,0',
             ]);
 
             if ($validated->fails()) {
@@ -70,25 +75,26 @@ class AdminPaymentController extends Controller
 
             [$entity_type, $entity_id] = explode('-', $validatedData['entity']);
 
-
             if ($entity_type == 'site') {
                 $type = Site::class;
-                $payment_type = strtolower($entity_type);
             } else {
                 $type = Supplier::class;
-                $payment_type = strtolower($entity_type);
             }
 
             $data = [
                 'entity_type' => $type,
                 'entity_id' => $entity_id,
                 'amount' => $validatedData['amount'],
-                'payment_type' => $payment_type,
+                'transaction_type' => $validatedData['transaction_type'],
             ];
+
+
 
             if ($id) {
 
+dd($id);
                 $payment = AdminPayment::findOrFail($id);
+
                 $payment->update($data);
 
                 return response()->json([
@@ -106,6 +112,7 @@ class AdminPaymentController extends Controller
                 ]);
 
             }
+
         } catch (Exception $e) {
             // Catch any exceptions during execution
             return response()->json([
@@ -118,9 +125,27 @@ class AdminPaymentController extends Controller
 
     public function edit($id)
     {
-        $payment = AdminPayment::with('entity')->findOrFail($id);
 
-        return response()->json($payment);
+        try {
+
+            $payment = AdminPayment::find($id);
+
+            if (!$payment) {
+                return response()->json([
+                    'error' => true,
+                    'message' => 'Payment not found',
+                ], 404);
+            }
+
+            return response()->json(new AdminPaymentResource($payment), Response::HTTP_OK);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => true,
+                'message' => 'Something went wrong!',
+            ]);
+        }
+
     }
 
 

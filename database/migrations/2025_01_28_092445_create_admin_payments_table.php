@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->morphs('entity');
             $table->decimal('amount', 10, 2);
-            $table->enum('payment_type', ['site', 'supplier']);
+            $table->boolean('transaction_type')->comment('1 => Sent, 0 => Received');
             $table->timestamps();
         });
     }

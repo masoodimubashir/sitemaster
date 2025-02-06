@@ -2,21 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class PaymentSupplier extends Model
+class Payment extends Model
 {
-    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'screenshot',
-        'verified_by_admin',
         'site_id',
         'supplier_id',
-        'amount'
+        'verified_by_admin',
+        'amount',
+        'transaction_type',
+        'payment_initiator'
     ];
 
     /**

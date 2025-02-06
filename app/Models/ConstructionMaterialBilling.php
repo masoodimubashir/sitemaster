@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ConstructionMaterialBilling extends Model
 {
-    use HasFactory;
 
     protected $fillable = [
         'image',
@@ -39,5 +38,6 @@ class ConstructionMaterialBilling extends Model
     {
         return $this->belongsTo(Phase::class);
     }
-    
+
+
 }

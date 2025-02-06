@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminPayment;
+use App\Models\Payment;
 use App\Models\PaymentSupplier;
 use App\Models\Site;
 use App\Services\DataService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Symfony\Component\HttpFoundation\Response;
 
 class PaymentsController extends Controller
 {
@@ -30,7 +34,7 @@ class PaymentsController extends Controller
         $ongoingSites = Site::where('is_on_going', 1)->pluck('id');
         $is_ongoing_count = $ongoingSites->count();
         $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
-        
+
         [
             $payments,
             $raw_materials,
@@ -39,15 +43,10 @@ class PaymentsController extends Controller
             $wagers
         ] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
 
-        $ledgers = $dataService->makeData(
-            $payments,
-            $raw_materials,
-            $squareFootageBills,
-            $expenses,
-            $wagers
-        )->sortByDesc(function ($d) {
-            return $d['created_at'];
-        });
+        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers)
+            ->sortByDesc(function ($d) {
+                return $d['created_at'];
+            });
 
         $balances = $dataService->calculateAllBalances($ledgers);
 
@@ -72,6 +71,7 @@ class PaymentsController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
+
         $suppliers = $paginatedLedgers->unique('supplier_id');
         $sites = $paginatedLedgers->unique('site_id');
 
@@ -83,7 +83,6 @@ class PaymentsController extends Controller
                 return !is_null($ledger['wager_id']);
             })
             ->unique('wager_id');
-
 
 
         return view("profile.partials.Admin.PaymentSuppliers.payments", compact(
@@ -118,46 +117,63 @@ class PaymentsController extends Controller
     public function store(Request $request)
     {
 
-
         try {
-
 
             $validatedData = Validator::make($request->all(), [
                 'screenshot' => 'required|mimes:png,jpg,webp, jpeg|max:1024',
-                'supplier_id' => 'required|exists:suppliers,id',
-                'site_id' => 'required|exists:sites,id',
                 'amount' => [
                     'required',
                     'numeric',
                     'min:0',
                     'max:99999999.99',
-                ]
+                ],
+                'transaction_type' => 'required|in:0,1',
+                'site_id' => 'required|exists:sites,id',
+                'supplier_id' => 'nullable|exists:suppliers,id',
             ]);
 
+
             if ($validatedData->fails()) {
-                return response()->json(['errors' =>  'Forms Fields Are Missing..'], 422);
+                return response()->json([
+                    'errors' => 'Forms Fields Are Missing..'
+                ], 422);
+            }
+
+
+            $path = null;
+            $transaction_type = null;
+
+            if ($request->filled('supplier_id')) {
+                $transaction_type = (int)$request->transaction_type === 0 ? 'sent' : 'received';
             }
 
             if ($request->hasFile('screenshot')) {
 
                 $image = $request->file('screenshot');
                 $imageName = time() . '.' . $image->getClientOriginalExtension();
-                $path = $request->file('screenshot')->storeAs('Payments', $imageName, 'public');
+                $path = $request->file('screenshot')->storeAs('Payment', $imageName, 'public');
             }
 
-            $payment = new PaymentSupplier();
+            $payment = new Payment();
             $payment->amount = $request->input('amount');
             $payment->site_id = $request->input('site_id');
             $payment->supplier_id = $request->input('supplier_id');
+            $payment->transaction_type = $transaction_type;
             $payment->verified_by_admin = 1;
+            $payment->payment_initiator = $request->filled('supplier_id') ? 1 : 0;
             $payment->screenshot = $path;
             $payment->save();
 
-            return response()->json(['message' => 'Payment created successfully']);
-        } catch (\Throwable $th) {
             return response()->json([
-                'error' => 'An error occurred while creating the payment.'
+                'message' => 'Payment created successfully'
             ]);
+
+        } catch (\Throwable $th) {
+
+            return response()->json([
+                'error' => 'Payment Cannot Be Made.. Try Again'
+            ]);
+
         }
     }
 
@@ -182,7 +198,79 @@ class PaymentsController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+
+        DB::beginTransaction();
+
+        try {
+
+            $validator = Validator::make($request->all(), [
+                'entity_id' => 'required|exists:sites,id',
+                'entity_type' => 'required',
+                'transaction_type' => 'required|in:0,1',
+                'amount' => [
+                    'required',
+                    'numeric',
+                    'min:0',
+                    'max:99999999.99',
+                ]
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Form Fields Are Missing.',
+                    'errors' => $validator->errors(),
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $validated_data = $validator->validated();
+
+            $admin_payment = AdminPayment::find($id);
+            if (!$admin_payment) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Payment not found.',
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            // Map Payment Data
+            $entity_id = $validated_data['entity_id'];
+            $entity_type = $validated_data['entity_type'];
+
+            $payment_data = [
+                'screenshot' => null,
+                'site_id' => $entity_type === 'site' ? $entity_id : null,
+                'supplier_id' => $entity_type === 'supplier' ? $entity_id : null,
+                'verified_by_admin' => 1,
+                'amount' => $admin_payment->amount,
+                'transaction_type' => $validated_data['transaction_type'],
+                'payment_initiator' => $entity_type === 'site' || $entity_type === 'supplier' ? 1 : 0,
+            ];
+
+            $payment = Payment::create($payment_data);
+            if (!$payment) {
+                DB::rollBack();
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Payment could not be created.',
+                ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Payment created successfully!',
+            ], Response::HTTP_CREATED);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'status' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
     }
 
     /**

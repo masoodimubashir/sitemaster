@@ -88,7 +88,7 @@ class UserSupplierController extends Controller
             }
         ])
             ->withSum('constructionMaterialBilling', 'amount')
-            ->withSum('paymentSuppliers', 'amount')
+            ->withSum('payment', 'amount')
             ->find($id);
 
         $grandTotal = 0;
@@ -103,9 +103,9 @@ class UserSupplierController extends Controller
                 'item' => $material->item_name,
                 'price_per_unit' => 0,
                 'total_price' => $material->amount,
-                'site' => $material->phase->site->site_name,
-                'site_owner' => $material->phase->site->site_owner_name,
-                'site_id' => $material->phase->site->id
+//                'site' => $material->phase->site->site_name ?? 'NA',
+//                'site_owner' => $material->phase->site->site_owner_name ?? 'NA',
+//                'site_id' => $material->phase->site->id ?? 'NA',
             ];
         }));
 
@@ -117,9 +117,9 @@ class UserSupplierController extends Controller
                 'item' => $wager->wager_name,
                 'price_per_unit' => $wager->price_per_day,
                 'total_price' => $wager->wager_total,
-                'site' => $wager->phase->site->site_name,
-                'site_owner' => $wager->phase->site->site_owner_name,
-                'site_id' => $wager->phase->site->id
+//                'site' => $wager->phase->site->site_name ?? 'NA',
+//                'site_owner' => $wager->phase->site->site_owner_name ?? 'NA',
+//                'site_id' => $wager->phase->site->id ?? 'NA'
 
             ];
         }));
@@ -132,9 +132,9 @@ class UserSupplierController extends Controller
                 'item' => $sqft->wager_name,
                 'price_per_unit' => $sqft->price,
                 'total_price' => $sqft->price * $sqft->multiplier,
-                'site' => $sqft->phase->site->site_name,
-                'site_owner' => $sqft->phase->site->site_owner_name,
-                'site_id' => $sqft->phase->site->id
+//                'site' => $sqft->phase->site->site_name ?? 'NA',
+//                'site_owner' => $sqft->phase->site->site_owner_name ?? 'NA',
+//                'site_id' => $sqft->phase->site->id ?? 'NA',
 
             ];
         }));
@@ -223,14 +223,14 @@ class UserSupplierController extends Controller
         }
 
         if ($supplier->is_raw_material_provider) {
-            $siteHasRecords = $supplier->paymentSuppliers()->exists() || $supplier->constructionMaterialBilling()->exists();
+            $siteHasRecords = $supplier->payments()->exists() || $supplier->constructionMaterialBilling()->exists();
         }
 
         if ($supplier->is_workforce_provider) {
             $siteHasRecords =  $supplier->dailyWagers()->exists() ||
                 $supplier->squareFootages()->exists() ||
                 $supplier->dailyWagers()->exists() ||
-                $supplier->paymentSuppliers()->exists();
+                $supplier->payments()->exists();
         }
 
         if ($siteHasRecords) {

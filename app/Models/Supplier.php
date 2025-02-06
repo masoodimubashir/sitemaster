@@ -33,13 +33,13 @@ class Supplier extends Model
     }
 
     /**
-     * Get all of the paymentSuppliers for the Supplier
+     * Get all of the payments for the Supplier
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function paymentSuppliers(): HasMany
+    public function payments(): HasMany
     {
-        return $this->hasMany(PaymentSupplier::class);
+        return $this->hasMany(Payment::class, 'supplier_id', 'id');
     }
 
     /**

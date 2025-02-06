@@ -10,7 +10,6 @@ use App\Http\Controllers\Admin\DailyWagerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\ItemsVerificationController;
-use App\Http\Controllers\Admin\PaymentBankController;
 use App\Http\Controllers\Admin\PaymentBillsController;
 use App\Http\Controllers\Admin\PaymentsController;
 use App\Http\Controllers\Admin\PaymentSiteController;
@@ -46,8 +45,6 @@ use App\Http\Controllers\User\UserSquareFootageBillsController;
 use App\Http\Controllers\User\UserWagerAttendanceController;
 use App\Http\Controllers\User\ViewSiteController;
 use App\Http\Controllers\UserSupplierController;
-use App\Http\Controllers\WagersController;
-use App\Http\Controllers\WagersSheetController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -98,7 +95,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
 
-    // Admin Enginner Controllers
+    // Admin Engineer Controllers
     Route::get('/users', [AdminUserController::class, 'index'])
         ->name('users.index');
     Route::get('/users/create', [AdminUserController::class, 'create'])
@@ -149,7 +146,8 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     //
     Route::resource('/phase', PhaseController::class);
 
-    Route::resource('/payment-bills', PaymentBillsController::class);
+//
+//    Route::resource('/payment-bills', PaymentBillsController::class);
 
     Route::get('/site/ledger/{id}', SitePaymentController::class)
         ->name('sites.view-ledger');

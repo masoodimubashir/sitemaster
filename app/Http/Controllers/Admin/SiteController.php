@@ -45,6 +45,8 @@ class   SiteController extends Controller
     public function store(StoreSiteRequest $request)
     {
 
+
+
         $request->validated();
 
         $user = User::find($request->user_id);
@@ -100,7 +102,7 @@ class   SiteController extends Controller
                       ->whereHas('dailyWager.supplier', fn($q) => $q->whereNull('deleted_at'))
                       ->latest();
             },
-            'paymeentSuppliers' => function($query) {
+            'payments' => function($query) {
                 $query->where('verified_by_admin', 1);
             },
 
@@ -108,7 +110,7 @@ class   SiteController extends Controller
 
 
 
-        $totalPaymentSuppliersAmount = $site->paymeentSuppliers()
+        $totalPaymentSuppliersAmount = $site->payments()
             ->where('verified_by_admin', 1)
             ->sum('amount');
         $grand_total_amount = 0;

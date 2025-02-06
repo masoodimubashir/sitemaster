@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Payment;
 use App\Models\PaymentSupplier;
 use App\Models\Site;
 use App\Models\Supplier;
@@ -23,7 +24,9 @@ class PaymentSupplierController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create() {}
+    public function create()
+    {
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -33,42 +36,49 @@ class PaymentSupplierController extends Controller
 
         if ($request->ajax()) {
 
-
             $validatedData = Validator::make($request->all(), [
-
                 'screenshot' => 'required|mimes:png,jpg,webp, jpeg|max:1024',
-                'supplier_id' => 'required|exists:suppliers,id',
-                'site_id' => 'required|exists:sites,id',
                 'amount' => [
                     'required',
                     'numeric',
                     'min:0',
                     'max:99999999.99',
-                ]
-
+                ],
+                'transaction_type' => 'required|in:0,1',
+                'site_id' => 'nullable|exists:sites,id',
+                'supplier_id' => 'required|exists:suppliers,id',
             ]);
 
             if ($validatedData->fails()) {
-                return response()->json(['errors' =>  'Forms Fields Are Missing..'], 422);
+                return response()->json([
+                    'errors' => 'Forms Fields Are Missing..'
+                ], 422);
             }
 
             $image_path = null;
-
             if ($request->hasFile('screenshot')) {
 
-                $image_path = $request->file('screenshot')->store('SupplierPayment', 'public');
-            
+                $image_path = $request->file('screenshot')->store('Payment', 'public');
+
             }
+
+            $transaction_type = null;
+            if ($request->filled('site_id')) {
+                $transaction_type = (int)$request->transaction_type === 0 ? 'sent' : 'received';
+            }
+
 
             try {
 
-                PaymentSupplier::create([
-                    'screenshot' => $image_path,
-                    'supplier_id' => $request->supplier_id,
-                    'site_id' => $request->site_id,
-                    'amount' => $request->amount,
-                    'verified_by_admin' => Auth::user()->role_name === 'admin' ? 1 : 0
-                ]);
+                $payment = new Payment();
+                $payment->amount = $request->input('amount');
+                $payment->site_id = $request->input('site_id');
+                $payment->supplier_id = $request->input('supplier_id');
+                $payment->transaction_type = $transaction_type;
+                $payment->verified_by_admin = 1;
+                $payment->payment_initiator = $request->filled('site_id') ? 1 : 0;
+                $payment->screenshot = $image_path;
+                $payment->save();
 
                 return response()->json([
                     'message' => 'Supplier payment created successfully.'

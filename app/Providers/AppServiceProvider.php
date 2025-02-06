@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\User;
 use Illuminate\Auth\Access\Response;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Pagination\Paginator;
@@ -31,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
             return $user->role_name === 'admin' ? Response::allow() : Response::deny('only admin is authorized to make this request');
         });
 
+        Model::preventLazyLoading();
         Paginator::useBootstrapFive();
     }
 }

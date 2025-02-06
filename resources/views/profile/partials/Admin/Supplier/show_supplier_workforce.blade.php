@@ -67,11 +67,8 @@
     </style>
 
 
-
-
-    <x-breadcrumb :names="['Suppliers', $supplier->name]" :urls="[$user . '/suppliers', $user . '/suppliers/' . $supplier->id]" />
-
-
+    <x-breadcrumb :names="['Suppliers', $supplier->name]"
+                  :urls="[$user . '/suppliers', $user . '/suppliers/' . $supplier->id]"/>
 
 
     <div class="row mb-4">
@@ -82,20 +79,19 @@
                     Make Payment
                 </button>
 
-              
 
                 <a href="{{ url($user . '/supplier/ledger', [$supplier->id]) }}" class="btn btn-info btns"
-                    data-modal="payment-supplier">
+                   data-modal="payment-supplier">
                     View Ledger
                 </a>
 
                 <a href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($supplier->id)]) }}"
-                    class="btn btn-info">
+                   class="btn btn-info">
                     Generate Payment Report
                 </a>
 
                 <a href="{{ url($user . '/supplier/payments', [$supplier->id]) }}" class="btn btn-info btns"
-                    data-modal="payment-supplier">
+                   data-modal="payment-supplier">
                     View Payments
                 </a>
 
@@ -138,7 +134,7 @@
                             <h5 class="mb-0">
 
                                 <a href="tel:+91-{{ $supplier->contact_no }}"
-                                    class="text-decoration-none">91-{{ ucfirst($supplier->contact_no) }}</a>
+                                   class="text-decoration-none">91-{{ ucfirst($supplier->contact_no) }}</a>
                             </h5>
                         </div>
                     </div>
@@ -217,88 +213,87 @@
 
                             <thead>
 
-                                <tr>
+                            <tr>
 
-                                    <th class="bg-info fw-bold text-white">
-                                        Date
-                                    </th>
+                                <th class="bg-info fw-bold text-white">
+                                    Date
+                                </th>
 
-                                    <th class="bg-info fw-bold text-white"> Bill Proof </th>
+                                <th class="bg-info fw-bold text-white"> Bill Proof</th>
 
-                                    <th class="bg-info fw-bold text-white"> Item </th>
+                                <th class="bg-info fw-bold text-white"> Item</th>
 
-                                    <th class="bg-info fw-bold text-white">
-                                        Site Name
-                                    </th>
+                                {{--                                    <th class="bg-info fw-bold text-white">--}}
+                                {{--                                        Site Name--}}
+                                {{--                                    </th>--}}
 
-                                    <th class="bg-info fw-bold text-white">
-                                        Site Owner
-                                    </th>
+                                {{--                                    <th class="bg-info fw-bold text-white">--}}
+                                {{--                                        Site Owner--}}
+                                {{--                                    </th>--}}
 
 
-                                    <th class="bg-info fw-bold text-white">
-                                        Price Per Unit
-                                    </th>
+                                <th class="bg-info fw-bold text-white">
+                                    Price Per Unit
+                                </th>
 
-                                    <th class="bg-info fw-bold text-white">
-                                        Total Amount
-                                    </th>
+                                <th class="bg-info fw-bold text-white">
+                                    Total Amount
+                                </th>
 
-                                </tr>
+                            </tr>
 
                             </thead>
 
                             <tbody>
 
-                                @if (count($data) > 0)
-                                    @foreach ($data as $d)
-                                        <tr>
-
-                                            <td>
-                                                {{ $d['created_at'] }}
-                                            </td>
-
-                                            <td>
-
-                                                @if ($d['image'] !== null)
-                                                    <img src="{{ asset('storage/' . $d['image']) }}" alt="">
-                                                @else
-                                                    NA
-                                                @endif
-
-                                            </td>
-
-                                            <td>
-                                                {{ $d['item'] }}
-                                            </td>
-
-
-                                            <td>
-                                                {{ $d['site'] }}
-                                            </td>
-
-                                            <td>
-                                                {{ $d['site_owner'] }}
-                                            </td>
-
-                                            <td>
-                                                {{ $d['price_per_unit'] }}
-                                            </td>
-
-                                            <td>
-                                                {{ $d['total_price'] }}
-                                            </td>
-
-
-                                        </tr>
-                                    @endforeach
-                                @else
+                            @if (count($data) > 0)
+                                @foreach ($data as $d)
                                     <tr>
-                                        <td colspan="7" class="text-danger fw-bold text-center">No Records Found...
-                                        </td>
-                                    </tr>
-                                @endif
 
+                                        <td>
+                                            {{ $d['created_at'] }}
+                                        </td>
+
+                                        <td>
+
+                                            @if ($d['image'] !== null)
+                                                <img src="{{ asset('storage/' . $d['image']) }}" alt="">
+                                            @else
+                                                NA
+                                            @endif
+
+                                        </td>
+
+                                        <td>
+                                            {{ $d['item'] }}
+                                        </td>
+
+
+                                        {{--                                            <td>--}}
+                                        {{--                                                {{ $d['site'] }}--}}
+                                        {{--                                            </td>--}}
+
+                                        {{--                                            <td>--}}
+                                        {{--                                                {{ $d['site_owner'] }}--}}
+                                        {{--                                            </td>--}}
+
+                                        <td>
+                                            {{ $d['price_per_unit'] }}
+                                        </td>
+
+                                        <td>
+                                            {{ $d['total_price'] }}
+                                        </td>
+
+
+                                    </tr>
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td colspan="7" class="text-danger fw-bold text-center">No Records Found...
+                                    </td>
+                                </tr>
+                            @endif
 
 
                             </tbody>
@@ -314,9 +309,6 @@
 
         </div>
 
-
-
-
     @endif
 
 
@@ -328,10 +320,7 @@
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
-                {{-- <div class="modal-header">
-                        <h1 class="modal-title fs-5" id="exampleModalLabel">Modal title</h1>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div> --}}
+
                 <div class="modal-body">
 
                     <form id="payment_form" class="forms-sample material-form" enctype="multipart/form-data">
@@ -340,42 +329,53 @@
 
                         {{-- Phase Name --}}
                         <div class="form-group">
-                            <input type="number" min="0" name="amount" />
+                            <input type="number" min="0" name="amount"/>
                             <label for="input" class="control-label">Amount</label><i class="bar"></i>
-                            <x-input-error :messages="$errors->get('amount')" class="mt-2" />
+                            <x-input-error :messages="$errors->get('amount')" class="mt-2"/>
                         </div>
 
-                        <!-- Site -->
+                        <input type="hidden" name="supplier_id" value="{{ $supplier->id }}"/>
+                        <x-input-error :messages="$errors->get('supplier_id')" class="mt-2"/>
 
-                        <div class="mt-4">
-                            <select id="site_id" class="form-select form-select-sm" name="site_id">
+
+                        {{-- Supppiers --}}
+
+                        <div>
+                            <select name="site_id" id="supplier_id"
+                                    class="form-select
+                                        text-black form-select-sm"
+                                    style="cursor: pointer">
                                 <option value="">Select Site</option>
-                                @foreach ($sites as $d)
-                                    <option value="{{ $d['site_id'] }}">
-                                        {{ $d['site_id'] }} -
-                                        {{ $d['site'] }}
+                                @foreach ($sites as $site)
+                                    <option value="{{ $site['site_id'] }}">
+                                        {{$site['site']}} - {{ $site['site_owner']}}
                                     </option>
                                 @endforeach
+
                             </select>
-                            @error('site_id')
-                                <x-input-error :messages="$site_id" class="mt-2" />
-                            @enderror
                         </div>
 
-                        <input type="hidden" name="supplier_id" value="{{ $supplier->id }}" />
-                        <x-input-error :messages="$errors->get('supplier_id')" class="mt-2" />
+                        <div class="row g-3 mt-4">
+                            <div class="col-auto">
+                                <label for="sent">
+                                    <input type="radio" name="transaction_type" id="sent" value="0" checked>
+                                    Sent
+                                </label>
+                            </div>
 
-
-                        @error('supplier_id')
-                            <x-input-error :messages="$message" class="mt-2" />
-                        @enderror
-
+                            <div class="col-auto">
+                                <label for="reveived">
+                                    <input type="radio" name="transaction_type" id="reveived" value="1">
+                                    Received
+                                </label>
+                            </div>
+                        </div>
 
 
                         {{-- Screenshot --}}
                         <div class="mt-3">
                             <input class="form-control form-control-md" id="image" type="file"
-                                name="screenshot">
+                                   name="screenshot">
                         </div>
 
                         <div class="flex items-center justify-end mt-4">
@@ -385,13 +385,9 @@
                         </div>
 
 
-
                     </form>
                 </div>
-                {{-- <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">Save changes</button>
-                    </div> --}}
+
             </div>
         </div>
     </div>
@@ -403,8 +399,8 @@
 
 
     <script>
-        $(document).ready(function() {
-            $('form[id="payment_form"]').on('submit', function(e) {
+        $(document).ready(function () {
+            $('form[id="payment_form"]').on('submit', function (e) {
                 e.preventDefault();
 
                 const form = $(this);
@@ -420,7 +416,7 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function(response) {
+                    success: function (response) {
                         messageContainer.append(`
                         <div class="alert align-items-center text-white bg-success border-0" role="alert">
                             <div class="d-flex">
@@ -432,12 +428,12 @@
                     `);
                         form[0].reset();
 
-                        setTimeout(function() {
+                        setTimeout(function () {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
                         }, 2000);
                     },
-                    error: function(response) {
+                    error: function (response) {
                         if (response.status === 422) { // Validation errors
                             messageContainer.append(`
                             <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
@@ -452,7 +448,7 @@
                         `);
                         }
 
-                        setTimeout(function() {
+                        setTimeout(function () {
                             messageContainer.find('.alert').alert('close');
                         }, 2000);
                     }

@@ -57,20 +57,18 @@ class SupplierController extends Controller
                 $query->where('verified_by_admin', 1)
                     ->with([
                         'phase' => function ($phase) {
-                            $phase->whereNull('deleted_at')
-                                ->with([
-                                    'site' => function ($siteQuery) {
-                                        $siteQuery->whereNull('deleted_at');
-                                    }
-                                ]);
-                        }
+                            $phase->with('site')
+                                ->whereNull('deleted_at');
+                        },
                     ]);
             },
             'dailyWagers' => function ($daily_wager) {
                 $daily_wager->with([
                     'phase' => function ($phase) {
-                        $phase->whereNull('deleted_at');
+                        $phase->with('site')
+                            ->whereNull('deleted_at');
                     },
+
                     'wagerAttendances'
                 ]);
             },
@@ -78,20 +76,17 @@ class SupplierController extends Controller
                 $sqft->where('verified_by_admin', 1)
                     ->with([
                         'phase' => function ($phase) {
-                            $phase->whereNull('deleted_at')
-                                ->with([
-                                    'site' => function ($siteQuery) {
-                                        $siteQuery->whereNull('deleted_at');
-                                    }
-                                ]);
-                        }
+                            $phase->with('site')
+                                ->whereNull('deleted_at');
+                        },
                     ]);
             },
-            'paymentSuppliers' => function ($payment) {
+            'payments' => function ($payment) {
                 $payment->where('verified_by_admin', 1);
             }
         ])
             ->find($id);
+
 
         $data = collect();
 
@@ -105,9 +100,9 @@ class SupplierController extends Controller
                 'price_per_unit' => 0,
                 'total_price' => $material->amount,
                 'transaction_type' => 'debit',
-                'site' => $material->phase->site->site_name,
-                'site_owner' => $material->phase->site->site_owner_name,
-                'site_id' => $material->phase->site->id
+                'site' => $material->phase->site->site_name ?? 'NA',
+                'site_owner' => $material->phase->site->site_owner_name ?? 'NA',
+                'site_id' => $material->phase->site->id ?? 'NA'
             ];
         }));
 
@@ -121,9 +116,9 @@ class SupplierController extends Controller
                 'price_per_unit' => $wager->price_per_day,
                 'total_price' => $wager->wager_total,
                 'transaction_type' => 'debit',
-                'site' => $wager->phase->site->site_name,
-                'site_owner' => $wager->phase->site->site_owner_name,
-                'site_id' => $wager->phase->site->id
+                'site' => $wager->phase->site->site_name ?? 'NA',
+                'site_owner' => $wager->phase->site->site_owner_name ?? 'NA',
+                'site_id' => $wager->phase->site->id ?? 'NA'
             ];
         }));
 
@@ -137,25 +132,9 @@ class SupplierController extends Controller
                 'price_per_unit' => $sqft->price,
                 'total_price' => $sqft->price * $sqft->multiplier,
                 'transaction_type' => 'debit',
-                'site' => $sqft->phase->site->site_name,
-                'site_owner' => $sqft->phase->site->site_owner_name,
-                'site_id' => $sqft->phase->site->id
-            ];
-        }));
-
-        // Merge Payments (Credit)
-        $data = $data->merge($supplier->paymentSuppliers->map(function ($payment) {
-            return [
-                'created_at' => $payment->created_at,
-                'type' => 'Payment',
-                'image' => $payment->screenshot,
-                'item' => 'Payment',
-                'price_per_unit' => 0,
-                'total_price' => $payment->amount,
-                'transaction_type' => 'credit',
-                'site' => $payment->site->site_name,
-                'site_owner' => $payment->site->site_owner_name,
-                'site_id' => $payment->site->id,
+                'site' => $sqft->phase->site->site_name ?? 'NA',
+                'site_owner' => $sqft->phase->site->site_owner_name ?? 'NA',
+                'site_id' => $sqft->phase->site->id ?? 'NA'
             ];
         }));
 

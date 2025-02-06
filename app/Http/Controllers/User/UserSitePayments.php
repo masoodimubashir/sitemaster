@@ -36,7 +36,6 @@ class UserSitePayments extends Controller
 
         try {
 
-
             $request->validate([
                 'amount' => 'required|numeric',
                 'site_id' => 'required',
