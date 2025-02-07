@@ -34,9 +34,8 @@
 
             <div class="d-flex justify-content-end">
 
-                <button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#bankModal">
-                    Add Payment
-                </button>
+                <button onclick="createNewPayment()" class="btn btn-info">Make Payment</button>
+
 
             </div>
 
@@ -112,6 +111,7 @@
                             <th class="bg-info text-white fw-bold">Date</th>
                             <th class="bg-info text-white fw-bold">Entity</th>
                             <th class="bg-info text-white fw-bold">Amount</th>
+                            <th class="bg-info text-white fw-bold">Transaction Type</th>
                             <th class="bg-info text-white fw-bold">Edit</th>
                             <th class="bg-info text-white fw-bold">Make Payment</th>
 
@@ -335,7 +335,6 @@
             const formData = new FormData(this);
             formData.append('_token', '{{ csrf_token() }}');
 
-            console.log(payment_id);
 
             const url = payment_id
                 ? `/admin/manage-payment/${payment_id}`
@@ -352,14 +351,14 @@
                     $('#bankModal').modal('hide');
 
                     messageContainer.append(`
-                            <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                    </div>
-                                </div>
+                    <div class="alert align-items-center text-white bg-success border-0" role="alert">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
                             </div>
-                        `);
+                        </div>
+                    </div>
+                `);
 
                     setTimeout(function () {
                         messageContainer.find('.alert').alert('close');
@@ -374,20 +373,20 @@
                         for (const field in errorMessages) {
                             if (errorMessages.hasOwnProperty(field)) {
                                 const errorElement = `
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    <strong>${errorMessages[field]}</strong>
-                                </div>
-                            `;
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                            <strong>${errorMessages[field]}</strong>
+                        </div>
+                    `;
                                 messageContainer.append(errorElement);
                             }
                         }
                     } else {
 
                         messageContainer.append(`
-                        <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                            An unexpected error occurred. Please try again later.
-                        </div>
-                    `);
+                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                    An unexpected error occurred. Please try again later.
+                </div>
+            `);
                     }
 
                     setTimeout(function () {
@@ -403,7 +402,6 @@
 
             let formData = new FormData(this);
             formData.append('_method', 'PUT');
-
 
             const payment_id = $('#payment_id').val();
 
@@ -439,10 +437,15 @@
 
         });
 
-        $('#bankModal').on('show.bs.modal', function () {
+        // Function to Open Modal for Adding New Payment
+        function createNewPayment() {
+            // Reset form and open modal
             $('#payment-bank-form')[0].reset();
-            $('#payment_id').val('');
-        });
+            $('#payment_id').val(''); // Ensure hidden ID is cleared
+
+            $('#bankModal').modal('show');
+        }
+
 
 
     </script>

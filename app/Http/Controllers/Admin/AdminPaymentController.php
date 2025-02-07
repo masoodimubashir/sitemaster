@@ -17,109 +17,76 @@ class AdminPaymentController extends Controller
     public function index()
     {
 
-        $sites = Site::where('is_on_going', 1)->latest()->get();
-        $suppliers = Supplier::latest()->get();
+        $sites = Site::query()->whereHas('adminPayments')->with('adminPayments')->withSum('adminPayments', 'amount')->get();
 
-        $entities = collect([
-            ...$sites->map(function ($site) {
-                return [
-                    'id' => $site->id,
-                    'name' => $site->site_name,
-                    'type' => 'site',
-                ];
-            }),
-            ...$suppliers->map(function ($supplier) {
-                return [
-                    'id' => $supplier->id,
-                    'name' => $supplier->name,
-                    'type' => 'Supplier',
-                ];
-            })
-        ]);
-
-        $payment_banks = AdminPayment::query()
-            ->with('entity')
-            ->latest()
-            ->paginate(10);
+        $suppliers = Supplier::query()->whereHas('adminPayments')->with('adminPayments')->withSum('adminPayments', 'amount')->get();
 
 
-        $total_amount = AdminPayment::sum('amount');
+        $payemnts = collect();
 
-        return view('profile.partials.Admin.PaymentSuppliers.manage-payments', compact(
-                'entities',
-                'payment_banks',
-                'total_amount')
-        );
+        $payments = $payemnts->merge($sites->map(function ($site) {
+            return [
+                'id' => $site->id,
+                'name' => $site->site_name,
+                'amount' => $site->admin_payments_sum_amount ?? 0,
+                'type' => 'site'
+            ];
+        }));
+
+
+        $payments = $payments->merge($suppliers->map(function ($supplier) {
+            return [
+                'id' => $supplier->id,
+                'name' => $supplier->name,
+                'amount' => $supplier->admin_payments_sum_amount ?? 0,
+                'type' => 'supplier'
+            ];
+        }));
+
+
+        return view('profile.partials.Admin.PaymentSuppliers.manage-payments', compact('payments'));
     }
 
     public function storeOrUpdate(Request $request, $id = null)
     {
+
         try {
 
+            $rules = ['amount' => 'required|numeric|min:1', 'entity' => 'required', 'transaction_type' => 'required|in:1,0',];
 
-            $validated = Validator::make($request->all(), [
-                'amount' => 'required|numeric|min:1',
-                'entity' => 'required',
-                'transaction_type' => 'required|in:1,0',
-            ]);
+            if ($request->has('product_id')) {
+                $rules['product_id'] = 'required|exists:products,id';
+            }
+
+            $validated = Validator::make($request->all(), $rules);
 
             if ($validated->fails()) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Form Fields Are Missing.',
-                    'errors' => $validated->errors()->toArray(),
-                ], 422);
+                return response()->json(['status' => false, 'message' => 'Form Fields Are Missing.', 'errors' => $validated->errors()->toArray(),], 422);
             }
 
             $validatedData = $validated->validated();
-
             [$entity_type, $entity_id] = explode('-', $validatedData['entity']);
+            $type = $entity_type === 'site' ? Site::class : Supplier::class;
 
-            if ($entity_type == 'site') {
-                $type = Site::class;
-            } else {
-                $type = Supplier::class;
+            $data = ['entity_type' => $type, 'entity_id' => $entity_id, 'amount' => $validatedData['amount'], 'transaction_type' => $validatedData['transaction_type'],];
+
+
+            // Include product_id if provided
+            if (isset($validatedData['product_id'])) {
+                $data['product_id'] = $validatedData['product_id'];
             }
-
-            $data = [
-                'entity_type' => $type,
-                'entity_id' => $entity_id,
-                'amount' => $validatedData['amount'],
-                'transaction_type' => $validatedData['transaction_type'],
-            ];
-
-
 
             if ($id) {
 
-dd($id);
                 $payment = AdminPayment::findOrFail($id);
-
                 $payment->update($data);
-
-                return response()->json([
-                    'status' => true,
-                    'message' => 'Payment updated successfully!',
-                ]);
-
+                return response()->json(['status' => true, 'message' => 'Payment updated successfully!']);
             } else {
-
                 AdminPayment::create($data);
-
-                return response()->json([
-                    'status' => true,
-                    'message' => 'Payment created successfully!',
-                ]);
-
+                return response()->json(['status' => true, 'message' => 'Payment created successfully!']);
             }
-
         } catch (Exception $e) {
-            // Catch any exceptions during execution
-            return response()->json([
-                'status' => false,
-                'message' => 'Something went wrong!',
-                'error' => $e->getMessage(),
-            ], 500);
+            return response()->json(['status' => false, 'message' => 'Something went wrong!', 'error' => $e->getMessage(),], 500);
         }
     }
 
@@ -131,19 +98,13 @@ dd($id);
             $payment = AdminPayment::find($id);
 
             if (!$payment) {
-                return response()->json([
-                    'error' => true,
-                    'message' => 'Payment not found',
-                ], 404);
+                return response()->json(['error' => true, 'message' => 'Payment not found',], 404);
             }
 
             return response()->json(new AdminPaymentResource($payment), Response::HTTP_OK);
 
         } catch (Exception $e) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Something went wrong!',
-            ]);
+            return response()->json(['error' => true, 'message' => 'Something went wrong!',]);
         }
 
     }

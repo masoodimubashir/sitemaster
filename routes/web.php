@@ -146,8 +146,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     //
     Route::resource('/phase', PhaseController::class);
 
-//
-//    Route::resource('/payment-bills', PaymentBillsController::class);
+    // Route::resource('/payment-bills', PaymentBillsController::class);
 
     Route::get('/site/ledger/{id}', SitePaymentController::class)
         ->name('sites.view-ledger');
@@ -200,8 +199,10 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     // Route For Managing Payments By Admin
     Route::get('/manage-payment', [AdminPaymentController::class, 'index']);
-    Route::post('/manage-payment/{id?}', [AdminPaymentController::class, 'storeOrUpdate'])->name('manage-payment.store-update');
-    Route::get('/manage-payment/{id}/edit', [AdminPaymentController::class, 'edit'])->name('payments.edit');
+    Route::post('/manage-payment/{id?}', [AdminPaymentController::class, 'storeOrUpdate'])
+        ->name('manage-payment.store-update');
+    Route::get('/manage-payment/{id}/edit', [AdminPaymentController::class, 'edit'])
+        ->name('payments.edit');
 
 });
 

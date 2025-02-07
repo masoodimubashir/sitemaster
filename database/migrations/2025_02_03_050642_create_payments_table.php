@@ -17,7 +17,7 @@ return new class extends Migration {
             $table->foreignId('supplier_id')->nullable()->constrained()->cascadeOnDelete();
             $table->decimal('amount', 8, 2);
             $table->boolean('verified_by_admin')->default(false);
-            $table->boolean('transaction_type')->comment('1 => Sent , 0 => Received');
+            $table->boolean('transaction_type')->nullable()->comment('1 => Sent , 0 => Received');
             $table->boolean('payment_initiator')->comment('If Site Or Supplier Exits => 1, Admin => 0');
             $table->timestamps();
         });

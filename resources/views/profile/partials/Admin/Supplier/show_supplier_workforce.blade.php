@@ -323,69 +323,72 @@
 
                 <div class="modal-body">
 
-                    <form id="payment_form" class="forms-sample material-form" enctype="multipart/form-data">
 
+                    <form id="payment_form" class="forms-sample material-form" enctype="multipart/form-data">
                         @csrf
 
-                        {{-- Phase Name --}}
+                        {{-- Amount Input --}}
                         <div class="form-group">
                             <input type="number" min="0" name="amount"/>
                             <label for="input" class="control-label">Amount</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('amount')" class="mt-2"/>
                         </div>
 
+                        {{-- Hidden Supplier ID --}}
                         <input type="hidden" name="supplier_id" value="{{ $supplier->id }}"/>
                         <x-input-error :messages="$errors->get('supplier_id')" class="mt-2"/>
 
+                        {{-- Dropdown to Select Payee --}}
+                        <select name="payment_initiator" id="payment_initiator" class="form-select text-black form-select-sm" onchange="togglePayeeOptions()">
+                            <option value="" selected>Select Payee</option>
+                            <option value="0">Pay Admin</option>
+                            <option value="1">Pay Site</option>
+                        </select>
 
-                        {{-- Supppiers --}}
+                        {{-- Options for Paying to Admin --}}
+                        <div id="adminOptions" style="display: none;" class="mt-4">
+                            {{-- Sent or Received Radio Options --}}
+                            <div class="row g-3">
+                                <div class="col-auto">
+                                    <label for="sent">
+                                        <input type="radio" name="transaction_type" id="sent" value="0">
+                                        Sent
+                                    </label>
+                                </div>
+                                <div class="col-auto">
+                                    <label for="received">
+                                        <input type="radio" name="transaction_type" id="received" value="1">
+                                        Received
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
 
-                        <div>
-                            <select name="site_id" id="supplier_id"
-                                    class="form-select
-                                        text-black form-select-sm"
-                                    style="cursor: pointer">
+                        {{-- Options for Paying to a Site --}}
+                        <div id="siteOptions" style="display: none;" class="mt-4">
+                            <select name="site_id" id="supplier_id" class="form-select text-black form-select-sm">
                                 <option value="">Select Site</option>
                                 @foreach ($sites as $site)
                                     <option value="{{ $site['site_id'] }}">
-                                        {{$site['site']}} - {{ $site['site_owner']}}
+                                        {{$site['site']}} - {{ $site['site_owner'] }}
                                     </option>
                                 @endforeach
-
                             </select>
-                        </div>
 
-                        <div class="row g-3 mt-4">
-                            <div class="col-auto">
-                                <label for="sent">
-                                    <input type="radio" name="transaction_type" id="sent" value="0" checked>
-                                    Sent
-                                </label>
-                            </div>
-
-                            <div class="col-auto">
-                                <label for="reveived">
-                                    <input type="radio" name="transaction_type" id="reveived" value="1">
-                                    Received
-                                </label>
+                            {{-- File Upload for Screenshot --}}
+                            <div class="mt-3">
+                                <input class="form-control form-control-md" id="image" type="file" name="screenshot">
                             </div>
                         </div>
 
-
-                        {{-- Screenshot --}}
-                        <div class="mt-3">
-                            <input class="form-control form-control-md" id="image" type="file"
-                                   name="screenshot">
-                        </div>
-
+                        {{-- Submit Button --}}
                         <div class="flex items-center justify-end mt-4">
                             <x-primary-button>
                                 {{ __('Pay') }}
                             </x-primary-button>
                         </div>
-
-
                     </form>
+
                 </div>
 
             </div>
@@ -399,7 +402,28 @@
 
 
     <script>
+
+        function togglePayeeOptions() {
+            const payeeSelector = document.getElementById('payment_initiator').value; // Get selected value
+            const adminOptions = document.getElementById('adminOptions'); // Admin section
+            const siteOptions = document.getElementById('siteOptions'); // Site section
+
+            // Show/Hide options based on the selected value
+            if (payeeSelector === "1") {
+                adminOptions.style.display = 'none'; // Hide Admin options
+                siteOptions.style.display = 'block'; // Show Site options
+            } else if (payeeSelector === "0") {
+                adminOptions.style.display = 'block'; // Show Admin options
+                siteOptions.style.display = 'none'; // Hide Site options
+            } else {
+                // Hide all sections if "Select Payee" is chosen
+                adminOptions.style.display = 'none';
+                siteOptions.style.display = 'none';
+            }
+        }
+
         $(document).ready(function () {
+
             $('form[id="payment_form"]').on('submit', function (e) {
                 e.preventDefault();
 
@@ -454,6 +478,7 @@
                     }
                 });
             });
+
         });
     </script>
 

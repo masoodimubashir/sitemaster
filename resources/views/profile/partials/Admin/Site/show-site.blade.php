@@ -1733,45 +1733,51 @@
                                 <x-input-error :messages="$errors->get('site_id')" class="mt-2"/>
                             </div>
 
-                            {{-- Supppiers --}}
-                            <div>
-                                <select name="supplier_id" id="supplier_id"
-                                        class="form-select
-                                        text-black form-select-sm"
+                            {{-- Select Payee Dropdown --}}
+                            <select name="payment_initiator" id="payment_initiator" class="form-select text-black form-select-sm"
+                                    style="cursor: pointer" onchange="togglePayOptions()">
+                                <option value="" selected>Select Payee</option>
+                                <option value="1">Supplier</option>
+                                <option value="0">Admin</option>
+                            </select>
 
-                                        style="cursor: pointer">
-                                    <option value="" selected>Select Supplier</option>
+                            {{-- Supplier Options (Shown when Supplier is selected) --}}
+                            <div id="supplierOptions" style="display: none;" class="mt-3">
+                                <select name="supplier_id" id="supplier_id" class="form-select text-black form-select-sm" style="cursor: pointer">
+                                    <option for="supplier_id" value="" >Select Supplier</option>
                                     @foreach ($suppliers as $supplier)
                                         <option value="{{ $supplier->id }}">
-                                            {{$supplier->name}}
+                                            {{ $supplier->name }}
                                         </option>
                                     @endforeach
-
                                 </select>
-                            </div>
 
-                            {{-- Sent Or Received --}}
-                            <div class="row g-3 mt-4">
-                                <div class="col-auto">
-                                    <label for="sent">
-                                        <input type="radio" name="transaction_type" id="sent" value="0" checked>
-                                        Sent
-                                    </label>
-                                </div>
-
-                                <div class="col-auto">
-                                    <label for="recieved">
-                                        <input type="radio" name="transaction_type" id="recieved" value="1">
-                                        Received
-                                    </label>
+                                {{-- File Upload for Screenshot --}}
+                                <div class="mt-3">
+                                    <input class="form-control form-control-md" id="image" type="file" name="screenshot">
                                 </div>
                             </div>
+
+                            {{-- Admin Options (Shown when Admin is selected) --}}
+                            <div id="adminOptions" style="display: none;" class="mt-4">
+                                <div class="row g-3">
+                                    {{-- Sent Radio Option --}}
+                                    <div class="col-auto">
+                                        <label for="transaction_sent">
+                                            <input type="radio" name="transaction_type" id="transaction_sent" value="1"> Sent
+                                        </label>
+                                    </div>
+                                    {{-- Received Radio Option --}}
+                                    <div class="col-auto">
+                                        <label for="transaction_received">
+                                            <input type="radio" name="transaction_type" id="transaction_received" value="0"> Received
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
 
                             {{-- Screenshot --}}
-                            <div class="mt-3">
-                                <input class="form-control form-control-md" id="image" type="file"
-                                       name="screenshot">
-                            </div>
 
 
                             <div class="flex items-center justify-end mt-4">
@@ -1794,45 +1800,45 @@
 
     @endif
 
-        <div class="container">
-            <!-- Supplier Selection -->
-            <div class="form-group mb-4">
-                <label for="supplier_id" class="form-label">Supplier</label>
-                <select name="supplier_id"
-                        id="supplier_id"
-                        class="form-select form-select-sm text-black"
-                        style="cursor: pointer">
-                    <option value="">Select Supplier</option>
-                    @foreach ($suppliers as $supplier)
-                        <option value="{{ $supplier->id }}">
-                            {{ $supplier->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+    <div class="container">
+        <!-- Supplier Selection -->
+        <div class="form-group mb-4">
+            <label for="supplier_id" class="form-label">Supplier</label>
+            <select name="supplier_id"
+                    id="supplier_id"
+                    class="form-select form-select-sm text-black"
+                    style="cursor: pointer">
+                <option value="">Select Supplier</option>
+                @foreach ($suppliers as $supplier)
+                    <option value="{{ $supplier->id }}">
+                        {{ $supplier->name }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-            <!-- Transaction Type - Initially Hidden -->
-            <div class="form-group" id="transactionTypeSection" style="display: none;">
-                <label class="form-label d-block">Transaction Type</label>
-                <div class="form-check form-check-inline">
-                    <input type="radio"
-                           class="form-check-input"
-                           name="transaction_type"
-                           id="sent"
-                           value="0"
-                           checked>
-                    <label class="form-check-label" for="sent">Sent</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input type="radio"
-                           class="form-check-input"
-                           name="transaction_type"
-                           id="received"
-                           value="1">
-                    <label class="form-check-label" for="received">Received</label>
-                </div>
+        <!-- Transaction Type - Initially Hidden -->
+        <div class="form-group" id="transactionTypeSection" style="display: none;">
+            <label class="form-label d-block">Transaction Type</label>
+            <div class="form-check form-check-inline">
+                <input type="radio"
+                       class="form-check-input"
+                       name="transaction_type"
+                       id="sent"
+                       value="0"
+                       checked>
+                <label class="form-check-label" for="sent">Sent</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input type="radio"
+                       class="form-check-input"
+                       name="transaction_type"
+                       id="received"
+                       value="1">
+                <label class="form-check-label" for="received">Received</label>
             </div>
         </div>
+    </div>
 
 
     <div id="imageModal" class="modal">
@@ -2052,7 +2058,6 @@
         });
 
         $(document).ready(function () {
-
 
 
             $('form[id="phaseForm"]').on('submit', function (e) {
@@ -2579,6 +2584,26 @@
 
 
     <script>
+
+
+        function togglePayOptions() {
+            const payTo = document.getElementById('payment_initiator').value; // Get the selected value
+            const supplierOptions = document.getElementById('supplierOptions'); // Supplier section
+            const adminOptions = document.getElementById('adminOptions'); // Admin section
+
+            // Check selected value and toggle visibility accordingly
+            if (payTo === "1") {
+                supplierOptions.style.display = 'block'; // Show Supplier options
+                adminOptions.style.display = 'none';    // Hide Admin options
+            } else if (payTo === "0") {
+                supplierOptions.style.display = 'none'; // Hide Supplier options
+                adminOptions.style.display = 'block';  // Show Admin options
+            } else {
+                // Hide both sections if "Select Payee" or invalid option is selected
+                supplierOptions.style.display = 'none';
+                adminOptions.style.display = 'none';
+            }
+        }
 
 
         function setActiveTab(tabId) {

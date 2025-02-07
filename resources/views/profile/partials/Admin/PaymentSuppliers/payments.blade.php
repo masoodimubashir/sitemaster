@@ -233,29 +233,31 @@
                                     <tr>
                                         <th class="bg-info text-white fw-bold ">Date | Time</th>
                                         <th class="bg-info text-white fw-bold ">Supplier Name</th>
-
                                         <th class="bg-info text-white fw-bold ">Phase</th>
                                         <th class="bg-info text-white fw-bold ">Site Name</th>
                                         <th class="bg-info text-white fw-bold ">Type</th>
                                         <th class="bg-info text-white fw-bold">Information</th>
                                         <th class="bg-info text-white fw-bold ">Debit</th>
-                                        <th class="bg-info fw-bold text-white">Site Total</th>
-                                        <th class="bg-info fw-bold text-white">Supplier Total</th>
                                         <th class="bg-info fw-bold text-white">Payment Mode</th>
-                                        <th>Totals Site</th>
-{{--                                        <th class="bg-info text-white fw-bold ">Credit</th>--}}
+                                        <th>Totals</th>
 
                                     </tr>
                                 </thead>
                                 <tbody>
+
+
                                     @if (count($paginatedLedgers))
+
 
 
                                         @foreach ($paginatedLedgers as $key => $ledger)
                                             @php
                                                 // $balance =  $ledger['amount'] - $ledger['payment_amounts'];
                                             @endphp
+
+
                                             <tr>
+
                                                 <td>
                                                     {{ $ledger['created_at'] }}
                                                 </td>
@@ -263,41 +265,37 @@
                                                 <td>
                                                     {{ ucwords($ledger['supplier']) }}
                                                 </td>
+
                                                 <td>
                                                     {{ ucwords($ledger['phase']) }}
                                                 </td>
+
                                                 <td>
                                                     {{ ucwords($ledger['site']) }}
                                                 </td>
+
                                                 <td>
                                                     {{ $ledger['category'] }}
                                                 </td>
+
                                                 <td>
                                                     {{ ucwords($ledger['description']) }}
                                                 </td>
+
                                                 <td>
                                                     {{ $ledger['debit'] }}
                                                 </td>
 
                                                 <td>
-                                                    {{ $ledger['site_payments_total'] }}
-                                                </td>
-
-                                                <td>
-                                                    {{ $ledger['supplier_payments_total'] }}
-                                                </td>
-                                                <td>
-                                                    {{ $ledger['payment_mode'] }}
+                                                    {{ $ledger['transaction_type'] }}
                                                 </td>
 
                                                 <td>
                                                     {{ $ledger['credit'] }}
                                                 </td>
 
-                                                {{--                                                <td>--}}
-{{--                                                    {{ $ledger['credit'] }}--}}
-{{--                                                </td>--}}
                                             </tr>
+
                                         @endforeach
                                     @else
                                         <tr>
@@ -314,103 +312,103 @@
                             {{ $paginatedLedgers->links() }}
                         </div>
                     </div>
-                    <div class="tab-pane fade" id="material" role="tabpanel" aria-labelledby="material-tab">
+{{--                    <div class="tab-pane fade" id="material" role="tabpanel" aria-labelledby="material-tab">--}}
 
 
-                        <div class="table-responsive mt-4">
+{{--                        <div class="table-responsive mt-4">--}}
 
-                            @if (count($paginatedLedgers))
+{{--                            @if (count($paginatedLedgers))--}}
 
-                                <table class="table table-bordered">
+{{--                                <table class="table table-bordered">--}}
 
-                                    <thead>
-                                        <tr>
+{{--                                    <thead>--}}
+{{--                                        <tr>--}}
 
-                                            <th class="bg-info fw-bold text-white">Date</th>
-                                            <th class="bg-info fw-bold text-white">Site Total</th>
-                                            <th class="bg-info fw-bold text-white">Supplier Total</th>
-                                            <th class="bg-info fw-bold text-white">Payment Mode</th>
-                                            <th class="bg-info fw-bold text-white"> Supplier </th>
-                                            <th class="bg-info fw-bold text-white"> Site Name </th>
-                                            <th class="bg-info fw-bold text-white"> Site Owner </th>
-                                            <th class="bg-info fw-bold text-white"> Contact No </th>
-                                            <th class="bg-info fw-bold text-white">Payment Amount</th>
-                                        </tr>
-                                    </thead>
+{{--                                            <th class="bg-info fw-bold text-white">Date</th>--}}
+{{--                                            <th class="bg-info fw-bold text-white">Site Total</th>--}}
+{{--                                            <th class="bg-info fw-bold text-white">Supplier Total</th>--}}
+{{--                                            <th class="bg-info fw-bold text-white">Payment Mode</th>--}}
+{{--                                            <th class="bg-info fw-bold text-white"> Supplier </th>--}}
+{{--                                            <th class="bg-info fw-bold text-white"> Site Name </th>--}}
+{{--                                            <th class="bg-info fw-bold text-white"> Site Owner </th>--}}
+{{--                                            <th class="bg-info fw-bold text-white"> Contact No </th>--}}
+{{--                                            <th class="bg-info fw-bold text-white">Payment Amount</th>--}}
+{{--                                        </tr>--}}
+{{--                                    </thead>--}}
 
-                                    <tbody>
+{{--                                    <tbody>--}}
 
-                                        @if (count($paginatedLedgers))
-
-
-                                            @foreach ($paginatedLedgers as $key => $ledger)
+{{--                                        @if (count($paginatedLedgers))--}}
 
 
-                                                @if ($ledger['category'] === 'Payments')
+{{--                                            @foreach ($paginatedLedgers as $key => $ledger)--}}
 
 
-                                                    <tr>
-                                                        <td>
-                                                            {{ $ledger['created_at'] }}
-                                                        </td>
+{{--                                                @if ($ledger['category'] === 'Payments')--}}
+
+
+{{--                                                    <tr>--}}
+{{--                                                        <td>--}}
+{{--                                                            {{ $ledger['created_at'] }}--}}
+{{--                                                        </td>--}}
 
 
 
-                                                        <td>
-                                                            {{ $ledger['payment_mode'] }}
-                                                        </td>
+{{--                                                        <td>--}}
+{{--                                                            {{ $ledger['payment_mode'] }}--}}
+{{--                                                        </td>--}}
 
 
-                                                        <td>
-                                                            {{ $ledger['site_payments_total'] }}
-                                                        </td>
+{{--                                                        <td>--}}
+{{--                                                            {{ $ledger['site_payments_total'] }}--}}
+{{--                                                        </td>--}}
 
-                                                        <td>
-                                                            {{ $ledger['supplier_payments_total'] }}
-                                                        </td>
+{{--                                                        <td>--}}
+{{--                                                            {{ $ledger['supplier_payments_total'] }}--}}
+{{--                                                        </td>--}}
 
-                                                        <td>
-                                                            {{ ucwords($ledger['supplier']) }}
-                                                        </td>
+{{--                                                        <td>--}}
+{{--                                                            {{ ucwords($ledger['supplier']) }}--}}
+{{--                                                        </td>--}}
 
-                                                        <td>
-                                                            {{ ucwords($ledger['site']) }}
-                                                        </td>
+{{--                                                        <td>--}}
+{{--                                                            {{ ucwords($ledger['site']) }}--}}
+{{--                                                        </td>--}}
 
-                                                        <td>
-                                                            {{ ucwords($ledger['site_owner']) }}
-                                                        </td>
+{{--                                                        <td>--}}
+{{--                                                            {{ ucwords($ledger['site_owner']) }}--}}
+{{--                                                        </td>--}}
 
-                                                        <td>
-                                                            {{ ucwords($ledger['contact_no']) }}
-                                                        </td>
+{{--                                                        <td>--}}
+{{--                                                            {{ ucwords($ledger['contact_no']) }}--}}
+{{--                                                        </td>--}}
 
-                                                        <td>
-                                                            {{ $ledger['credit'] }}
-                                                        </td>
-                                                    </tr>
-                                                @endif
-                                            @endforeach
-                                        @else
-                                            <tr>
-                                                <td class="text-danger fw-bold text-center" colspan="8">No Records
-                                                    Available...</td>
-                                            </tr>
-                                        @endif
+{{--                                                        <td>--}}
+{{--                                                            {{ $ledger['credit'] }}--}}
+{{--                                                        </td>--}}
+{{--                                                    </tr>--}}
+{{--                                                @endif--}}
+{{--                                            @endforeach--}}
+{{--                                        @else--}}
+{{--                                            <tr>--}}
+{{--                                                <td class="text-danger fw-bold text-center" colspan="8">No Records--}}
+{{--                                                    Available...</td>--}}
+{{--                                            </tr>--}}
+{{--                                        @endif--}}
 
-                                    </tbody>
+{{--                                    </tbody>--}}
 
 
-                                </table>
-                            @else
-                                <h1 class="display-4 bg-white p-2 text-center fw-3 text-danger">No records found..</h1>
-                            @endif
-                        </div>
+{{--                                </table>--}}
+{{--                            @else--}}
+{{--                                <h1 class="display-4 bg-white p-2 text-center fw-3 text-danger">No records found..</h1>--}}
+{{--                            @endif--}}
+{{--                        </div>--}}
 
-                        <div class="mt-4">
-                            {{ $paginatedLedgers->links() }}
-                        </div>
-                    </div>
+{{--                        <div class="mt-4">--}}
+{{--                            {{ $paginatedLedgers->links() }}--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
                 </div>
 
             </div>

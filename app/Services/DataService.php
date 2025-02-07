@@ -48,9 +48,8 @@ class DataService
 //            ->when($site_id !== 'all', fn($q) => $q->where('site_id', $site_id))
 //            ->when($supplier_id && $supplier_id != 'all', fn($q) => $q->where('supplier_id', $supplier_id))
 //            ->latest()
-//            ->get();l
+//            ->get();
 
-//        dd();
 
         $payments = Payment::query()
             ->with([
@@ -286,30 +285,39 @@ class DataService
             $site_total = $admin_payment_site_amount + $pay->amount;
             $supplier_total = $admin_payment_supplier_amount + $pay->amount;
 
-            $credit += $site_total + $supplier_total;
+            if ($admin_payment_supplier_amount !== null) {
+                $credit += $admin_payment_supplier_amount;
+            } elseif ($admin_payment_site_amount !== null) {
+                $credit += $admin_payment_site_amount;
+            } else {
+                $credit += $site_total + $supplier_total;
+            }
+
 
             return [
+
+                'category' => 'Payment',
+                'phase' => $pay->phase->phase_name ?? 'NA',
+                'description' => $pay->description ?? 'NA',
                 'admin_payment_supplier_amount' => $admin_payment_supplier_amount,
                 'admin_payment_site_amount' => $admin_payment_site_amount,
+                'site_payments_total' => $site_total,
+                'supplier_payments_total' => $supplier_total,
                 'site_total' => $site_total,
                 'supplier_total' => $supplier_total,
-                'payment_mode' => $pay->payment_mode,
-                'site_id' => $pay->site->site_name ?? 'NA',
-                'supplier_id' => $pay->supplier->name ?? 'NA',
-                 [
-                    'entity_type' => $pay->supplier ? $pay->supplier->name : $pay->site->site_name,
-                     'entity_id' => $pay->entity_id,
-                     'amount' => $pay->amount
-                ]
+                'transaction_type' => $pay->transaction_type === 1 ? 'Sent' : 'Received',
+                'site_id' => $pay->site->id ?? 'NA',
+                'site' => $pay->site->site_name ?? 'NA',
+                'supplier_id' => $pay->supplier->id ?? 'NA',
+                'supplier' => $pay->supplier->name ?? 'NA',
+                'credit' => $credit,
+                'debit' => 'NA',
+                'created_at' => $pay->created_at,
             ];
 
 
         }));
 
-//        dd($credit);
-
-
-//        dd($ledgers);
 
         $ledgers = $ledgers->merge($raw_materials->map(function ($material) {
 
