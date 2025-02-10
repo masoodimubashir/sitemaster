@@ -82,14 +82,13 @@ class PaymentsController extends Controller
 
         try {
 
-
             $validatedData = Validator::make($request->all(), [
-                'screenshot' => 'sometimes|mimes:png,jpg,webp, jpeg|max:1024',
+//                'screenshot' => 'sometimes|mimes:png,jpg,webp, jpeg|max:1024',
                 'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99',],
                 'transaction_type' => 'required|in:0,1',
-                'site_id' => 'required|exists:sites,id',
+                'site_id' => 'nullable|exists:sites,id',
                 'supplier_id' => 'nullable|exists:suppliers,id',
-                'payment_initiator' => 'required|in:0,1',
+                'payment_initiator' => 'nullable|in:0,1',
             ]);
 
             if ($validatedData->fails()) {
@@ -112,7 +111,6 @@ class PaymentsController extends Controller
 
 
             $path = null;
-            $transaction_type = null;
 
             if ($request->hasFile('screenshot')) {
 
@@ -125,7 +123,7 @@ class PaymentsController extends Controller
             $payment->amount = $request->input('amount');
             $payment->site_id = $request->input('site_id');
             $payment->supplier_id = $request->input('supplier_id');
-            $payment->transaction_type = $transaction_type;
+            $payment->transaction_type = $request->input('transaction_type');
             $payment->verified_by_admin = 1;
             $payment->payment_initiator = $request->filled('supplier_id') ? 1 : 0;
             $payment->screenshot = $path;

@@ -1800,57 +1800,8 @@
 
     @endif
 
-    <div class="container">
-        <!-- Supplier Selection -->
-        <div class="form-group mb-4">
-            <label for="supplier_id" class="form-label">Supplier</label>
-            <select name="supplier_id"
-                    id="supplier_id"
-                    class="form-select form-select-sm text-black"
-                    style="cursor: pointer">
-                <option value="">Select Supplier</option>
-                @foreach ($suppliers as $supplier)
-                    <option value="{{ $supplier->id }}">
-                        {{ $supplier->name }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <!-- Transaction Type - Initially Hidden -->
-        <div class="form-group" id="transactionTypeSection" style="display: none;">
-            <label class="form-label d-block">Transaction Type</label>
-            <div class="form-check form-check-inline">
-                <input type="radio"
-                       class="form-check-input"
-                       name="transaction_type"
-                       id="sent"
-                       value="0"
-                       checked>
-                <label class="form-check-label" for="sent">Sent</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input type="radio"
-                       class="form-check-input"
-                       name="transaction_type"
-                       id="received"
-                       value="1">
-                <label class="form-check-label" for="received">Received</label>
-            </div>
-        </div>
-    </div>
-
-
-    <div id="imageModal" class="modal">
-        <div class="modal-content p-2">
-            <div class="close-container d-flex justify-content-end">
-                <span class="close">&times;</span>
-            </div>
-            <img id="modalImage" src="" alt="Full size image">
-        </div>
-    </div>
-
     <script>
+
         $(document).on('click', '.delete-link', function (e) {
             e.preventDefault();
 
@@ -2449,7 +2400,7 @@
                 $('.text-danger').remove();
 
                 $.ajax({
-                    url: '{{ url('admin/payments') }}',
+                    url: '{{ url('admin/sites/payments') }}',
                     type: 'POST',
                     data: formData,
                     contentType: false,
@@ -2505,82 +2456,6 @@
 
         });
     </script>
-
-
-    {{-- <form method="POST" action="/upload-photo" enctype="multipart/form-data">
-        @csrf
-        <input type="file" accept="image/*" capture="camera" name="photo">
-        <button type="submit">Upload Photo</button>
-    </form> --}}
-
-    {{-- <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Get all buttons with class 'btn'
-            const buttons = document.querySelectorAll('.btns');
-
-            // Add click event listeners to each button
-            buttons.forEach(button => {
-                button.addEventListener('click', () => {
-                    // Get the modal ID from the button's data attribute
-                    const modalId = button.getAttribute('data-modal');
-                    const modal = document.getElementById(modalId);
-
-                    // Show the modal
-                    if (modal) {
-                        modal.style.display = 'block';
-                    }
-                });
-            });
-
-            // Close modals when the close button is clicked
-            const closeButtons = document.querySelectorAll('.modal .close');
-            closeButtons.forEach(closeButton => {
-                closeButton.addEventListener('click', () => {
-                    const modal = closeButton.closest('.modal');
-                    if (modal) {
-                        modal.style.display = 'none';
-                    }
-                });
-            });
-
-            // Close modals when clicking outside the modal content
-            window.addEventListener('click', (event) => {
-                if (event.target.classList.contains('modal')) {
-                    event.target.style.display = 'none';
-                }
-            });
-        });
-
-        // Get all accordion headers
-        var headers = document.querySelectorAll('.accordion-header');
-
-        // Add click event listener to each header
-        headers.forEach(header => {
-            header.addEventListener('click', function() {
-                // Toggle the active class on the clicked header
-                this.classList.toggle('active');
-
-                // Get the content panel associated with the clicked header
-                var content = this.nextElementSibling;
-
-                // If the content panel is open, close it
-                if (content.style.display === 'block') {
-                    content.style.display = 'none';
-                    content.classList.remove('show');
-                } else {
-                    // Otherwise, close all other content panels
-                    document.querySelectorAll('.accordion-content').forEach(panel => {
-                        panel.style.display = 'none';
-                        panel.classList.remove('show');
-                    });
-
-                    // Open the clicked content panel
-                    content.style.display = 'block';
-                    content.classList.add('show');
-                }
-            });
-        });
-    </script> --}}
 
 
     <script>

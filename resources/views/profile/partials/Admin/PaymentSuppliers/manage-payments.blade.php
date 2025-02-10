@@ -1,4 +1,68 @@
-@php use App\Models\Site; @endphp
+@php
+    use App\Models\Site;
+    use Carbon\Carbon;
+
+    $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+
+@endphp
+
+
+{{--<select style="cursor: pointer"--}}
+{{--        class="bg-white text-black form-select form-select-sm" name="wager_id"--}}
+{{--        onchange="document.getElementById('filterForm').submit();">--}}
+{{--    <option value="all" {{ request('wager_id') === 'all' ? 'selected' : '' }}>--}}
+{{--        All Wagers--}}
+{{--    </option>--}}
+{{--    @foreach ($wagers as $wager)--}}
+{{--        <option value="{{ $wager['wager_id'] }}"--}}
+{{--            {{ request('wager_id') == $wager['wager_id'] ? 'selected' : '' }}>--}}
+{{--            {{ $wager['description'] }}--}}
+{{--        </option>--}}
+{{--    @endforeach--}}
+{{--</select>--}}
+
+{{--<select style="cursor: pointer"--}}
+{{--        class="bg-white text-black form-select form-select-sm" name="supplier_id"--}}
+{{--        onchange="document.getElementById('filterForm').submit();">--}}
+{{--    <option value="all" {{ request('supplier_id') == 'all' ? 'selected' : '' }}>--}}
+{{--        All Suppliers--}}
+{{--    </option>--}}
+{{--    @foreach ($suppliers as $supplier)--}}
+{{--        <option value="{{ $supplier['supplier_id'] }}"--}}
+{{--            {{ request('supplier_id') == $supplier['supplier_id'] ? 'selected' : '' }}>--}}
+{{--            {{ $supplier['supplier'] }}--}}
+{{--        </option>--}}
+{{--    @endforeach--}}
+{{--</select>--}}
+
+{{--<select style="cursor: pointer"--}}
+{{--        class="bg-white text-black form-select form-select-sm" name="date_filter"--}}
+{{--        id="date_filter" onchange="document.getElementById('filterForm').submit();">--}}
+{{--    <option value="today"--}}
+{{--        {{ request('date_filter') === 'today' ? 'selected' : '' }}>--}}
+{{--        Today</option>--}}
+{{--    <option value="yesterday"--}}
+{{--        {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>--}}
+{{--        Yesterday</option>--}}
+{{--    <option value="this_week"--}}
+{{--        {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>--}}
+{{--        This Week</option>--}}
+{{--    <option value="this_month"--}}
+{{--        {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>--}}
+{{--        This Month</option>--}}
+{{--    <option value="this_year"--}}
+{{--        {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>--}}
+{{--        This Year</option>--}}
+{{--    <option value="lifetime"--}}
+{{--        {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>--}}
+{{--        All Data--}}
+{{--    </option>--}}
+{{--</select>--}}
+
+
+{{--</div>--}}
+
+
 <x-app-layout>
     @if (session('status') === 'update')
         <x-success-message message="Your Record has been updated..."/>
@@ -32,18 +96,56 @@
 
         <div class="col-sm-12">
 
-            <div class="d-flex justify-content-end">
+            {{--            <div class="d-flex justify-content-end">--}}
 
-                <button onclick="createNewPayment()" class="btn btn-info">Make Payment</button>
+            {{--                <button onclick="createNewPayment()" class="btn btn-info">Make Payment</button>--}}
 
 
-            </div>
+            {{--            </div>--}}
 
 
             <div class="table-responsive mt-4">
 
+                <div class="row mt-4 mb-4">
+                    <div class="col-12 col-md-10 d-flex flex-column flex-md-row gap-2 align-items-center">
 
-                @if (count($payment_banks))
+                        <form class="d-flex flex-column flex-md-row gap-2 w-100"
+                              action="{{ url($user . '/manage-payment') }}" method="GET" id="filterForm">
+
+                            <select style="cursor: pointer" onchange="document.getElementById('filterForm').submit();"
+                                    class="bg-white text-black form-select form-select-sm" name="id">
+                                <option value="all" {{ request('id') === 'all' ? 'selected' : '' }}>
+                                    Select Site
+                                </option>
+                                @foreach ($sites as $data)
+                                    <option
+                                        value="site-{{ $data['id'] }}" {{ request('id') == 'site-' . $data['id'] ? 'selected' : '' }}>
+                                        {{ $data['site_name'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            <select style="cursor: pointer" onchange="document.getElementById('filterForm').submit();"
+                                    class="bg-white text-black form-select form-select-sm" name="id">
+                                <option value="all" {{ request('id') === 'all' ? 'selected' : '' }}>
+                                    Select Supplier
+                                </option>
+                                @foreach ($suppliers as $data)
+                                    <option
+                                        value="supplier-{{ $data['id'] }}" {{ request('id') == 'supplier-' . $data['id'] ? 'selected' : '' }}>
+                                        {{ $data['name'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                        </form>
+
+                    </div>
+
+                </div>
+
+
+                @if (count($payments))
 
                     <table class="table table-bordered">
 
@@ -54,53 +156,12 @@
                             <td colspan="1">
                                 <div class="p-3 d-flex flex-column gap-2 text-danger">
                                     <small>
-                                        <b>
-                                            Total Aamount
-                                        </b>
+                                        <h4>
+                                            Total Amount
+                                        </h4>
                                     </small>
                                     <h4 class="fw-bold">
                                         {{ Number::currency($total_amount, 'INR') }}
-                                    </h4>
-                                </div>
-                            </td>
-
-                            <td colspan="1">
-                                <div class="p-3 d-flex flex-column gap-2 text-warning">
-                                    <small>
-                                        <b>
-                                            Total Due
-                                        </b>
-                                    </small>
-                                    <h4 class="fw-bold">
-                                        {{-- {{ Number::currency($total_due, 'INR') }} --}}
-                                    </h4>
-                                </div>
-                            </td>
-
-                            <td>
-                                <div class="p-3 d-flex flex-column gap-2 text-info fw-bold">
-
-                                    <small>
-                                        <b>
-                                            Effective Balance
-                                        </b>
-                                    </small>
-                                    <h4>
-                                        {{-- {{ Number::currency($effective_balance, 'INR') }} --}}
-                                    </h4>
-
-                                </div>
-                            </td>
-
-                            <td colspan="1">
-                                <div class="p-3 d-flex flex-column gap-2 text-success">
-                                    <small>
-                                        <b>
-                                            Total Paid
-                                        </b>
-                                    </small>
-                                    <h4 class="fw-bold">
-                                        {{-- {{ Number::currency($total_paid, 'INR') }} --}}
                                     </h4>
                                 </div>
                             </td>
@@ -110,8 +171,10 @@
                         <tr>
                             <th class="bg-info text-white fw-bold">Date</th>
                             <th class="bg-info text-white fw-bold">Entity</th>
-                            <th class="bg-info text-white fw-bold">Amount</th>
-                            <th class="bg-info text-white fw-bold">Transaction Type</th>
+                            <th class="bg-info text-white fw-bold">Name</th>
+                            <th class="bg-info text-white fw-bold">Sent</th>
+                            <th class="bg-info text-white fw-bold">Received</th>
+
                             <th class="bg-info text-white fw-bold">Edit</th>
                             <th class="bg-info text-white fw-bold">Make Payment</th>
 
@@ -120,44 +183,42 @@
                         </thead>
 
                         <tbody>
-                        @foreach ($payment_banks as $payment)
+
+                        @foreach ($payments as $payment)
                             <tr>
+                                <td>{{ Carbon::parse($payment['created_at'])->format('d-m-Y') }}</td>
+                                <td>{{ $payment['type'] }}</td>
+                                <td>{{ ucfirst($payment['name']) }}</td>
 
-                                <td>{{ $payment->created_at->format('d-m-Y') }}</td>
-                                <td>
-                                    {{
-                                        $payment->entity_type  === Site::class ?
-                                        $payment->entity->site_name  : $payment->entity->name
-                                    }}
-                                </td>
-                                <td>{{ $payment->amount }}</td>
-                                <td>{{ $payment->transaction_type === 1 ? 'Sent' : 'Received' }}</td>
+                                <td>{{ ucfirst($payment['transaction_type']) }}</td>
+                                <td>{{ $payment['amount'] }}</td>
                                 <td class="space-x-4">
-
                                     <!-- Edit Button -->
                                     <a href="#" data-bs-toggle="modal" data-bs-target="#bankModal"
-                                       onclick="fetchPaymentData({{ $payment->id }})">
-                                        <i
-                                            class="fa-solid fa-edit text-xl text-primary bg-white rounded-full px-2 py-1"></i>
+                                       onclick="fetchPaymentData({{ $payment['id'] }})">
+                                        <i class="fa-solid fa-edit text-xl text-primary bg-white rounded-full px-2 py-1"></i>
                                     </a>
 
-
                                 </td>
-                                <td class="space-x-4">
+                                <td>
+                                    <!-- Payment Button -->
+                                    <button data-bs-toggle="modal" data-bs-target="#payment_model"
+                                            onclick="makePayment(
+                                            {{ $payment['id'] }},
+                                            '{{ $payment['entity_type'] }}',
+                                            '{{$payment['amount']}}',
+                                           '{{ $payment['transaction_type'] == 'sent' ? 1 : 0 }}'
 
-                                    <!-- Edit Button -->
-                                    <button data-bs-toggle="modal" data-bs-target="#make_payment_modal"
-                                            onclick="makePayment({{ $payment->id }})"
+                                            )"
                                             class="badge badge-success rounded fw-bold">
-                                         Pay  {{ $payment->entity->name ?? $payment->entity->site_name }}
+                                        Pay {{ $payment['name'] }}
                                     </button>
-
-
                                 </td>
                             </tr>
                         @endforeach
 
                         </tbody>
+
                     </table>
 
                 @else
@@ -176,7 +237,7 @@
 
             <div class="mt-4">
 
-                {{ $payment_banks->links() }}
+                {{ $payments->links() }}
 
             </div>
 
@@ -188,224 +249,116 @@
     <div id="messageContainer"></div>
 
     <!-- Modal -->
-        <div id="bankModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="bankModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <form id="payment-bank-form">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="bankModalLabel">Manage Payment</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div id="bankModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="bankModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="payment-bank-form">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="bankModalLabel">Manage Payment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <!-- Hidden Field for Payment ID -->
+
+                        <!-- Amount -->
+                        <div class="form-group">
+                            <label for="modal_amount">Amount</label>
+                            <input type="number" step="0.01" id="modal_amount" name="amount" class="form-control"/>
                         </div>
 
-                        <div class="modal-body">
-                            <!-- Hidden Field for Payment ID -->
+                        <!-- Entity Dropdown -->
+                        <div class="form-group">
+                            <label for="modal_from">Entity</label>
+                            <select id="modal_from" name="entity" class="form-select text-black"
+                                    style="cursor: pointer">
+                                <option value="">Select Entity</option>
+                                @foreach ($payments as $entity)
+                                    <option value="{{ $entity['type'] }}-{{ $entity['id'] }}">
+                                        {{ $entity['id'] }} - {{ $entity['name'] }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
 
-                            <!-- Amount -->
-                            <div class="form-group">
-                                <label for="modal_amount">Amount</label>
-                                <input type="number" step="0.01" id="modal_amount" name="amount" class="form-control" />
+                    <!-- Transaction Type -->
+                    <div class="container">
+                        <div class="form-group">
+                            <label class="form-label d-block">Transaction Type</label>
+                            <div>
+                                <input type="radio" name="transaction_type" id="sent" value="1" checked>
+                                <label for="sent" class="form-check-label">Sent</label>
                             </div>
-
-                            <!-- Entity Dropdown -->
-                            <div class="form-group">
-                                <label for="modal_from">Entity</label>
-                                <select id="modal_from" name="entity" class="form-select text-black" style="cursor: pointer">
-                                    <option value="">Select Entity</option>
-                                    @foreach ($entities as $entity)
-                                        <option value="{{ $entity['type'] }}-{{ $entity['id'] }}">
-                                            {{ $entity['id'] }} - {{ $entity['name'] }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                            <div>
+                                <input type="radio" name="transaction_type" id="received" value="0">
+                                <label for="received" class="form-check-label">Received</label>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Transaction Type -->
-                        <div class="container">
-                            <div class="form-group">
-                                <label class="form-label d-block">Transaction Type</label>
-                                <div>
-                                    <input type="radio" name="transaction_type" id="sent" value="1" checked>
-                                    <label for="sent" class="form-check-label">Sent</label>
-                                </div>
-                                <div>
-                                    <input type="radio" name="transaction_type" id="received" value="0">
-                                    <label for="received" class="form-check-label">Received</label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <!-- Submit button -->
-                            <button type="submit" class="btn btn-primary">Save</button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="modal-footer">
+                        <!-- Submit button -->
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
 
 
-        <div id="make_payment_modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="makePaymentModalLabel"
-             aria-hidden="true">
-            <div class="modal-dialog" role="document">
-                <div class="modal-content">
-                    <form class="make_payment_form">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="makePaymentModalLabel">Make Payment</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div id="payment_model" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="makePaymentModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form class="payment_form">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="makePaymentModalLabel">Make Payment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <!-- Hidden Fields -->
+                        <input type="text" id="transaction_type" name="transaction_type"/>
+                        <input type="text" id="entity_id" name="entity_id"/>
+                        <input type="text" id="entity_type" name="entity_type"/>
+
+                        <!-- Payment Amount -->
+                        <div class="form-group mb-3">
+                            <label for="payment_amount" class="form-label">Amount</label>
+                            <input type="number" step="0.01" id="payment_amount" name="amount" class="form-control"
+                                   placeholder="Enter payment amount"/>
                         </div>
+                    </div>
 
-                        <div class="modal-body">
-                            <!-- Hidden Fields -->
-                            <input type="hidden" id="payment_id" name="payment_id" />
-                            <input type="hidden" id="transaction_type" name="transaction_type" />
-                            <input type="hidden" id="entity_id" name="entity_id" />
-                            <input type="hidden" id="entity_type" name="entity_type" />
-
-                            <!-- Payment Amount -->
-                            <div class="form-group mb-3">
-                                <label for="payment_amount" class="form-label">Amount</label>
-                                <input type="number" step="0.01" id="payment_amount" name="amount" class="form-control"
-                                       placeholder="Enter payment amount" required />
-                            </div>
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="submit" class="btn btn-info btn-sm">Make Payment</button>
-                        </div>
-                    </form>
-                </div>
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-info btn-sm">Make Payment</button>
+                    </div>
+                </form>
             </div>
         </div>
+    </div>
+
 
     <script>
 
 
+        function makePayment(id, entityType, amount, transactionType) {
+            // $('#transaction_type').val(transactionType);
+            // $('#entity_id').val(id);
+            // $('#entity_type').val(entityType);
+            // $('#payment_amount').val(amount);
 
-        function fetchPaymentData(paymentId) {
-            $.ajax({
-                url: `/admin/manage-payment/${paymentId}/edit`, // Backend endpoint
-                method: 'GET',
-                success: function (response) {
-                    $('#payment_id').val(response.id);
-                    $('#modal_amount').val(response.amount);
-                    $('#modal_from').val(`${response.entity_type}-${response.entity_id}`).change(); // Preselect entity
-
-                    // Set transaction type
-                    if (response.transaction_type === 1) {
-                        $('#sent').prop('checked', true);
-                    } else {
-                        $('#received').prop('checked', true);
-                    }
-
-                    $('#bankModal').modal('show'); // Open the modal
-                },
-                error: function () {
-                    alert('Failed to fetch payment details. Please try again.');
-                }
-            });
+            console.log(transactionType);
         }
 
-        function makePayment(paymentId) {
-            $.ajax({
-                url: `/admin/manage-payment/${paymentId}/edit`,
-                method: 'GET',
-                success: function (response) {
-                    $('#payment_id').val(response.id);
-                    $('#transaction_type').val(response.transaction_type);
-                    $('#entity_id').val(response.entity_id);
-                    $('#entity_type').val(response.entity_type);
-                    $('#payment_amount').val(response.amount || '');
-
-                    $('#make_payment_modal').modal('show');
-                },
-                error: function () {
-                    alert('Failed to fetch payment data. Please try again.');
-                }
-            });
-        }
-
-        $('#payment-bank-form').submit(function (event) {
-            event.preventDefault();
-
-            const messageContainer = $('#messageContainer');
-
-            const payment_id = $('#payment_id').val();
-            const formData = new FormData(this);
-            formData.append('_token', '{{ csrf_token() }}');
-
-
-            const url = payment_id
-                ? `/admin/manage-payment/${payment_id}`
-                : '/admin/manage-payment';
-
-            $.ajax({
-                url: url,
-                method: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (response) {
-
-                    $('#bankModal').modal('hide');
-
-                    messageContainer.append(`
-                    <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                            </div>
-                        </div>
-                    </div>
-                `);
-
-                    setTimeout(function () {
-                        messageContainer.find('.alert').alert('close');
-                        location.reload();
-                    }, 2000);
-                },
-                error: function (error) {
-
-                    if (error.status === 422) {
-                        const errorMessages = error.responseJSON.errors;
-
-                        for (const field in errorMessages) {
-                            if (errorMessages.hasOwnProperty(field)) {
-                                const errorElement = `
-                        <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                            <strong>${errorMessages[field]}</strong>
-                        </div>
-                    `;
-                                messageContainer.append(errorElement);
-                            }
-                        }
-                    } else {
-
-                        messageContainer.append(`
-                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                    An unexpected error occurred. Please try again later.
-                </div>
-            `);
-                    }
-
-                    setTimeout(function () {
-                        messageContainer.find('.alert').alert('close');
-                    }, 3000);
-                }
-            });
-        });
-
-        $('.make_payment_form').submit(function (event) {
-
+        $('.payment_form').submit(function (event) {
             event.preventDefault();
 
             let formData = new FormData(this);
-            formData.append('_method', 'PUT');
 
-            const payment_id = $('#payment_id').val();
-
-            const url = `/admin/payments/${payment_id}`;
+            const url = `/admin/payments`;
 
             $.ajax({
                 url: url,
@@ -417,36 +370,77 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
                 },
                 success: function (response) {
-
-                    $('#make_payment_modal').modal('hide');
+                    alert('Payment Successful!');
+                    $('#payment_model').modal('hide');
+                    location.reload();
                 },
                 error: function (xhr) {
                     if (xhr.status === 422) {
-
+                        // Handle validation errors
                         const errors = xhr.responseJSON.errors;
-
                         for (const [field, messages] of Object.entries(errors)) {
                             alert(`${field}: ${messages.join(', ')}`);
                         }
-
                     } else {
+                        // Handle other errors
                         alert('An error occurred while making the payment. Please try again.');
                     }
                 }
             });
-
         });
-
-        // Function to Open Modal for Adding New Payment
-        function createNewPayment() {
-            // Reset form and open modal
-            $('#payment-bank-form')[0].reset();
-            $('#payment_id').val(''); // Ensure hidden ID is cleared
-
-            $('#bankModal').modal('show');
-        }
-
 
 
     </script>
 </x-app-layout>
+
+
+{{----}}
+{{--        $('.make_payment_form').submit(function (event) {--}}
+
+{{--            event.preventDefault();--}}
+
+{{--            let formData = new FormData(this);--}}
+{{--            formData.append('_method', 'PUT');--}}
+
+{{--            const payment_id = $('#payment_id').val();--}}
+
+{{--            const url = `/admin/payments/${payment_id}`;--}}
+
+{{--            $.ajax({--}}
+{{--                url: url,--}}
+{{--                method: 'POST',--}}
+{{--                data: formData,--}}
+{{--                processData: false,--}}
+{{--                contentType: false,--}}
+{{--                headers: {--}}
+{{--                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),--}}
+{{--                },--}}
+{{--                success: function (response) {--}}
+
+{{--                    $('#make_payment_modal').modal('hide');--}}
+{{--                },--}}
+{{--                error: function (xhr) {--}}
+{{--                    if (xhr.status === 422) {--}}
+
+{{--                        const errors = xhr.responseJSON.errors;--}}
+
+{{--                        for (const [field, messages] of Object.entries(errors)) {--}}
+{{--                            alert(`${field}: ${messages.join(', ')}`);--}}
+{{--                        }--}}
+
+{{--                    } else {--}}
+{{--                        alert('An error occurred while making the payment. Please try again.');--}}
+{{--                    }--}}
+{{--                }--}}
+{{--            });--}}
+
+{{--        });--}}
+
+{{--        // Function to Open Modal for Adding New Payment--}}
+{{--        function createNewPayment() {--}}
+{{--            // Reset form and open modal--}}
+{{--            $('#payment-bank-form')[0].reset();--}}
+{{--            $('#payment_id').val(''); // Ensure hidden ID is cleared--}}
+
+{{--            $('#bankModal').modal('show');--}}
+{{--        }--}}

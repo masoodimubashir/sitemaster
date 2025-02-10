@@ -101,7 +101,7 @@ class SupplierController extends Controller
                 'total_price' => $material->amount,
                 'transaction_type' => 'debit',
                 'site' => $material->phase->site->site_name ?? 'NA',
-                'site_owner' => $material->phase->site->site_owner_name ?? 'NA',
+                'site_name' => $material->phase->site->site_name ?? 'NA',
                 'site_id' => $material->phase->site->id ?? 'NA'
             ];
         }));
@@ -117,7 +117,7 @@ class SupplierController extends Controller
                 'total_price' => $wager->wager_total,
                 'transaction_type' => 'debit',
                 'site' => $wager->phase->site->site_name ?? 'NA',
-                'site_owner' => $wager->phase->site->site_owner_name ?? 'NA',
+                'site_name' => $wager->phase->site->site_name ?? 'NA',
                 'site_id' => $wager->phase->site->id ?? 'NA'
             ];
         }));
@@ -133,7 +133,7 @@ class SupplierController extends Controller
                 'total_price' => $sqft->price * $sqft->multiplier,
                 'transaction_type' => 'debit',
                 'site' => $sqft->phase->site->site_name ?? 'NA',
-                'site_owner' => $sqft->phase->site->site_owner_name ?? 'NA',
+                'site_name' => $sqft->phase->site->site_name ?? 'NA',
                 'site_id' => $sqft->phase->site->id ?? 'NA'
             ];
         }));
@@ -159,11 +159,13 @@ class SupplierController extends Controller
             'sites' => $sites
         ];
 
+//        dd($sites);
+
         if ($supplier->is_raw_material_provider === 1) {
-            return view('profile.partials.Admin.Supplier.show-supplier_raw_material', $data);
+            return view('profile.partials.Admin.Supplier.show-supplier_raw_material', compact('data', 'sites'));
         }
 
-        return view('profile.partials.Admin.Supplier.show_supplier_workforce', $data);
+        return view('profile.partials.Admin.Supplier.show_supplier_workforce', compact('data'));
 
     }
 

@@ -123,6 +123,10 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     //  This Route Is Used To Make Payment In Supplier View
     Route::resource('/supplier/payments', PaymentSupplierController::class);
 
+    Route::get('sites/payments/{id}', [PaymentSiteController::class, 'showPayment']);
+    Route::post('sites/payments', [PaymentSiteController::class, 'makePayment']);
+
+
     //  On Going Site Updated With This Route
     Route::post('sites/update-on-going/{id}', UpdateOnGoingController::class)->name('sites.update-on-going');
 
@@ -138,7 +142,6 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     Route::resource('/daily-wager-attendance', WagerAttendanceController::class);
 
-    Route::get('sites/payments/{id}', PaymentSiteController::class);
 
     // Items Controller
     Route::resource('/items', ItemController::class);
@@ -265,7 +268,7 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
     // Site Payments
     Route::resource('supplier/payments', PaymentSupplierController::class);
-    Route::get('sites/payments/{id}', PaymentSiteController::class);
+//    Route::get('sites/payments/{id}', PaymentSiteController::class);
 
     // View Supplier Ledger
     Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');
