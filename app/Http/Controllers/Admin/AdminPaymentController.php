@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AdminPaymentResource;
 use App\Models\AdminPayment;
+use App\Models\Payment;
 use App\Models\Site;
 use App\Models\Supplier;
 use Exception;
@@ -19,96 +20,110 @@ class AdminPaymentController extends Controller
     public function index(Request $request)
     {
 
-        $id = $request->input('id');
 
-        $sites = Site::query()
-            ->when(str_starts_with($id, 'site-') && $id !== 'all', function ($query) use ($id) {
-                $query->where('id', $id);
-            })
-            ->whereHas('adminPayments')
-            ->with(['adminPayments'])
-            ->get();
-
-        $suppliers = Supplier::query()
-            ->when(str_starts_with($id, 'supplier-') && $id !== 'all', function ($query) use ($id) {
-                $query->where('id', $id);
-            })
-            ->whereHas('adminPayments')
-            ->with(['adminPayments'])
-            ->get();
+        $payments = AdminPayment::with('entity')
+            ->paginate(10);
 
 
 
-        $data = collect();
+        $total_amount = AdminPayment::sum('amount');
 
-        $data = $data->merge($sites->flatMap(function ($site) {
-            $received = $site->adminPayments->where('transaction_type', 0)->sum('amount');
-            $sent = $site->adminPayments->where('transaction_type', 1)->sum('amount');
 
-            return [
-                [
-                    'id' => $site->id,
-                    'type' => 'Site',
-                    'name' => $site->site_name,
-                    'transaction_type' => 'sent',
-                    'entity_type' => Site::class,
-                    'amount' => $sent,
-                    'created_at' => $site->created_at,
-                ],
-                [
-                    'id' => $site->id,
-                    'type' => 'Site',
-                    'name' => $site->site_name,
-                    'transaction_type' => 'received',
-                    'entity_type' => Site::class,
-                    'amount' => $received,
-                    'created_at' => $site->created_at,
-                ]
-            ];
-        }));
+//        $id = $request->input('id');
 
-        $data = $data->merge($suppliers->flatMap(function ($supplier) {
-            $received = $supplier->adminPayments->where('transaction_type', 0)->sum('amount');
-            $sent = $supplier->adminPayments->where('transaction_type', 1)->sum('amount');
-
-            return [
-                [
-                    'id' => $supplier->id,
-                    'type' => 'Supplier',
-                    'name' => $supplier->name,
-                    'transaction_type' => 'sent',
-                    'entity_type' => Supplier::class,
-                    'amount' => $sent,
-                    'created_at' => $supplier->created_at,
-                ],
-                [
-                    'id' => $supplier->id,
-                    'type' => 'Supplier',
-                    'name' => $supplier->name,
-                    'transaction_type' => 'received',
-                    'entity_type' => Supplier::class,
-                    'amount' => $received,
-                    'created_at' => $supplier->created_at,
-                ]
-            ];
-        }));
-
-        $total_amount = $data->sum('amount');
-
-        $payments = new LengthAwarePaginator(
-            $data->forPage($request->input('page', 1), 10),
-            $data->count(), 10,
-            $request->input('page', 10), [
-                'path' => $request->url(), 'query' => $request->query()
-            ]
-        );
-
+//        $sites = Site::query()
+//            ->when(str_starts_with($id, 'site-') && $id !== 'all', function ($query) use ($id) {
+//                $query->where('id', $id);
+//            })
+//            ->whereHas('adminPayments')
+//            ->with(['adminPayments'])
+//            ->get();
+//
+//        $suppliers = Supplier::query()
+//            ->when(str_starts_with($id, 'supplier-') && $id !== 'all', function ($query) use ($id) {
+//                $query->where('id', $id);
+//            })
+//            ->whereHas('adminPayments')
+//            ->with(['adminPayments'])
+//            ->get();
+//
+//
+//
+//        $data = collect();
+//
+//
+//        $data = $data->merge($sites->flatMap(function ($site) {
+//            $received = $site->adminPayments->where('transaction_type', 0);
+//            $sent = $site->adminPayments->where('transaction_type', 1);
+//
+//            return [
+//                [
+//                    'id' => $site->id,
+//                    'type' => 'Site',
+//                    'name' => $site->site_name,
+//                    'transaction_type' => 'sent',
+//                    'entity_type' => Site::class,
+//                    'amount' => $sent->sum('amount'),
+////                    'admin_payment_ids' => $site->adminPayments->pluck('id')->unique(),
+//                    'created_at' => $site->created_at,
+//                ],
+//                [
+//                    'id' => $site->id,
+//                    'type' => 'Site',
+//                    'name' => $site->site_name,
+//                    'transaction_type' => 'received',
+//                    'entity_type' => Site::class,
+//                    'amount' => $received->sum('amount'),
+////                    'admin_payment_ids' => $site->adminPayments->pluck('id')->unique(),
+//                    'created_at' => $site->created_at,
+//                ]
+//            ];
+//        }));
+//
+//        $data = $data->merge($suppliers->flatMap(function ($supplier) {
+//            $received = $supplier->adminPayments->where('transaction_type', 0);
+//            $sent = $supplier->adminPayments->where('transaction_type', 1);
+//
+//            return [
+//                [
+//                    'id' => $supplier->id,
+//                    'type' => 'Supplier',
+//                    'name' => $supplier->name,
+//                    'transaction_type' => 'sent',
+//                    'entity_type' => Supplier::class,
+//                    'amount' => $sent->sum('amount'),
+////                    'admin_payment_ids' => $supplier->adminPayments->pluck('id')->unique(),
+//                    'created_at' => $supplier->created_at,
+//                ],
+//                [
+//                    'id' => $supplier->id,
+//                    'type' => 'Supplier',
+//                    'name' => $supplier->name,
+//                    'transaction_type' => 'received',
+//                    'entity_type' => Supplier::class,
+//                    'amount' => $received->sum('amount'),
+////                    'admin_payment_ids' => $supplier->adminPayments->pluck('id')->unique(),
+//                    'created_at' => $supplier->created_at,
+//                ]
+//            ];
+//        }));
+//
+////        dd($data);
+//
+//        $total_amount = $data->sum('amount');
+//
+//        $payments = new LengthAwarePaginator(
+//            $data->forPage($request->input('page', 1), 10),
+//            $data->count(), 10,
+//            $request->input('page', 10), [
+//                'path' => $request->url(), 'query' => $request->query()
+//            ]
+//        );
+//
 
         return view('profile.partials.Admin.PaymentSuppliers.manage-payments', compact(
                 'payments',
                 'total_amount',
-                'sites',
-                'suppliers'
             )
         );
     }

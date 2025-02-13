@@ -4,14 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ConstructionMaterialBilling as ModelsConstructionMaterialBilling;
-use App\Models\PaymentSupplier;
 use App\Models\Phase;
 use App\Models\Site;
 use App\Models\Supplier;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -39,7 +36,11 @@ class ConstructionMaterialBilling extends Controller
 
         $phases = Phase::latest()->get();
 
-        return view('profile.partials.Admin.ConstructionMaterialBillings.create-billings', compact('sites', 'suppliers', 'phases'));
+        return view('profile.partials.Admin.ConstructionMaterialBillings.create-billings', compact(
+            'sites',
+            'suppliers',
+            'phases')
+        );
     }
 
 
@@ -50,6 +51,7 @@ class ConstructionMaterialBilling extends Controller
     {
         if ($request->ajax()) {
 
+            DB::beginTransaction();
 
             $validator = Validator::make($request->all(), [
                 'image' => 'required|mimes:png,jpg,webp|max:1024',
@@ -60,7 +62,9 @@ class ConstructionMaterialBilling extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['errors' => 'Validation Error.. Try Again'], 422);
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
             }
 
             $image_path = null;
@@ -69,23 +73,41 @@ class ConstructionMaterialBilling extends Controller
             }
 
             try {
-                // Create the construction billing entry
+
                 $constructionBilling = new ModelsConstructionMaterialBilling();
                 $constructionBilling->amount = $request->input('amount');
                 $constructionBilling->item_image_path = $image_path;
                 $constructionBilling->item_name = $request->input('item_name');
-                $constructionBilling->verified_by_admin = 1; // or set based on logic
+                $constructionBilling->verified_by_admin = 1;
                 $constructionBilling->supplier_id = $request->input('supplier_id');
-                $constructionBilling->user_id = auth()->user()->id; // Ensure user is authenticated
+                $constructionBilling->user_id = auth()->user()->id;
                 $constructionBilling->phase_id = $request->input('phase_id');
                 $constructionBilling->save();
 
-                return response()->json(['message' => 'Construction billing created successfully'], 201);
+                $site_id = $constructionBilling->phase->site_id ?? null;
+
+                if ($constructionBilling) {
+
+                    $this->setSiteTotalAmount($site_id, $constructionBilling->amount);
+
+                }
+
+                return response()->json([
+                    'message' => 'Construction billing created and site total updated successfully'
+                ], 201);
+
             } catch (\Exception $e) {
-                // Handle any unexpected errors
-                return response()->json(['error' => 'An unexpected error occurred: '], 500);
+
+                DB::rollBack();
+
+                return response()->json([
+                    'error' => 'An unexpected error occurred. Please try again.'
+                ], 500);
             }
         }
+
+        return response()->json(['error' => 'Invalid request.'], 400);
+
     }
 
 

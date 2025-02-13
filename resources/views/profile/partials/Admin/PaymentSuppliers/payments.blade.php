@@ -61,19 +61,19 @@
                                         @endforeach
                                     </select>
 
-                                    <select style="cursor: pointer"
-                                        class="bg-white text-black form-select form-select-sm" name="wager_id"
-                                        onchange="document.getElementById('filterForm').submit();">
-                                        <option value="all" {{ request('wager_id') === 'all' ? 'selected' : '' }}>
-                                            All Wagers
-                                        </option>
-                                        @foreach ($wagers as $wager)
-                                            <option value="{{ $wager['wager_id'] }}"
-                                                {{ request('wager_id') == $wager['wager_id'] ? 'selected' : '' }}>
-                                                {{ $wager['description'] }}
-                                            </option>
-                                        @endforeach
-                                    </select>
+{{--                                    <select style="cursor: pointer"--}}
+{{--                                        class="bg-white text-black form-select form-select-sm" name="wager_id"--}}
+{{--                                        onchange="document.getElementById('filterForm').submit();">--}}
+{{--                                        <option value="all" {{ request('wager_id') === 'all' ? 'selected' : '' }}>--}}
+{{--                                            All Wagers--}}
+{{--                                        </option>--}}
+{{--                                        @foreach ($wagers as $wager)--}}
+{{--                                            <option value="{{ $wager['wager_id'] }}"--}}
+{{--                                                {{ request('wager_id') == $wager['wager_id'] ? 'selected' : '' }}>--}}
+{{--                                                {{ $wager['description'] }}--}}
+{{--                                            </option>--}}
+{{--                                        @endforeach--}}
+{{--                                    </select>--}}
 
                                     <select style="cursor: pointer"
                                         class="bg-white text-black form-select form-select-sm" name="supplier_id"
@@ -113,11 +113,6 @@
                                         </option>
                                     </select>
 
-                                    <div class="d-flex gap-2">
-                                        {{-- <button type="submit" class="btn btn-info text-white mt-2">Filter</button> --}}
-                                        <button type="button" class="btn btn-success  text-white mt-2"
-                                            onclick="resetForm()">Reset</button>
-                                    </div>
 
                                 </form>
                             </div>
@@ -232,14 +227,14 @@
                                     </tr>
                                     <tr>
                                         <th class="bg-info text-white fw-bold ">Date | Time</th>
+                                        <th class="bg-info fw-bold text-white">Transaction Type</th>
                                         <th class="bg-info text-white fw-bold ">Supplier Name</th>
-                                        <th class="bg-info text-white fw-bold ">Phase</th>
                                         <th class="bg-info text-white fw-bold ">Site Name</th>
+                                        <th class="bg-info text-white fw-bold ">Phase</th>
                                         <th class="bg-info text-white fw-bold ">Type</th>
                                         <th class="bg-info text-white fw-bold">Information</th>
                                         <th class="bg-info text-white fw-bold ">Debit</th>
-                                        <th class="bg-info fw-bold text-white">Payment Mode</th>
-                                        <th>Totals</th>
+                                        <th class="bg-info fw-bold text-white">Credit</th>
 
                                     </tr>
                                 </thead>
@@ -261,18 +256,26 @@
                                                 <td>
                                                     {{ $ledger['created_at'] }}
                                                 </td>
+                                                <td>
+                                                    {{ $ledger['transaction_type'] }}
+                                                </td>
 
                                                 <td>
                                                     {{ ucwords($ledger['supplier']) }}
+                                                </td>
+
+
+
+
+                                                <td>
+                                                    {{ ucwords($ledger['site']) }}
                                                 </td>
 
                                                 <td>
                                                     {{ ucwords($ledger['phase']) }}
                                                 </td>
 
-                                                <td>
-                                                    {{ ucwords($ledger['site']) }}
-                                                </td>
+
 
                                                 <td>
                                                     {{ $ledger['category'] }}
@@ -286,9 +289,7 @@
                                                     {{ $ledger['debit'] }}
                                                 </td>
 
-                                                <td>
-                                                    {{ $ledger['transaction_type'] }}
-                                                </td>
+
 
                                                 <td>
                                                     {{ $ledger['credit'] }}
@@ -562,12 +563,10 @@
 
     <script>
         function resetForm() {
-            // Reset select fields to default values
             document.querySelector('select[name="site_id"]').value = 'all';
             document.querySelector('select[name="date_filter"]').value = 'today';
             document.querySelector('select[name="supplier_id"]').value = 'all';
             document.querySelector('select[name="wager_id"]').value = 'all';
-            // Optional: If you want to actually clear the URL parameters
             window.location.href = "{{ url($user . '/payments') }}";
         }
     </script>

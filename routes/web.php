@@ -218,8 +218,6 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
         ->name('user.dashboard');
 
     // Site Controllers
-
-
     Route::get('/sites/create', [ViewSiteController::class, 'create']);
     Route::get('/sites/{id}', [ViewSiteController::class, 'show']);
 
@@ -293,6 +291,7 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
 
     Route::get('wager-attendance', [AttendanceSheetController::class, 'index']);
+    
 });
 
 

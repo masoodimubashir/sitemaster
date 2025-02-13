@@ -96,6 +96,44 @@
 
         <div class="col-sm-12">
 
+{{--            <div class="row mt-4 mb-4">--}}
+{{--                <div class="col-12 col-md-10 d-flex flex-column flex-md-row gap-2 align-items-center">--}}
+
+{{--                    <form class="d-flex flex-column flex-md-row gap-2 w-100"--}}
+{{--                          action="{{ url($user . '/manage-payment') }}" method="GET" id="filterForm">--}}
+
+{{--                        <select style="cursor: pointer" onchange="document.getElementById('filterForm').submit();"--}}
+{{--                                class="bg-white text-black form-select form-select-sm" name="id">--}}
+{{--                            <option value="all" {{ request('id') === 'all' ? 'selected' : '' }}>--}}
+{{--                                Select Site--}}
+{{--                            </option>--}}
+{{--                            @foreach ($sites as $data)--}}
+{{--                                <option--}}
+{{--                                    value="site-{{ $data['id'] }}" {{ request('id') == 'site-' . $data['id'] ? 'selected' : '' }}>--}}
+{{--                                    {{ $data['site_name'] }}--}}
+{{--                                </option>--}}
+{{--                            @endforeach--}}
+{{--                        </select>--}}
+
+{{--                        <select style="cursor: pointer" onchange="document.getElementById('filterForm').submit();"--}}
+{{--                                class="bg-white text-black form-select form-select-sm" name="id">--}}
+{{--                            <option value="all" {{ request('id') === 'all' ? 'selected' : '' }}>--}}
+{{--                                Select Supplier--}}
+{{--                            </option>--}}
+{{--                            @foreach ($suppliers as $data)--}}
+{{--                                <option--}}
+{{--                                    value="supplier-{{ $data['id'] }}" {{ request('id') == 'supplier-' . $data['id'] ? 'selected' : '' }}>--}}
+{{--                                    {{ $data['name'] }}--}}
+{{--                                </option>--}}
+{{--                            @endforeach--}}
+{{--                        </select>--}}
+
+{{--                    </form>--}}
+
+{{--                </div>--}}
+
+{{--            </div>--}}
+
             {{--            <div class="d-flex justify-content-end">--}}
 
             {{--                <button onclick="createNewPayment()" class="btn btn-info">Make Payment</button>--}}
@@ -105,44 +143,6 @@
 
 
             <div class="table-responsive mt-4">
-
-                <div class="row mt-4 mb-4">
-                    <div class="col-12 col-md-10 d-flex flex-column flex-md-row gap-2 align-items-center">
-
-                        <form class="d-flex flex-column flex-md-row gap-2 w-100"
-                              action="{{ url($user . '/manage-payment') }}" method="GET" id="filterForm">
-
-                            <select style="cursor: pointer" onchange="document.getElementById('filterForm').submit();"
-                                    class="bg-white text-black form-select form-select-sm" name="id">
-                                <option value="all" {{ request('id') === 'all' ? 'selected' : '' }}>
-                                    Select Site
-                                </option>
-                                @foreach ($sites as $data)
-                                    <option
-                                        value="site-{{ $data['id'] }}" {{ request('id') == 'site-' . $data['id'] ? 'selected' : '' }}>
-                                        {{ $data['site_name'] }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            <select style="cursor: pointer" onchange="document.getElementById('filterForm').submit();"
-                                    class="bg-white text-black form-select form-select-sm" name="id">
-                                <option value="all" {{ request('id') === 'all' ? 'selected' : '' }}>
-                                    Select Supplier
-                                </option>
-                                @foreach ($suppliers as $data)
-                                    <option
-                                        value="supplier-{{ $data['id'] }}" {{ request('id') == 'supplier-' . $data['id'] ? 'selected' : '' }}>
-                                        {{ $data['name'] }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                        </form>
-
-                    </div>
-
-                </div>
 
 
                 @if (count($payments))
@@ -172,10 +172,8 @@
                             <th class="bg-info text-white fw-bold">Date</th>
                             <th class="bg-info text-white fw-bold">Entity</th>
                             <th class="bg-info text-white fw-bold">Name</th>
-                            <th class="bg-info text-white fw-bold">Sent</th>
-                            <th class="bg-info text-white fw-bold">Received</th>
-
-                            <th class="bg-info text-white fw-bold">Edit</th>
+                            <th class="bg-info text-white fw-bold">Transaction Type</th>
+                            <th class="bg-info text-white fw-bold">Amount</th>
                             <th class="bg-info text-white fw-bold">Make Payment</th>
 
                         </tr>
@@ -187,34 +185,31 @@
                         @foreach ($payments as $payment)
                             <tr>
                                 <td>{{ Carbon::parse($payment['created_at'])->format('d-m-Y') }}</td>
-                                <td>{{ $payment['type'] }}</td>
-                                <td>{{ ucfirst($payment['name']) }}</td>
+                                <td>{{ $payment['entity_type'] === Site::class ? 'Site' : 'Supplier' }}</td>
+                                <td>{{ ucfirst( $payment['entity_type'] === Site::class ? $payment['entity']->site_name : $payment['entity']->name) }}</td>
 
-                                <td>{{ ucfirst($payment['transaction_type']) }}</td>
+                                <td>{{ $payment['transaction_type'] === 1 ? 'Sent' : 'Received' }}</td>
                                 <td>{{ $payment['amount'] }}</td>
-                                <td class="space-x-4">
-                                    <!-- Edit Button -->
-                                    <a href="#" data-bs-toggle="modal" data-bs-target="#bankModal"
-                                       onclick="fetchPaymentData({{ $payment['id'] }})">
-                                        <i class="fa-solid fa-edit text-xl text-primary bg-white rounded-full px-2 py-1"></i>
-                                    </a>
 
-                                </td>
                                 <td>
                                     <!-- Payment Button -->
                                     <button data-bs-toggle="modal" data-bs-target="#payment_model"
                                             onclick="makePayment(
                                             {{ $payment['id'] }},
-                                            '{{ $payment['entity_type'] }}',
+                                            '{{$payment['entity']->id}}',
+                                            '{{ $payment['entity_type'] == Site::class ? 'site' : 'supplier' }}',
                                             '{{$payment['amount']}}',
-                                           '{{ $payment['transaction_type'] == 'sent' ? 1 : 0 }}'
+                                            '{{ $payment['transaction_type'] }}'
 
                                             )"
                                             class="badge badge-success rounded fw-bold">
-                                        Pay {{ $payment['name'] }}
+                                        Pay {{ ucfirst( $payment['entity_type'] === Site::class ? $payment['entity']->site_name : $payment['entity']->name)  }}
                                     </button>
+
                                 </td>
+
                             </tr>
+
                         @endforeach
 
                         </tbody>
@@ -249,63 +244,63 @@
     <div id="messageContainer"></div>
 
     <!-- Modal -->
-    <div id="bankModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="bankModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <form id="payment-bank-form">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="bankModalLabel">Manage Payment</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
+{{--    <div id="bankModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="bankModalLabel"--}}
+{{--         aria-hidden="true">--}}
+{{--        <div class="modal-dialog" role="document">--}}
+{{--            <div class="modal-content">--}}
+{{--                <form id="payment-bank-form">--}}
+{{--                    <div class="modal-header">--}}
+{{--                        <h5 class="modal-title" id="bankModalLabel">Manage Payment</h5>--}}
+{{--                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>--}}
+{{--                    </div>--}}
 
-                    <div class="modal-body">
-                        <!-- Hidden Field for Payment ID -->
+{{--                    <div class="modal-body">--}}
+{{--                        <!-- Hidden Field for Payment ID -->--}}
 
-                        <!-- Amount -->
-                        <div class="form-group">
-                            <label for="modal_amount">Amount</label>
-                            <input type="number" step="0.01" id="modal_amount" name="amount" class="form-control"/>
-                        </div>
+{{--                        <!-- Amount -->--}}
+{{--                        <div class="form-group">--}}
+{{--                            <label for="modal_amount">Amount</label>--}}
+{{--                            <input type="number" step="0.01" id="modal_amount" name="amount" class="form-control"/>--}}
+{{--                        </div>--}}
 
-                        <!-- Entity Dropdown -->
-                        <div class="form-group">
-                            <label for="modal_from">Entity</label>
-                            <select id="modal_from" name="entity" class="form-select text-black"
-                                    style="cursor: pointer">
-                                <option value="">Select Entity</option>
-                                @foreach ($payments as $entity)
-                                    <option value="{{ $entity['type'] }}-{{ $entity['id'] }}">
-                                        {{ $entity['id'] }} - {{ $entity['name'] }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
+{{--                        <!-- Entity Dropdown -->--}}
+{{--                        <div class="form-group">--}}
+{{--                            <label for="modal_from">Entity</label>--}}
+{{--                            <select id="modal_from" name="entity" class="form-select text-black"--}}
+{{--                                    style="cursor: pointer">--}}
+{{--                                <option value="">Select Entity</option>--}}
+{{--                                @foreach ($payments as $entity)--}}
+{{--                                    <option value="{{ $entity['type'] }}-{{ $entity['id'] }}">--}}
+{{--                                        {{ $entity['id'] }} - {{ $entity['name'] }}--}}
+{{--                                    </option>--}}
+{{--                                @endforeach--}}
+{{--                            </select>--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
 
-                    <!-- Transaction Type -->
-                    <div class="container">
-                        <div class="form-group">
-                            <label class="form-label d-block">Transaction Type</label>
-                            <div>
-                                <input type="radio" name="transaction_type" id="sent" value="1" checked>
-                                <label for="sent" class="form-check-label">Sent</label>
-                            </div>
-                            <div>
-                                <input type="radio" name="transaction_type" id="received" value="0">
-                                <label for="received" class="form-check-label">Received</label>
-                            </div>
-                        </div>
-                    </div>
+{{--                    <!-- Transaction Type -->--}}
+{{--                    <div class="container">--}}
+{{--                        <div class="form-group">--}}
+{{--                            <label class="form-label d-block">Transaction Type</label>--}}
+{{--                            <div>--}}
+{{--                                <input type="radio" name="transaction_type" id="sent" value="1" checked>--}}
+{{--                                <label for="sent" class="form-check-label">Sent</label>--}}
+{{--                            </div>--}}
+{{--                            <div>--}}
+{{--                                <input type="radio" name="transaction_type" id="received" value="0">--}}
+{{--                                <label for="received" class="form-check-label">Received</label>--}}
+{{--                            </div>--}}
+{{--                        </div>--}}
+{{--                    </div>--}}
 
-                    <div class="modal-footer">
-                        <!-- Submit button -->
-                        <button type="submit" class="btn btn-primary">Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+{{--                    <div class="modal-footer">--}}
+{{--                        <!-- Submit button -->--}}
+{{--                        <button type="submit" class="btn btn-primary">Save</button>--}}
+{{--                    </div>--}}
+{{--                </form>--}}
+{{--            </div>--}}
+{{--        </div>--}}
+{{--    </div>--}}
 
 
     <div id="payment_model" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="makePaymentModalLabel"
@@ -317,13 +312,12 @@
                         <h5 class="modal-title" id="makePaymentModalLabel">Make Payment</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-
                     <div class="modal-body">
                         <!-- Hidden Fields -->
+                        <input type="text" id="payment_id" name="payment_id"/>
                         <input type="text" id="transaction_type" name="transaction_type"/>
                         <input type="text" id="entity_id" name="entity_id"/>
                         <input type="text" id="entity_type" name="entity_type"/>
-
                         <!-- Payment Amount -->
                         <div class="form-group mb-3">
                             <label for="payment_amount" class="form-label">Amount</label>
@@ -331,7 +325,6 @@
                                    placeholder="Enter payment amount"/>
                         </div>
                     </div>
-
                     <div class="modal-footer">
                         <button type="submit" class="btn btn-info btn-sm">Make Payment</button>
                     </div>
@@ -343,51 +336,87 @@
 
     <script>
 
+        const messageContainer = $('#messageContainer');
+        function makePayment(id, entity_id, entityType, amount, transactionType) {
 
-        function makePayment(id, entityType, amount, transactionType) {
-            // $('#transaction_type').val(transactionType);
-            // $('#entity_id').val(id);
-            // $('#entity_type').val(entityType);
-            // $('#payment_amount').val(amount);
-
-            console.log(transactionType);
+            $('#payment_id').val(id);
+            $('#entity_id').val(entity_id);
+            $('#entity_type').val(entityType);
+            $('#payment_amount').val(amount);
+            $('#transaction_type').val(transactionType);
         }
 
         $('.payment_form').submit(function (event) {
-            event.preventDefault();
+            event.preventDefault(); // Prevent default form submission
 
-            let formData = new FormData(this);
+            const formData = new FormData(this); // Collect form data
+            const url = `/admin/payments`; // Define endpoint
 
-            const url = `/admin/payments`;
-
+            // Perform AJAX request
             $.ajax({
                 url: url,
                 method: 'POST',
                 data: formData,
-                processData: false,
-                contentType: false,
+                processData: false, // Prevent jQuery from processing the data
+                contentType: false, // Ensure the correct form data type
                 headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'), // CSRF token
                 },
                 success: function (response) {
-                    alert('Payment Successful!');
-                    $('#payment_model').modal('hide');
-                    location.reload();
+                    // Handle successful response
+                    displayAlert('success', response.message);
+
+                    // Auto-hide success message and reload page
+                    setTimeout(() => {
+                        location.reload(); // Reload to reflect changes
+                    }, 3000);
                 },
                 error: function (xhr) {
+                    // Handle error responses
+
+                    console.log(xhr);
+
                     if (xhr.status === 422) {
-                        // Handle validation errors
+
+
+                        // Validation errors
                         const errors = xhr.responseJSON.errors;
                         for (const [field, messages] of Object.entries(errors)) {
-                            alert(`${field}: ${messages.join(', ')}`);
+                            displayAlert('danger', `${field}: ${messages.join(', ')}`);
                         }
+                    } else if (xhr.status === 404) {
+                        // Admin payment entry not found
+                        displayAlert('danger', `${xhr.responseJSON.error}`);
+                    } else if (xhr.status === 500) {
+                        // Generic server error
+                        displayAlert('danger', 'Payment could not be made. Something went wrong, please try again later.');
                     } else {
-                        // Handle other errors
-                        alert('An error occurred while making the payment. Please try again.');
+                        // Other errors
+                        displayAlert('danger', 'An unexpected error occurred. Please try again later.');
                     }
-                }
+                },
             });
         });
+
+        function displayAlert(type, message) {
+            const messageContainer = $('#messageContainer');
+            messageContainer.append(`
+        <div class="alert alert-${type} text-white border-0 mb-3" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong><i class="fas fa-${type === 'success' ? 'check-circle' : 'times-circle'} me-2"></i></strong>
+                    ${message}
+                </div>
+            </div>
+        </div>
+    `);
+
+            // Auto-hide message after 3 seconds
+            setTimeout(() => {
+                messageContainer.find('.alert').alert('close'); // Close the alert
+            }, 3000);
+        }
+
 
 
     </script>

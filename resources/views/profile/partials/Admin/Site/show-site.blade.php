@@ -2232,23 +2232,23 @@
                     },
                     error: function (response) {
 
-                        console.log(response);
 
 
                         if (response.status === 422) { // Validation errors
                             messageContainer.append(`
-                        <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-                        ${response.responseJSON.errors}
+                            <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
 
-                        </div>`)
+                                ${response.responseJSON.errors}
+
+                            </div>`)
 
                         } else {
                             messageContainer.append(`
-                        <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                            An unexpected error occurred. Please try again later.
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    An unexpected error occurred. Please try again later.
 
-                        </div>
-                    `);
+                                </div>
+                            `);
                         }
                         // Auto-hide error message after 5 seconds
                         setTimeout(function () {
@@ -2362,13 +2362,11 @@
                         }, 2000);
                     },
                     error: function (response) {
-                        console.log(response);
 
-
-                        if (response.status === 422) { // Validation errors
+                        if (response.status === 422) {
                             messageContainer.append(`
                         <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-                        ${response.responseJSON.errors}
+                             ${response.responseJSON.errors}
 
                         </div>`)
 
