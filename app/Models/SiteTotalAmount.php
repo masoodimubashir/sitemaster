@@ -8,8 +8,8 @@ class SiteTotalAmount extends Model
 {
 
     protected $fillable = [
-        'site_id',
-        'amount',
+        'phase_id',
+        'total_amount',
     ];
 
 }

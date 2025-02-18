@@ -53,8 +53,7 @@ Route::get('/', function () {
 });
 
 
-Route::middleware(['auth'])->group(function () {
-});
+Route::middleware(['auth'])->group(function () {});
 
 Route::get('/client-login', [ClientAuthController::class, 'login'])->name('client.login');
 Route::post('/client-login', [ClientAuthController::class, 'store'])->name('client.store');
@@ -80,8 +79,8 @@ Route::middleware(['auth:clients', 'isClient'])->prefix('client')->group(functio
 //-------------------- Admin Routes --------------------------------
 Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(function () {
 
-    Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
 
+    Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
 
     Route::get('/markAllAsRead', [MarkNotificationAsReadController::class, 'markAllNotificationAsRead'])
         ->name('admin.markAllAsRead');
@@ -96,20 +95,13 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
 
     // Admin Engineer Controllers
-    Route::get('/users', [AdminUserController::class, 'index'])
-        ->name('users.index');
-    Route::get('/users/create', [AdminUserController::class, 'create'])
-        ->name('users.create');
-    Route::get('/edit-user/{id}', [AdminUserController::class, 'editUser'])
-        ->name('admin.edit-user');
-    Route::post('/register', [AdminUserController::class, 'register'])
-        ->name('admin.register-user');
-    Route::put('/user/update-password/{id}', [AdminUserController::class, 'updateUserPassword'])
-        ->name('admin.update-user-password');
-    Route::put('/user/update-name/{id}', [AdminUserController::class, 'updateName'])
-        ->name('user.update-name');
-    Route::delete('/user/delete/{id}', [AdminUserController::class, 'deleteUser'])
-        ->name('admin.delete-user');
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
+    Route::get('/edit-user/{id}', [AdminUserController::class, 'editUser'])->name('admin.edit-user');
+    Route::post('/register', [AdminUserController::class, 'register'])->name('admin.register-user');
+    Route::put('/user/update-password/{id}', [AdminUserController::class, 'updateUserPassword'])->name('admin.update-user-password');
+    Route::put('/user/update-name/{id}', [AdminUserController::class, 'updateName'])->name('user.update-name');
+    Route::delete('/user/delete/{id}', [AdminUserController::class, 'deleteUser'])->name('admin.delete-user');
 
     // Client Controller
     Route::resource('/clients', ClientController::class);
@@ -151,25 +143,19 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     // Route::resource('/payment-bills', PaymentBillsController::class);
 
-    Route::get('/site/ledger/{id}', SitePaymentController::class)
-        ->name('sites.view-ledger');
+    Route::get('/site/ledger/{id}', SitePaymentController::class)->name('sites.view-ledger');
 
     // View Supplier Ledger
-    Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)
-        ->name('suppliers.view-ledger');
+    Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');
 
     // Payments Controller
     Route::resource('/payments', PaymentsController::class);
 
     //  All Controllers For Soft Deletes
-    Route::get('/trashed-supplier', [TrashController::class, 'trashedSuppliers'])
-        ->name('trash.suppliers');
-    Route::get('/trashed-site', [TrashController::class, 'trashedSites'])
-        ->name('trash.sites');
-    Route::get('phase/trashed-phases/abc', [TrashController::class, 'trashedPhase'])
-        ->name('trash.phases');
-    Route::get('/trashed-{model_name}/{id}', [TrashController::class, 'restore'])
-        ->name('trash.restore');
+    Route::get('/trashed-supplier', [TrashController::class, 'trashedSuppliers'])->name('trash.suppliers');
+    Route::get('/trashed-site', [TrashController::class, 'trashedSites'])->name('trash.sites');
+    Route::get('phase/trashed-phases/abc', [TrashController::class, 'trashedPhase'])->name('trash.phases');
+    Route::get('/trashed-{model_name}/{id}', [TrashController::class, 'restore'])->name('trash.restore');
 
     // DownLoad PDF Controller
     Route::get('/download-site/report/{id}', [PDFController::class, 'showSitePdf']);
@@ -206,7 +192,6 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
         ->name('manage-payment.store-update');
     Route::get('/manage-payment/{id}/edit', [AdminPaymentController::class, 'edit'])
         ->name('payments.edit');
-
 });
 
 
@@ -266,7 +251,7 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
     // Site Payments
     Route::resource('supplier/payments', PaymentSupplierController::class);
-//    Route::get('sites/payments/{id}', PaymentSiteController::class);
+    //    Route::get('sites/payments/{id}', PaymentSiteController::class);
 
     // View Supplier Ledger
     Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');
@@ -291,13 +276,11 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
 
     Route::get('wager-attendance', [AttendanceSheetController::class, 'index']);
-    
 });
 
 
 // Routes accessible to both admin and site engineers
-Route::middleware(['isAdmin', 'isUser'])->group(function () {
-});
+Route::middleware(['isAdmin', 'isUser'])->group(function () {});
 
 
 require __DIR__ . '/auth.php';

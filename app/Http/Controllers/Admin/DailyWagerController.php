@@ -2,18 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Class\HelperClass;
 use App\Http\Controllers\Controller;
 use App\Models\DailyWager;
 use App\Models\PaymentSupplier;
 use App\Models\Site;
-use App\Models\Workforce;
+use DB;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\Rule;
 
 class DailyWagerController extends Controller
 {
+
+
+    use HelperClass;
+
     /**
      * Display a listing of the resource.
      */
@@ -42,7 +45,7 @@ class DailyWagerController extends Controller
     public function store(Request $request)
     {
         if ($request->ajax()) {
-            
+
             $validator = Validator::make($request->all(), [
                 'price_per_day' => 'required|numeric|max:9999999999',
                 'wager_name' => 'required|string|max:255',
@@ -50,14 +53,13 @@ class DailyWagerController extends Controller
                 'supplier_id' => 'required|exists:suppliers,id',
             ]);
 
-            // Check for validation errors
             if ($validator->fails()) {
                 return response()->json(['errors' => 'Validation Error.. Try Again!'], 422);
             }
 
             try {
-                // Create the daily wager
-                DailyWager::create([
+
+                $daily_wager = DailyWager::create([
                     'price_per_day' => $request->price_per_day,
                     'wager_name' => $request->wager_name,
                     'phase_id' => $request->phase_id,
@@ -65,9 +67,10 @@ class DailyWagerController extends Controller
                     'verified_by_admin' => true,
                 ]);
 
+
                 return response()->json(['message' => 'Wager created successfully.'], 201);
             } catch (\Exception $e) {
-                // Handle any unexpected errors
+
                 return response()->json(['error' => 'An unexpected error occurred: '], 500);
             }
         }
@@ -112,7 +115,18 @@ class DailyWagerController extends Controller
 
         $daily_wager = DailyWager::find($id);
 
+        $old_amount = $daily_wager->wager_total;
+        $no_of_persons = (int)($old_amount / $daily_wager->price_per_day);
+        $newAmount = $request->price_per_day * $no_of_persons;
+
         $daily_wager->update($request->all());
+
+        if ($daily_wager) {
+
+            $new_amount = $this->adjustBalance($newAmount, $old_amount);
+
+            $this->updateSiteTotalAmount($request->phase_id, $new_amount);
+        }
 
         return redirect()->route('sites.show', [base64_encode($daily_wager->phase->site->id)])->with('status', 'update');
     }
@@ -131,7 +145,7 @@ class DailyWagerController extends Controller
 
             $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($daily_wager) {
                 $query->where('site_id', $daily_wager->phase->site_id)
-                ->orWhere('supplier_id', $daily_wager->supplier_id);
+                    ->orWhere('supplier_id', $daily_wager->supplier_id);
             })->exists();
 
             if ($hasPaymentRecords) {
@@ -146,4 +160,3 @@ class DailyWagerController extends Controller
         }
     }
 }
-

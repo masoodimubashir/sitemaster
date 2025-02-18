@@ -8,7 +8,7 @@ use App\Models\SupplierTotalAmount;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 
-class HelperClass
+trait HelperClass
 {
     /**
      * Create a new class instance.
@@ -37,7 +37,6 @@ class HelperClass
                     'amount' => $amount,
                 ]);
             }
-
         } catch (\Exception $e) {
             Log::error("Failed to set supplier total amount: {$e->getMessage()}");
             throw new \Exception('Unable to set supplier total amount. Please try again.');
@@ -74,6 +73,7 @@ class HelperClass
     {
         try {
 
+
             $supplierTotal = SupplierTotalAmount::where('supplier_id', $supplier_id)->first();
 
             if (!$supplierTotal) {
@@ -81,12 +81,9 @@ class HelperClass
             }
 
             $supplierTotal->update(['amount' => $amount]);
-
         } catch (ModelNotFoundException $e) {
-            Log::warning("Unable to update supplier total amount: {$e->getMessage()}");
             throw $e;
         } catch (\Exception $e) {
-            Log::error("Failed to update supplier total amount: {$e->getMessage()}");
             throw new \Exception('Unable to update supplier total amount. Please try again.');
         }
     }
@@ -94,25 +91,27 @@ class HelperClass
     /**
      * Set (Create or Add) Site Total Amount
      */
-    public function setSiteTotalAmount(int $site_id, float $amount)
+    public function setSiteTotalAmount(int $id, float $amount)
     {
         try {
-            // Check if a record already exists for the site
-            $siteTotal = SiteTotalAmount::where('site_id', $site_id)->first();
+
+
+            $siteTotal = SiteTotalAmount::where('phase_id', $id)->first();
 
             if ($siteTotal) {
-                // If it exists, update its amount instead of creating a new record
-                $this->updateSiteTotalAmount($site_id, $amount);
+    
+                $siteTotal->update([
+                    'total_amount' => $amount
+                ]);
+                
             } else {
-                // Create a new site total amount record
-                SiteTotalAmount::create([
-                    'site_id' => $site_id,
-                    'amount' => $amount,
+
+                $total = SiteTotalAmount::create([
+                    'phase_id' => $id,
+                    'total_amount' => $amount,
                 ]);
             }
-
         } catch (\Exception $e) {
-            Log::error("Failed to set site total amount: {$e->getMessage()}");
             throw new \Exception('Unable to set site total amount. Please try again.');
         }
     }
@@ -143,24 +142,44 @@ class HelperClass
     /**
      * Update Site Total Amount
      */
-    public function updateSiteTotalAmount(int $site_id, float $amount)
+    public function updateSiteTotalAmount(int $phase_id, float $new_amount)
     {
         try {
-            $siteTotal = SiteTotalAmount::where('site_id', $site_id)->first();
+
+            $siteTotal = SiteTotalAmount::where('phase_id', $phase_id)->first();
 
             if (!$siteTotal) {
-                throw new ModelNotFoundException("Site total amount not found for site_id: $site_id.");
+                throw new ModelNotFoundException("Site total amount not found for phase: $phase_id.");
             }
 
-            // Update the site's total amount
-            $siteTotal->update(['amount' => $amount]);
+            $amount = $siteTotal->total_amount + $new_amount;
+
+            $siteTotal->update([
+                'total_amount' => $amount
+            ]);
+
         } catch (ModelNotFoundException $e) {
-            Log::warning("Unable to update site total amount: {$e->getMessage()}");
             throw $e;
         } catch (\Exception $e) {
-            Log::error("Failed to update site total amount: {$e->getMessage()}");
             throw new \Exception('Unable to update site total amount. Please try again.');
         }
     }
 
+
+    public function adjustBalance($new, $old){
+
+        $new_amount = 0;
+
+
+
+        if($new > $old){
+            $new_amount = $new - $old;
+        }
+        if($new < $old){
+            $new_amount = $new - $old;
+        }
+
+        return $new_amount;
+
+    }
 }

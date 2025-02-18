@@ -17,7 +17,7 @@
 
 
                     <form method="POST"
-                        action="{{ url('user' . '/square-footage-bills/'.  base64_encode($square_footage_bill->id)) }}"
+                        action="{{ url($user . '/square-footage-bills/'.  base64_encode($square_footage_bill->id)) }}"
                         class="forms-sample material-form" enctype="multipart/form-data">
 
                         @method('PUT')

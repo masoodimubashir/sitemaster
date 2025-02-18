@@ -711,7 +711,7 @@
 
 
                                                             <td>
-                                                                {{ $sqft->multiplier * $sqft->price }}
+                                                                {{ $sqft->type === 'full_contract' ? $sqft->price : $sqft->price * $sqft->multiplier }}
                                                             </td>
 
                                                             <td>

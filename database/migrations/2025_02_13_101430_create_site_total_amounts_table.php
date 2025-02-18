@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('site_total_amounts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('phase_id')->constrained()->cascadeOnDelete();
-            $table->decimal('total_amount', 10, 2);
+            $table->foreignId('phase_id')->nullable()->constrained()->nullOnDelete();
+            $table->decimal('total_amount', 12, 2);
             $table->timestamps();
         });
     }

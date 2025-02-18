@@ -2,18 +2,20 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Class\HelperClass;
 use App\Http\Controllers\Controller;
 use App\Models\DailyWager;
 use App\Models\PaymentSupplier;
 use App\Models\User;
 use App\Models\WagerAttendance;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class WagerAttendanceController extends Controller
 {
+
+    use HelperClass;
+
     /**
      * Display a listing of the resource.
      */
@@ -42,8 +44,6 @@ class WagerAttendanceController extends Controller
     {
         if ($request->ajax()) {
 
-
-
             $validator = Validator::make($request->all(), [
                 'no_of_persons' => 'required|integer|min:1',
                 'daily_wager_id' => 'sometimes|exists:daily_wagers,id',
@@ -53,7 +53,9 @@ class WagerAttendanceController extends Controller
 
             if ($validator->fails()) {
 
-                return response()->json(['errors' => 'Validation Error... Try Again!'], 422);
+                return response()->json([
+                    'errors' => 'Validation Error... Try Again!'
+                ], 422);
             }
 
             try {
@@ -69,11 +71,32 @@ class WagerAttendanceController extends Controller
 
                 $daily_wager_attendance->save();
 
-                return response()->json(['message' => 'Attendance recorded successfully.'], 201);
 
+                if ($daily_wager_attendance) {
+
+                    $dialy_wager = DailyWager::find($request->daily_wager_id);
+
+                    if (!$dialy_wager) {
+                        return response()->json([
+                            'message' => 'Wager Not Found.'
+                        ], 404);
+                    }
+
+                    $dialy_wager_price =  $dialy_wager->price_per_day;
+
+                    $amount = $dialy_wager_price * $request->no_of_persons;
+
+                    $this->setSiteTotalAmount($request->phase_id, $amount);
+                }
+
+                return response()->json([
+                    'message' => 'Attendance recorded successfully.'
+                ], 201);
             } catch (\Exception $e) {
-                
-                return response()->json(['error' => 'An unexpected error occurred: ' . $e->getMessage()], 500);
+
+                return response()->json([
+                    'error' => 'An unexpected error occurred: ' . $e->getMessage()
+                ], 500);
             }
         }
 
@@ -121,6 +144,8 @@ class WagerAttendanceController extends Controller
         $wager_attendance->is_present =  1;
         $wager_attendance->created_at = $request->date ? $request->date :  now();
         $wager_attendance->save();
+
+        
 
         return redirect()->route('sites.show', [base64_encode($wager_attendance->phase->site->id)])
             ->with('status', 'update');

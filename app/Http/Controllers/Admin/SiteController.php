@@ -109,7 +109,6 @@ class   SiteController extends Controller
         ])->findOrFail($site_id);
 
 
-
         $totalPaymentSuppliersAmount = $site->payments()
             ->where('verified_by_admin', 1)
             ->sum('amount');
