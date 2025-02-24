@@ -78,13 +78,12 @@ class ConstructionMaterialBilling extends Controller
             }
 
             $image_path = null;
+            
             if ($request->hasFile('image')) {
                 $image_path = $request->file('image')->store('ConstructionBillingImage', 'public');
             }
 
             try {
-
-
 
                 $constructionBilling = new ModelsConstructionMaterialBilling();
                 $constructionBilling->amount = $request->input('amount');

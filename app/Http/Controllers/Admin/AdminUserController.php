@@ -116,14 +116,12 @@ class AdminUserController extends Controller
 
         $user = User::find($id);
 
-        $hasPaymentRecords = Site::whereHas('user', function ($query) use ($id) {
-            $query->where('user_id', $id);
-        })->exists();
+        $hasPayments = $user->sites()
+            ->whereHas('payments')
+            ->exists();
 
-        dd($hasPaymentRecords);
-
-        if ($hasPaymentRecords) {
-            return redirect()->back()->with('status', 'error');
+        if ($hasPayments) {
+            return redirect()->back()->with('status', 'hasPayment');
         }
 
         $user->delete();

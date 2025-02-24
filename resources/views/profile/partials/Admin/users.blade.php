@@ -12,11 +12,15 @@
     @endif
 
     @if (session('status') === 'delete')
-        <x-success-message message="Site Engineer Deleted..." />
+        <x-error-message message="Site Engineer Deleted" />
     @endif
 
     @if (session('status') === 'error')
-        <x-success-message message="Sorry! Site Engineer Not Found..." />
+        <x-error-message message="Sorry! Site Engineer Not Found..." />
+    @endif
+
+    @if (session('status') === 'hasPayment')
+        <x-error-message message="Sorry! Site Engineer Cannot Be deleted..." />
     @endif
 
     <div class="row">

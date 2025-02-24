@@ -59,7 +59,6 @@ class ItemController extends Controller
         } else {
             return redirect()->to('user/items')->with('status', 'create');
         }
-
     }
 
     /**
@@ -122,11 +121,10 @@ class ItemController extends Controller
             return redirect()->back()->with('status', 'error');
         }
 
-        $hasData = ConstructionMaterialBilling::firstWhere('item_name', $item->item_name);
+        $hasItem = ConstructionMaterialBilling::where('item_name', $item->item_name)->exists();
 
-
-        if ($hasData) {
-            return redirect()->back()->with('status', 'null');
+        if ($hasItem) {
+            return redirect()->back()->with('status', 'hasItem');
         }
 
         $item->delete();

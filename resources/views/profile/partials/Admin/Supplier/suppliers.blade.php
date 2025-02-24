@@ -14,7 +14,7 @@
     @endif
 
     @if (session('status') === 'error')
-        <x-error-message message='Something Went Wrong...' />
+        <x-error-message message='Supplier Deleted...' />
     @endif
 
     @if (session('status') === 'create')
@@ -23,6 +23,10 @@
 
     @if (session('status') === 'delete')
         <x-error-message message='Supplier Deleted Succussfully...' />
+    @endif
+
+    @if (session('status') === 'hasPaymnent')
+        <x-error-message message='Supplier cannot be deleted...' />
     @endif
 
     <div class="row">

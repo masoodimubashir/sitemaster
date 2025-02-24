@@ -7,13 +7,12 @@ use App\Http\Requests\StoreSiteRequest;
 use App\Http\Requests\UpdateSiteRequest;
 use App\Models\Client;
 use App\Models\Item;
-use App\Models\PaymentSupplier;
 use App\Models\Site;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Notifications\UserSiteNotification;
 
-class   SiteController extends Controller
+class SiteController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -44,8 +43,6 @@ class   SiteController extends Controller
      */
     public function store(StoreSiteRequest $request)
     {
-
-
 
         $request->validated();
 
@@ -78,34 +75,43 @@ class   SiteController extends Controller
 
         $site_id = base64_decode($id);
 
-        $site = Site::with([
-            'phases.constructionMaterialBillings' => function($query) {
-                $query->with('supplier')
-                      ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-                      ->latest();
-            },
-            'phases.squareFootageBills' => function($query) {
-                $query->with('supplier')
-                      ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-                      ->latest();
-            },
-            'phases.dailyWagers' => function($query) {
-                $query->with(['wagerAttendances', 'supplier'])
-                      ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-                      ->latest();
-            },
-            'phases.dailyExpenses' => function($query) {
-                $query->latest();
-            },
-            'phases.wagerAttendances' => function($query) {
-                $query->with('dailyWager.supplier')
-                      ->whereHas('dailyWager.supplier', fn($q) => $q->whereNull('deleted_at'))
-                      ->latest();
-            },
-            'payments' => function($query) {
-                $query->where('verified_by_admin', 1);
-            },
 
+        $site = Site::whereHas('phases')->with([
+            'phases' => function ($query) {
+                $query->whereNull('deleted_at');
+            },
+            'phases.constructionMaterialBillings' => function ($query) {
+                $query->with('supplier')
+                    ->where('verified_by_admin', 1)
+                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+                    ->whereNull('deleted_at')
+                    ->latest();
+            },
+            'phases.squareFootageBills' => function ($query) {
+                $query->with('supplier')
+                    ->where('verified_by_admin', 1)
+                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+                    ->whereNull('deleted_at')
+                    ->latest();
+            },
+            'phases.dailyWagers' => function ($query) {
+                $query->with(['wagerAttendances', 'supplier'])
+                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+                    ->whereNull('deleted_at')
+                    ->latest();
+            },
+            'phases.dailyExpenses' => function ($query) {
+                $query->whereNull('deleted_at');
+            },
+            'phases.wagerAttendances' => function ($query) {
+                $query->with('dailyWager.supplier')
+                    ->whereHas('dailyWager.supplier', fn($q) => $q->whereNull('deleted_at')) 
+                    ->whereNull('deleted_at')
+                    ->latest();
+            },
+            'payments' => function ($query) {
+                $query->where('verified_by_admin', 1); 
+            },
         ])->findOrFail($site_id);
 
 
@@ -172,7 +178,6 @@ class   SiteController extends Controller
                     'name' => $wager->wager_name,
                 ];
             });
-
         })->values()->toArray();
 
 
@@ -240,15 +245,14 @@ class   SiteController extends Controller
 
         $site = Site::where('id', $site_id)->first();
 
-        $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($site) {
-            $query->where('site_id', $site->id)->first();
-        })->exists();
+        $hasPaymentRecords = $site::query()
+            ->whereHas('payments')
+            ->orWhereHas('adminPayments')
+            ->exists();
 
         if ($hasPaymentRecords) {
-            return redirect()->back()->with('status', 'error');
+            return redirect()->back()->with('status', 'hasPaymentRecords');
         }
-
-        $site->phases()->delete();
 
         $site->delete();
 

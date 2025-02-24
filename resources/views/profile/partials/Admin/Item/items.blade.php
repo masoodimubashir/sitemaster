@@ -22,7 +22,7 @@
         <x-error-message message="Sorry! Item Not Found..." />
     @endif
 
-    @if (session('status') === 'null')
+    @if (session('status') === 'hasItem')
         <x-error-message message="This Item Cannot Be deleted" />
     @endif
 

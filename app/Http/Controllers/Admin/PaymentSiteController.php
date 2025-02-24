@@ -17,10 +17,17 @@ class PaymentSiteController extends Controller
 
         $site = Site::find($id);
 
-        $payments = $site->paymeentSuppliers()->where('verified_by_admin', 1)->paginate(10);
+        $payments = $site->with(['payments' => function ($query) {
+            $query->where('verified_by_admin', 1);
+        }])
+            ->paginate(10);
 
-        return view('profile.partials.Admin.PaymentSuppliers.site-payment-supplier', compact('payments', 'site'));
+            dd($payments);
 
+        return view('profile.partials.Admin.PaymentSuppliers.site-payment-supplier', compact(
+            'payments', 
+            'site'
+        ));
     }
 
     public function makePayment(Request $request)
@@ -52,7 +59,6 @@ class PaymentSiteController extends Controller
                 ]);
 
                 return response()->json(['message' => 'Payment To Admin']);
-
             }
 
 
@@ -76,12 +82,9 @@ class PaymentSiteController extends Controller
             $payment->save();
 
             return response()->json(['message' => 'Payment created successfully']);
-
         } catch (Throwable $th) {
 
             return response()->json(['error' => 'Payment Cannot Be Made.. Try Again']);
-
         }
     }
-
 }

@@ -1,19 +1,19 @@
 <x-app-layout>
 
     @if (session('status') === 'update')
-        <x-success-message message="Your Record has been updated..."/>
+        <x-success-message message="Your Record has been updated..." />
     @endif
 
     @if (session('status') === 'delete')
-        <x-success-message message="Your Record has been deleted..."/>
+        <x-success-message message="Your Record has been deleted..." />
     @endif
 
     @if (session('status') === 'not_found')
-        <x-success-message message="No Site Payments Available..."/>
+        <x-success-message message="No Site Payments Available..." />
     @endif
 
     @if (session('status') === 'error')
-        <x-success-message message="Something went wrong! try again..."/>
+        <x-success-message message="Something went wrong! try again..." />
     @endif
 
     <div id="messageContainer"></div>
@@ -117,8 +117,6 @@
             align-items: center;
             gap: 10px;
         }
-
-
     </style>
 
     <style>
@@ -138,8 +136,7 @@
     </style>
 
 
-    <x-breadcrumb :names="['Sites', $site->site_name]"
-                  :urls="['admin/sites', 'admin/sites/' . base64_encode($site->id)]"/>
+    <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['admin/sites', 'admin/sites/' . base64_encode($site->id)]" />
 
     {{-- Action Buttons Section --}}
     <div class="row mb-4">
@@ -162,12 +159,12 @@
                 </a>
 
                 <a href="{{ url('admin/download-site/report', ['id' => base64_encode($site->id)]) }}"
-                   class="btn btn-info px-4">
+                    class="btn btn-info px-4">
                     <i class="fas fa-file-pdf me-2"></i>Download PDF
                 </a>
 
                 <a href="{{ url('admin/site-payment/report', ['id' => base64_encode($site->id)]) }}"
-                   class="btn btn-info px-4">
+                    class="btn btn-info px-4">
                     <i class="fas fa-file-invoice me-2"></i>Generate Payments
                 </a>
             </div>
@@ -296,7 +293,7 @@
                     @foreach ($site->phases as $phase_key => $phase)
                         <li class="nav-item">
                             <a class="nav-link {{ $phase_key === 0 ? 'active' : '' }}" href="#{{ $phase->id }}"
-                               data-bs-toggle="tab" onclick="setActiveTab('{{ $phase->id }}')">
+                                data-bs-toggle="tab" onclick="setActiveTab('{{ $phase->id }}')">
                                 {{ $phase->phase_name }}
                             </a>
                         </li>
@@ -313,13 +310,13 @@
 
 
                             <a href="{{ url('admin/download-phase/report', ['id' => base64_encode($phase->id)]) }}"
-                               class="btn btn-info btn-sm text-white">
+                                class="btn btn-info btn-sm text-white">
                                 Generate Phase PDF
                             </a>
 
 
                             <button class="btn btn-sm btn-info text-white dropdown-toggle" type="button"
-                                    id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                                id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
                                 Make Entry
                             </button>
 
@@ -328,7 +325,7 @@
 
                                 <li>
                                     <a class="btn" data-bs-toggle="modal" role="button"
-                                       href="#modal-construction-billings{{ $phase->id }}">
+                                        href="#modal-construction-billings{{ $phase->id }}">
                                         Construction
                                     </a>
                                 </li>
@@ -336,7 +333,7 @@
                                 <li>
 
                                     <a class="btn" data-bs-toggle="modal" role="button"
-                                       href="#modal-square-footage-bills{{ $phase->id }}">
+                                        href="#modal-square-footage-bills{{ $phase->id }}">
                                         Contractor </a>
 
                                 </li>
@@ -344,7 +341,7 @@
                                 <li class="nav-item dropdown-button">
 
                                     <a class="btn" data-bs-toggle="modal" role="button"
-                                       href="#modal-daily-expenses{{ $phase->id }}">
+                                        href="#modal-daily-expenses{{ $phase->id }}">
                                         Expenditure
                                     </a>
 
@@ -352,7 +349,7 @@
 
                                 <li>
                                     <a class="btn" data-bs-toggle="modal" role="button"
-                                       href="#modal-daily-wager{{ $phase->id }}">
+                                        href="#modal-daily-wager{{ $phase->id }}">
                                         Wager </a>
                                 </li>
 
@@ -375,118 +372,118 @@
                                             <table class="table table-hover table-custom">
 
                                                 <thead>
-                                                <tr>
+                                                    <tr>
 
-                                                    <th>..</th>
-                                                    <th>Amount</th>
-                                                    <th> Service Charge {{ $site->service_charge }}%</th>
-                                                    <th> Total</th>
+                                                        <th>..</th>
+                                                        <th>Amount</th>
+                                                        <th> Service Charge {{ $site->service_charge }}%</th>
+                                                        <th> Total</th>
 
-                                                </tr>
+                                                    </tr>
                                                 </thead>
                                                 <tbody>
-                                                <tr>
-                                                    {{-- <td>
+                                                    <tr>
+                                                        {{-- <td>
                                                             Service Charge + Total Amount
                                                         </td> --}}
 
-                                                </tr>
-                                                <tr>
+                                                    </tr>
+                                                    <tr>
 
-                                                    <td>
-                                                        Materials
-                                                    </td>
-                                                    <td>
-                                                        {{ $phase->construction_total_amount }}
-                                                    </td>
-                                                    <td>
-                                                        ....
-                                                    </td>
-                                                    <td>
-                                                        {{ $phase->construction_total_service_charge_amount }}
-                                                    </td>
+                                                        <td>
+                                                            Materials
+                                                        </td>
+                                                        <td>
+                                                            {{ $phase->construction_total_amount }}
+                                                        </td>
+                                                        <td>
+                                                            ....
+                                                        </td>
+                                                        <td>
+                                                            {{ $phase->construction_total_service_charge_amount }}
+                                                        </td>
 
-                                                </tr>
+                                                    </tr>
 
-                                                <tr>
+                                                    <tr>
 
-                                                    <td>
-                                                        Contracts
-                                                    </td>
+                                                        <td>
+                                                            Contracts
+                                                        </td>
 
-                                                    <td>
-                                                        {{ $phase->square_footage_total_amount }}
-                                                    </td>
+                                                        <td>
+                                                            {{ $phase->square_footage_total_amount }}
+                                                        </td>
 
-                                                    <td>
-                                                        ....
-                                                    </td>
+                                                        <td>
+                                                            ....
+                                                        </td>
 
-                                                    <td>
-                                                        {{ $phase->sqft_total_service_charge_amount }}
-                                                    </td>
+                                                        <td>
+                                                            {{ $phase->sqft_total_service_charge_amount }}
+                                                        </td>
 
-                                                </tr>
+                                                    </tr>
 
-                                                <tr>
+                                                    <tr>
 
-                                                    <td>
-                                                        Expenses
-                                                    </td>
+                                                        <td>
+                                                            Expenses
+                                                        </td>
 
-                                                    <td>
-                                                        {{ $phase->daily_expenses_total_amount }}
-                                                    </td>
+                                                        <td>
+                                                            {{ $phase->daily_expenses_total_amount }}
+                                                        </td>
 
-                                                    <td>
-                                                        ....
-                                                    </td>
+                                                        <td>
+                                                            ....
+                                                        </td>
 
-                                                    <td>
-                                                        {{ $phase->daily_expense_total_service_charge_amount }}
-                                                    </td>
+                                                        <td>
+                                                            {{ $phase->daily_expense_total_service_charge_amount }}
+                                                        </td>
 
-                                                </tr>
-
-
-                                                <tr>
-
-                                                    <td>
-                                                        Wager
-                                                    </td>
-
-                                                    <td>
-                                                        {{ $phase->daily_wagers_total_amount }}
-                                                    </td>
-
-                                                    <td>
-                                                        ...
-                                                    </td>
-
-                                                    <td>
-                                                        {{ $phase->daily_wagers_total_service_charge_amount }}
-                                                    </td>
-
-                                                </tr>
+                                                    </tr>
 
 
-                                                <tr>
+                                                    <tr>
 
-                                                    <td>Sub Total</td>
+                                                        <td>
+                                                            Wager
+                                                        </td>
 
-                                                    <td>
-                                                        {{ $phase->phase_total_amount }}
-                                                    </td>
+                                                        <td>
+                                                            {{ $phase->daily_wagers_total_amount }}
+                                                        </td>
 
-                                                    <td>
-                                                        {{ $phase->phase_total_service_charge_amount }}
-                                                    </td>
+                                                        <td>
+                                                            ...
+                                                        </td>
 
-                                                    <td>
-                                                        {{ $phase->phase_total_with_service_charge_amount }}
-                                                    </td>
+                                                        <td>
+                                                            {{ $phase->daily_wagers_total_service_charge_amount }}
+                                                        </td>
 
-                                                </tr>
+                                                    </tr>
+
+
+                                                    <tr>
+
+                                                        <td>Sub Total</td>
+
+                                                        <td>
+                                                            {{ $phase->phase_total_amount }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ $phase->phase_total_service_charge_amount }}
+                                                        </td>
+
+                                                        <td>
+                                                            {{ $phase->phase_total_with_service_charge_amount }}
+                                                        </td>
+
+                                                    </tr>
 
                                                 </tbody>
 
@@ -508,118 +505,117 @@
                                             <table class="table table-hover table-custom">
 
                                                 <thead>
-                                                <tr>
+                                                    <tr>
 
-                                                    <th>Date</th>
-                                                    <th> Image</th>
-                                                    <th> Name</th>
-                                                    <th> Item Name</th>
-                                                    <th> Price</th>
-                                                    <th>
-                                                        Actions
-                                                    </th>
-                                                </tr>
+                                                        <th>Date</th>
+                                                        <th> Image</th>
+                                                        <th> Name</th>
+                                                        <th> Item Name</th>
+                                                        <th> Price</th>
+                                                        <th>
+                                                            Actions
+                                                        </th>
+                                                    </tr>
                                                 </thead>
                                                 <tbody>
-                                                {{-- Construction Material --}}
+                                                    {{-- Construction Material --}}
 
-                                                @if (count($phase->constructionMaterialBillings))
-                                                    @foreach ($phase->constructionMaterialBillings as $construction_material_billing)
-                                                        <tr>
+                                                    @if (count($phase->constructionMaterialBillings))
+                                                        @foreach ($phase->constructionMaterialBillings as $construction_material_billing)
+                                                            <tr>
 
-                                                            <td>
-                                                                {{ $construction_material_billing->created_at->format('d-M-Y') }}
-                                                            </td>
-
-                                                            <td>
-                                                                <img style="cursor: pointer"
-                                                                     data-full="{{ asset('storage/' . $construction_material_billing->item_image_path) }}"
-                                                                     src="{{ asset('storage/' . $construction_material_billing->item_image_path) }}"
-                                                                     alt=""
-                                                                     class="w-20 h-20 rounded-full gallery-image">
-                                                            </td>
-
-                                                            <td>
-                                                                <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
-                                                                   href="{{ url('/admin/suppliers', $construction_material_billing->supplier->id) }}">
-                                                                    {{ $construction_material_billing->supplier->name ?? '' }}
-                                                                </a>
-                                                            </td>
-
-                                                            <td>
-                                                                {{ $construction_material_billing->item_name }}
-                                                            </td>
-
-                                                            <td>
-                                                                {{ $construction_material_billing->amount }}
-                                                                <br>
-                                                            </td>
-
-                                                            <td>
-
-                                                                <a
-                                                                    href="{{ route('construction-material-billings.edit', [base64_encode($construction_material_billing->id)]) }}">
-                                                                    <i
-                                                                        class="fa-regular fa-pen-to-square fs-5  bg-white rounded-full px-2 py-1"></i>
-                                                                </a>
-
-                                                                <a href="#" class="delete-link"
-                                                                   data-id="{{ $construction_material_billing->id }}"
-                                                                   data-name="materials">
-                                                                    <i
-                                                                        class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                </a>
-
-                                                                @if ($construction_material_billing->verified_by_admin)
-                                                                    <a href="#"
-                                                                       class="verify-link ms-3 badge badge-info nav-link text-black"
-                                                                       data-name="materials"
-                                                                       data-id="{{ $construction_material_billing->id }}"
-                                                                       data-verified="0">
-                                                                        Verified
-                                                                    </a>
-                                                                @else
-                                                                    <a href="#"
-                                                                       class="verify-link ms-3 badge badge-danger nav-link text-black"
-                                                                       data-name="materials"
-                                                                       data-id="{{ $construction_material_billing->id }}"
-                                                                       data-verified="1">
-                                                                        Verify
-                                                                    </a>
-                                                                @endif
-
-
-                                                            </td>
-
-
-                                                        </tr>
-
-                                                        @if ($loop->last)
-                                                            <tr class="">
-                                                                <td colspan="4"
-                                                                    class="text-right font-bold bg-info text-white fw-bold">
-                                                                    Cost + Service Charge:
+                                                                <td>
+                                                                    {{ $construction_material_billing->created_at->format('d-M-Y') }}
+                                                                </td>
+                                                                <td>
+                                                                    <img style="cursor: pointer"
+                                                                        data-full="{{ asset('storage/' . $construction_material_billing->item_image_path) }}"
+                                                                        src="{{ asset('storage/' . $construction_material_billing->item_image_path) }}"
+                                                                        alt=""
+                                                                        class="w-20 h-20 rounded-full gallery-image">
                                                                 </td>
 
-                                                                <td colspan="2"
-                                                                    class="font-bold bg-info text-white fw-bold">
-
-                                                                    {{ $phase->construction_total_amount }}
-                                                                    +
-                                                                    {{ ($site->service_charge / 100) * $phase->construction_total_amount }}
-                                                                    =
-                                                                    {{ ($site->service_charge / 100) * $phase->construction_total_amount + $phase->construction_total_amount }}
+                                                                <td>
+                                                                    <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
+                                                                        href="{{ url('/admin/suppliers', $construction_material_billing->supplier->id) }}">
+                                                                        {{ $construction_material_billing->supplier->name ?? '' }}
+                                                                    </a>
                                                                 </td>
+
+                                                                <td>
+                                                                    {{ $construction_material_billing->item_name }}
+                                                                </td>
+
+                                                                <td>
+                                                                    {{ $construction_material_billing->amount }}
+                                                                    <br>
+                                                                </td>
+
+                                                                <td>
+
+                                                                    <a
+                                                                        href="{{ route('construction-material-billings.edit', [base64_encode($construction_material_billing->id)]) }}">
+                                                                        <i
+                                                                            class="fa-regular fa-pen-to-square fs-5  bg-white rounded-full px-2 py-1"></i>
+                                                                    </a>
+
+                                                                    <a href="#" class="delete-link"
+                                                                        data-id="{{ $construction_material_billing->id }}"
+                                                                        data-name="materials">
+                                                                        <i
+                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
+                                                                    </a>
+
+                                                                    @if ($construction_material_billing->verified_by_admin)
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-info nav-link text-black"
+                                                                            data-name="materials"
+                                                                            data-id="{{ $construction_material_billing->id }}"
+                                                                            data-verified="0">
+                                                                            Verified
+                                                                        </a>
+                                                                    @else
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-danger nav-link text-black"
+                                                                            data-name="materials"
+                                                                            data-id="{{ $construction_material_billing->id }}"
+                                                                            data-verified="1">
+                                                                            Verify
+                                                                        </a>
+                                                                    @endif
+
+
+                                                                </td>
+
+
                                                             </tr>
-                                                        @endif
-                                                    @endforeach
-                                                @else
-                                                    <tr>
-                                                        <td colspan="6" class="text-center text-danger">No
-                                                            Records Found..
-                                                        </td>
-                                                    </tr>
-                                                @endif
+
+                                                            @if ($loop->last)
+                                                                <tr class="">
+                                                                    <td colspan="4"
+                                                                        class="text-right font-bold bg-info text-white fw-bold">
+                                                                        Cost + Service Charge:
+                                                                    </td>
+
+                                                                    <td colspan="2"
+                                                                        class="font-bold bg-info text-white fw-bold">
+
+                                                                        {{ $phase->construction_total_amount }}
+                                                                        +
+                                                                        {{ ($site->service_charge / 100) * $phase->construction_total_amount }}
+                                                                        =
+                                                                        {{ ($site->service_charge / 100) * $phase->construction_total_amount + $phase->construction_total_amount }}
+                                                                    </td>
+                                                                </tr>
+                                                            @endif
+                                                        @endforeach
+                                                    @else
+                                                        <tr>
+                                                            <td colspan="6" class="text-center text-danger">No
+                                                                Records Found..
+                                                            </td>
+                                                        </tr>
+                                                    @endif
 
                                                 </tbody>
 
@@ -640,148 +636,148 @@
                                         <div class="table-responsive">
                                             <table class="table table-hover table-custom">
                                                 <thead>
-                                                <tr>
+                                                    <tr>
 
-                                                    <th>Date</th>
+                                                        <th>Date</th>
 
-                                                    <th> Image</th>
-                                                    <th> Wager type</th>
-                                                    <th>Supplier Name</th>
-                                                    <th> Type</th>
-                                                    <th> Price</th>
+                                                        <th> Image</th>
+                                                        <th> Wager type</th>
+                                                        <th>Supplier Name</th>
+                                                        <th> Type</th>
+                                                        <th> Price</th>
 
-                                                    <th>Multiplier</th>
-                                                    <th>
-                                                        Total Price
-                                                    </th>
+                                                        <th>Multiplier</th>
+                                                        <th>
+                                                            Total Price
+                                                        </th>
 
-                                                    <th>
-                                                        Actions
-                                                    </th>
+                                                        <th>
+                                                            Actions
+                                                        </th>
 
 
-                                                </tr>
+                                                    </tr>
                                                 </thead>
                                                 <tbody>
 
 
-                                                {{-- Square Footage --}}
+                                                    {{-- Square Footage --}}
 
 
 
-                                                @if (count($phase->squareFootageBills))
-                                                    @foreach ($phase->squareFootageBills as $sqft)
-                                                        <tr>
+                                                    @if (count($phase->squareFootageBills))
+                                                        @foreach ($phase->squareFootageBills as $sqft)
+                                                            <tr>
 
-                                                            <td>{{ $sqft->created_at->format('d-M-Y') }}
-                                                            </td>
-
-                                                            <td>
-                                                                <img style="cursor: pointer"
-                                                                     data-full="{{ asset('storage/'.$sqft->image_path) }}"
-                                                                     src="{{ asset('storage/'.$sqft->image_path) }}"
-                                                                     alt=""
-                                                                     class="w-20 h-20 rounded-full gallery-image">
-                                                            </td>
-                                                            <td>
-                                                                {{ ucwords($sqft->wager_name) }}
-                                                            </td>
-
-                                                            <td>
-                                                                <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
-                                                                   href="{{ url('/admin/suppliers', $sqft->supplier->id) }}">
-                                                                    {{ ucwords($sqft->supplier->name) }}
-
-                                                                </a>
-
-                                                            </td>
-
-
-                                                            <td>
-                                                                {{ ucwords($sqft->type) }}
-                                                            </td>
-
-                                                            <td>
-                                                                {{ Number::currency($sqft->price ?? 0, 'INR') }}
-                                                            </td>
-
-                                                            <td>
-                                                                {{ $sqft->multiplier }}
-                                                            </td>
-
-
-                                                            <td>
-                                                                {{ $sqft->type === 'full_contract' ? $sqft->price : $sqft->price * $sqft->multiplier }}
-                                                            </td>
-
-                                                            <td>
-                                                                <a
-                                                                    href="{{ route('square-footage-bills.edit', [base64_encode($sqft->id)]) }}">
-                                                                    <i
-                                                                        class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                </a>
-
-
-                                                                <a href="#" class="delete-link"
-                                                                   data-id="{{ $sqft->id }}"
-                                                                   data-name="sqft">
-                                                                    <i
-                                                                        class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                </a>
-
-
-                                                                @if ($sqft->verified_by_admin)
-                                                                    <a href="#"
-                                                                       class="verify-link ms-3 badge badge-info nav-link text-black"
-                                                                       data-name="sqft"
-                                                                       data-id="{{ $sqft->id }}"
-                                                                       data-verified="0">
-                                                                        Verified
-                                                                    </a>
-                                                                @else
-                                                                    <a href="#"
-                                                                       class="verify-link ms-3 badge badge-danger nav-link text-black"
-                                                                       data-name="sqft"
-                                                                       data-id="{{ $sqft->id }}"
-                                                                       data-verified="1">
-                                                                        Verify
-                                                                    </a>
-                                                                @endif
-
-
-                                                            </td>
-                                                        </tr>
-                                                        @if ($loop->last)
-                                                            <tr class="">
-                                                                <td colspan="7"
-                                                                    class="text-right font-bold bg-info text-white fw-bold">
-
-                                                                    Cost + Service Charge
+                                                                <td>{{ $sqft->created_at->format('d-M-Y') }}
                                                                 </td>
 
-                                                                <td colspan="2"
-                                                                    class="font-bold bg-info text-white fw-bold">
+                                                                <td>
+                                                                    <img style="cursor: pointer"
+                                                                        data-full="{{ asset('storage/' . $sqft->image_path) }}"
+                                                                        src="{{ asset('storage/' . $sqft->image_path) }}"
+                                                                        alt=""
+                                                                        class="w-20 h-20 rounded-full gallery-image">
+                                                                </td>
+                                                                <td>
+                                                                    {{ ucwords($sqft->wager_name) }}
+                                                                </td>
 
-                                                                    {{ $phase->square_footage_total_amount }}
+                                                                <td>
+                                                                    <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
+                                                                        href="{{ url('/admin/suppliers', $sqft->supplier->id) }}">
+                                                                        {{ ucwords($sqft->supplier->name) }}
 
-                                                                    +
+                                                                    </a>
 
-                                                                    {{ ($site->service_charge / 100) * $phase->square_footage_total_amount }}
+                                                                </td>
 
-                                                                    =
-                                                                    {{ ($site->service_charge / 100) * $phase->square_footage_total_amount + $phase->square_footage_total_amount }}
+
+                                                                <td>
+                                                                    {{ ucwords($sqft->type) }}
+                                                                </td>
+
+                                                                <td>
+                                                                    {{ Number::currency($sqft->price ?? 0, 'INR') }}
+                                                                </td>
+
+                                                                <td>
+                                                                    {{ $sqft->multiplier }}
+                                                                </td>
+
+
+                                                                <td>
+                                                                    {{ $sqft->type === 'full_contract' ? $sqft->price : $sqft->price * $sqft->multiplier }}
+                                                                </td>
+
+                                                                <td>
+                                                                    <a
+                                                                        href="{{ route('square-footage-bills.edit', [base64_encode($sqft->id)]) }}">
+                                                                        <i
+                                                                            class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
+                                                                    </a>
+
+
+                                                                    <a href="#" class="delete-link"
+                                                                        data-id="{{ $sqft->id }}"
+                                                                        data-name="sqft">
+                                                                        <i
+                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
+                                                                    </a>
+
+
+                                                                    @if ($sqft->verified_by_admin)
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-info nav-link text-black"
+                                                                            data-name="sqft"
+                                                                            data-id="{{ $sqft->id }}"
+                                                                            data-verified="0">
+                                                                            Verified
+                                                                        </a>
+                                                                    @else
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-danger nav-link text-black"
+                                                                            data-name="sqft"
+                                                                            data-id="{{ $sqft->id }}"
+                                                                            data-verified="1">
+                                                                            Verify
+                                                                        </a>
+                                                                    @endif
+
+
                                                                 </td>
                                                             </tr>
-                                                        @endif
-                                                    @endforeach
-                                                @else
-                                                    <tr>
-                                                        <td colspan="9" class="text-center text-danger">
-                                                            No
-                                                            Records Found
-                                                        </td>
-                                                    </tr>
-                                                @endif
+                                                            @if ($loop->last)
+                                                                <tr class="">
+                                                                    <td colspan="7"
+                                                                        class="text-right font-bold bg-info text-white fw-bold">
+
+                                                                        Cost + Service Charge
+                                                                    </td>
+
+                                                                    <td colspan="2"
+                                                                        class="font-bold bg-info text-white fw-bold">
+
+                                                                        {{ $phase->square_footage_total_amount }}
+
+                                                                        +
+
+                                                                        {{ ($site->service_charge / 100) * $phase->square_footage_total_amount }}
+
+                                                                        =
+                                                                        {{ ($site->service_charge / 100) * $phase->square_footage_total_amount + $phase->square_footage_total_amount }}
+                                                                    </td>
+                                                                </tr>
+                                                            @endif
+                                                        @endforeach
+                                                    @else
+                                                        <tr>
+                                                            <td colspan="9" class="text-center text-danger">
+                                                                No
+                                                                Records Found
+                                                            </td>
+                                                        </tr>
+                                                    @endif
 
                                                 </tbody>
 
@@ -804,111 +800,110 @@
                                             <table class="table table-hover table-custom">
 
                                                 <thead>
-                                                <tr>
+                                                    <tr>
 
-                                                    <th>Date</th>
-                                                    <th>Bill Photo</th>
-                                                    <th> Item Name</th>
-                                                    <th> Total Price</th>
-                                                    <th>
-                                                        Actions
-                                                    </th>
-                                                </tr>
+                                                        <th>Date</th>
+                                                        <th>Bill Photo</th>
+                                                        <th> Item Name</th>
+                                                        <th> Total Price</th>
+                                                        <th>
+                                                            Actions
+                                                        </th>
+                                                    </tr>
                                                 </thead>
                                                 <tbody>
 
 
-                                                {{-- Contractor --}}
+                                                    {{-- Contractor --}}
 
 
 
-                                                @if (count($phase->dailyExpenses))
-                                                    @foreach ($phase->dailyExpenses as $daily_expenses)
-                                                        <tr>
-
-
-                                                            <td>
-                                                                {{ $daily_expenses->created_at->format('d-M-Y') }}
-                                                            </td>
-
-                                                            <td>
-                                                                <img
-                                                                    src="{{ asset('storage/' . $daily_expenses->bill_photo) }}"
-                                                                    alt="{{ asset('storage/' . $daily_expenses->bill_photo) }}"
-                                                                    class="w-20 h-20 rounded-full cursor-pointer"
-                                                                    data-full="{{ asset('storage/' . $daily_expenses->bill_photo) }}">
-                                                            </td>
-
-                                                            <td>
-                                                                {{ ucwords($daily_expenses->item_name) }}
-                                                            </td>
-
-
-                                                            <td>
-                                                                {{ $daily_expenses->price }}
-                                                            </td>
-
-                                                            <td>
-
-                                                                <a
-                                                                    href="{{ route('daily-expenses.edit', [base64_encode($daily_expenses->id)]) }}">
-                                                                    <i
-                                                                        class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                </a>
-
-
-                                                                <a href="#" class="delete-link"
-                                                                   data-id="{{ $daily_expenses->id }}"
-                                                                   data-name="expenses">
-                                                                    <i
-                                                                        class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                </a>
-
-                                                                @if ($daily_expenses->verified_by_admin)
-                                                                    <a href="#"
-                                                                       class="verify-link ms-3 badge badge-info nav-link text-black"
-                                                                       data-name="expenses"
-                                                                       data-id="{{ $daily_expenses->id }}"
-                                                                       data-verified="0">
-                                                                        Verified
-                                                                    </a>
-                                                                @else
-                                                                    <a href="#"
-                                                                       class="verify-link ms-3 badge badge-danger nav-link text-black"
-                                                                       data-name="expenses"
-                                                                       data-id="{{ $daily_expenses->id }}"
-                                                                       data-verified="1">
-                                                                        Verify
-                                                                    </a>
-                                                                @endif
-                                                            </td>
-
-                                                        </tr>
-                                                        @if ($loop->last)
+                                                    @if (count($phase->dailyExpenses))
+                                                        @foreach ($phase->dailyExpenses as $daily_expenses)
                                                             <tr>
-                                                                <td colspan="3"
-                                                                    class="text-right font-bold bg-info text-white   fw-bold">
-                                                                    Cost + Service Charge:
-                                                                </td>
-                                                                <td colspan="2"
-                                                                    class="font-bold bg-info text-white  fw-bold">
 
-                                                                    {{ $phase->daily_expenses_total_amount }}
-                                                                    +
-                                                                    {{ ($site->service_charge / 100) * $phase->daily_expenses_total_amount }}
-                                                                    =
-                                                                    {{ ($site->service_charge / 100) * $phase->daily_expenses_total_amount + $phase->daily_expenses_total_amount }}
+
+                                                                <td>
+                                                                    {{ $daily_expenses->created_at->format('d-M-Y') }}
                                                                 </td>
+
+                                                                <td>
+                                                                    <img src="{{ asset('storage/' . $daily_expenses->bill_photo) }}"
+                                                                        alt="{{ asset('storage/' . $daily_expenses->bill_photo) }}"
+                                                                        class="w-20 h-20 rounded-full cursor-pointer"
+                                                                        data-full="{{ asset('storage/' . $daily_expenses->bill_photo) }}">
+                                                                </td>
+
+                                                                <td>
+                                                                    {{ ucwords($daily_expenses->item_name) }}
+                                                                </td>
+
+
+                                                                <td>
+                                                                    {{ $daily_expenses->price }}
+                                                                </td>
+
+                                                                <td>
+
+                                                                    <a
+                                                                        href="{{ route('daily-expenses.edit', [base64_encode($daily_expenses->id)]) }}">
+                                                                        <i
+                                                                            class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
+                                                                    </a>
+
+
+                                                                    <a href="#" class="delete-link"
+                                                                        data-id="{{ $daily_expenses->id }}"
+                                                                        data-name="expenses">
+                                                                        <i
+                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
+                                                                    </a>
+
+                                                                    @if ($daily_expenses->verified_by_admin)
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-info nav-link text-black"
+                                                                            data-name="expenses"
+                                                                            data-id="{{ $daily_expenses->id }}"
+                                                                            data-verified="0">
+                                                                            Verified
+                                                                        </a>
+                                                                    @else
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-danger nav-link text-black"
+                                                                            data-name="expenses"
+                                                                            data-id="{{ $daily_expenses->id }}"
+                                                                            data-verified="1">
+                                                                            Verify
+                                                                        </a>
+                                                                    @endif
+                                                                </td>
+
                                                             </tr>
-                                                        @endif
-                                                    @endforeach
-                                                @else
-                                                    <tr>
-                                                        <td colspan="4" class="text-center text-danger">
-                                                            No Records Found
-                                                        </td>
-                                                    </tr>
-                                                @endif
+                                                            @if ($loop->last)
+                                                                <tr>
+                                                                    <td colspan="3"
+                                                                        class="text-right font-bold bg-info text-white   fw-bold">
+                                                                        Cost + Service Charge:
+                                                                    </td>
+                                                                    <td colspan="2"
+                                                                        class="font-bold bg-info text-white  fw-bold">
+
+                                                                        {{ $phase->daily_expenses_total_amount }}
+                                                                        +
+                                                                        {{ ($site->service_charge / 100) * $phase->daily_expenses_total_amount }}
+                                                                        =
+                                                                        {{ ($site->service_charge / 100) * $phase->daily_expenses_total_amount + $phase->daily_expenses_total_amount }}
+                                                                    </td>
+                                                                </tr>
+                                                            @endif
+                                                        @endforeach
+                                                    @else
+                                                        <tr>
+                                                            <td colspan="4" class="text-center text-danger">
+                                                                No Records Found
+                                                            </td>
+                                                        </tr>
+                                                    @endif
 
                                                 </tbody>
 
@@ -934,68 +929,68 @@
                                             <table class="table table-hover table-custom">
 
                                                 <thead>
-                                                <tr>
+                                                    <tr>
 
-                                                    <th>Date</th>
+                                                        <th>Date</th>
 
-                                                    <th> Wager Name</th>
-                                                    <th>Price Per Wager</th>
-                                                    <th> Total Price</th>
-                                                    <th>
-                                                        Actions
-                                                    </th>
+                                                        <th> Wager Name</th>
+                                                        <th>Price Per Wager</th>
+                                                        <th> Total Price</th>
+                                                        <th>
+                                                            Actions
+                                                        </th>
 
 
-                                                </tr>
+                                                    </tr>
                                                 </thead>
                                                 <tbody>
 
 
-                                                {{-- Square Footage --}}
+                                                    {{-- Square Footage --}}
 
 
-                                                @if (count($phase->dailyWagers))
-                                                    @foreach ($phase->dailyWagers as $daily_wager)
-                                                        <tr>
+                                                    @if (count($phase->dailyWagers))
+                                                        @foreach ($phase->dailyWagers as $daily_wager)
+                                                            <tr>
 
-                                                            <td>
+                                                                <td>
 
-                                                                {{ $daily_wager->created_at->format('d-M-Y') }}
+                                                                    {{ $daily_wager->created_at->format('d-M-Y') }}
 
-                                                            </td>
+                                                                </td>
 
-                                                            <td>
+                                                                <td>
 
-                                                                {{ ucwords($daily_wager->wager_name) }}
+                                                                    {{ ucwords($daily_wager->wager_name) }}
 
-                                                            </td>
+                                                                </td>
 
-                                                            <td>
+                                                                <td>
 
-                                                                {{ $daily_wager->price_per_day }}
+                                                                    {{ $daily_wager->price_per_day }}
 
-                                                            </td>
+                                                                </td>
 
-                                                            <td>
+                                                                <td>
 
-                                                                {{ $daily_wager->wager_total }}
+                                                                    {{ $daily_wager->wager_total }}
 
-                                                            </td>
-                                                            <td>
+                                                                </td>
+                                                                <td>
 
-                                                                <a
-                                                                    href="{{ route('dailywager.edit', [base64_encode($daily_wager->id)]) }}">
-                                                                    <i
-                                                                        class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                </a>
+                                                                    <a
+                                                                        href="{{ route('dailywager.edit', [base64_encode($daily_wager->id)]) }}">
+                                                                        <i
+                                                                            class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
+                                                                    </a>
 
-                                                                <a href="#" class="delete-link"
-                                                                   data-id="{{ $daily_wager->id }}"
-                                                                   data-name="wager">
-                                                                    <i
-                                                                        class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                </a>
-                                                                {{--
+                                                                    <a href="#" class="delete-link"
+                                                                        data-id="{{ $daily_wager->id }}"
+                                                                        data-name="wager">
+                                                                        <i
+                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
+                                                                    </a>
+                                                                    {{--
                                                                 @if ($daily_wager->verified_by_admin)
                                                                     <a href="#"
                                                                         class="verify-link ms-3 badge badge-info nav-link text-black"
@@ -1014,39 +1009,39 @@
                                                                     </a>
                                                                 @endif --}}
 
-                                                            </td>
-
-                                                        </tr>
-
-                                                        @if ($loop->last)
-                                                            <tr>
-                                                                <td colspan="3"
-                                                                    class="text-right font-bold bg-info text-white fw-bold">
-                                                                    Cost + Service Charge
                                                                 </td>
 
-                                                                <td colspan="2"
-                                                                    class=" font-bold bg-info text-white fw-bold">
-
-                                                                    {{ $phase->daily_wagers_total_amount }}
-                                                                    +
-                                                                    {{ ($site->service_charge / 100) * $phase->daily_wagers_total_amount }}
-                                                                    =
-                                                                    {{ ($site->service_charge / 100) * $phase->daily_wagers_total_amount + $phase->daily_wagers_total_amount }}
-                                                                </td>
                                                             </tr>
-                                                        @endif
-                                                    @endforeach
-                                                @else
-                                                    <tr>
-                                                        <td colspan="4"
-                                                            class="text-center text-danger fw-bold">
-                                                            No
-                                                            Records Found
-                                                        </td>
-                                                        <td>
-                                                    </tr>
-                                                @endif
+
+                                                            @if ($loop->last)
+                                                                <tr>
+                                                                    <td colspan="3"
+                                                                        class="text-right font-bold bg-info text-white fw-bold">
+                                                                        Cost + Service Charge
+                                                                    </td>
+
+                                                                    <td colspan="2"
+                                                                        class=" font-bold bg-info text-white fw-bold">
+
+                                                                        {{ $phase->daily_wagers_total_amount }}
+                                                                        +
+                                                                        {{ ($site->service_charge / 100) * $phase->daily_wagers_total_amount }}
+                                                                        =
+                                                                        {{ ($site->service_charge / 100) * $phase->daily_wagers_total_amount + $phase->daily_wagers_total_amount }}
+                                                                    </td>
+                                                                </tr>
+                                                            @endif
+                                                        @endforeach
+                                                    @else
+                                                        <tr>
+                                                            <td colspan="4"
+                                                                class="text-center text-danger fw-bold">
+                                                                No
+                                                                Records Found
+                                                            </td>
+                                                            <td>
+                                                        </tr>
+                                                    @endif
 
 
                                                 </tbody>
@@ -1070,84 +1065,84 @@
                                             <table class="table table-hover table-custom">
 
                                                 <thead>
-                                                <tr>
+                                                    <tr>
 
-                                                    <th>Date</th>
+                                                        <th>Date</th>
 
-                                                    <th> No Of Persons</th>
-                                                    <th>Wager Name</th>
-                                                    <th>
-                                                        Supplier
-                                                    </th>
-                                                    <th>
-                                                        Actions
-                                                    </th>
-                                                </tr>
+                                                        <th> No Of Persons</th>
+                                                        <th>Wager Name</th>
+                                                        <th>
+                                                            Supplier
+                                                        </th>
+                                                        <th>
+                                                            Actions
+                                                        </th>
+                                                    </tr>
                                                 </thead>
                                                 <tbody>
 
-                                                {{-- Square Footage --}}
+                                                    {{-- Square Footage --}}
 
 
-                                                @if (count($phase->wagerAttendances))
-                                                    @foreach ($phase->wagerAttendances as $wager_attendance)
-                                                        <tr aria-colspan="4">
+                                                    @if (count($phase->wagerAttendances))
+                                                        @foreach ($phase->wagerAttendances as $wager_attendance)
+                                                            <tr aria-colspan="4">
 
 
-                                                            <td>{{ $wager_attendance->created_at->format('d-M-Y') }}
-                                                            </td>
+                                                                <td>{{ $wager_attendance->created_at->format('d-M-Y') }}
+                                                                </td>
 
-                                                            <td>
-                                                                {{ $wager_attendance->no_of_persons }}
-                                                            </td>
+                                                                <td>
+                                                                    {{ $wager_attendance->no_of_persons }}
+                                                                </td>
 
-                                                            <td>
-                                                                {{ ucwords($wager_attendance->dailyWager->wager_name) }}
-                                                            </td>
+                                                                <td>
+                                                                    {{ ucwords($wager_attendance->dailyWager->wager_name) }}
+                                                                </td>
 
-                                                            <td>
+                                                                <td>
 
-                                                                <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
-                                                                   href="{{ url('/admin/suppliers', $wager_attendance->dailyWager->supplier->id) }}">
-                                                                {{ ucwords($wager_attendance->dailyWager->supplier->name ?? '') }}
-                                                            </td>
-
-
-                                                            <td>
-                                                                <a
-                                                                    href="{{ route('daily-wager-attendance.edit', [base64_encode($wager_attendance->id)]) }}">
-                                                                    <i
-                                                                        class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                </a>
+                                                                    <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
+                                                                        href="{{ url('/admin/suppliers', $wager_attendance->dailyWager->supplier->id) }}">
+                                                                        {{ ucwords($wager_attendance->dailyWager->supplier->name ?? '') }}
+                                                                </td>
 
 
-                                                                <a href="#" class="delete-link"
-                                                                   data-id="{{ $wager_attendance->id }}"
-                                                                   data-name="attendance">
-                                                                    <i
-                                                                        class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                </a>
-
-                                                                @if ($wager_attendance->verified_by_admin)
-                                                                    <a href="#"
-                                                                       class="verify-link ms-3 badge badge-info nav-link text-black"
-                                                                       data-name="attendance"
-                                                                       data-id="{{ $wager_attendance->id }}"
-                                                                       data-verified="0">
-                                                                        Verified
+                                                                <td>
+                                                                    <a
+                                                                        href="{{ route('daily-wager-attendance.edit', [base64_encode($wager_attendance->id)]) }}">
+                                                                        <i
+                                                                            class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
-                                                                @else
-                                                                    <a href="#"
-                                                                       class="verify-link ms-3 badge badge-danger nav-link text-black"
-                                                                       data-name="attendance"
-                                                                       data-id="{{ $wager_attendance->id }}"
-                                                                       data-verified="1">
-                                                                        Verify
+
+
+                                                                    <a href="#" class="delete-link"
+                                                                        data-id="{{ $wager_attendance->id }}"
+                                                                        data-name="attendance">
+                                                                        <i
+                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
-                                                                @endif
+
+                                                                    @if ($wager_attendance->verified_by_admin)
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-info nav-link text-black"
+                                                                            data-name="attendance"
+                                                                            data-id="{{ $wager_attendance->id }}"
+                                                                            data-verified="0">
+                                                                            Verified
+                                                                        </a>
+                                                                    @else
+                                                                        <a href="#"
+                                                                            class="verify-link ms-3 badge badge-danger nav-link text-black"
+                                                                            data-name="attendance"
+                                                                            data-id="{{ $wager_attendance->id }}"
+                                                                            data-verified="1">
+                                                                            Verify
+                                                                        </a>
+                                                                    @endif
 
 
-                                                                {{-- @if ($wager_attendance->verified_by_admin)
+                                                                    {{-- @if ($wager_attendance->verified_by_admin)
                                                                     <a
                                                                         href="{{ route('verifyAttendance', [$wager_attendance->id]) }}">
                                                                         <i class="fa-solid fa-x"></i>
@@ -1160,96 +1155,96 @@
                                                                     </a>
                                                                 @endif --}}
 
+                                                                </td>
+
+
+                                                            </tr>
+                                                        @endforeach
+                                                    @else
+                                                        <tr>
+                                                            <td colspan="4" class="text-center text-danger">
+                                                                No Records Found
+                                                            </td>
+                                                        </tr>
+                                                    @endif
+
+
+                                                    <tr>
+                                                        <form class="forms-sample material-form" id="wagerAttendance">
+
+                                                            @csrf
+
+
+                                                            <td>
+
+                                                                <div>
+                                                                    <input id="phase_id" type="hidden"
+                                                                        name="phase_id" placeholder="Phase"
+                                                                        value="{{ $phase->id }}" />
+                                                                    @error('phase_id')
+                                                                        <x-input-error :messages="$message" class="mt-2" />
+                                                                    @enderror
+                                                                </div>
+
+                                                                <div>
+                                                                    <input type="date" name="date"
+                                                                        class="form-control"
+                                                                        max="{{ now()->format('Y-m-d') }}"
+                                                                        required />
+                                                                    @error('date')
+                                                                        <x-input-error :messages="$message" class="mt-2" />
+                                                                    @enderror
+                                                                </div>
+
+                                                            </td>
+
+                                                            <td>
+                                                                <!-- No Of Persons -->
+                                                                <div style="">
+                                                                    <input id="no_of_persons" type="number"
+                                                                        name="no_of_persons"
+                                                                        placeholder="No Of Persons"
+                                                                        style="width: 100%; border: 0; outline: 1px solid #dee2e6; border-radius: 5px;" />
+
+                                                                    @error('no_of_persons')
+                                                                        <x-input-error :messages="$message" class="mt-2" />
+                                                                    @enderror
+                                                                </div>
+
+                                                            </td>
+
+                                                            <td>
+
+                                                                <!-- Wager -->
+                                                                <select
+                                                                    class="form-select text-black form-select-sm bg-white"
+                                                                    style="cursor: pointer" id="daily_wager_id"
+                                                                    name="daily_wager_id">
+
+                                                                    <option value="">Select Wager</option>
+
+                                                                    @foreach ($wagers as $wager)
+                                                                        <option value="{{ $wager['id'] }}">
+                                                                            {{ $wager['name'] }}
+                                                                        </option>
+                                                                    @endforeach
+
+                                                                </select>
+                                                                @error('daily_wager_id')
+                                                                    <x-input-error :messages="$message" class="mt-2" />
+                                                                @enderror
                                                             </td>
 
 
-                                                        </tr>
-                                                    @endforeach
-                                                @else
-                                                    <tr>
-                                                        <td colspan="4" class="text-center text-danger">
-                                                            No Records Found
-                                                        </td>
+                                                            <td>
+                                                                <button class="btn  btn-info text-white">
+                                                                    {{ __('Make Attendance') }}
+                                                                </button>
+                                                            </td>
+
+
+                                                        </form>
                                                     </tr>
-                                                @endif
-
-
-                                                <tr>
-                                                    <form class="forms-sample material-form" id="wagerAttendance">
-
-                                                        @csrf
-
-
-                                                        <td>
-
-                                                            <div>
-                                                                <input id="phase_id" type="hidden"
-                                                                       name="phase_id" placeholder="Phase"
-                                                                       value="{{ $phase->id }}"/>
-                                                                @error('phase_id')
-                                                                <x-input-error :messages="$message" class="mt-2"/>
-                                                                @enderror
-                                                            </div>
-
-                                                            <div>
-                                                                <input type="date" name="date"
-                                                                       class="form-control"
-                                                                       max="{{ now()->format('Y-m-d') }}"
-                                                                       required/>
-                                                                @error('date')
-                                                                <x-input-error :messages="$message" class="mt-2"/>
-                                                                @enderror
-                                                            </div>
-
-                                                        </td>
-
-                                                        <td>
-                                                            <!-- No Of Persons -->
-                                                            <div style="">
-                                                                <input id="no_of_persons" type="number"
-                                                                       name="no_of_persons"
-                                                                       placeholder="No Of Persons"
-                                                                       style="width: 100%; border: 0; outline: 1px solid #dee2e6; border-radius: 5px;"/>
-
-                                                                @error('no_of_persons')
-                                                                <x-input-error :messages="$message" class="mt-2"/>
-                                                                @enderror
-                                                            </div>
-
-                                                        </td>
-
-                                                        <td>
-
-                                                            <!-- Wager -->
-                                                            <select
-                                                                class="form-select text-black form-select-sm bg-white"
-                                                                style="cursor: pointer" id="daily_wager_id"
-                                                                name="daily_wager_id">
-
-                                                                <option value="">Select Wager</option>
-
-                                                                @foreach ($wagers as $wager)
-                                                                    <option value="{{ $wager['id'] }}">
-                                                                        {{ $wager['name'] }}
-                                                                    </option>
-                                                                @endforeach
-
-                                                            </select>
-                                                            @error('daily_wager_id')
-                                                            <x-input-error :messages="$message" class="mt-2"/>
-                                                            @enderror
-                                                        </td>
-
-
-                                                        <td>
-                                                            <button class="btn  btn-info text-white">
-                                                                {{ __('Make Attendance') }}
-                                                            </button>
-                                                        </td>
-
-
-                                                    </form>
-                                                </tr>
 
                                                 </tbody>
 
@@ -1305,23 +1300,23 @@
 
                         <!-- Modal 1 -->
                         <div id="modal-construction-billings{{ $phase->id }}" class="modal fade"
-                             aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+                            aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content">
                                     <div class="modal-body">
                                         <form enctype="multipart/form-data" class="forms-sample material-form"
-                                              id="constructionBillingForm">
+                                            id="constructionBillingForm">
 
                                             @csrf
 
 
                                             <!-- Amount -->
                                             <div class="form-group">
-                                                <input type="number" name="amount" id="amount"/>
+                                                <input type="number" name="amount" id="amount" />
                                                 <label for="amount" class="control-label">Material Price</label>
                                                 <i class="bar"></i>
                                                 @error('amount')
-                                                <x-input-error :messages="$message" class="mt-2"/>
+                                                    <x-input-error :messages="$message" class="mt-2" />
                                                 @enderror
                                             </div>
 
@@ -1330,8 +1325,8 @@
                                                 <!-- Item Name -->
                                                 <div class="col-md-6">
                                                     <select class="form-select text-black form-select-sm"
-                                                            id="exampleFormControlSelect3" name="item_name"
-                                                            style="cursor: pointer">
+                                                        id="exampleFormControlSelect3" name="item_name"
+                                                        style="cursor: pointer">
                                                         <option value="">Select Item
                                                         </option>
                                                         @foreach ($items as $item)
@@ -1341,15 +1336,15 @@
                                                         @endforeach
                                                     </select>
                                                     @error('item_name')
-                                                    <x-input-error :messages="$message" class="mt-2"/>
+                                                        <x-input-error :messages="$message" class="mt-2" />
                                                     @enderror
                                                 </div>
 
                                                 <!-- Supplier -->
                                                 <div class="col-md-6">
                                                     <select class="form-select text-black form-select-sm"
-                                                            id="exampleFormControlSelect3" name="supplier_id"
-                                                            style="cursor: pointer">
+                                                        id="exampleFormControlSelect3" name="supplier_id"
+                                                        style="cursor: pointer">
                                                         <option value="">Select Supplier
                                                         </option>
                                                         @foreach ($raw_material_providers as $supplier)
@@ -1359,16 +1354,16 @@
                                                         @endforeach
                                                     </select>
                                                     @error('supplier_id')
-                                                    <x-input-error :messages="$message" class="mt-2"/>
+                                                        <x-input-error :messages="$message" class="mt-2" />
                                                     @enderror
                                                 </div>
 
                                                 <!-- Phases -->
                                                 <div class=" col-md-6 mt-3">
                                                     <input id="phase_id" type="hidden" name="phase_id"
-                                                           placeholder="Phase" value="{{ $phase->id }}"/>
+                                                        placeholder="Phase" value="{{ $phase->id }}" />
                                                     @error('phase_id')
-                                                    <x-input-error :messages="$message" class="mt-2"/>
+                                                        <x-input-error :messages="$message" class="mt-2" />
                                                     @enderror
                                                 </div>
                                             </div>
@@ -1376,7 +1371,7 @@
                                             <!-- Item Bill Photo -->
                                             <div class="mt-3">
                                                 <input class="form-control form-control-md" id="image"
-                                                       type="file" name="image">
+                                                    type="file" name="image">
                                             </div>
 
                                             <div class="flex items-center justify-end mt-4">
@@ -1393,48 +1388,48 @@
 
                         <!-- Modal 2 -->
                         <div id="modal-square-footage-bills{{ $phase->id }}" class="modal fade"
-                             aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+                            aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content">
                                     <div class="modal-body">
 
                                         {{-- Create Square Footage Bills --}}
                                         <form id="squareFootageBills" enctype="multipart/form-data"
-                                              class="forms-sample material-form">
+                                            class="forms-sample material-form">
 
 
                                             @csrf
 
                                             <!-- Wager Name -->
                                             <div class="form-group">
-                                                <input id="wager_name" type="text" name="wager_name"/>
-                                                <label for="wager_name" class="control-label"/>Work
+                                                <input id="wager_name" type="text" name="wager_name" />
+                                                <label for="wager_name" class="control-label" />Work
                                                 Type</label><i class="bar"></i>
 
                                                 @error('wager_name')
-                                                <x-input-error :messages="$message" class="mt-2"/>
+                                                    <x-input-error :messages="$message" class="mt-2" />
                                                 @enderror
                                             </div>
 
                                             <!-- Price -->
                                             <div class="form-group">
-                                                <input id="price" type="number" name="price"/>
-                                                <label for="price" class="control-label"/>Price</label><i
+                                                <input id="price" type="number" name="price" />
+                                                <label for="price" class="control-label" />Price</label><i
                                                     class="bar"></i>
 
                                                 @error('price')
-                                                <x-input-error :messages="$message" class="mt-2"/>
+                                                    <x-input-error :messages="$message" class="mt-2" />
                                                 @enderror
                                             </div>
 
                                             <!-- Number Of Days -->
                                             <div class="form-group">
-                                                <input id="multiplier" type="number" name="multiplier"/>
+                                                <input id="multiplier" type="number" name="multiplier" />
                                                 <label for="multiplier" class="control-label">Multiplier</label><i
                                                     class="bar"></i>
 
                                                 @error('multiplier')
-                                                <x-input-error :messages="$message" class="mt-2"/>
+                                                    <x-input-error :messages="$message" class="mt-2" />
                                                 @enderror
                                             </div>
 
@@ -1444,8 +1439,8 @@
                                                 <div class="col-md-6">
                                                     <!-- Type -->
                                                     <select class="form-select text-black form-select-sm"
-                                                            id="exampleFormControlSelect3" name="type"
-                                                            style="cursor: pointer">
+                                                        id="exampleFormControlSelect3" name="type"
+                                                        style="cursor: pointer">
                                                         <option value="">Select Type</option>
                                                         <option value="per_sqr_ft">Per Square Feet</option>
                                                         <option value="per_unit">Per Unit</option>
@@ -1453,14 +1448,14 @@
                                                         </option>
                                                     </select>
                                                     @error('type')
-                                                    <x-input-error :messages="$message" class="mt-2"/>
+                                                        <x-input-error :messages="$message" class="mt-2" />
                                                     @enderror
                                                 </div>
 
                                                 <div class="col-md-6">
                                                     <!-- Select Supplier -->
                                                     <select class="form-select text-black form-select-sm"
-                                                            id="supplier_id" name="supplier_id" style="cursor: pointer">
+                                                        id="supplier_id" name="supplier_id" style="cursor: pointer">
                                                         <option value="">Select Supplier</option>
                                                         @foreach ($workforce_suppliers as $supplier)
                                                             <option value="{{ $supplier->id }}">
@@ -1469,15 +1464,15 @@
                                                         @endforeach
                                                     </select>
                                                     @error('supplier_id')
-                                                    <x-input-error :messages="$message" class="mt-2"/>
+                                                        <x-input-error :messages="$message" class="mt-2" />
                                                     @enderror
                                                 </div>
 
                                                 <div class=" col-md-6 mt-3">
                                                     <input id="phase_id" type="hidden" name="phase_id"
-                                                           placeholder="Phase" value="{{ $phase->id }}"/>
+                                                        placeholder="Phase" value="{{ $phase->id }}" />
                                                     @error('phase_id')
-                                                    <x-input-error :messages="$message" class="mt-2"/>
+                                                        <x-input-error :messages="$message" class="mt-2" />
                                                     @enderror
                                                 </div>
                                             </div>
@@ -1487,9 +1482,9 @@
                                             <div class="mt-3">
                                                 <label for="image">Item Bill</label>
                                                 <input class="form-control form-control-md" id="image"
-                                                       type="file" name="image_path">
+                                                    type="file" name="image_path">
                                                 @error('image_path')
-                                                <x-input-error :messages="$message" class="mt-2"/>
+                                                    <x-input-error :messages="$message" class="mt-2" />
                                                 @enderror
                                             </div>
 
@@ -1508,7 +1503,7 @@
 
                         <!-- Modal 3 -->
                         <div id="modal-daily-wager{{ $phase->id }}" class="modal fade" aria-hidden="true"
-                             aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+                            aria-labelledby="exampleModalToggleLabel" tabindex="-1">
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content">
                                     <div class="modal-body">
@@ -1519,23 +1514,23 @@
 
                                             <!-- Wager Name -->
                                             <div class="form-group">
-                                                <input id="wager_name" type="text" name="wager_name"/>
+                                                <input id="wager_name" type="text" name="wager_name" />
                                                 <label for="wager_name" class="control-label">Wager
                                                     Name</label><i class="bar"></i>
 
                                                 @error('wager_name')
-                                                <x-input-error :messages="$message" class="mt-2"/>
+                                                    <x-input-error :messages="$message" class="mt-2" />
                                                 @enderror
                                             </div>
 
                                             <!-- Price Per day -->
                                             <div class="form-group">
-                                                <input id="price_per_day" type="number" name="price_per_day"/>
+                                                <input id="price_per_day" type="number" name="price_per_day" />
                                                 <label for="price_per_day" class="control-label">Price Per
                                                     Day</label><i class="bar"></i>
 
                                                 @error('price_per_day')
-                                                <x-input-error :messages="$message" class="mt-2"/>
+                                                    <x-input-error :messages="$message" class="mt-2" />
                                                 @enderror
                                             </div>
 
@@ -1543,7 +1538,7 @@
                                                 <!-- Select Supplier -->
                                                 <div class="">
                                                     <select class="form-select text-black form-select-sm"
-                                                            id="supplier_id" name="supplier_id" style="cursor: pointer">
+                                                        id="supplier_id" name="supplier_id" style="cursor: pointer">
                                                         <option value="">Select Supplier</option>
                                                         @foreach ($workforce_suppliers as $supplier)
                                                             <option value="{{ $supplier->id }}">
@@ -1552,16 +1547,16 @@
                                                         @endforeach
                                                     </select>
                                                     @error('supplier_id')
-                                                    <x-input-error :messages="$message" class="mt-2"/>
+                                                        <x-input-error :messages="$message" class="mt-2" />
                                                     @enderror
                                                 </div>
 
                                                 <!-- Select Phase -->
                                                 <div class=" col-md-6 mt-3">
                                                     <input id="phase_id" type="hidden" name="phase_id"
-                                                           placeholder="Phase" value="{{ $phase->id }}"/>
+                                                        placeholder="Phase" value="{{ $phase->id }}" />
                                                     @error('phase_id')
-                                                    <x-input-error :messages="$message" class="mt-2"/>
+                                                        <x-input-error :messages="$message" class="mt-2" />
                                                     @enderror
                                                 </div>
                                             </div>
@@ -1582,7 +1577,7 @@
 
                         <!-- Modal 4 -->
                         <div id="modal-daily-expenses{{ $phase->id }}" class="modal fade" aria-hidden="true"
-                             aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+                            aria-labelledby="exampleModalToggleLabel" tabindex="-1">
 
                             {{-- Daily Expenses  --}}
                             <div class="modal-dialog modal-dialog-centered">
@@ -1594,30 +1589,30 @@
 
                                             <!-- Wager Name -->
                                             <div class="form-group">
-                                                <input id="item_name" type="text" name="item_name"/>
+                                                <input id="item_name" type="text" name="item_name" />
                                                 <label for="item_name" class="control-label">Item
                                                     Name</label><i class="bar"></i>
                                                 @error('item_name')
-                                                <x-input-error :messages="$message" class="mt-2"/>
+                                                    <x-input-error :messages="$message" class="mt-2" />
                                                 @enderror
                                             </div>
 
                                             <!-- Price -->
                                             <div class="form-group">
-                                                <input id="price" type="number" name="price"/>
+                                                <input id="price" type="number" name="price" />
                                                 <label for="price" class="control-label">Price</label><i
                                                     class="bar"></i>
                                                 @error('price')
-                                                <x-input-error :messages="$message" class="mt-2"/>
+                                                    <x-input-error :messages="$message" class="mt-2" />
                                                 @enderror
                                             </div>
 
                                             <!-- Select Phase -->
                                             <div class=" col-md-6 mt-3">
                                                 <input id="phase_id" type="hidden" name="phase_id"
-                                                       placeholder="Phase" value="{{ $phase->id }}"/>
+                                                    placeholder="Phase" value="{{ $phase->id }}" />
                                                 @error('phase_id')
-                                                <x-input-error :messages="$message" class="mt-2"/>
+                                                    <x-input-error :messages="$message" class="mt-2" />
                                                 @enderror
                                             </div>
 
@@ -1625,9 +1620,9 @@
                                             <div class="col-12 mt-3">
 
                                                 <input class="form-control" type="file" id="formFile"
-                                                       name="bill_photo">
+                                                    name="bill_photo">
                                                 @error('bill_photo')
-                                                <x-input-error :messages="$message" class="mt-2"/>
+                                                    <x-input-error :messages="$message" class="mt-2" />
                                                 @enderror
 
                                             </div>
@@ -1653,16 +1648,16 @@
             <table class=" mt-2 table table-bordered">
                 <thead></thead>
                 <tbody>
-                <tr>
-                    <td class="text-danger fw-bold text-center">No Site Data Availiable..</td>
-                </tr>
+                    <tr>
+                        <td class="text-danger fw-bold text-center">No Site Data Availiable..</td>
+                    </tr>
                 </tbody>
             </table>
         @endif
 
         {{-- Phase Form --}}
         <div id="phase" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-             tabindex="-1">
+            tabindex="-1">
 
             <div class="modal-dialog modal-dialog-centered">
 
@@ -1676,16 +1671,16 @@
 
                             {{-- Phase Name --}}
                             <div class="form-group">
-                                <input type="text" name="phase_name" id="phase_name"/>
+                                <input type="text" name="phase_name" id="phase_name" />
                                 <label for="phase_name" class="control-label">Phase Name</label>
                                 <i class="bar"></i>
-                                <x-input-error :messages="$errors->get('phase_name')" class="mt-2"/>
+                                <x-input-error :messages="$errors->get('phase_name')" class="mt-2" />
                             </div>
 
                             <!-- Site -->
                             <div class="form-group">
-                                <input type="hidden" name="site_id" value="{{ $site->id }}"/>
-                                <x-input-error :messages="$errors->get('site_id')" class="mt-2"/>
+                                <input type="hidden" name="site_id" value="{{ $site->id }}" />
+                                <x-input-error :messages="$errors->get('site_id')" class="mt-2" />
                             </div>
 
                             <div class="flex items-center justify-end mt-4">
@@ -1707,7 +1702,7 @@
 
         {{-- Payment Supplier --}}
         <div id="payment-supplier" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-             tabindex="-1">
+            tabindex="-1">
 
             <div class="modal-dialog modal-dialog-centered">
 
@@ -1716,26 +1711,27 @@
                     <div class="modal-body">
 
                         <form id="payment_supplierForm" class="forms-sample material-form"
-                              enctype="multipart/form-data">
+                            enctype="multipart/form-data">
 
                             @csrf
 
                             {{-- Phase Name --}}
                             <div class="form-group">
-                                <input type="number" min="0" name="amount" step="0.01"/>
+                                <input type="number" min="0" name="amount" step="0.01" />
                                 <label for="input" class="control-label">Amount</label><i class="bar"></i>
-                                <x-input-error :messages="$errors->get('amount')" class="mt-2"/>
+                                <x-input-error :messages="$errors->get('amount')" class="mt-2" />
                             </div>
 
                             <!-- Site -->
                             <div class="form-group">
-                                <input type="hidden" name="site_id" value="{{ $site->id }}"/>
-                                <x-input-error :messages="$errors->get('site_id')" class="mt-2"/>
+                                <input type="hidden" name="site_id" value="{{ $site->id }}" />
+                                <x-input-error :messages="$errors->get('site_id')" class="mt-2" />
                             </div>
 
                             {{-- Select Payee Dropdown --}}
-                            <select name="payment_initiator" id="payment_initiator" class="form-select text-black form-select-sm"
-                                    style="cursor: pointer" onchange="togglePayOptions()">
+                            <select name="payment_initiator" id="payment_initiator"
+                                class="form-select text-black form-select-sm" style="cursor: pointer"
+                                onchange="togglePayOptions()">
                                 <option value="" selected>Select Payee</option>
                                 <option value="1">Supplier</option>
                                 <option value="0">Admin</option>
@@ -1743,8 +1739,9 @@
 
                             {{-- Supplier Options (Shown when Supplier is selected) --}}
                             <div id="supplierOptions" style="display: none;" class="mt-3">
-                                <select name="supplier_id" id="supplier_id" class="form-select text-black form-select-sm" style="cursor: pointer">
-                                    <option for="supplier_id" value="" >Select Supplier</option>
+                                <select name="supplier_id" id="supplier_id"
+                                    class="form-select text-black form-select-sm" style="cursor: pointer">
+                                    <option for="supplier_id" value="">Select Supplier</option>
                                     @foreach ($suppliers as $supplier)
                                         <option value="{{ $supplier->id }}">
                                             {{ $supplier->name }}
@@ -1754,7 +1751,8 @@
 
                                 {{-- File Upload for Screenshot --}}
                                 <div class="mt-3">
-                                    <input class="form-control form-control-md" id="image" type="file" name="screenshot">
+                                    <input class="form-control form-control-md" id="image" type="file"
+                                        name="screenshot">
                                 </div>
                             </div>
 
@@ -1764,13 +1762,15 @@
                                     {{-- Sent Radio Option --}}
                                     <div class="col-auto">
                                         <label for="transaction_sent">
-                                            <input type="radio" name="transaction_type" id="transaction_sent" value="1"> Sent
+                                            <input type="radio" name="transaction_type" id="transaction_sent"
+                                                value="1"> Sent
                                         </label>
                                     </div>
                                     {{-- Received Radio Option --}}
                                     <div class="col-auto">
                                         <label for="transaction_received">
-                                            <input type="radio" name="transaction_type" id="transaction_received" value="0"> Received
+                                            <input type="radio" name="transaction_type" id="transaction_received"
+                                                value="0"> Received
                                         </label>
                                     </div>
                                 </div>
@@ -1801,8 +1801,7 @@
     @endif
 
     <script>
-
-        $(document).on('click', '.delete-link', function (e) {
+        $(document).on('click', '.delete-link', function(e) {
             e.preventDefault();
 
             const link = $(this);
@@ -1849,7 +1848,7 @@
                 data: {
                     _token: '{{ csrf_token() }}',
                 },
-                success: function (response, xhr) {
+                success: function(response, xhr) {
 
 
                     link.closest('tr').remove();
@@ -1863,14 +1862,14 @@
                                                 </div>
                                     </div>`);
 
-                    setTimeout(function () {
-                        messageContainer.find('.alert').fadeOut('slow', function () {
+                    setTimeout(function() {
+                        messageContainer.find('.alert').fadeOut('slow', function() {
                             $(this).remove();
                             location.reload();
                         });
                     }, 2000);
                 },
-                error: function (error) {
+                error: function(error) {
 
                     let errorMessage;
 
@@ -1890,8 +1889,8 @@
                                     </div>
                                 </div> `);
 
-                    setTimeout(function () {
-                        messageContainer.find('.alert').fadeOut('slow', function () {
+                    setTimeout(function() {
+                        messageContainer.find('.alert').fadeOut('slow', function() {
                             $(this).remove();
                             // location.reload();
                         });
@@ -1901,7 +1900,7 @@
 
         });
 
-        $(document).on('click', '.verify-link', function (e) {
+        $(document).on('click', '.verify-link', function(e) {
 
             e.preventDefault();
 
@@ -1948,7 +1947,7 @@
                     _token: '{{ csrf_token() }}',
                     verified: verified
                 },
-                success: function (response) {
+                success: function(response) {
 
                     if (verified == 1) {
 
@@ -1978,14 +1977,14 @@
                 `);
                     }
 
-                    setTimeout(function () {
-                        messageContainer.find('.alert').fadeOut('slow', function () {
+                    setTimeout(function() {
+                        messageContainer.find('.alert').fadeOut('slow', function() {
                             $(this).remove();
                             location.reload();
                         });
                     }, 500);
                 },
-                error: function (xhr) {
+                error: function(xhr) {
                     console.error('Error:', xhr);
                     messageContainer.append(`
                 <div class="alert align-items-center text-white bg-danger border-0" role="alert">
@@ -1997,8 +1996,8 @@
                 </div>
             `);
 
-                    setTimeout(function () {
-                        messageContainer.find('.alert').fadeOut('slow', function () {
+                    setTimeout(function() {
+                        messageContainer.find('.alert').fadeOut('slow', function() {
                             $(this).remove();
                             location.reload();
 
@@ -2008,10 +2007,10 @@
             });
         });
 
-        $(document).ready(function () {
+        $(document).ready(function() {
 
 
-            $('form[id="phaseForm"]').on('submit', function (e) {
+            $('form[id="phaseForm"]').on('submit', function(e) {
                 e.preventDefault();
 
                 const form = $(this);
@@ -2028,7 +2027,7 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function (response) {
+                    success: function(response) {
                         form[0].reset();
                         messageContainer.append(`
                                  <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
@@ -2039,12 +2038,12 @@
                                     </div>
                                 </div> `);
                         // Auto-hide success message after 3 seconds
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
                         }, 2000);
                     },
-                    error: function (response) {
+                    error: function(response) {
 
                         if (response.status === 422) { // Validation errors
                             messageContainer.append(`
@@ -2062,7 +2061,7 @@
                     `);
                         }
                         // Auto-hide error message after 5 seconds
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
                         }, 2000);
@@ -2071,7 +2070,7 @@
             });
 
             //  Script For Construction Form
-            $('form[id^="constructionBillingForm"]').on('submit', function (e) {
+            $('form[id^="constructionBillingForm"]').on('submit', function(e) {
                 e.preventDefault();
 
                 const form = $(this);
@@ -2087,7 +2086,7 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function (response) {
+                    success: function(response) {
                         messageContainer.append(`
                         <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
                             <div class="d-flex">
@@ -2101,13 +2100,13 @@
                         form[0].reset();
 
                         // Auto-hide success message after 3 seconds
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
                         }, 2000);
                     },
-                    error: function (response) {
+                    error: function(response) {
 
                         if (response.status === 422) { // Validation errors
                             messageContainer.append(`
@@ -2125,7 +2124,7 @@
                     `);
                         }
                         // Auto-hide error message after 5 seconds
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                         }, 2000);
                     }
@@ -2133,7 +2132,7 @@
             });
 
             // Script For square Footage Bills
-            $('form[id^="squareFootageBills"]').on('submit', function (e) {
+            $('form[id^="squareFootageBills"]').on('submit', function(e) {
                 e.preventDefault();
 
                 const form = $(this);
@@ -2149,7 +2148,7 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function (response) {
+                    success: function(response) {
                         messageContainer.append(`
                         <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
                             <div class="d-flex">
@@ -2161,13 +2160,13 @@
                 `);
                         form[0].reset();
 
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
                         }, 2000);
                     },
-                    error: function (response) {
+                    error: function(response) {
 
                         if (response.status === 422) { // Validation errors
                             messageContainer.append(`
@@ -2185,7 +2184,7 @@
                     `);
                         }
                         // Auto-hide error message after 5 seconds
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
                         }, 2000);
@@ -2193,7 +2192,7 @@
                 });
             });
 
-            $('form[id^="dailyExpenses"]').on('submit', function (e) {
+            $('form[id^="dailyExpenses"]').on('submit', function(e) {
                 e.preventDefault();
 
                 const form = $(this);
@@ -2209,7 +2208,7 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function (response) {
+                    success: function(response) {
 
 
                         messageContainer.append(`
@@ -2224,13 +2223,13 @@
                         form[0].reset();
 
                         // Auto-hide success message after 3 seconds
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
                         }, 2000);
                     },
-                    error: function (response) {
+                    error: function(response) {
 
 
 
@@ -2251,7 +2250,7 @@
                             `);
                         }
                         // Auto-hide error message after 5 seconds
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
                         }, 2000);
@@ -2259,7 +2258,7 @@
                 });
             });
 
-            $('form[id^="dailyWager"]').on('submit', function (e) {
+            $('form[id^="dailyWager"]').on('submit', function(e) {
                 e.preventDefault();
 
                 const form = $(this);
@@ -2275,7 +2274,7 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function (response) {
+                    success: function(response) {
 
                         messageContainer.append(`
                         <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
@@ -2290,13 +2289,13 @@
                         form[0].reset();
 
                         // Auto-hide success message after 3 seconds
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
                         }, 2000);
                     },
-                    error: function (response) {
+                    error: function(response) {
                         console.log(response);
 
 
@@ -2316,7 +2315,7 @@
                     `);
                         }
                         // Auto-hide error message after 5 seconds
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
                         }, 2000);
@@ -2324,7 +2323,7 @@
                 });
             });
 
-            $('form[id^="wagerAttendance"]').on('submit', function (e) {
+            $('form[id^="wagerAttendance"]').on('submit', function(e) {
                 e.preventDefault();
 
                 const form = $(this);
@@ -2340,7 +2339,7 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function (response) {
+                    success: function(response) {
 
                         messageContainer.append(`
                         <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
@@ -2355,13 +2354,13 @@
                         form[0].reset();
 
                         // Auto-hide success message after 3 seconds
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
                         }, 2000);
                     },
-                    error: function (response) {
+                    error: function(response) {
 
                         if (response.status === 422) {
                             messageContainer.append(`
@@ -2379,7 +2378,7 @@
                     `);
                         }
                         // Auto-hide error message after 5 seconds
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
                         }, 2000);
@@ -2387,7 +2386,7 @@
                 });
             });
 
-            $('form[id="payment_supplierForm"]').on('submit', function (e) {
+            $('form[id="payment_supplierForm"]').on('submit', function(e) {
                 e.preventDefault();
 
                 const form = $(this);
@@ -2403,7 +2402,7 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    success: function (response) {
+                    success: function(response) {
 
                         console.log(response);
 
@@ -2420,13 +2419,13 @@
                         form[0].reset();
 
                         // Auto-hide success message after 3 seconds
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
 
                         }, 2000);
                     },
-                    error: function (response) {
+                    error: function(response) {
 
                         if (response.status === 422) { // Validation errors
                             messageContainer.append(`
@@ -2444,7 +2443,7 @@
                     `);
                         }
                         // Auto-hide error message after 5 seconds
-                        setTimeout(function () {
+                        setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
 
                         }, 2000);
@@ -2457,8 +2456,6 @@
 
 
     <script>
-
-
         function togglePayOptions() {
             const payTo = document.getElementById('payment_initiator').value; // Get the selected value
             const supplierOptions = document.getElementById('supplierOptions'); // Supplier section
@@ -2467,10 +2464,10 @@
             // Check selected value and toggle visibility accordingly
             if (payTo === "1") {
                 supplierOptions.style.display = 'block'; // Show Supplier options
-                adminOptions.style.display = 'none';    // Hide Admin options
+                adminOptions.style.display = 'none'; // Hide Admin options
             } else if (payTo === "0") {
                 supplierOptions.style.display = 'none'; // Hide Supplier options
-                adminOptions.style.display = 'block';  // Show Admin options
+                adminOptions.style.display = 'block'; // Show Admin options
             } else {
                 // Hide both sections if "Select Payee" or invalid option is selected
                 supplierOptions.style.display = 'none';
@@ -2496,7 +2493,7 @@
         }
 
         // Restore the active tab on page load
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const activeTab = localStorage.getItem('activeTab');
             if (activeTab) {
                 // Trigger click on the saved tab to restore its state
@@ -2516,8 +2513,8 @@
         var galleryImages = document.querySelectorAll(".gallery-image");
 
         // Add event listener to each image
-        galleryImages.forEach(function (image) {
-            image.addEventListener("click", function () {
+        galleryImages.forEach(function(image) {
+            image.addEventListener("click", function() {
                 var fullImagePath = this.getAttribute("data-full");
                 modalImg.src = fullImagePath;
                 modal.style.display = "block"; // Show the modal
@@ -2525,18 +2522,16 @@
         });
 
         // When the user clicks on <span> (close button), close the modal
-        closeBtn.onclick = function () {
+        closeBtn.onclick = function() {
             modal.style.display = "none";
         }
 
         // Close the modal when clicking anywhere outside of the modal
-        window.onclick = function (event) {
+        window.onclick = function(event) {
             if (event.target == modal) {
                 modal.style.display = "none";
             }
         }
-
-
     </script>
 
 </x-app-layout>

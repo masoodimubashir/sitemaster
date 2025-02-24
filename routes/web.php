@@ -109,6 +109,9 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     // Suppliers Routes
     Route::resource('/suppliers', SupplierController::class);
 
+    // Items Controller
+    Route::resource('/items', ItemController::class);
+
     // Sites Controller
     Route::resource('/sites', SiteController::class);
 
@@ -134,8 +137,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     Route::resource('/daily-wager-attendance', WagerAttendanceController::class);
 
-    // Items Controller
-    Route::resource('/items', ItemController::class);
+
 
     //
     Route::resource('/phase', PhaseController::class);

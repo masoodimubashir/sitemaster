@@ -24,31 +24,31 @@
 
                 @if ($payments)
 
-                    {{-- <table class="table table-bordered">
+                    <table class="table table-bordered">
                             <tbody>
                                 <tr>
                                     <td><strong>Site Name</strong></td>
-                                    <td>{{ ucwords($supplier->site->site_name) }}</td>
+                                    <td>{{ ucwords($site->site_name) }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Location</strong></td>
-                                    <td>{{ ucwords($supplier->site->location) }}</td>
+                                    <td>{{ ucwords($site->location) }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Contact No</strong></td>
-                                    <td>{{ $supplier->site->contact_no }}</td>
+                                    <td>{{ $site->contact_no }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Service Charge</strong></td>
-                                    <td>{{ $supplier->site->service_charge }}</td>
+                                    <td>{{ $site->service_charge }}</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Site Owner Name</strong></td>
-                                    <td>{{ ucwords($supplier->site->site_owner_name) }}</td>
+                                    <td>{{ ucwords($site->site_owner_name) }}</td>
                                 </tr>
 
                             </tbody>
-                        </table> --}}
+                        </table>
 
                     <table class="table table-bordered">
                         <thead>
@@ -63,50 +63,41 @@
                         </thead>
                         <tbody>
                             @if ($payments->count() > 0)
-                                @foreach ($payments as $payment_supplier)
-                                    @if ($payment_supplier->supplier)
+                                @foreach ($site->payments as $payment)
                                         <tr>
 
 
-                                            <td>{{ $payment_supplier->created_at->format('d-M-Y') }}</td>
+                                            {{-- <td>{{ $payment->created_at->format('d-M-Y') }}</td> --}}
 
-                                            <td>
+                                            {{-- <td>
                                                 <!-- Image with click handler -->
-                                                <img src="{{ asset('storage/' . $payment_supplier->screenshot) }}"
-                                                    alt="Payment Screenshot" class="img-fluid cursor-pointer"
+                                                <img src="{{ asset('storage/' . $payment->screenshot) }}"
+                                                    alt="" class="img-fluid cursor-pointer"
                                                     data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
                                                     onclick="showImagePreview(this.src)">
 
+                                            </td> --}}
 
-                                            </td>
+                                            {{-- <td>
+                                                {{ Ucwords($payment->site->site_name) }}
+                                            </td> --}}
 
-                                            <td>
-                                                {{ Ucwords($payment_supplier->site->site_name) }}
-                                            </td>
+                                            {{-- <td> --}}
+                                                {{-- {{ Ucwords($payment->site->site_owner_name) }} --}}
+                                            {{-- </td> --}}
 
-                                            <td>
-                                                {{ Ucwords($payment_supplier->site->site_owner_name) }}
-                                            </td>
-
-                                            <td>
-                                                {{ Ucwords($payment_supplier->supplier->name) }}
-                                            </td>
-
+                                            {{-- <td> --}}
+                                                {{-- {{ Ucwords($payment->supplier->name) }} --}}
+                                            {{-- </td> --}}
 
 
 
 
-                                            <td>{{ Number::currency($payment_supplier->amount, 'INR') }}</td>
+
+                                            {{-- <td>{{ Number::currency($payment->amount, 'INR') }}</td> --}}
 
 
                                         </tr>
-                                    @else
-                                        <tr>
-                                            <td colspan="4" class="text-center text-danger fw-bold">
-                                                No Records Found..
-                                            </td>
-                                        </tr>
-                                    @endif
                                 @endforeach
                             @else
                                 <tr>

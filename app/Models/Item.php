@@ -26,7 +26,7 @@ class Item extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function material(): HasMany
+    public function constructionMaterials(): HasMany
     {
         return $this->hasMany(ConstructionMaterialBilling::class);
     }

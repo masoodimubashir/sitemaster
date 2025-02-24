@@ -22,6 +22,13 @@
         <x-error-message message="Site Cannot Be Deleted...." />
     @endif
 
+
+    @if (session('status') === 'hasPaymentRecords')
+        <x-error-message message="Site Cannot Be Deleted...." />
+    @endif
+
+    
+
     <div class="row">
 
         <div class="col-lg-12">

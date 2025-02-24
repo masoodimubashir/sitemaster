@@ -213,12 +213,11 @@ class SupplierController extends Controller
             return redirect()->back()->with('status', 'error');
         }
 
-        $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($supplier) {
-            $query->orWhere('supplier_id', $supplier->id);
-        })->exists();
+        $hasPaymnent = $supplier->payments()->exists();
 
-        if ($hasPaymentRecords) {
-            return redirect()->to('admin/suppliers')->with('status', 'error');
+
+        if ($hasPaymnent) {
+            return redirect()->to('admin/suppliers')->with('status', 'hasPaymnent');
         }
 
         $supplier->delete();
