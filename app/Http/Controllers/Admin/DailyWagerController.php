@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Class\HelperClass;
 use App\Http\Controllers\Controller;
 use App\Models\DailyWager;
+use App\Models\Payment;
 use App\Models\PaymentSupplier;
 use App\Models\Site;
 use DB;
@@ -142,11 +143,16 @@ class DailyWagerController extends Controller
 
             $daily_wager = DailyWager::find($id);
 
-
-            $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($daily_wager) {
+            $hasPaymentRecords = Payment::where(function ($query) use ($daily_wager) {
                 $query->where('site_id', $daily_wager->phase->site_id)
                     ->orWhere('supplier_id', $daily_wager->supplier_id);
             })->exists();
+
+            $is_present = $daily_wager->whereHas('WagerAttendances')->exists();
+
+            if ($is_present) {
+                return response()->json(['error' => 'This Item Cannot Be Deleted. Attendance records exist.'], 404);
+            }
 
             if ($hasPaymentRecords) {
                 return response()->json(['error' => 'This Item Cannot Be Deleted. Payment records exist.'], 404);

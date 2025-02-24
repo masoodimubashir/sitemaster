@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Class\HelperClass;
 use App\Http\Controllers\Controller;
 use App\Models\DailyWager;
+use App\Models\Payment;
 use App\Models\PaymentSupplier;
 use App\Models\User;
 use App\Models\WagerAttendance;
+use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -145,7 +147,7 @@ class WagerAttendanceController extends Controller
         $wager_attendance->created_at = $request->date ? $request->date :  now();
         $wager_attendance->save();
 
-        
+
 
         return redirect()->route('sites.show', [base64_encode($wager_attendance->phase->site->id)])
             ->with('status', 'update');
@@ -157,26 +159,32 @@ class WagerAttendanceController extends Controller
     public function destroy(string $id)
     {
 
+        return DB::transaction(function () use ($id) {
 
-        try {
+            try {
 
-            $daily_wager_attendance = WagerAttendance::find($id);
+                $daily_wager_attendance = WagerAttendance::find($id);
 
 
-            $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($daily_wager_attendance) {
-                $query->where('site_id', $daily_wager_attendance->phase->site_id)
-                    ->orWhere('supplier_id', $daily_wager_attendance->dailyWager->supplier->supplier_id);
-            })->exists();
+                $hasPaymentRecords = Payment::where(function ($query) use ($daily_wager_attendance) {
+                    $query->where('site_id', $daily_wager_attendance->phase->site_id)
+                        ->orWhere('supplier_id', $daily_wager_attendance->dailyWager->supplier->supplier_id);
+                })->exists();
 
-            if ($hasPaymentRecords) {
-                return response()->json(['error' => 'This Item Cannot Be Deleted. Payment records exist.'], 404);
+                if ($hasPaymentRecords) {
+                    return response()->json(['error' => 'This Item Cannot Be Deleted. Payment records exist.'], 404);
+                }
+
+                $amount = $daily_wager_attendance->dailyWager->wager_total;
+
+                $this->updateBalanceOnDelete($daily_wager_attendance->phase_id, $amount);
+
+                $daily_wager_attendance->delete();
+
+                return response()->json(['message' => 'Item Deleted...'], 201);
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                return response()->json(['error' => 'Something Went Wrong Try Again'], 500);
             }
-
-            $daily_wager_attendance->delete();
-
-            return response()->json(['message' => 'Item Deleted...'], 201);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['error' => 'Something Went Wrong Try Again'], 500);
-        }
+        });
     }
 }

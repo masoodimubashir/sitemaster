@@ -99,11 +99,10 @@ trait HelperClass
             $siteTotal = SiteTotalAmount::where('phase_id', $id)->first();
 
             if ($siteTotal) {
-    
+
                 $siteTotal->update([
-                    'total_amount' => $amount
+                    'total_amount' => $amount + $siteTotal->total_amount,
                 ]);
-                
             } else {
 
                 $total = SiteTotalAmount::create([
@@ -157,7 +156,6 @@ trait HelperClass
             $siteTotal->update([
                 'total_amount' => $amount
             ]);
-
         } catch (ModelNotFoundException $e) {
             throw $e;
         } catch (\Exception $e) {
@@ -166,20 +164,51 @@ trait HelperClass
     }
 
 
-    public function adjustBalance($new, $old){
+    public function adjustBalance($new, $old)
+    {
 
         $new_amount = 0;
 
 
 
-        if($new > $old){
+        if ($new > $old) {
             $new_amount = $new - $old;
         }
-        if($new < $old){
+        if ($new < $old) {
             $new_amount = $new - $old;
         }
 
         return $new_amount;
+    }
 
+    public function updateBalanceOnDelete(int $phase_id, float $amount)
+    {
+
+        try {
+
+            $siteTotal = SiteTotalAmount::where('phase_id', $phase_id)->first();
+
+            if (!$siteTotal) {
+                throw new ModelNotFoundException("Site total amount not found for phase: $phase_id.");
+            }
+
+            if ($amount < 0) {
+                throw new \Exception('Unable to update site total amount. Please try again.');
+            }
+
+            $amount = $siteTotal->total_amount - $amount;
+
+            if ($amount === 0) {
+                $siteTotal->delete();
+            }
+
+            $siteTotal->update([
+                'total_amount' => $amount
+            ]);
+        } catch (ModelNotFoundException $e) {
+            throw $e;
+        } catch (\Exception $e) {
+            throw new \Exception('Unable to update site total amount. Please try again.');
+        }
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Class\HelperClass;
 use App\Http\Controllers\Controller;
+use App\Models\Payment;
 use App\Models\PaymentSupplier;
 use App\Models\Phase;
 use App\Models\SquareFootageBill;
@@ -47,6 +48,7 @@ class SquareFootageBillsController extends Controller
 
     public function store(Request $request)
     {
+
 
         DB::beginTransaction();
 
@@ -94,6 +96,8 @@ class SquareFootageBillsController extends Controller
                 if ($sqft) {
 
                     $this->setSiteTotalAmount($request->phase_id, $price);
+
+                    DB::commit();
                 }
 
                 return response()->json([
@@ -168,7 +172,6 @@ class SquareFootageBillsController extends Controller
                 }
 
                 $image_path = $request->file('image_path')->store('SquareFootageImages', 'public');
-                
             } else {
 
                 $image_path = $square_footage_bill->image_path;
@@ -205,30 +208,35 @@ class SquareFootageBillsController extends Controller
     public function destroy(string $id)
     {
 
-        try {
+        return DB::transaction(function () use ($id) {
+            try {
 
-            $square_footage_bill = SquareFootageBill::find($id);
+                $square_footage_bill = SquareFootageBill::find($id);
 
-            $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($square_footage_bill) {
-                $query->where('site_id', $square_footage_bill->phase->site_id)
-                    ->orWhere('supplier_id', $square_footage_bill->supplier_id);
-            })->exists();
+                $hasPaymentRecords = Payment::where(function ($query) use ($square_footage_bill) {
+                    $query->where('site_id', $square_footage_bill->phase->site_id)
+                        ->orWhere('supplier_id', $square_footage_bill->supplier_id);
+                })->exists();
 
-            if ($hasPaymentRecords) {
-                return response()->json(['error' => 'This Item Cannot Be Deleted. Payment records exist.'], 404);
+                if ($hasPaymentRecords) {
+                    return response()->json(['error' => 'This Item Cannot Be Deleted. Payment records exist.'], 404);
+                }
+
+                if ($square_footage_bill->image_path && Storage::exists($square_footage_bill->image_path)) {
+                    Storage::delete($square_footage_bill->image_path);
+                }
+
+                $amount = $square_footage_bill->price * $square_footage_bill->multiplier;
+
+                $this->updateBalanceOnDelete($square_footage_bill->phase_id, $amount);
+
+                $square_footage_bill->delete();
+
+                return response()->json(['message' => 'Item Deleted...'], 201);
+            } catch (\Throwable $th) {
+
+                return response()->json(['error' => 'An unexpected error occurred: '], 500);
             }
-
-            // Delete the associated image if it exists
-            if ($square_footage_bill->image_path && Storage::exists($square_footage_bill->image_path)) {
-                Storage::delete($square_footage_bill->image_path);
-            }
-
-            $square_footage_bill->delete();
-
-            return response()->json(['message' => 'Item Deleted...'], 201);
-        } catch (\Throwable $th) {
-
-            return response()->json(['error' => 'An unexpected error occurred: '], 500);
-        }
+        });
     }
 }

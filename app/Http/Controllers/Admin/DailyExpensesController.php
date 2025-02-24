@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Class\HelperClass;
 use App\Http\Controllers\Controller;
 use App\Models\DailyExpenses;
+use App\Models\Payment;
 use App\Models\PaymentSupplier;
 use DB;
 use Illuminate\Http\Request;
@@ -178,29 +179,33 @@ class DailyExpensesController extends Controller
     public function destroy(string $id)
     {
 
+        return DB::transaction(function () use ($id) {
 
-        try {
 
-            $expense = DailyExpenses::find($id);
+            try {
 
-            $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($expense) {
-                $query->where('site_id', $expense->phase->site_id);
-            })->exists();
+                $expense = DailyExpenses::find($id);
 
-            if ($hasPaymentRecords) {
-                return response()->json(['error' => 'This Item Cannot Be Deleted. Payment records exist.'], 404);
+                $hasPaymentRecords = Payment::where(function ($query) use ($expense) {
+                    $query->where('site_id', $expense->phase->site_id);
+                })->exists();
+
+                if ($hasPaymentRecords) {
+                    return response()->json(['error' => 'This Item Cannot Be Deleted. Payment records exist.'], 404);
+                }
+
+                if ($expense->bill_photo && Storage::exists($expense->bill_photo)) {
+                    Storage::delete($expense->bill_photo);
+                }
+
+                $this->updateBalanceOnDelete($expense->phase_id, $expense->price);
+
+                $expense->delete();
+
+                return response()->json(['message' => 'Item Deleted Successfully'], 200);
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                return response()->json(['error' => 'Something Went Wrong Try Again'], 500);
             }
-
-            // Delete the associated image if it exists
-            if ($expense->bill_photo && Storage::exists($expense->bill_photo)) {
-                Storage::delete($expense->bill_photo);
-            }
-
-            $expense->delete();
-
-            return response()->json(['message' => 'Item Deleted Successfully'], 200);
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json(['error' => 'Something Went Wrong Try Again'], 500);
-        }
+        });
     }
 }

@@ -96,14 +96,12 @@ class ConstructionMaterialBilling extends Controller
                 $constructionBilling->phase_id = $request->input('phase_id');
                 $constructionBilling->save();
 
-
                 if ($constructionBilling) {
 
                     $this->setSiteTotalAmount($request->phase_id, $request->amount);
 
                     DB::commit();
                 }
-
 
                 return response()->json([
                     'message' => 'Construction bill Created'
@@ -211,26 +209,31 @@ class ConstructionMaterialBilling extends Controller
     {
         try {
 
-            $construction_material_billing = ModelsConstructionMaterialBilling::findOrFail($id);
+            return DB::transaction(function () use ($id) {
+                $construction_material_billing = ModelsConstructionMaterialBilling::findOrFail($id);
 
-            $hasPaymentRecords = Payment::where(function ($query) use ($construction_material_billing) {
-                $query->where('site_id', $construction_material_billing->phase->site_id)
-                    ->orWhere('supplier_id', $construction_material_billing->supplier_id);
-            })->exists();
+                $hasPaymentRecords = Payment::where(function ($query) use ($construction_material_billing) {
+                    $query->where('site_id', $construction_material_billing->phase->site_id)
+                        ->orWhere('supplier_id', $construction_material_billing->supplier_id);
+                })->exists();
 
-            if ($hasPaymentRecords) {
-                return response()->json(['error' => 'This Item Cannot Be Deleted. Payment Records Exist.'], 404);
-            }
+                if ($hasPaymentRecords) {
+                    return response()->json([
+                        'error' => 'This Item Cannot Be Deleted. Payment Records Exist.'
+                    ], 404);
+                }
 
-            // // Delete the associated image if it exists
-            if ($construction_material_billing->item_image_path && Storage::exists($construction_material_billing->item_image_path)) {
-                Storage::delete($construction_material_billing->item_image_path);
-            }
+                if ($construction_material_billing->item_image_path && Storage::exists($construction_material_billing->item_image_path)) {
+                    Storage::delete($construction_material_billing->item_image_path);
+                }
 
-            // Delete the record
-            $construction_material_billing->delete();
+                $this->updateBalanceOnDelete($construction_material_billing->phase_id, $construction_material_billing->amount);
+                $construction_material_billing->delete();
 
-            return response()->json(['message' => 'Item Deleted Successfully'], 200);
+                return response()->json([
+                    'message' => 'Item Deleted Successfully'
+                ], 200);
+            });
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['error' => 'Something Went Wrong Try Again'], 500);
         }
