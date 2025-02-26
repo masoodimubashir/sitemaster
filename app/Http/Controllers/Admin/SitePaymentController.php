@@ -23,8 +23,7 @@ class SitePaymentController extends Controller
     {
 
 
-        dd($request->all());
-
+        
         $dateFilter = $request->get('date_filter', 'lifetime');
         $site_id = $request->input('site_id', $id);
         $supplier_id = $request->input('supplier_id', 'all');

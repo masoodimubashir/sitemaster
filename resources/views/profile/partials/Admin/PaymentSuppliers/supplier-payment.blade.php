@@ -90,31 +90,23 @@
 
                 @if ($payments)
 
-                    {{-- <table class="table table-bordered">
-                            <tbody>
-                                <tr>
-                                    <td><strong>Site Name</strong></td>
-                                    <td>{{ ucwords($supplier->site->site_name) }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Location</strong></td>
-                                    <td>{{ ucwords($supplier->site->location) }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Contact No</strong></td>
-                                    <td>{{ $supplier->site->contact_no }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Service Charge</strong></td>
-                                    <td>{{ $supplier->site->service_charge }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Site Owner Name</strong></td>
-                                    <td>{{ ucwords($supplier->site->site_owner_name) }}</td>
-                                </tr>
+                    <table class="table table-bordered">
+                        <tbody>
+                            <tr>
+                                <td><strong>Supplier Name</strong></td>
+                                <td>{{ ucwords($supplier->name) }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Location</strong></td>
+                                <td>{{ ucwords($supplier->address) }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Contact No</strong></td>
+                                <td>{{ $supplier->contact_no }}</td>
+                            </tr>
 
-                            </tbody>
-                        </table> --}}
+                        </tbody>
+                    </table>
 
                     <table class="table table-bordered">
                         <thead>
@@ -123,7 +115,6 @@
                                 <th class="fw-bold bg-info  text-white">Screenshot</th>
                                 <th class="fw-bold bg-info  text-white">Site</th>
                                 <th class="fw-bold bg-info  text-white">Site Owner</th>
-                                <th class="fw-bold bg-info  text-white">Supplier</th>
                                 <th class="fw-bold bg-info  text-white">Amount</th>
                             </tr>
                         </thead>
@@ -138,7 +129,8 @@
 
 
                                             <td>
-                                                <img src="{{ asset('storage/' . $payment_supplier->screenshot) }}" alt="">
+                                                <img src="{{ asset('storage/' . $payment_supplier->screenshot) }}"
+                                                    alt="">
                                             </td>
 
                                             <td>
@@ -149,9 +141,6 @@
                                                 {{ Ucwords($payment_supplier->site->site_owner_name) }}
                                             </td>
 
-                                            <td>
-                                                {{ Ucwords($payment_supplier->supplier->name) }}
-                                            </td>
 
                                             <td>{{ Number::currency($payment_supplier->amount, 'INR') }}</td>
 

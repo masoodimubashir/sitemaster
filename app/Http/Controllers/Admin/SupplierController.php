@@ -52,40 +52,104 @@ class SupplierController extends Controller
      */
     public function show(string $id)
     {
-        $supplier = Supplier::with([
-            'constructionMaterialBilling' => function ($query) {
-                $query->where('verified_by_admin', 1)
-                    ->with([
-                        'phase' => function ($phase) {
-                            $phase->with('site')
-                                ->whereNull('deleted_at');
-                        },
-                    ]);
-            },
-            'dailyWagers' => function ($daily_wager) {
-                $daily_wager->with([
-                    'phase' => function ($phase) {
-                        $phase->with('site')
-                            ->whereNull('deleted_at');
-                    },
 
-                    'wagerAttendances'
-                ]);
+
+        $supplier = Supplier::with([
+            'constructionMaterialBilling' => function ($material) {
+                $material->where([
+                    'verified_by_admin' => 1,
+                    'deleted_at' => null,
+                ])->with(['phase' => function ($phase) {
+                    $phase->with(['site' => fn($site) => ($site->whereNull('deleted_at'))])->whereNull('deleted_at');
+                }])->latest();
             },
-            'squareFootages' => function ($sqft) {
-                $sqft->where('verified_by_admin', 1)
-                    ->with([
-                        'phase' => function ($phase) {
-                            $phase->with('site')
-                                ->whereNull('deleted_at');
-                        },
-                    ]);
+            'dailyWagers' => fn($daily_wager) => ($daily_wager->whereNull('deleted_at'))->latest(),
+            'squareFootages' => function ($square_footage) {
+                $square_footage->where([
+                    'verified_by_admin' => 1,
+                    'deleted_at' => null,
+                ])->with(['phase' => function ($phase) {
+                    $phase->with(['site' => fn($site) => ($site->whereNull('deleted_at'))])->whereNull('deleted_at');
+                }])->latest();
             },
             'payments' => function ($payment) {
                 $payment->where('verified_by_admin', 1);
-            }
-        ])
-            ->find($id);
+            },
+        ])->find($id);
+
+        // $supplier = Supplier::with([
+        //     'constructionMaterialBilling' => function ($query) {
+        //         $query->where('verified_by_admin', 1)
+        //             ->with([
+        //                 'phase' => function ($phase) {
+        //                     $phase->with('site')
+        //                         ->whereNull('deleted_at');
+        //                 },
+        //             ]);
+        //     },
+        //     'dailyWagers' => function ($daily_wager) {
+        //         $daily_wager->with([
+        //             'phase' => function ($phase) {
+        //                 $phase->with('site')
+        //                     ->whereNull('deleted_at');
+        //             },
+
+        //             'wagerAttendances'
+        //         ]);
+        //     },
+        //     'squareFootages' => function ($sqft) {
+        //         $sqft->where('verified_by_admin', 1)
+        //             ->with([
+        //                 'phase' => function ($phase) {
+        //                     $phase->with('site')
+        //                         ->whereNull('deleted_at');
+        //                 },
+        //             ]);
+        //     },
+        //     'payments' => function ($payment) {
+        //         $payment->where('verified_by_admin', 1);
+        //     }
+        // ])
+        //     ->find($id);
+
+
+        // $site = Site::whereHas('phases')->with([
+        //     'phases' => function ($query) {
+        //         $query->whereNull('deleted_at');
+        //     },
+        //     'phases.constructionMaterialBillings' => function ($query) {
+        //         $query->with('supplier')
+        //             ->where('verified_by_admin', 1)
+        //             ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+        //             ->whereNull('deleted_at')
+        //             ->latest();
+        //     },
+        //     'phases.squareFootageBills' => function ($query) {
+        //         $query->with('supplier')
+        //             ->where('verified_by_admin', 1)
+        //             ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+        //             ->whereNull('deleted_at')
+        //             ->latest();
+        //     },
+        //     'phases.dailyWagers' => function ($query) {
+        //         $query->with(['wagerAttendances', 'supplier'])
+        //             ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+        //             ->whereNull('deleted_at')
+        //             ->latest();
+        //     },
+        //     'phases.dailyExpenses' => function ($query) {
+        //         $query->whereNull('deleted_at');
+        //     },
+        //     'phases.wagerAttendances' => function ($query) {
+        //         $query->with('dailyWager.supplier')
+        //             ->whereHas('dailyWager.supplier', fn($q) => $q->whereNull('deleted_at')) 
+        //             ->whereNull('deleted_at')
+        //             ->latest();
+        //     },
+        //     'payments' => function ($query) {
+        //         $query->where('verified_by_admin', 1); 
+        //     },
+        // ])->findOrFail($site_id);
 
 
         $data = collect();
@@ -140,7 +204,7 @@ class SupplierController extends Controller
 
         // Calculate totals
         $totalDebit = $data->where('transaction_type', 'debit')->sum('total_price');
-        $totalCredit = $data->where('transaction_type', 'credit')->sum('total_price');
+        $totalCredit = $supplier->payments()->sum('amount');
 
         $balance = $totalDebit - $totalCredit;
 
@@ -159,14 +223,12 @@ class SupplierController extends Controller
             'sites' => $sites
         ];
 
-//        dd($sites);
-
         if ($supplier->is_raw_material_provider === 1) {
             return view('profile.partials.Admin.Supplier.show-supplier_raw_material', compact('data', 'sites'));
         }
 
-        return view('profile.partials.Admin.Supplier.show_supplier_workforce', compact('data'));
 
+        return view('profile.partials.Admin.Supplier.show_supplier_workforce', compact('data', 'sites'));
     }
 
     /**

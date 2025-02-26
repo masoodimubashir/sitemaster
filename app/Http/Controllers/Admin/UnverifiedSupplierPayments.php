@@ -12,7 +12,7 @@ class UnverifiedSupplierPayments extends Controller
 
         $supplier = Supplier::find($id);
 
-        $payments = $supplier->paymentSuppliers()->where('verified_by_admin', 0)->paginate(10);
+        $payments = $supplier->payments()->where('verified_by_admin', 0)->paginate(10);
 
         return view('profile.partials.Admin.PaymentSuppliers.show-unverified_supplier_payments', compact('payments', 'supplier'));
     }

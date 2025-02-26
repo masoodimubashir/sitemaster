@@ -137,9 +137,6 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     Route::resource('/daily-wager-attendance', WagerAttendanceController::class);
 
-
-
-    //
     Route::resource('/phase', PhaseController::class);
 
     // Route::resource('/payment-bills', PaymentBillsController::class);

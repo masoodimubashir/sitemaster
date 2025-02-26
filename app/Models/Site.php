@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -42,7 +41,7 @@ class Site extends Model
      */
     public function payments(): HasMany
     {
-        return $this->hasMany( Payment::class, 'site_id', 'id');
+        return $this->hasMany(Payment::class, 'site_id', 'id');
     }
 
     /**
@@ -65,6 +64,7 @@ class Site extends Model
     {
         return $this->belongsTo(Client::class);
     }
+    
 
     /**
      * Polymorphic relationship to AdminPayment.

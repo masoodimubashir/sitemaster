@@ -27,22 +27,12 @@ class PaymentsController extends Controller
     public function index(Request $request, DataService $dataService)
     {
 
-        $dateFilter = $request->input('date_filter', 'today');
-        $site_id = $request->input('site_id', 'all');
-        $supplier_id = $request->input('supplier_id', 'all');
-        $wager_id = $request->input('wager_id', 'all');
 
         $ongoingSites = Site::where('is_on_going', 1)->pluck('id');
         $is_ongoing_count = $ongoingSites->count();
         $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData(
-            $dateFilter,
-            $site_id,
-            $supplier_id,
-            $wager_id
-        );
-
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($request);
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers)
             ->sortByDesc(function ($d) {
@@ -51,13 +41,9 @@ class PaymentsController extends Controller
 
         $balances = $dataService->calculateAllBalances($ledgers);
 
-        // Access the values
         $withoutServiceCharge = $balances['without_service_charge'];
         $withServiceCharge = $balances['with_service_charge'];
-
-        // Get specific totals
         $effective_balance = $withoutServiceCharge['due'];
-
         $total_paid = $withServiceCharge['paid'];
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
@@ -66,7 +52,9 @@ class PaymentsController extends Controller
 
         $paginatedLedgers = new LengthAwarePaginator(
             $ledgers->forPage(
-                $request->input('page', 1), $perPage),
+                $request->input('page', 1),
+                $perPage
+            ),
             $ledgers->count(),
             $perPage,
             $request->input('page', 10),
@@ -74,7 +62,7 @@ class PaymentsController extends Controller
         );
 
         $suppliers = $paginatedLedgers->unique('supplier_id');
-        $sites = $paginatedLedgers->unique('site_id');
+        $sites = $paginatedLedgers->unique('site');
 
         $wagers = $paginatedLedgers->map(function ($ledger) {
             $ledger['wager_id'] = isset($ledger['wager_id']) ? $ledger['wager_id'] : null;
@@ -229,12 +217,10 @@ class PaymentsController extends Controller
             DB::commit();
 
             return response()->json(['status' => true, 'message' => 'Payment created successfully!',], Response::HTTP_CREATED);
-
         } catch (Exception $e) {
             DB::rollBack();
             return response()->json(['status' => false, 'message' => 'Error: ' . $e->getMessage(),], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
     }
 
     /**

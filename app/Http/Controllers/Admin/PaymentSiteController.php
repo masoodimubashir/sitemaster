@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminPayment;
 use App\Models\Payment;
 use App\Models\Site;
-use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -17,15 +16,13 @@ class PaymentSiteController extends Controller
 
         $site = Site::find($id);
 
-        $payments = $site->with(['payments' => function ($query) {
-            $query->where('verified_by_admin', 1);
-        }])
+        $payments = $payments = $site->payments()
+            ->with(['site', 'supplier'])
+            ->where('verified_by_admin', 1)
             ->paginate(10);
 
-            dd($payments);
-
         return view('profile.partials.Admin.PaymentSuppliers.site-payment-supplier', compact(
-            'payments', 
+            'payments',
             'site'
         ));
     }

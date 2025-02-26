@@ -695,26 +695,28 @@ class PDF extends Fpdf
         $this->SetFont('', '', 8);
 
 
-        $this->Cell($this->width / 1.5, $this->height, 'Date', 1, 0,);
-        $this->Cell($this->width / 1.15, $this->height, 'Supplier', 1, 0,);
-        $this->Cell($this->width / 2.5, $this->height, 'Phase', 1, 0,);
-        $this->Cell($this->width / 2, $this->height, 'Site', 1, 0,);
-        $this->Cell($this->width / 1.7, $this->height, 'Type', 1, 0,);
-        $this->Cell($this->width / 1.6, $this->height, 'Information', 1, 0,);
-        $this->Cell($this->width / 2.5, $this->height, 'Debit', 1, 0,);
-        $this->Cell($this->width / 3.2, $this->height, 'Credit', 1, 0,);
+        $this->Cell($this->width / 2.6, $this->height, 'Date', 1, 0,);
+        $this->Cell($this->width / 1.7, $this->height, 'Transaction Type', 1, 0,);
+        $this->Cell($this->width / 1.55, $this->height, 'Supplier Name', 1, 0,);
+        $this->Cell($this->width / 2, $this->height, 'Site Name', 1, 0,);
+        $this->Cell($this->width / 2, $this->height, 'Phase', 1, 0,);
+        $this->Cell($this->width / 2.6, $this->height, 'Type', 1, 0,);
+        $this->Cell($this->width / 1.7, $this->height, 'Information', 1, 0,);
+        $this->Cell($this->width / 2.6, $this->height, 'Debit', 1, 0,);
+        $this->Cell($this->width / 2.6, $this->height, 'Credit', 1, 0,);
         $this->Ln();
 
         foreach ($ledgers as $ledger) {
 
-            $this->Cell($this->width / 1.5, $this->height, $ledger['created_at'], 1, 0,);
-            $this->Cell($this->width / 1.15, $this->height,  ucwords($ledger['supplier']), 1, 0,);
-            $this->Cell($this->width / 2.5, $this->height, ucwords($ledger['phase']), 1, 0,);
+            $this->Cell($this->width / 2.6, $this->height, $ledger['created_at']->format('d-M-y'), 1, 0,);
+            $this->Cell($this->width / 1.7, $this->height, ucwords($ledger['transaction_type']), 1, 0,);
+            $this->Cell($this->width / 1.55, $this->height,  ucwords($ledger['supplier']), 1, 0,);
             $this->Cell($this->width / 2, $this->height, ucwords($ledger['site']), 1, 0,);
-            $this->Cell($this->width / 1.7, $this->height, $ledger['category'], 1, 0,);
-            $this->Cell($this->width / 1.6, $this->height, ucwords($ledger['description']), 1, 0,);
-            $this->Cell($this->width / 2.5, $this->height, $ledger['debit'], 1, 0,);
-            $this->Cell($this->width / 3.2, $this->height, $ledger['credit'], 1, 0,);
+            $this->Cell($this->width / 2, $this->height, ucwords($ledger['phase']), 1, 0,);
+            $this->Cell($this->width / 2.6, $this->height, $ledger['category'], 1, 0,);
+            $this->Cell($this->width / 1.7, $this->height, ucwords($ledger['description']), 1, 0,);
+            $this->Cell($this->width / 2.6, $this->height, $ledger['debit'], 1, 0,);
+            $this->Cell($this->width / 2.6, $this->height, $ledger['credit'], 1, 0,);
             $this->Ln();
         }
     }

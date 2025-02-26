@@ -54,26 +54,14 @@
                                             All Sites
                                         </option>
                                         @foreach ($sites as $site)
-                                            <option value="{{ $site['site_id'] }}"
-                                                {{ request('site_id') == $site['site_id'] ? 'selected' : '' }}>
-                                                {{ $site['site'] }}
-                                            </option>
+                                            @if ($site['site'] != '--')
+                                                <option value="{{ $site['site_id'] }}"
+                                                    {{ request('site_id') == $site['site_id'] ? 'selected' : '' }}>
+                                                    {{ $site['site'] }}
+                                                </option>
+                                            @endif
                                         @endforeach
                                     </select>
-
-{{--                                    <select style="cursor: pointer"--}}
-{{--                                        class="bg-white text-black form-select form-select-sm" name="wager_id"--}}
-{{--                                        onchange="document.getElementById('filterForm').submit();">--}}
-{{--                                        <option value="all" {{ request('wager_id') === 'all' ? 'selected' : '' }}>--}}
-{{--                                            All Wagers--}}
-{{--                                        </option>--}}
-{{--                                        @foreach ($wagers as $wager)--}}
-{{--                                            <option value="{{ $wager['wager_id'] }}"--}}
-{{--                                                {{ request('wager_id') == $wager['wager_id'] ? 'selected' : '' }}>--}}
-{{--                                                {{ $wager['description'] }}--}}
-{{--                                            </option>--}}
-{{--                                        @endforeach--}}
-{{--                                    </select>--}}
 
                                     <select style="cursor: pointer"
                                         class="bg-white text-black form-select form-select-sm" name="supplier_id"
@@ -82,10 +70,12 @@
                                             All Suppliers
                                         </option>
                                         @foreach ($suppliers as $supplier)
-                                            <option value="{{ $supplier['supplier_id'] }}"
-                                                {{ request('supplier_id') == $supplier['supplier_id'] ? 'selected' : '' }}>
-                                                {{ $supplier['supplier'] }}
-                                            </option>
+                                            @if ($supplier['supplier_id'] != '--')
+                                                <option value="{{ $supplier['supplier_id'] }}"
+                                                    {{ request('supplier_id') == $supplier['supplier_id'] ? 'selected' : '' }}>
+                                                    {{ $supplier['supplier'] }}
+                                                </option>
+                                            @endif
                                         @endforeach
                                     </select>
 
@@ -94,19 +84,24 @@
                                         id="date_filter" onchange="document.getElementById('filterForm').submit();">
                                         <option value="today"
                                             {{ request('date_filter') === 'today' ? 'selected' : '' }}>
-                                            Today</option>
+                                            Today
+                                        </option>
                                         <option value="yesterday"
                                             {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>
-                                            Yesterday</option>
+                                            Yesterday
+                                        </option>
                                         <option value="this_week"
                                             {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>
-                                            This Week</option>
+                                            This Week
+                                        </option>
                                         <option value="this_month"
                                             {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>
-                                            This Month</option>
+                                            This Month
+                                        </option>
                                         <option value="this_year"
                                             {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>
-                                            This Year</option>
+                                            This Year
+                                        </option>
                                         <option value="lifetime"
                                             {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
                                             All Data
@@ -296,7 +291,6 @@
                                                 </td>
 
                                             </tr>
-
                                         @endforeach
                                     @else
                                         <tr>
@@ -313,103 +307,103 @@
                             {{ $paginatedLedgers->links() }}
                         </div>
                     </div>
-{{--                    <div class="tab-pane fade" id="material" role="tabpanel" aria-labelledby="material-tab">--}}
+                    {{--                    <div class="tab-pane fade" id="material" role="tabpanel" aria-labelledby="material-tab"> --}}
 
 
-{{--                        <div class="table-responsive mt-4">--}}
+                    {{--                        <div class="table-responsive mt-4"> --}}
 
-{{--                            @if (count($paginatedLedgers))--}}
+                    {{--                            @if (count($paginatedLedgers)) --}}
 
-{{--                                <table class="table table-bordered">--}}
+                    {{--                                <table class="table table-bordered"> --}}
 
-{{--                                    <thead>--}}
-{{--                                        <tr>--}}
+                    {{--                                    <thead> --}}
+                    {{--                                        <tr> --}}
 
-{{--                                            <th class="bg-info fw-bold text-white">Date</th>--}}
-{{--                                            <th class="bg-info fw-bold text-white">Site Total</th>--}}
-{{--                                            <th class="bg-info fw-bold text-white">Supplier Total</th>--}}
-{{--                                            <th class="bg-info fw-bold text-white">Payment Mode</th>--}}
-{{--                                            <th class="bg-info fw-bold text-white"> Supplier </th>--}}
-{{--                                            <th class="bg-info fw-bold text-white"> Site Name </th>--}}
-{{--                                            <th class="bg-info fw-bold text-white"> Site Owner </th>--}}
-{{--                                            <th class="bg-info fw-bold text-white"> Contact No </th>--}}
-{{--                                            <th class="bg-info fw-bold text-white">Payment Amount</th>--}}
-{{--                                        </tr>--}}
-{{--                                    </thead>--}}
+                    {{--                                            <th class="bg-info fw-bold text-white">Date</th> --}}
+                    {{--                                            <th class="bg-info fw-bold text-white">Site Total</th> --}}
+                    {{--                                            <th class="bg-info fw-bold text-white">Supplier Total</th> --}}
+                    {{--                                            <th class="bg-info fw-bold text-white">Payment Mode</th> --}}
+                    {{--                                            <th class="bg-info fw-bold text-white"> Supplier </th> --}}
+                    {{--                                            <th class="bg-info fw-bold text-white"> Site Name </th> --}}
+                    {{--                                            <th class="bg-info fw-bold text-white"> Site Owner </th> --}}
+                    {{--                                            <th class="bg-info fw-bold text-white"> Contact No </th> --}}
+                    {{--                                            <th class="bg-info fw-bold text-white">Payment Amount</th> --}}
+                    {{--                                        </tr> --}}
+                    {{--                                    </thead> --}}
 
-{{--                                    <tbody>--}}
+                    {{--                                    <tbody> --}}
 
-{{--                                        @if (count($paginatedLedgers))--}}
-
-
-{{--                                            @foreach ($paginatedLedgers as $key => $ledger)--}}
+                    {{--                                        @if (count($paginatedLedgers)) --}}
 
 
-{{--                                                @if ($ledger['category'] === 'Payments')--}}
+                    {{--                                            @foreach ($paginatedLedgers as $key => $ledger) --}}
 
 
-{{--                                                    <tr>--}}
-{{--                                                        <td>--}}
-{{--                                                            {{ $ledger['created_at'] }}--}}
-{{--                                                        </td>--}}
+                    {{--                                                @if ($ledger['category'] === 'Payments') --}}
+
+
+                    {{--                                                    <tr> --}}
+                    {{--                                                        <td> --}}
+                    {{--                                                            {{ $ledger['created_at'] }} --}}
+                    {{--                                                        </td> --}}
 
 
 
-{{--                                                        <td>--}}
-{{--                                                            {{ $ledger['payment_mode'] }}--}}
-{{--                                                        </td>--}}
+                    {{--                                                        <td> --}}
+                    {{--                                                            {{ $ledger['payment_mode'] }} --}}
+                    {{--                                                        </td> --}}
 
 
-{{--                                                        <td>--}}
-{{--                                                            {{ $ledger['site_payments_total'] }}--}}
-{{--                                                        </td>--}}
+                    {{--                                                        <td> --}}
+                    {{--                                                            {{ $ledger['site_payments_total'] }} --}}
+                    {{--                                                        </td> --}}
 
-{{--                                                        <td>--}}
-{{--                                                            {{ $ledger['supplier_payments_total'] }}--}}
-{{--                                                        </td>--}}
+                    {{--                                                        <td> --}}
+                    {{--                                                            {{ $ledger['supplier_payments_total'] }} --}}
+                    {{--                                                        </td> --}}
 
-{{--                                                        <td>--}}
-{{--                                                            {{ ucwords($ledger['supplier']) }}--}}
-{{--                                                        </td>--}}
+                    {{--                                                        <td> --}}
+                    {{--                                                            {{ ucwords($ledger['supplier']) }} --}}
+                    {{--                                                        </td> --}}
 
-{{--                                                        <td>--}}
-{{--                                                            {{ ucwords($ledger['site']) }}--}}
-{{--                                                        </td>--}}
+                    {{--                                                        <td> --}}
+                    {{--                                                            {{ ucwords($ledger['site']) }} --}}
+                    {{--                                                        </td> --}}
 
-{{--                                                        <td>--}}
-{{--                                                            {{ ucwords($ledger['site_owner']) }}--}}
-{{--                                                        </td>--}}
+                    {{--                                                        <td> --}}
+                    {{--                                                            {{ ucwords($ledger['site_owner']) }} --}}
+                    {{--                                                        </td> --}}
 
-{{--                                                        <td>--}}
-{{--                                                            {{ ucwords($ledger['contact_no']) }}--}}
-{{--                                                        </td>--}}
+                    {{--                                                        <td> --}}
+                    {{--                                                            {{ ucwords($ledger['contact_no']) }} --}}
+                    {{--                                                        </td> --}}
 
-{{--                                                        <td>--}}
-{{--                                                            {{ $ledger['credit'] }}--}}
-{{--                                                        </td>--}}
-{{--                                                    </tr>--}}
-{{--                                                @endif--}}
-{{--                                            @endforeach--}}
-{{--                                        @else--}}
-{{--                                            <tr>--}}
-{{--                                                <td class="text-danger fw-bold text-center" colspan="8">No Records--}}
-{{--                                                    Available...</td>--}}
-{{--                                            </tr>--}}
-{{--                                        @endif--}}
+                    {{--                                                        <td> --}}
+                    {{--                                                            {{ $ledger['credit'] }} --}}
+                    {{--                                                        </td> --}}
+                    {{--                                                    </tr> --}}
+                    {{--                                                @endif --}}
+                    {{--                                            @endforeach --}}
+                    {{--                                        @else --}}
+                    {{--                                            <tr> --}}
+                    {{--                                                <td class="text-danger fw-bold text-center" colspan="8">No Records --}}
+                    {{--                                                    Available...</td> --}}
+                    {{--                                            </tr> --}}
+                    {{--                                        @endif --}}
 
-{{--                                    </tbody>--}}
+                    {{--                                    </tbody> --}}
 
 
-{{--                                </table>--}}
-{{--                            @else--}}
-{{--                                <h1 class="display-4 bg-white p-2 text-center fw-3 text-danger">No records found..</h1>--}}
-{{--                            @endif--}}
-{{--                        </div>--}}
+                    {{--                                </table> --}}
+                    {{--                            @else --}}
+                    {{--                                <h1 class="display-4 bg-white p-2 text-center fw-3 text-danger">No records found..</h1> --}}
+                    {{--                            @endif --}}
+                    {{--                        </div> --}}
 
-{{--                        <div class="mt-4">--}}
-{{--                            {{ $paginatedLedgers->links() }}--}}
-{{--                        </div>--}}
-{{--                    </div>--}}
+                    {{--                        <div class="mt-4"> --}}
+                    {{--                            {{ $paginatedLedgers->links() }} --}}
+                    {{--                        </div> --}}
+                    {{--                    </div> --}}
                 </div>
 
             </div>

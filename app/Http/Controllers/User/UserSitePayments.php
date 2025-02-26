@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Payment;
 use App\Models\PaymentSupplier;
 use App\Models\Site;
 use App\Models\Supplier;
@@ -50,7 +51,7 @@ class UserSitePayments extends Controller
                 $path = $request->file('screenshot')->storeAs('Payments', $imageName, 'public');
             }
 
-            $payment = new PaymentSupplier();
+            $payment = new Payment();
             $payment->amount = $request->input('amount');
             $payment->site_id = $request->input('site_id');
             $payment->supplier_id = $request->input('supplier_id');
@@ -74,7 +75,7 @@ class UserSitePayments extends Controller
 
         $site = Site::findOrFail($id);
 
-        $site->paymeentSuppliers()->latest()->paginate(10);
+        $site->payments()->where('verified_by_admin', 1)->latest()->paginate(10);
 
         return view('profile.partials.Admin.PaymentSuppliers.site-payment-supplier', compact('site'));
     }

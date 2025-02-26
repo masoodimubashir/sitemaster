@@ -164,7 +164,7 @@
                         </div>
                         <div>
                             <h6 class="text-muted mb-1">Debit</h6>
-                            {{ Number::currency($totalDebit ?? 0, 'INR') }}
+                            {{ Number::currency($data['totalDebit'] ?? 0, 'INR') }}
                         </div>
                     </div>
 
@@ -192,7 +192,7 @@
                         </div>
                         <div>
                             <h6 class="text-muted mb-1">Credit</h6>
-                            {{ Number::currency($totalCredit ?? 0, 'INR') }}
+                            {{ Number::currency($data['totalCredit'] ?? 0, 'INR') }}
 
                         </div>
                     </div>

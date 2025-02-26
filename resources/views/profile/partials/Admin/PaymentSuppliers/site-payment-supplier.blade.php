@@ -25,79 +25,69 @@
                 @if ($payments)
 
                     <table class="table table-bordered">
-                            <tbody>
-                                <tr>
-                                    <td><strong>Site Name</strong></td>
-                                    <td>{{ ucwords($site->site_name) }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Location</strong></td>
-                                    <td>{{ ucwords($site->location) }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Contact No</strong></td>
-                                    <td>{{ $site->contact_no }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Service Charge</strong></td>
-                                    <td>{{ $site->service_charge }}</td>
-                                </tr>
-                                <tr>
-                                    <td><strong>Site Owner Name</strong></td>
-                                    <td>{{ ucwords($site->site_owner_name) }}</td>
-                                </tr>
+                        <tbody>
+                            <tr>
+                                <td><strong>Site Name</strong></td>
+                                <td>{{ ucwords($site->site_name) }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Location</strong></td>
+                                <td>{{ ucwords($site->location) }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Contact No</strong></td>
+                                <td>{{ $site->contact_no }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Service Charge</strong></td>
+                                <td>{{ $site->service_charge }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Site Owner Name</strong></td>
+                                <td>{{ ucwords($site->site_owner_name) }}</td>
+                            </tr>
 
-                            </tbody>
-                        </table>
+                        </tbody>
+                    </table>
 
                     <table class="table table-bordered">
+
                         <thead>
                             <tr>
                                 <th class="fw-bold bg-info  text-white">Date</th>
                                 <th class="fw-bold bg-info  text-white">Screenshot</th>
-                                <th class="fw-bold bg-info  text-white">Site</th>
-                                <th class="fw-bold bg-info  text-white">Site Owner</th>
                                 <th class="fw-bold bg-info  text-white">Supplier</th>
                                 <th class="fw-bold bg-info  text-white">Amount</th>
                             </tr>
                         </thead>
+
                         <tbody>
+
                             @if ($payments->count() > 0)
-                                @foreach ($site->payments as $payment)
-                                        <tr>
+                                @foreach ($payments as $payment)
+                                    <tr>
 
 
-                                            {{-- <td>{{ $payment->created_at->format('d-M-Y') }}</td> --}}
+                                        <td>{{ $payment->created_at->format('d-M-Y') }}</td>
 
-                                            {{-- <td>
-                                                <!-- Image with click handler -->
-                                                <img src="{{ asset('storage/' . $payment->screenshot) }}"
-                                                    alt="" class="img-fluid cursor-pointer"
-                                                    data-bs-toggle="modal" data-bs-target="#imagePreviewModal"
-                                                    onclick="showImagePreview(this.src)">
+                                        <td>
+                                            <!-- Image with click handler -->
+                                            <img src="{{ asset('storage/' . $payment->screenshot) }}" alt=""
+                                                class="img-fluid cursor-pointer" data-bs-toggle="modal"
+                                                data-bs-target="#imagePreviewModal"
+                                                onclick="showImagePreview(this.src)">
 
-                                            </td> --}}
+                                        </td>
 
-                                            {{-- <td>
-                                                {{ Ucwords($payment->site->site_name) }}
-                                            </td> --}}
+                                        <td>
+                                            {{ ucwords($payment->supplier->name ?? 'NA') }}
+                                        </td>
 
-                                            {{-- <td> --}}
-                                                {{-- {{ Ucwords($payment->site->site_owner_name) }} --}}
-                                            {{-- </td> --}}
+                                        <td>
+                                            {{ Number::currency($payment->amount, 'INR') }}
+                                        </td>
 
-                                            {{-- <td> --}}
-                                                {{-- {{ Ucwords($payment->supplier->name) }} --}}
-                                            {{-- </td> --}}
-
-
-
-
-
-                                            {{-- <td>{{ Number::currency($payment->amount, 'INR') }}</td> --}}
-
-
-                                        </tr>
+                                    </tr>
                                 @endforeach
                             @else
                                 <tr>
@@ -106,10 +96,12 @@
                                     </td>
                                 </tr>
                             @endif
-
+                        
                         </tbody>
+
                     </table>
                 @else
+
                     <table class="table table-bordered">
                         <tbody>
 
@@ -121,7 +113,9 @@
 
                         </tbody>
                     </table>
+
                 @endif
+
             </div>
         </div>
 

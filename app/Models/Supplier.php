@@ -37,7 +37,7 @@ class Supplier extends Model
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function E(): HasMany
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'supplier_id', 'id');
     }

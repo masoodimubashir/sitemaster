@@ -318,32 +318,22 @@ class PDFController extends Controller
     public function showLedgerPdf(Request $request, DataService $dataService)
     {
 
-        $dateFilter = $request->get('date_filter', 'today');
-        $site_id = $request->input('site_id', 'all');
-        $supplier_id = $request->input('supplier_id', 'all');
-        $wager_id = $request->input('wager_id', 'all');
+        
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($request);
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
-        // [$total_paid, $total_due, $total_balance] = $dataService->calculateBalances($ledgers);
-
-
         $balances = $dataService->calculateAllBalances($ledgers);
 
-        // Access the values
         $withoutServiceCharge = $balances['without_service_charge'];
         $withServiceCharge = $balances['with_service_charge'];
 
-        // Get specific totals
-        $effective_balance = $withoutServiceCharge['balance'];
+        $effective_balance = $withoutServiceCharge['due'];
 
         $total_paid = $withServiceCharge['paid'];
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
-
-
 
         $ledgers = $ledgers->sortByDesc(function ($d) {
             return $d['created_at'];
@@ -352,7 +342,7 @@ class PDFController extends Controller
         $pdf = new PDF();
         $pdf->AliasNbPages();
         $pdf->AddPage();
-        $pdf->SetFont('Times', '', 12);
+        $pdf->SetFont('Times', '', 10);
         $pdf->SetTitle('Supplier Payment History');
         $pdf->ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance);
         $pdf->Output();
