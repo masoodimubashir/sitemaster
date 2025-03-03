@@ -26,8 +26,8 @@
                             <tr>
                                 <td>{{ $pay->created_at }}</td>
                                 <td>{{ $pay->amount }}</td>
-                                <td>{{ $pay->supplier->name }}</td>
-                                <td>{{ $pay->site->site_name }}</td>
+                                <td>{{ $pay->supplier->name ?? '--' }}</td>
+                                <td>{{ $pay->site->site_name ?? '--' }}</td>
                                 <td>{{ $pay->site->site_owner_name }}</td>
                                 <td>
 

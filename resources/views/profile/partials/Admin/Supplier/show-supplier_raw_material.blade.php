@@ -417,6 +417,7 @@
                         form[0].reset();
 
                         setTimeout(function () {
+                            location.reload();
                             messageContainer.find('.alert').alert('close');
                         }, 2000);
                     },
@@ -429,7 +430,6 @@
                                 ${response.responseJSON.errors}
                             </div>`)
 
-                            location.reload();
 
                         } else {
                             messageContainer.append(`

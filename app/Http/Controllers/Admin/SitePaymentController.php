@@ -3,14 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\ConstructionMaterialBilling;
-use App\Models\DailyExpenses;
-use App\Models\DailyWager;
-use App\Models\PaymentSupplier;
 use App\Models\Site;
-use App\Models\SquareFootageBill;
 use App\Services\DataService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
@@ -22,8 +16,6 @@ class SitePaymentController extends Controller
     public function __invoke(Request $request, string $id, DataService $dataService)
     {
 
-
-        
         $dateFilter = $request->get('date_filter', 'lifetime');
         $site_id = $request->input('site_id', $id);
         $supplier_id = $request->input('supplier_id', 'all');
@@ -35,12 +27,12 @@ class SitePaymentController extends Controller
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
-        $ledgers = $ledgers->filter(fn($ledger) => $ledger['site_id'] == $site->id)
-            ->sortByDesc(function ($d) {
-                return $d['created_at'];
-            });
+        $financialSummary  = $dataService->calculateAllBalances($ledgers);
 
-        [$total_paid, $total_due, $total_balance] = $dataService->calculateBalancesWithServiceCharge($ledgers);
+        $effective_balance = $financialSummary['without_service_charge']['due'];
+        $total_paid = $financialSummary['with_service_charge']['paid'];
+        $total_due = $financialSummary['with_service_charge']['due'];
+        $total_balance = $financialSummary['with_service_charge']['balance'];
 
         $perPage = 10;
 
@@ -54,18 +46,17 @@ class SitePaymentController extends Controller
 
         $suppliers = $paginatedLedgers->unique('supplier_id');
 
-        return view("profile.partials.Admin.Ledgers.site-ledger",
+        return view(
+            "profile.partials.Admin.Ledgers.site-ledger",
             compact(
                 'paginatedLedgers',
                 'total_paid',
                 'total_due',
                 'total_balance',
                 'site',
-                'suppliers'
+                'suppliers',
+                'effective_balance'
             )
         );
     }
-
-
-
 }

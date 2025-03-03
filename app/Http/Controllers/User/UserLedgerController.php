@@ -5,10 +5,8 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Site;
 use App\Services\DataService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Log;
 
 class UserLedgerController extends Controller
 {
@@ -23,17 +21,26 @@ class UserLedgerController extends Controller
 
         $site = Site::find($id);
 
+
+
         [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
-        $ledgers = $ledgers->filter(fn($ledger) => $ledger['site_id'] == $site->id)
-            ->sortByDesc(function ($d) {
+        $ledgers = $ledgers->sortByDesc(function ($d) {
                 return $d['created_at'];
             });
 
-        [$total_paid, $total_due, $total_balance] = $dataService->calculateBalancesWithServiceCharge($ledgers);
 
+        $balances = $dataService->calculateAllBalances($ledgers);
+
+        $withoutServiceCharge = $balances['without_service_charge'];
+        $withServiceCharge = $balances['with_service_charge'];
+        $effective_balance = $withoutServiceCharge['due'];
+        $total_paid = $withServiceCharge['paid'];
+        $total_due = $withServiceCharge['due'];
+        $total_balance = $withServiceCharge['balance'];
+        
         $perPage = 10;
 
         $paginatedLedgers = new LengthAwarePaginator(
@@ -46,7 +53,8 @@ class UserLedgerController extends Controller
 
         $suppliers = $paginatedLedgers->unique('supplier_id');
 
-        return view("profile.partials.Admin.Ledgers.site-ledger",
+        return view(
+            "profile.partials.Admin.Ledgers.site-ledger",
             compact(
                 'paginatedLedgers',
                 'total_paid',

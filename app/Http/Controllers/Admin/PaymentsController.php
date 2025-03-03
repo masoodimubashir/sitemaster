@@ -19,7 +19,6 @@ use Symfony\Component\HttpFoundation\Response;
 class PaymentsController extends Controller
 {
 
-    // public function __construct(DataService $dataService) {}
 
     /**
      * Display a listing of the resource.
@@ -27,12 +26,17 @@ class PaymentsController extends Controller
     public function index(Request $request, DataService $dataService)
     {
 
+        $dateFilter = $request->input('date_filter', 'today');
+        $site_id = $request->input('site_id', 'all');
+        $supplier_id = $request->input('supplier_id', 'all');
+        $wager_id = $request->input('wager_id', 'all');
 
-        $ongoingSites = Site::where('is_on_going', 1)->pluck('id');
-        $is_ongoing_count = $ongoingSites->count();
-        $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
-
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($request);
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData(
+            $dateFilter,
+            $site_id,
+            $supplier_id,
+            $wager_id
+        );
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers)
             ->sortByDesc(function ($d) {
@@ -50,6 +54,10 @@ class PaymentsController extends Controller
 
         $perPage = $request->get('per_page', 20);
 
+        $site = Site::query();
+        $is_ongoing_count = $site->where('is_on_going', 1)->count();
+        $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
+
         $paginatedLedgers = new LengthAwarePaginator(
             $ledgers->forPage(
                 $request->input('page', 1),
@@ -61,15 +69,15 @@ class PaymentsController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $suppliers = $paginatedLedgers->unique('supplier_id');
-        $sites = $paginatedLedgers->unique('site');
+        $suppliers = $paginatedLedgers->filter(fn($supplier) => $supplier['supplier_id'] !== '--')->unique('supplier_id');
+        $sites = $paginatedLedgers->filter(fn($site) => $site['site_id'] !== '--')->unique('site');
 
-        $wagers = $paginatedLedgers->map(function ($ledger) {
-            $ledger['wager_id'] = isset($ledger['wager_id']) ? $ledger['wager_id'] : null;
-            return $ledger;
-        })->filter(function ($ledger) {
-            return !is_null($ledger['wager_id']);
-        })->unique('wager_id');
+        // $wagers = $paginatedLedgers->map(function ($ledger) {
+        //     $ledger['wager_id'] = isset($ledger['wager_id']) ? $ledger['wager_id'] : null;
+        //     return $ledger;
+        // })->filter(function ($ledger) {
+        //     return !is_null($ledger['wager_id']);
+        // })->unique('wager_id');
 
         return view("profile.partials.Admin.PaymentSuppliers.payments", compact(
             'paginatedLedgers',

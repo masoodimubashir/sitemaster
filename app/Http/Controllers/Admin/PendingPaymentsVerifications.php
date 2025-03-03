@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Payment;
 use App\Models\PaymentSupplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -14,19 +15,15 @@ class PendingPaymentsVerifications extends Controller
     public function index()
     {
 
-        $payments = PaymentSupplier::with('site', 'supplier')->latest()->paginate(20);
+        $payments = Payment::with('site', 'supplier')->latest()->paginate(20);
 
         return view('profile.partials.Admin.PaymentBills.show-unverified_payments', compact('payments'));
     }
     public function verifyPayment(Request $request)
     {
 
-        $validated = Validator::make($request->all(),[
-            'id' => 'required|exists:payments,id',
-        ]);
-
         try {
-            $record = PaymentSupplier::findOrFail($request->id);
+            $record = Payment::findOrFail($request->id);
 
             $record->update([
                 'verified_by_admin' => $request->verified,

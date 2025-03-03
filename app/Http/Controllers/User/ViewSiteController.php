@@ -25,6 +25,7 @@ class ViewSiteController extends Controller
 
         $site_id = base64_decode($id);
 
+
         $site = Site::with([
             'phases' => function ($phase) {
                 $phase->with([

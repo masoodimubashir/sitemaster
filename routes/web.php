@@ -93,7 +93,6 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-
     // Admin Engineer Controllers
     Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
     Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
@@ -182,7 +181,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     // Verification Controller For Items
     Route::get('/item-verification', [ItemsVerificationController::class, 'index']);
     Route::get('/verify-items', [ItemsVerificationController::class, 'verifyItems']);
-    Route::get('wager-attendance', [AttendanceSheetController::class, 'index']);
+    Route::get('/wager-attendance', [AttendanceSheetController::class, 'index']);
 
     // Route For Managing Payments By Admin
     Route::get('/manage-payment', [AdminPaymentController::class, 'index']);

@@ -2,19 +2,15 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
+
 use App\Charts\BalancePaidChart;
 use App\Charts\CostProfitChart;
 use App\Charts\PaymentChart;
-use App\Http\Controllers\Controller;
 use App\Models\Client;
-use App\Models\ConstructionMaterialBilling;
-use App\Models\DailyExpenses;
-use App\Models\DailyWager;
-use App\Models\PaymentSupplier;
+use App\Models\Payment;
 use App\Models\Site;
-use App\Models\SquareFootageBill;
 use App\Models\Supplier;
-use App\Models\WagerAttendance;
 use App\Services\DataService;
 
 class DashboardController extends Controller
@@ -22,81 +18,147 @@ class DashboardController extends Controller
     public function dashboard(DataService $dataService)
     {
 
-        //  Get Notification Of the Authenticated User
         $notifications = auth()->user()->unreadNotifications;
 
-        //  Get All The Data
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData('lifetime', 'all', 'all', 'all');
+        $siteStats = $this->getSiteStatistics();
+
+        $financialData = $this->getFinancialData($dataService);
+
+        $charts = $this->prepareCharts(
+            $financialData['balance_without_service_charge'],
+            $financialData['paid'],
+            $financialData['revenue'],
+            $financialData['profit'],
+            $financialData['payments']
+        );
+
+        $entityData = $this->getEntityData();
+
+        $data = $this->consolidateData($entityData);
+
+        return view('profile.partials.Admin.Dashboard.dashboard', [
+            'data' => $data,
+            'notifications' => $notifications,
+            'opened_sites' => $siteStats['opened'],
+            'closed_sites' => $siteStats['closed'],
+            'paid' => $financialData['paid'],
+            'balance_paid_chart' => $charts['balance_paid'],
+            'cost_profit_chart' => $charts['cost_profit'],
+            'payment_chart' => $charts['payment']
+        ]);
+    }
+
+    /**
+     * Get site statistics
+     *
+     * @return array
+     */
+    private function getSiteStatistics()
+    {
+        return [
+            'opened' => Site::where('is_on_going', 1)->count(),
+            'closed' => Site::where('is_on_going', 0)->count()
+        ];
+    }
+
+    /**
+     * Get financial data from the DataService
+     *
+     * @param DataService $dataService
+     * @return array
+     */
+    private function getFinancialData(DataService $dataService)
+    {
+
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] =
+            $dataService->getData('lifetime', 'all', 'all', 'all');
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
-
-
-        
         $balances = $dataService->calculateAllBalances($ledgers);
 
-        // Access the values
         $withoutServiceCharge = $balances['without_service_charge'];
         $withServiceCharge = $balances['with_service_charge'];
-
-        // Get specific totals
         $balance_without_service_charge = $withoutServiceCharge['balance'];
         $balance_with_service_charge = $withServiceCharge['balance'];
-
-
         $paid = $withoutServiceCharge['paid'];
 
-        $total_due = $withServiceCharge['due'];
-        $total_balance = $withServiceCharge['balance'];
-
-
-
-        // $data = $dataService->calculateBalancesWithServiceCharge($ledgers);
-
-        // $paid = $total_paid;
-        // $balance_without_service_charge = $total_balance;
-        // $balance_with_service_charge = $data[2];
-
-        $balance_paid_chart = new BalancePaidChart($balance_without_service_charge, $paid);
-
-        $revenue = $balance_without_service_charge + $paid;
+        $revenue = $balance_with_service_charge + $paid;
         $profit = $revenue - $balance_with_service_charge;
 
-        $cost_profit_chart = new CostProfitChart($revenue, $profit);
+        return [
+            'payments' => $payments,
+            'balance_without_service_charge' => $balance_without_service_charge,
+            'balance_with_service_charge' => $balance_with_service_charge,
+            'paid' => $paid,
+            'revenue' => $revenue,
+            'profit' => $profit
+        ];
+    }
 
-        $payment_chart = new PaymentChart($payments);
+    /**
+     * Prepare chart objects
+     *
+     * @param float $balance
+     * @param float $paid
+     * @param float $revenue
+     * @param float $profit
+     * @param array $payments
+     * @return array
+     */
+    private function prepareCharts($balance, $paid, $revenue, $profit, $payments)
+    {
+        return [
+            'balance_paid' => new BalancePaidChart($balance, $paid),
+            'cost_profit' => new CostProfitChart($revenue, $profit),
+            'payment' => new PaymentChart($payments)
+        ];
+    }
 
-        $clients = Client::all();
-        $suppliers = Supplier::all();
-        $payments = PaymentSupplier::with('supplier', 'site')->get();
-       
+    /**
+     * Get entity data (clients and suppliers)
+     *
+     * @return array
+     */
+    private function getEntityData()
+    {
+        return [
+            'clients' => Client::all(),
+            'suppliers' => Supplier::all(),
+            'payments' => Payment::with('supplier', 'site')->get()
+        ];
+    }
 
-        // // Get all sites with opened and closed counts
-        $opened_sites = Site::where('is_on_going', 1)->count();
-        $closed_sites = Site::where('is_on_going', 0)->count();
-
+    /**
+     * Consolidate data for view
+     *
+     * @param array $entityData
+     * @param array $payments
+     * @return \Illuminate\Support\Collection
+     */
+    private function consolidateData($entityData)
+    {
         $data = collect();
+        $sum_total_payment_amount = 0;
 
-        $data = $data->merge($suppliers->map(function ($supplier) {
+        $data = $data->merge($entityData['suppliers']->map(function ($supplier) {
             return [
                 'suppliers' => $supplier ?? 'NA',
                 'category' => 'Suppliers',
             ];
         }));
 
-        $data = $data->merge($clients->map(function ($client) {
+        $data = $data->merge($entityData['clients']->map(function ($client) {
             return [
                 'clients' => $client ?? 'NA',
                 'category' => 'Clients',
             ];
         }));
 
+        $data = $data->merge($entityData['payments']->map(function ($pay) use (&$sum_total_payment_amount) {
 
-        $data = $data->merge($payments->map(function ($pay) use (&$sum_total_payment_amount) {
-            // Update the running total
             $sum_total_payment_amount += $pay->amount ?? 0;
 
             return [
-
                 'amount' => $pay->amount ?? 0,
                 'screenshot' => $pay->screenshot ?? 'NA',
                 'supplier' => $pay->supplier->name ?? '',
@@ -114,9 +176,6 @@ class DashboardController extends Controller
             ];
         }));
 
-
-        return view('profile.partials.Admin.Dashboard.dashboard',
-            compact('data', 'balance_paid_chart', 'opened_sites', 'closed_sites', 'notifications', 'cost_profit_chart', 'payment_chart', 'paid')
-        );
+        return $data;
     }
 }

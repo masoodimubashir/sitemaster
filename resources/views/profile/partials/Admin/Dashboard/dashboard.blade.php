@@ -344,8 +344,8 @@
                                     <div class="list align-items-center pt-3">
                                         <div class="wrapper w-100">
                                             <p class="mb-0">
-                                                <a href="{{ url('/admin/clients') }}"
-                                                    class="fw-bold text-primary">Show all
+                                                <a href="{{ url('/admin/clients') }}" class="fw-bold text-primary">Show
+                                                    all
                                                     <i class="mdi mdi-arrow-right ms-2"></i></a>
                                             </p>
                                         </div>
@@ -420,135 +420,6 @@
                         </div>
                     </div>
 
-                    {{-- <div class="row flex-grow">
-                        <div class="col-12 grid-margin stretch-card">
-                            <div class="card card-rounded">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-lg-12">
-                                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                                <div>
-                                                    <h4 class="card-title card-title-dash">
-                                                        Payment Chart</h4>
-                                                </div>
-                                                <div>
-                                                    <div class="dropdown">
-                                                        <button
-                                                            class="btn btn-light dropdown-toggle toggle-dark btn-lg mb-0 me-0"
-                                                            type="button" id="dropdownMenuButton3"
-                                                            data-bs-toggle="dropdown" aria-haspopup="true"
-                                                            aria-expanded="false"> Month
-                                                            Wise </button>
-                                                        <div class="dropdown-menu"
-                                                            aria-labelledby="dropdownMenuButton3">
-                                                            <h6 class="dropdown-header">
-                                                                week Wise</h6>
-                                                            <a class="dropdown-item" href="#">Year
-                                                                Wise</a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mt-3">
-                                                ....
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
-                    {{-- <div class="row flex-grow">
-                        <div class="col-12 grid-margin stretch-card">
-                            <div class="card card-rounded">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-lg-12">
-                                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                                <div>
-                                                    <h4 class="card-title card-title-dash">
-                                                        Top Performer</h4>
-                                                </div>
-                                            </div>
-                                            <div class="mt-3">
-                                                <div
-                                                    class="wrapper d-flex align-items-center justify-content-between py-2 border-bottom">
-                                                    <div class="d-flex">
-                                                        <img class="img-sm rounded-10"
-                                                            src="assets/images/faces/face1.jpg" alt="profile">
-                                                        <div class="wrapper ms-3">
-                                                            <p class="ms-1 mb-1 fw-bold">
-                                                                Brandon Washington</p>
-                                                            <small class="text-muted mb-0">162543</small>
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-muted text-small"> 1h
-                                                        ago </div>
-                                                </div>
-                                                <div
-                                                    class="wrapper d-flex align-items-center justify-content-between py-2 border-bottom">
-                                                    <div class="d-flex">
-                                                        <img class="img-sm rounded-10"
-                                                            src="assets/images/faces/face2.jpg" alt="profile">
-                                                        <div class="wrapper ms-3">
-                                                            <p class="ms-1 mb-1 fw-bold">
-                                                                Wayne Murphy</p>
-                                                            <small class="text-muted mb-0">162543</small>
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-muted text-small"> 1h
-                                                        ago </div>
-                                                </div>
-                                                <div
-                                                    class="wrapper d-flex align-items-center justify-content-between py-2 border-bottom">
-                                                    <div class="d-flex">
-                                                        <img class="img-sm rounded-10"
-                                                            src="assets/images/faces/face3.jpg" alt="profile">
-                                                        <div class="wrapper ms-3">
-                                                            <p class="ms-1 mb-1 fw-bold">
-                                                                Katherine Butler</p>
-                                                            <small class="text-muted mb-0">162543</small>
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-muted text-small"> 1h
-                                                        ago </div>
-                                                </div>
-                                                <div
-                                                    class="wrapper d-flex align-items-center justify-content-between py-2 border-bottom">
-                                                    <div class="d-flex">
-                                                        <img class="img-sm rounded-10"
-                                                            src="assets/images/faces/face4.jpg" alt="profile">
-                                                        <div class="wrapper ms-3">
-                                                            <p class="ms-1 mb-1 fw-bold">
-                                                                Matthew Bailey</p>
-                                                            <small class="text-muted mb-0">162543</small>
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-muted text-small"> 1h
-                                                        ago </div>
-                                                </div>
-                                                <div
-                                                    class="wrapper d-flex align-items-center justify-content-between pt-2">
-                                                    <div class="d-flex">
-                                                        <img class="img-sm rounded-10"
-                                                            src="assets/images/faces/face5.jpg" alt="profile">
-                                                        <div class="wrapper ms-3">
-                                                            <p class="ms-1 mb-1 fw-bold">
-                                                                Rafell John</p>
-                                                            <small class="text-muted mb-0">Alaska,
-                                                                USA</small>
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-muted text-small"> 1h
-                                                        ago </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
                 </div>
             </div>
         </div>
@@ -559,4 +430,6 @@
     {!! $payment_chart->script() !!}
     {!! $balance_paid_chart->script() !!}
     {!! $cost_profit_chart->script() !!}
+
+
 </x-app-layout>

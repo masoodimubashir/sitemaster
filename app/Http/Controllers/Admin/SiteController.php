@@ -73,10 +73,10 @@ class SiteController extends Controller
     public function show(string $id)
     {
 
+
         $site_id = base64_decode($id);
 
-
-        $site = Site::whereHas('phases')->with([
+        $site = Site::with([
             'phases' => function ($query) {
                 $query->whereNull('deleted_at');
             },
@@ -105,40 +105,31 @@ class SiteController extends Controller
             },
             'phases.wagerAttendances' => function ($query) {
                 $query->with('dailyWager.supplier')
-                    ->whereHas('dailyWager.supplier', fn($q) => $q->whereNull('deleted_at')) 
+                    ->whereHas('dailyWager.supplier', fn($q) => $q->whereNull('deleted_at'))
                     ->whereNull('deleted_at')
                     ->latest();
             },
             'payments' => function ($query) {
-                $query->where('verified_by_admin', 1); 
+                $query->where('verified_by_admin', 1);
             },
-        ])->findOrFail($site_id);
-
+        ])
+        ->find($site_id);
 
         $totalPaymentSuppliersAmount = $site->payments()
             ->where('verified_by_admin', 1)
             ->sum('amount');
+
         $grand_total_amount = 0;
 
         foreach ($site->phases as $phase) {
 
-            $phase->construction_total_amount = $phase->constructionMaterialBillings->filter(function ($material) {
-                return $material->verified_by_admin === 1;
-            })
-                ->sum('amount');
+            $phase->construction_total_amount = $phase->constructionMaterialBillings->sum('amount');
 
-            $phase->square_footage_total_amount = $phase->squareFootageBills
-                ->filter(function ($sqft) {
-                    return $sqft->verified_by_admin === 1;
-                })
-                ->reduce(function ($sum, $sqft) {
+            $phase->square_footage_total_amount = $phase->squareFootageBills->reduce(function ($sum, $sqft) {
                     return $sum + ($sqft->price * $sqft->multiplier);
                 }, 0);
 
-            $phase->daily_expenses_total_amount = $phase->dailyExpenses->filter(function ($expense) {
-                return $expense->verified_by_admin === 1;
-            })->sum('price');
-
+            $phase->daily_expenses_total_amount = $phase->dailyExpenses->sum('price');
 
             foreach ($phase->dailyWagers as $wager) {
                 $phase->daily_wagers_total_amount += $wager->wager_total;
@@ -147,17 +138,13 @@ class SiteController extends Controller
             $phase->construction_total_service_charge_amount = ($site->service_charge / 100) * $phase->construction_total_amount +  $phase->construction_total_amount;
             $phase->daily_expense_total_service_charge_amount = ($site->service_charge / 100) * $phase->daily_expenses_total_amount + $phase->daily_expenses_total_amount;
             $phase->daily_wagers_total_service_charge_amount = ($site->service_charge / 100) * $phase->daily_wagers_total_amount + $phase->daily_wagers_total_amount;
-
-
-            // Phase Total Amount
             $phase->phase_total_amount = $phase->construction_total_amount + $phase->daily_expenses_total_amount + $phase->daily_wagers_total_amount + $phase->square_footage_total_amount;
-
+           
             $phase->sqft_total_service_charge_amount = (($site->service_charge / 100) * $phase->square_footage_total_amount) + $phase->square_footage_total_amount;
-
             $phase->phase_total_service_charge_amount = ($site->service_charge / 100) * $phase->phase_total_amount;
-
+           
             $phase->phase_total_with_service_charge_amount = $phase->phase_total_amount + $phase->phase_total_service_charge_amount;
-
+           
             $grand_total_amount += $phase->phase_total_with_service_charge_amount;
         }
 

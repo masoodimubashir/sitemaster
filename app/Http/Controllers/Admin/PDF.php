@@ -9,7 +9,7 @@ use Illuminate\Support\Number;
 class PDF extends Fpdf
 {
 
-    private int $height = 10;
+    private int $height = 6;
     private int  $width = 47;
 
     function LoadData($data)
@@ -559,18 +559,11 @@ class PDF extends Fpdf
                 $this->Ln();
             }
         }
-
-        // if ($key < count($phases) - 1) {
-        //     $this->AddPage();
-        // } else {
-        //     return;
-        // }
-
     }
 
     function supplierPaymentTable($supplier)
     {
-        if ($supplier->paymentSuppliers->isEmpty()) {
+        if ($supplier->payments->isEmpty()) {
             $this->Cell(0, 10, 'No Data Available', 0, 0, 'C');
             $this->Ln();
             return;
@@ -581,7 +574,7 @@ class PDF extends Fpdf
         $this->Ln();
         $this->Ln();
 
-        foreach ($supplier->paymentSuppliers as $key => $payment) {
+        foreach ($supplier->payments as $key => $payment) {
             if ($key === 0) {
 
                 $this->Cell($this->width / 1.2, $this->height, 'Date', 1);
@@ -592,8 +585,8 @@ class PDF extends Fpdf
                 $this->Ln();
             }
             $this->Cell($this->width / 1.2, $this->height, $payment->created_at->format('D-M'), 1);
-            $this->Cell($this->width / 1.2, $this->height, $payment->site->site_name, 1);
-            $this->Cell($this->width / 1.2, $this->height, ucwords($payment->site->site_owner_name), 1);
+            $this->Cell($this->width / 1.2, $this->height, $payment->site->site_name ?? '--', 1);
+            $this->Cell($this->width / 1.2, $this->height, ucwords($payment->site->site_owner_name ?? '--'), 1);
             $this->Cell($this->width / 1.2, $this->height, ucwords($payment->supplier->name), 1);
             $this->Cell($this->width / 1.2, $this->height, $payment->amount, 1, 1);
         }
@@ -609,7 +602,8 @@ class PDF extends Fpdf
         }
 
 
-        if (count($site->paymeentSuppliers) <= 0) {
+
+        if (count($site->payments) <= 0) {
             $this->Cell(0, 10, 'No Data Available', 1, 0, 'C');
             $this->Ln();
             return;
@@ -646,7 +640,7 @@ class PDF extends Fpdf
         $this->Ln();
         $this->Ln();
 
-        foreach ($site->paymeentSuppliers as $key => $site_payment) {
+        foreach ($site->payments as $key => $site_payment) {
 
             if ($key === 0) {
                 $this->Cell($this->width * 1.34, $this->height, 'Date', 1, 0,);
@@ -656,70 +650,103 @@ class PDF extends Fpdf
             }
 
             $this->Cell($this->width * 1.34, $this->height, $site_payment->created_at->format('d-m-y'), 1, 0,);
-            $this->Cell($this->width * 1.34, $this->height, $site_payment->supplier->name, 1, 0,);
+            $this->Cell($this->width * 1.34, $this->height, $site_payment->supplier->name ?? '-', 1, 0,);
             $this->Cell($this->width * 1.34, $this->height, $site_payment->amount, 1, 1);
         }
     }
 
     function ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance)
     {
+        $this->SetTextColor(0,170,183);
+        $this->Text(188 / 2, 40, 'SiteMaster');
 
-        $this->SetMargins(3, 0, 3);
+        $this->SetMargins(2, 0, 2);
+        $this->SetFontSize(7);
 
-        $this->Text(188 / 2, 40, 'Ledger Report');
-
+    
         $this->Ln();
         $this->Ln();
-
-        $this->Cell($this->width * 2.18, $this->height, 'Total Balance', 1, 0,);
-        $this->Cell($this->width * 2.18, $this->height, $total_balance, 1, 0,);
-
+    
+        // Summary section styling
+        $this->SetFillColor(245, 245, 245);
+        $this->SetTextColor(51, 51, 51);
+    
+        // Summary cells
+        $this->Cell($this->width * 2.18, $this->height, 'Total Balance', 1, 0, 'L', true);
+        $this->Cell($this->width * 2.18, $this->height, $total_balance, 1, 0, 'L', true);
         $this->Ln();
-
-        $this->Cell($this->width * 2.18, $this->height, 'Total Due', 1, 0,);
-        $this->Cell($this->width * 2.18, $this->height, $total_due, 1, 0,);
-
+    
+        $this->Cell($this->width * 2.18, $this->height, 'Total Due', 1, 0, 'L', true);
+        $this->Cell($this->width * 2.18, $this->height, $total_due, 1, 0, 'L', true);
         $this->Ln();
-
-        $this->Cell($this->width * 2.18, $this->height, 'Total Paid', 1, 0,);
-        $this->Cell($this->width * 2.18, $this->height, $total_paid, 1, 0,);
-
+    
+        $this->Cell($this->width * 2.18, $this->height, 'Total Paid', 1, 0, 'L', true);
+        $this->Cell($this->width * 2.18, $this->height, $total_paid, 1, 0, 'L', true);
         $this->Ln();
-
-        $this->Cell($this->width * 2.18, $this->height, 'Effective Balance', 1, 0,);
-        $this->Cell($this->width * 2.18, $this->height, $effective_balance, 1, 0,);
-
+    
+        $this->Cell($this->width * 2.18, $this->height, 'Effective Balance', 1, 0, 'L', true);
+        $this->Cell($this->width * 2.18, $this->height, $effective_balance, 1, 0, 'L', true);
         $this->Ln();
         $this->Ln();
-
-        $this->SetFont('', '', 8);
-
-
-        $this->Cell($this->width / 2.6, $this->height, 'Date', 1, 0,);
-        $this->Cell($this->width / 1.7, $this->height, 'Transaction Type', 1, 0,);
-        $this->Cell($this->width / 1.55, $this->height, 'Supplier Name', 1, 0,);
-        $this->Cell($this->width / 2, $this->height, 'Site Name', 1, 0,);
-        $this->Cell($this->width / 2, $this->height, 'Phase', 1, 0,);
-        $this->Cell($this->width / 2.6, $this->height, 'Type', 1, 0,);
-        $this->Cell($this->width / 1.7, $this->height, 'Information', 1, 0,);
-        $this->Cell($this->width / 2.6, $this->height, 'Debit', 1, 0,);
-        $this->Cell($this->width / 2.6, $this->height, 'Credit', 1, 0,);
+    
+        // Table header styling
+        $this->SetFillColor(81,177,225);
+        $this->SetTextColor(255, 255, 255);
+    
+        // Table headers
+        $this->Cell($this->width / 3.5, $this->height, 'Date', 1, 0, 'L', true);
+        $this->Cell($this->width / 1.7, $this->height, 'Transaction Type', 1, 0, 'L', true);
+        $this->Cell($this->width / 1.55, $this->height, 'Supplier Name', 1, 0, 'L', true);
+        $this->Cell($this->width / 1.68, $this->height, 'Site Name', 1, 0, 'L', true);
+        $this->Cell($this->width / 2, $this->height, 'Phase', 1, 0, 'L', true);
+        $this->Cell($this->width / 2.6, $this->height, 'Type', 1, 0, 'L', true);
+        $this->Cell($this->width / 1.7, $this->height, 'Narration', 1, 0, 'L', true);
+        $this->Cell($this->width / 2.6, $this->height, 'Debit', 1, 0, 'L', true);
+        $this->Cell($this->width / 2.6, $this->height, 'Credit', 1, 0, 'L', true);
         $this->Ln();
-
+    
+        // Table content styling
+        $this->SetTextColor(51, 51, 51);
+    
+        // Table content
         foreach ($ledgers as $ledger) {
-
-            $this->Cell($this->width / 2.6, $this->height, $ledger['created_at']->format('d-M-y'), 1, 0,);
-            $this->Cell($this->width / 1.7, $this->height, ucwords($ledger['transaction_type']), 1, 0,);
-            $this->Cell($this->width / 1.55, $this->height,  ucwords($ledger['supplier']), 1, 0,);
-            $this->Cell($this->width / 2, $this->height, ucwords($ledger['site']), 1, 0,);
-            $this->Cell($this->width / 2, $this->height, ucwords($ledger['phase']), 1, 0,);
-            $this->Cell($this->width / 2.6, $this->height, $ledger['category'], 1, 0,);
-            $this->Cell($this->width / 1.7, $this->height, ucwords($ledger['description']), 1, 0,);
-            $this->Cell($this->width / 2.6, $this->height, $ledger['debit'], 1, 0,);
-            $this->Cell($this->width / 2.6, $this->height, $ledger['credit'], 1, 0,);
-            $this->Ln();
+            $cellHeight = 6;
+            $maxHeight = 0;
+    
+            // Calculate max height needed for wrapped text
+            $descriptionWidth = $this->GetStringWidth(ucwords($ledger['description']));
+            $supplierWidth = $this->GetStringWidth(ucwords($ledger['supplier']));
+            
+            $descriptionHeight = ceil($descriptionWidth / ($this->width / 1.7)) * $cellHeight;
+            $supplierHeight = ceil($supplierWidth / ($this->width / 1.55)) * $cellHeight;
+            
+            $maxHeight = max($cellHeight, $descriptionHeight, $supplierHeight);
+    
+            $x = $this->GetX();
+            $y = $this->GetY();
+    
+            $this->Cell($this->width / 3.5, $maxHeight, $ledger['created_at']->format('d-M-y'), 1, 0, 'L');
+            $this->Cell($this->width / 1.7, $maxHeight, ucwords($ledger['transaction_type']), 1, 0, 'L');
+            
+            // MultiCell for supplier name
+            $this->MultiCell($this->width / 1.55, $cellHeight, ucwords($ledger['supplier']), 1, 'L');
+            $this->SetXY($x + ($this->width / 3.5) + ($this->width / 1.7) + ($this->width / 1.55), $y);
+    
+            $this->Cell($this->width / 1.68, $maxHeight, ucwords($ledger['site']), 1, 0, 'L');
+            $this->Cell($this->width / 2, $maxHeight, ucwords($ledger['phase']), 1, 0, 'L');
+            $this->Cell($this->width / 2.6, $maxHeight, $ledger['category'], 1, 0, 'L');
+            
+            // MultiCell for description
+            $x = $this->GetX();
+            $this->MultiCell($this->width / 1.7, $cellHeight, ucwords($ledger['description']), 1, 'L');
+            $this->SetXY($x + ($this->width / 1.7), $y);
+    
+            $this->Cell($this->width / 2.6, $maxHeight, $ledger['debit'], 1, 0, 'L');
+            $this->Cell($this->width / 2.6, $maxHeight, $ledger['credit'], 1, 1, 'L');
         }
     }
+    
+
 
     private function getServiceChargeAmount($amount, $serviceCharge)
     {

@@ -15,13 +15,9 @@ class DataService
 
     public function __construct() {}
 
-    public function getData($request)
+    public function getData($dateFilter, $site_id, $supplier_id, $wager_id)
     {
 
-        $dateFilter = $request->input('date_filter', 'today');
-        $site_id = $request->input('site_id', 'all');
-        $supplier_id = $request->input('supplier_id', 'all');
-        $wager_id = $request->input('wager_id', 'all');
 
         $dateRange = $this->filterByDate($dateFilter);
 
@@ -73,11 +69,11 @@ class DataService
         $ledgers = $ledgers->merge($payments->map(function ($pay) {
 
             return [
-                'description' => "Payment",
+                'description' => 'Payment',
                 'category' => 'Payment',
                 'credit' => $pay->transaction_type === 0 ? $pay->amount : 0,
                 'debit' => $pay->supplier && $pay->site_id ? $pay->amount : (($pay->transaction_type == 1) ? $pay->amount : 0),
-                'transaction_type' => $pay->supplier_id && $pay->site_id ? '--' : (($pay->transaction_type === 0) ? 'Sent By Firm' : 'Received By Firm'),
+                'transaction_type' => $pay->supplier_id && $pay->site_id ? 'Sent By '. ucwords($pay->site->site_name) : (($pay->transaction_type === 0) ? 'Sent By Firm' : 'Received By Firm'),
                 'payment_initiator' => !empty($pay->site_id) && empty($pay->supplier_id) ? 'Site' : (!empty($pay->supplier_id) ? 'Supplier' : 'Admin'),
                 'site' => $pay->site->site_name ?? '--',
                 'supplier' => $pay->supplier->name ?? '--',
@@ -94,8 +90,8 @@ class DataService
             $service_charge = $this->getServiceChargeAmount($material->amount, $material->phase->site->service_charge);
 
             return [
-                'description' => $material->item_name ?? 'Raw Material',
-                'category' => 'Raw Material',
+                'description' => $material->item_name ?? '--',
+                'category' => 'Material',
                 'credit' => 0,
                 'debit' => $material->amount,
                 'transaction_type' => '--',
@@ -117,8 +113,8 @@ class DataService
             $service_charge = $this->getServiceChargeAmount($amount, $bill->phase->site->service_charge);
 
             return [
-                'description' => 'Square Footage Work',
-                'category' => 'Square Footage Bill',
+                'description' => $bill->wager_name ?? '--',
+                'category' => 'SQFT',
                 'debit' => $amount,
                 'credit' => 0,
                 'total_amount_with_service_charge' => $service_charge + $amount,
@@ -138,8 +134,8 @@ class DataService
             $service_charge = $this->getServiceChargeAmount($expense->price, $expense->phase->site->service_charge);
 
             return [
-                'description' => $expense->item_name ?? 'Daily Expense',
-                'category' => 'Daily Expense',
+                'description' => $expense->item_name ?? '--',
+                'category' => 'Expense',
                 'credit' => 0,
                 'debit' => $expense->price,
                 'total_amount_with_service_charge' => $service_charge + $expense->price,
@@ -159,8 +155,8 @@ class DataService
             $service_charge = $this->getServiceChargeAmount($wager->wager_total, $wager->phase->site->service_charge);
 
             return [
-                'description' => $wager->wager_name ?? 'Daily Wager',
-                'category' => 'Daily Wager',
+                'description' => $wager->wager_name ?? '--',
+                'category' => 'Wager',
                 'credit' => 0,
                 'debit' => $wager->wager_total,
                 'transaction_type' => '--',

@@ -21,69 +21,53 @@ class PDFController extends Controller
 {
     public function showSitePdf(string $id)
     {
+
         $site_id = base64_decode($id);
 
         $site = Site::with([
-            'phases.constructionMaterialBillings' => function ($q) {
-                $q->where('verified_by_admin', 1)
-                    ->whereHas('supplier', function ($query) {
-                        $query->whereNull('deleted_at');
-                    })
-                    ->with('supplier');
+            'phases' => function ($query) {
+                $query->whereNull('deleted_at');
             },
-            'phases.squareFootageBills' => function ($q) {
-                $q->where('verified_by_admin', 1)
-                    ->whereHas('supplier', function ($query) {
-                        $query->whereNull('deleted_at');
-                    });
-            },
-            'phases.squareFootageBills.supplier' => function ($q) {
-                $q->withTrashed();
-            },
-            'phases.dailyWagers' => function ($q) {
-                $q->whereHas('supplier', function ($query) {
-                    $query->whereNull('deleted_at');
-                })
-                    ->whereHas('wagerAttendances', function ($query) {
-                        $query->where('verified_by_admin', 1); // Only include records where 'verified_by_admin' is 1
-                    })
-                    ->with([
-                        'wagerAttendances' => function ($query) {
-                            $query->where('verified_by_admin', 1); // Make sure to load only the wagerAttendances that are verified by admin
-                        },
-                        'supplier' => function ($q) {
-                            $q->withoutTrashed();
-                        }
-                    ])
+            'phases.constructionMaterialBillings' => function ($query) {
+                $query->with('supplier')
+                    ->where('verified_by_admin', 1)
+                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+                    ->whereNull('deleted_at')
                     ->latest();
             },
-            'phases.dailyExpenses' => function ($q) {
-                $q->where('verified_by_admin', 1);
+            'phases.squareFootageBills' => function ($query) {
+                $query->with('supplier')
+                    ->where('verified_by_admin', 1)
+                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+                    ->whereNull('deleted_at')
+                    ->latest();
             },
-            'phases.wagerAttendances' => function ($q) {
-                $q->whereHas('dailyWager.supplier', function ($query) {
-                    $query->whereNull('deleted_at');
-                })
-                    ->with([
-                        'dailyWager.supplier' => function ($q) {
-                            $q->withoutTrashed();
-                        }
-                    ])
-                    ->where('verified_by_admin', 1);
+            'phases.dailyWagers' => function ($query) {
+                $query->with(['wagerAttendances', 'supplier'])
+                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+                    ->whereNull('deleted_at')
+                    ->latest();
             },
-            'paymeentSuppliers' => function ($q) {
-                $q->where('verified_by_admin', 1)
-                    ->whereHas('supplier', function ($query) {
-                        $query->whereNull('deleted_at');
-                    })
-                    ->withoutTrashed();
-            }
+            'phases.dailyExpenses' => function ($query) {
+                $query->whereNull('deleted_at');
+            },
+            'phases.wagerAttendances' => function ($query) {
+                $query->with('dailyWager.supplier')
+                    ->whereHas('dailyWager.supplier', fn($q) => $q->whereNull('deleted_at'))
+                    ->whereNull('deleted_at')
+                    ->latest();
+            },
+            'payments' => function ($query) {
+                $query->where('verified_by_admin', 1);
+            },
         ])
-            ->findOrFail($site_id);
+        ->find($site_id);
 
 
 
-        $totalSupplierPaymentAmount = $site->paymeentSuppliers->sum('amount');
+        $totalSupplierPaymentAmount = $site->payments()
+        ->where('verified_by_admin', 1)
+        ->sum('amount');
 
         $siteData = [
             'site' => $site,
@@ -275,8 +259,8 @@ class PDFController extends Controller
     {
 
 
-        $supplier = Supplier::with(['paymentSuppliers' => function ($q) {
-            $q->where('verified_by_admin', 1);
+        $supplier = Supplier::with(['payments' => function ($q) {
+            $q->with(['site', 'supplier'])->where('verified_by_admin', 1);
         }])->latest()->find(base64_decode($id));
 
         $pdf = new PDF();
@@ -292,18 +276,17 @@ class PDFController extends Controller
     public function showSitePaymentPdf(string $id)
     {
 
+        $site_id = base64_decode($id);
+
         $site = Site::with([
-            'paymeentSuppliers' => function ($pay) {
+            'payments' => function ($pay) {
                 $pay->where('verified_by_admin', 1)
                     ->with(['supplier', 'site']);
             }
         ], 'phases')
-            ->whereHas('phases')
-            ->whereHas('paymeentSuppliers.supplier', function ($query) {
-                $query->whereNull('deleted_at');
-            })
             ->latest()
-            ->find(base64_decode($id));
+            ->find($site_id);
+
 
         $pdf = new PDF();
         $pdf->AliasNbPages();
@@ -318,9 +301,12 @@ class PDFController extends Controller
     public function showLedgerPdf(Request $request, DataService $dataService)
     {
 
-        
+        $dateFilter = $request->get('date_filter', 'lifetime');
+        $site_id = $request->input('site_id', $request->input('site_id'));
+        $supplier_id = $request->input('supplier_id', 'all');
+        $wager_id = $request->input('wager_id', 'all');
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($request);
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
@@ -328,16 +314,16 @@ class PDFController extends Controller
 
         $withoutServiceCharge = $balances['without_service_charge'];
         $withServiceCharge = $balances['with_service_charge'];
-
         $effective_balance = $withoutServiceCharge['due'];
-
         $total_paid = $withServiceCharge['paid'];
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
 
+
         $ledgers = $ledgers->sortByDesc(function ($d) {
             return $d['created_at'];
         });
+
 
         $pdf = new PDF();
         $pdf->AliasNbPages();

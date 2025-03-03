@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Site;
 use App\Services\DataService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -14,9 +13,8 @@ class SupplierPaymentController extends Controller
     public function __invoke(Request $request, string $id, DataService $dataService)
     {
 
-
         //  Get The Data From The Request 
-        $dateFilter = $request->get('date_filter', 'lifetime');
+        $dateFilter = $request->get('date_filter', 'today');
         $site_id = $request->input('site_id', 'all');
         $supplier_id = $request->input('supplier_id', $id);
         $wager_id = $request->input('wager_id', 'all');
@@ -29,7 +27,6 @@ class SupplierPaymentController extends Controller
         // Get All the data on the arguments given
         [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
 
-
         // Prepare the data for the view
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
@@ -38,18 +35,16 @@ class SupplierPaymentController extends Controller
             return $d['created_at'];
         })->whereNotNull('supplier_id');
 
-        // Get the unique sites
-        $sites = $ledgers->unique('site_id');
 
         //  Calculate the balances
         $balances = $dataService->calculateAllBalances($ledgers);
 
-        // Access the values
         $withoutServiceCharge = $balances['without_service_charge'];
-
-        $total_paid = $withoutServiceCharge['paid'];
-        $total_due = $withoutServiceCharge['due'];
-        $total_balance = $withoutServiceCharge['balance'];
+        $withServiceCharge = $balances['with_service_charge'];
+        $effective_balance = $withoutServiceCharge['due'];
+        $total_paid = $withServiceCharge['paid'];
+        $total_due = $withServiceCharge['due'];
+        $total_balance = $withServiceCharge['balance'];
 
         // Paginate the data
         $paginatedLedgers = new LengthAwarePaginator(
@@ -59,6 +54,8 @@ class SupplierPaymentController extends Controller
             $request->input('page', 1),
             ['path' => $request->url(), 'query' => $request->query()]
         );
+
+        $sites = $paginatedLedgers->filter(fn($site) => $site['site_id'] !== '--')->unique('site');
 
         return view(
             "profile.partials.Admin.Ledgers.supplier-ledger",
@@ -70,7 +67,10 @@ class SupplierPaymentController extends Controller
                 'id',
                 'total_balance',
                 'sites',
+                'effective_balance'
+
             )
+
         );
     }
 }
