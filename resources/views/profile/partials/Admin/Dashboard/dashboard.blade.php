@@ -13,24 +13,6 @@
                             <p class="statistics-title text-danger fw-bold">Closed Sites</p>
                             <h3 class="rate-percentage text-danger">{{ $closed_sites }}</h3>
                         </div>
-                        {{-- <div class="bg-white px-2 py-3 rounded">
-                            <p class="statistics-title text-info fw-bold">Total Due</p>
-                            <h3 class="rate-percentage text-info">{{ Number::currency($finalTotal, 'INR') }}</h3>
-                            </p>
-                        </div> --}}
-                        {{-- <div class="d-none d-md-block bg-white px-2 py-3 rounded">
-                            <p class="statistics-title text-info fw-bold">Paid</p>
-                            <h3 class="rate-percentage text-info">2m:35s</h3>
-                        </div> --}}
-                        {{-- <div class="d-none d-md-block bg-white px-2 py-3 rounded">
-                            <p class="statistics-title text-info fw-bold">Balance</p>
-                            <h3 class="rate-percentage text-info">68.8</h3>
-                            </p>
-                        </div> --}}
-                        {{-- <div class="d-none d-md-block bg-white px-2 py-3 rounded">
-                            <p class="statistics-title text-info fw-bold">Profit</p>
-                            <h3 class="rate-percentage text-info">2m:35s</h3>
-                        </div> --}}
                     </div>
                 </div>
             </div>

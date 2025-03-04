@@ -3,19 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\ConstructionMaterialBilling;
-use App\Models\DailyExpenses;
-use App\Models\DailyWager;
-use App\Models\Item;
-use App\Models\PaymentSupplier;
 use App\Models\Phase;
 use App\Models\Site;
-use App\Models\SquareFootageBill;
 use App\Models\Supplier;
 use App\Services\DataService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class PDFController extends Controller
 {
@@ -63,8 +55,6 @@ class PDFController extends Controller
         ])
         ->find($site_id);
 
-
-
         $totalSupplierPaymentAmount = $site->payments()
         ->where('verified_by_admin', 1)
         ->sum('amount');
@@ -90,11 +80,9 @@ class PDFController extends Controller
 
             $daily_wagers_total = $phase->daily_wagers_total_amount;
 
-            // Calculate total for the phase with service charge
             $phase_total = $construction_total + $daily_expenses_total + $daily_wagers_total + $square_footage_total;
             $total_with_service_charge = ($phase_total * $site->service_charge / 100) + $phase_total;
 
-            // Add phase data to the site array
             $siteData['phases'][] = [
                 'phase' => $phase->phase_name,
                 'site_service_charge' => $site->service_charge,
@@ -116,6 +104,7 @@ class PDFController extends Controller
         $siteData['grand_total_amount'] = array_reduce($siteData['phases'], function ($carry, $phase) {
             return $carry + $phase['phase_total_with_service_charge'];
         }, 0);
+
 
         $data = [
             'site_name' => $site->site_name,

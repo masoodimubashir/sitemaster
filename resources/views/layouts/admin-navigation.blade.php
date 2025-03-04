@@ -1,10 +1,4 @@
 
-
-
-
-
-
-
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
     <ul class="nav">
         <li class="nav-item">
@@ -30,7 +24,7 @@
             </a>
         </li>
 
-        <li class="nav-item">
+        <li class="nav-item {{ request()->is('admin/suppliers') ? 'active' : '' }}">
             <a class="nav-link" href="{{ url('admin/suppliers') }}">
                 <i class="menu-icon fa fa-inbox"></i>
                 <span class="menu-title">Suppliers</span>
@@ -110,11 +104,14 @@
                 <span class="menu-title">Suppliers</span>
             </a>
         </li>
+
+
         <li class="nav-item">
             <a class="nav-link"
                 href="{{ route('trash.sites') }}">
                 <span class="menu-title">Sites</span></a>
         </li>
+        
         <li class="nav-item">
             <a class="nav-link"
                 href="{{ route('trash.phases') }}">

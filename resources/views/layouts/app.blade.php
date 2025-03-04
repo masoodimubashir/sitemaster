@@ -4,11 +4,7 @@
     if (auth()->user()->role_name === 'admin' || auth()->user()->role_name === 'site_engineer') {
         # code...
 
-        $notifications = auth()
-            ->user()
-            ->unreadNotifications()
-            ->where('notifiable_type', User::class)
-            ->get();
+        $notifications = auth()->user()->unreadNotifications()->where('notifiable_type', User::class)->get();
     }
 
 @endphp
@@ -259,7 +255,7 @@
     <!-- <script src="assets/js/Chart.roundedBarCharts.js')}}"></script> -->
     <!-- End custom js for this page-->
 
-    <script src = "https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js" ></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/main.min.js"></script>
 
     @stack('scripts')
 

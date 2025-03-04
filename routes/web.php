@@ -10,7 +10,6 @@ use App\Http\Controllers\Admin\DailyWagerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ItemController;
 use App\Http\Controllers\Admin\ItemsVerificationController;
-use App\Http\Controllers\Admin\PaymentBillsController;
 use App\Http\Controllers\Admin\PaymentsController;
 use App\Http\Controllers\Admin\PaymentSiteController;
 use App\Http\Controllers\Admin\PaymentSupplierController;
