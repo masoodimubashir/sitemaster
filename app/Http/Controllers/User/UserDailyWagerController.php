@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Class\HelperClass;
 use App\Http\Controllers\Controller;
 use App\Models\DailyWager;
 use App\Models\User;
@@ -12,6 +13,9 @@ use Illuminate\Support\Facades\Validator;
 
 class UserDailyWagerController extends Controller
 {
+
+    use HelperClass;
+
     public function store(Request $request)
     {
         if ($request->ajax()) {
@@ -37,7 +41,6 @@ class UserDailyWagerController extends Controller
                     'supplier_id' => $request->supplier_id,
                     // 'verified_by_admin' => 0,
                 ]);
-
 
                 $data = [
                     'user' => auth()->user()->name,
@@ -87,9 +90,20 @@ class UserDailyWagerController extends Controller
 
         $daily_wager = DailyWager::find($id);
 
+        $old_amount = $daily_wager->wager_total;
+        $no_of_persons = (int)($old_amount / $daily_wager->price_per_day);
+        $newAmount = $request->price_per_day * $no_of_persons;
+
         $daily_wager->update($request->all());
 
-        return redirect()->route('user.sites.show',
+        if ($daily_wager) {
+
+            $new_amount = $this->adjustBalance($newAmount, $old_amount);
+
+            $this->updateSiteTotalAmount($request->phase_id, $new_amount);
+        }
+
+        return redirect()->url('user/sites' .
             [base64_encode($daily_wager->phase->site->id)])
             ->with('status', 'update');
     }

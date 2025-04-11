@@ -679,6 +679,7 @@
                                                                         alt=""
                                                                         class="w-20 h-20 rounded-full gallery-image">
                                                                 </td>
+                                                                
                                                                 <td>
                                                                     {{ ucwords($sqft->wager_name) }}
                                                                 </td>

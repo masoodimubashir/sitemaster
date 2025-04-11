@@ -24,7 +24,7 @@
             </a>
         </li>
 
-        <li class="nav-item {{ request()->is('admin/suppliers') ? 'active' : '' }}">
+        <li class="nav-item">
             <a class="nav-link" href="{{ url('admin/suppliers') }}">
                 <i class="menu-icon fa fa-inbox"></i>
                 <span class="menu-title">Suppliers</span>

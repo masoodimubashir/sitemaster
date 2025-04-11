@@ -1,417 +1,279 @@
 <x-app-layout>
 
+
+    <style>
+        #messageContainer {
+            position: fixed;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999999999;
+        }
+    </style>
+
     <div class="row">
-        <div class="col-sm-12">
-            <div class="row mb-4">
-                <div class="col-sm-12">
-                    <div class="statistics-details d-flex align-items-center gap-3">
-                        <div class="bg-white px-2 py-3 rounded">
-                            <p class="statistics-title text-info fw-bold">Sites Open</p>
-                            <h3 class="rate-percentage text-info">{{ $opened_sites }}</h3>
-                        </div>
-                        <div class="bg-white px-2 py-3 rounded">
-                            <p class="statistics-title text-danger fw-bold">Closed Sites</p>
-                            <h3 class="rate-percentage text-danger">{{ $closed_sites }}</h3>
-                        </div>
+
+        <!-- Stats Overview -->
+        <div class="row mb-4 align-items-center">
+            <!-- Statistics -->
+            <div class="col-md-8">
+                <div class="d-flex gap-3">
+                    <div class="bg-white px-4 py-3 rounded">
+                        <p class="statistics-title text-info fw-bold">Sites Open</p>
+                        <h3 class="rate-percentage text-info">{{ $ongoingSites }}</h3>
+                    </div>
+                    <div class="bg-white px-4 py-3 rounded">
+                        <p class="statistics-title text-danger fw-bold">Closed Sites</p>
+                        <h3 class="rate-percentage text-danger">{{ $completedSites }}</h3>
                     </div>
                 </div>
             </div>
-            <div class="row mb-4">
-                <div class="col-lg-8 d-flex flex-column">
-                    <div class="row flex-grow">
-                        <div class="col-12 col-lg-4 col-lg-12 grid-margin stretch-card">
-                            <div class="card card-rounded">
-                                <div class="card-body">
-                                    <div class="d-sm-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h4 class="card-title card-title-dash">Payment History</h4>
-                                        </div>
-                                        <div>
-                                            <a class="btn btn-sm btn-info text-white"
-                                                href="{{ url('/admin/payments') }}">All Payments</a>
-                                        </div>
-                                    </div>
-                                    <div class="table-responsive  mt-1">
-                                        <table class="table select-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>
-                                                        <div class="form-check form-check-flat mt-0">
-                                                            <label class="form-check-label">
-                                                                <input type="checkbox" class="form-check-input"
-                                                                    aria-checked="false" id="check-all"><i
-                                                                    class="input-helper"></i></label>
-                                                        </div>
-                                                    </th>
-                                                    <th>Created At</th>
-                                                    <th>Bill</th>
-                                                    <th>Amount</th>
-                                                    <th>Site</th>
-                                                    <th>Supplier</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
 
-                                                @php
-                                                    $count = 0; // Initialize a counter
-                                                @endphp
-
-                                                @for ($i = 0; $i < count($data); $i++)
-                                                    @if ($data[$i]['category'] === 'Payments')
-                                                        @if ($count < 7)
-                                                            <tr>
-                                                                <td>
-                                                                    <div class="form-check form-check-flat mt-0">
-                                                                        <label class="form-check-label">
-                                                                            <input type="checkbox"
-                                                                                class="form-check-input"
-                                                                                aria-checked="false">
-                                                                            <i class="input-helper"></i>
-                                                                        </label>
-                                                                    </div>
-                                                                </td>
-                                                                <td>
-                                                                    {{ \Carbon\Carbon::parse($data[$i]['created_at'])->format('d-M-Y') }}
-                                                                </td>
-                                                                <td>
-                                                                    <div class="d-flex">
-                                                                        <img src="{{ asset('storage/' . $data[$i]['screenshot']) }}"
-                                                                            alt="">
-                                                                    </div>
-                                                                </td>
-                                                                <td>
-                                                                    <h6>{{ Number::currency($data[$i]['amount'], 'INR') }}
-                                                                    </h6>
-                                                                </td>
-                                                                <td>
-                                                                    <div>
-                                                                        <div
-                                                                            class="d-flex justify-content-between align-items-center mb-1 max-width-progress-wrap">
-                                                                            <p class="text-success">
-                                                                                {{ ucwords($data[$i]['site']) }}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                </td>
-                                                                <td>
-                                                                    <div>{{ ucwords($data[$i]['supplier']) }}</div>
-                                                                </td>
-                                                            </tr>
-                                                            @php
-                                                                $count++; // Increment the counter
-                                                            @endphp
-                                                        @endif
-                                                    @endif
-                                                @endfor
-
-
-
-
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4 d-flex flex-column">
-                    <div class="row flex-grow">
-                        <div class="col-md-6 col-lg-12 grid-margin stretch-card">
-                            <div class="card card-rounded">
-                                <div class="card-body pb-0">
-
-                                    <div class="row">
-
-                                        <div class="text-black row text-center">
-
-                                            <h4 class="card-title card-title-dash  mb-4 col-6">
-                                                Monthy Payments
-                                            </h4>
-
-                                            <div class="col-6">
-                                                <p class=" mb-1">
-                                                    Total Amount : {{ Number::currency($paid, 'INR') }}
-                                                </p>
-                                            </div>
-
-                                        </div>
-
-                                        <div>
-
-                                            <div class="status-summary-chart-wrapper pb-4">
-
-                                                {!! $payment_chart->container() !!}
-
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-12 grid-margin stretch-card">
-                            <div class="card card-rounded">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-lg-6">
-                                            <div class="d-flex justify-content-between align-items-center mb-2 mb-sm-0">
-
-                                                {!! $balance_paid_chart->container() !!}
-
-                                            </div>
-                                        </div>
-                                        <div class="col-lg-6">
-                                            <div class="d-flex justify-content-between align-items-center">
-
-                                                {!! $cost_profit_chart->container() !!}
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Button aligned right -->
+            <div class="col-md-2 text-end">
+                <a class="btn btn-primary w-100" href="">
+                    <i class="menu-icon fa fa-inbox"></i> Suppliers
+                </a>
             </div>
-            <div class="row mb-4">
-                <div class="col-lg-8 d-flex flex-column">
-                    {{-- <div class="row flex-grow">
-                        <div class="col-12 grid-margin stretch-card">
-                            <div class="card card-rounded">
-                                <div class="card-body">
-                                    <h4 class="card-title card-title-dash">Monthly Payments Overview</h4>
 
-                                    <div class="chartjs-bar-wrapper mt-3">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
-                    {{-- <div class="row flex-grow">
-                        <div class="col-12 grid-margin stretch-card">
-                            <div class="card card-rounded table-darkBGImg">
-                                <div class="card-body">
-                                    <div class="col-sm-8">
-                                        <h3 class="text-white upgrade-info mb-0"> Enhance
-                                            your <span class="fw-bold">Campaign</span> for
-                                            better outreach </h3>
-                                        <a href="#" class="btn btn-info upgrade-btn">Upgrade
-                                            Account!</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div> --}}
-                    <div class="row flex-grow">
-                        <div class="col-12 grid-margin stretch-card">
-                            {{-- <div class="card card-rounded">
-                                <div class="card-body">
-                                    <div class="d-sm-flex justify-content-between align-items-start">
-                                        <div>
-                                            <h4 class="card-title card-title-dash">
-                                                Performance Line Chart</h4>
-                                            <h5 class="card-subtitle card-subtitle-dash">
-                                                Lorem Ipsum is simply dummy text of the
-                                                printing</h5>
-                                        </div>
-                                        <div id="performanceLine-legend"></div>
-                                    </div>
-                                    <div class="chartjs-wrapper mt-4 row">
-                                        <canvas id="performanceLine" width=""></canvas>
-                                        <div class="col-6">
+            <!-- Create Site Button -->
+            <div class="col-md-2 text-end">
+                <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#create-site-modal">
+                    + Create Site
+                </button>
+            </div>
 
-                                        </div>
-                                        <div class="col-6">
+        </div>
 
-                                        </div>
 
-                                    </div>
-                                </div>
-                            </div> --}}
 
-                        </div>
+
+        <!-- Summary + Charts -->
+        <div class="col-12">
+            <div class="card card-rounded mb-4">
+                <div class="card-body p-0 d-flex flex-column">
+
+                    <!-- Top Summary -->
+                    <div class="p-3 d-flex justify-content-between align-items-center border-bottom">
+                        <div><strong>You’ll Give:</strong> ₹0</div>
+                        <div><strong>You’ll Get:</strong> ₹1,000 <span class="text-danger">↓</span></div>
+                        <a href="{{ url('/admin/payments') }}" class="btn btn-outline-primary btn-sm">View Report</a>
                     </div>
-                    <div class="row flex-grow">
-                        <div class="col-md-6 col-lg-6 grid-margin stretch-card">
-                            <div class="card card-rounded p-4">
 
-                                <div class="d-flex align-items-center justify-content-between mb-3">
-                                    <h4 class="card-title card-title-dash">Suppliers</h4>
-                                    <a class="btn btn-info btn-sm text-white mb-0 me-0"
-                                        href="{{ url('/admin/suppliers/create') }}">
-                                        <i class="mdi mdi-account-plus me-1"></i>
-                                    </a>
-                                </div>
-                                <div class="list align-items-center border-bottom py-2">
-                                    {{--
-                                    @for ($d = 0; $d < 6; $d++)
-                                        @if ($d['category'] === 'Suppliers')
-                                            <ul class="bullet-line-list ">
+                    <!-- Filters -->
+                    <div class="p-3 border-bottom d-flex gap-2">
+                        <input type="text" class="form-control w-25" placeholder="Search for customers">
+                        <select class="form-select w-25">
+                            <option selected>Filter By</option>
+                        </select>
+                        <select class="form-select w-25">
+                            <option selected>Sort By</option>
+                        </select>
+                    </div>
 
-                                                <li>
-                                                    <div class="d-flex justify-content-between">
-                                                        <div>
-                                                            {{ ucwords($d['suppliers']->name) }}
-                                                        </div>
-                                                        <p>{{ \Carbon\Carbon::parse($d['suppliers']->created_at)->format('d-M-Y') }}
-                                                        </p>
-                                                    </div>
-                                                </li>
-                                            </ul>
-                                        @endif
-                                    @endfor --}}
-
-                                    @for ($d = 0; $d < 5; $d++)
-                                        @if (isset($data[$d]) && $data[$d]['category'] === 'Suppliers')
-                                            <ul class="bullet-line-list ">
-
-                                                <li>
-                                                    <div class="d-flex justify-content-between">
-                                                        <div>
-                                                            {{ $data[$d]['suppliers']->name }}
-
-                                                        </div>
-                                                        <p>{{ \Carbon\Carbon::parse($data[$d]['suppliers']->created_at)->format('d-M-Y') }}
-                                                        </p>
-                                                    </div>
-                                                </li>
-                                            </ul>
-                                        @endif
-                                    @endfor
-
-
-                                    <div class="list align-items-center pt-3">
-                                        <div class="wrapper w-100">
-                                            <p class="mb-0">
-                                                <a href="{{ url('/admin/suppliers') }}"
-                                                    class="fw-bold text-primary">Show all
-                                                    <i class="mdi mdi-arrow-right ms-2"></i></a>
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6 col-lg-6 grid-margin stretch-card">
-                            <div class="card card-rounded">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center justify-content-between mb-3">
-                                        <h4 class="card-title card-title-dash">Clients</h4>
-                                        <a class="btn btn-info btn-sm text-white mb-0 me-0"
-                                            href="{{ url('/admin/clients/create') }}">
-                                            <i class="mdi mdi-account-plus me-1"></i>
+                    <!-- Customer List -->
+                    <div class="p-3  bg-white rounded shadow-sm">
+                        @foreach ($sites as $site)
+                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                                <div>
+                                    <strong>
+                                        <a href="{{ url('/admin/sites/' . base64_encode($site->id)) }}">
+                                            {{ $site->site_name }}
                                         </a>
-                                    </div>
-                                    <ul class="bullet-line-list ">
-
-                                        @foreach ($data as $d)
-                                            @if ($d['category'] === 'Clients')
-                                                <li>
-                                                    <div class="d-flex justify-content-between">
-                                                        <div>
-                                                            <span class="text-light-green">
-                                                                {{ ucwords($d['clients']->name) }}
-                                                            </span>
-                                                        </div>
-                                                        <p>{{ \Carbon\Carbon::parse($d['clients']->created_at)->format('D-m') }}
-                                                        </p>
-                                                    </div>
-                                                </li>
-                                            @endif
-                                        @endforeach
-
-                                    </ul>
-                                    <div class="list align-items-center pt-3">
-                                        <div class="wrapper w-100">
-                                            <p class="mb-0">
-                                                <a href="{{ url('/admin/clients') }}" class="fw-bold text-primary">Show
-                                                    all
-                                                    <i class="mdi mdi-arrow-right ms-2"></i></a>
-                                            </p>
-                                        </div>
-                                    </div>
+                                    </strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ $site->client->name }}
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ $site->created_at->diffForHumans() }}
+                                    </small>
+                                </div>
+                                <div class="text-end">
+                                    <strong class="text-danger">
+                                        {{ $site->total_payments }}
+                                    </strong><br>
+                                    <small class="text-muted">You'll Get</small>
                                 </div>
                             </div>
-                        </div>
+                        @endforeach
                     </div>
+
+
+
+
                 </div>
-                <div class="col-lg-4 d-flex flex-column">
-                    <div class="row flex-grow">
-                        <div class="col-12 grid-margin stretch-card">
-                            <div class="card card-rounded">
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-lg-12">
-                                            <div class="d-flex justify-content-between align-items-center">
-                                                <h4 class="card-title card-title-dash">Notification Center</h4>
+            </div>
+        </div>
 
-                                                <div class="add-items d-flex mb-0">
-                                                    <!-- <input type="text" class="form-control todo-list-input" placeholder="What do you need to do today?"> -->
-                                                    <a href="{{ route('admin.markAllAsRead') }}"
-                                                        class="btn btn-info text-white btn-sm">
-                                                        Mark All Read
-                                                    </a>
-
-                                                    <a href="{{ route('admin.viewAllNotifications') }}"
-                                                        class="btn btn-sm btn-primary">
-                                                        View All
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            <div class="list-wrapper">
-                                                <ul class="todo-list todo-list-rounded">
-                                                    @if (count($notifications))
-                                                        @foreach ($notifications as $key => $notification)
-                                                            @if ($key <= 2)
-                                                                <li class="d-block">
-                                                                    <div class="form-check w-100">
-                                                                        <label class="form-check-label">
-                                                                            <input class="checkbox" type="checkbox">
-                                                                            Notify To: {{ $notification->type }}
-                                                                            <i class="input-helper rounded"></i>
-                                                                        </label>
-                                                                        <div class="d-flex mt-2">
-                                                                            <div class="ps-4 text-small me-3">
-                                                                                {{ ucwords($notification->data['message']) }}
-
-                                                                            </div>
-                                                                            <div
-                                                                                class="badge badge-opacity-info text-black fw-bold me-3">
-                                                                                {{ \Carbon\Carbon::parse($notification->created_at)->format('D-M-Y') }}
-                                                                            </div>
-                                                                            <i
-                                                                                class="mdi mdi-flag ms-2 flag-color"></i>
-                                                                        </div>
-                                                                    </div>
-                                                                </li>
-                                                            @endif
-                                                        @endforeach
-                                                    @else
-                                                        <h6 class="text-danger">No Notifications Awialable....</h6>
-                                                    @endif
+    </div>
 
 
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+
+
+    <!-- Create Site Modal -->
+    <div id="create-site-modal" class="modal fade" aria-hidden="true" aria-labelledby="createSiteModalLabel"
+        tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createSiteModalLabel">Create New Site</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createSiteForm" class="forms-sample material-form" enctype="multipart/form-data">
+                        @csrf
+
+                        <!-- Site Name -->
+                        <div class="form-group">
+                            <input type="text" name="site_name" id="site_name" />
+                            <label for="site_name" class="control-label">Site Name</label><i class="bar"></i>
                         </div>
-                    </div>
 
+                        <!-- Service Charge -->
+                        <div class="form-group">
+                            <input type="number" min="0" name="service_charge" id="service_charge"
+                                step="0.01" />
+                            <label for="service_charge" class="control-label">Service Charge</label><i
+                                class="bar"></i>
+                        </div>
+
+                        <!-- Service Charge -->
+                        <div class="form-group">
+                            <input type="number" min="0" name="contact_no" id="contact_no" step="0.01" />
+                            <label for="contact_no" class="control-label">Contact No</label><i class="bar"></i>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="form-group">
+                            <input type="text" name="location" id="location" />
+                            <label for="location" class="control-label">Location</label><i class="bar"></i>
+                        </div>
+
+                        <div class="row">
+                            <!-- Select User -->
+                            <div class="col-md-6">
+                                <select name="user_id" id="user_id" class="form-select text-black form-select-sm"
+                                    style="cursor: pointer">
+                                    <option value="" selected>Select User</option>
+                                    @foreach ($users as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Select Client -->
+                            <div class="col-md-6">
+                                <select name="client_id" id="client_id" class="form-select text-black form-select-sm"
+                                    style="cursor: pointer">
+                                    <option value="" selected>Select Client</option>
+                                    @foreach ($clients as $client)
+                                        <option value="{{ $client->id }}">{{ $client->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+
+                            <div class="flex items-center justify-end mt-4">
+                                <button type="button" class="btn btn-secondary me-2"
+                                    data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary" id="submitSiteBtn">
+                                    Create Site
+                                </button>
+                            </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- {!! $site_chart->script() !!} --}}
+    <div id="messageContainer"></div>
 
-    {!! $payment_chart->script() !!}
-    {!! $balance_paid_chart->script() !!}
-    {!! $cost_profit_chart->script() !!}
+
+
+    <script>
+        $(document).ready(function() {
+            const messageContainer = $('#messageContainer');
+
+            $('#createSiteForm').submit(function(e) {
+
+                e.preventDefault();
+
+                // Reset previous error messages and alerts
+                $('.error-message').text('');
+                messageContainer.html('');
+
+                // Disable button and show spinner
+                const submitBtn = $('#submitSiteBtn');
+                submitBtn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...'
+                );
+
+                // Prepare form data
+                const formData = new FormData(this);
+
+                // AJAX request
+                $.ajax({
+                    url: '/admin/sites',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.status) {
+
+                            $('#create-site-modal').modal('hide');
+                            $('#createSiteForm')[0].reset();
+
+                            messageContainer.html(`
+                                <div class="alert alert-success mt-3 alert-dismissible fade show" role="alert">
+                                    ${response.message}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
+                        }
+
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+
+                        }, 2000);
+
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+
+
+                            messageContainer.html(`
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    ${xhr.responseJSON.message}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
+                        } else {
+                            messageContainer.html(`
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    ${xhr.responseJSON?.message || 'An unexpected error occurred.'}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
+                        }
+
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                        }, 2000);
+                    },
+                    complete: function() {
+                        submitBtn.prop('disabled', false).text('Create Site');
+                    }
+                });
+            });
+        });
+    </script>
+
 
 
 </x-app-layout>

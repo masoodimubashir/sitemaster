@@ -25,50 +25,48 @@ class ViewSiteController extends Controller
 
         $site_id = base64_decode($id);
 
-
         $site = Site::with([
-            'phases' => function ($phase) {
-                $phase->with([
-                    'constructionMaterialBillings' => function ($q) {
-                        $q->where('verified_by_admin', 1)
-                            ->with('supplier')
-                            ->whereHas('supplier', function ($q) {
-                                $q->whereNull('deleted_at');
-                            })->latest();
-                    },
-                    'squareFootageBills' => function ($q) {
-                        $q->where('verified_by_admin', 1)
-                            ->with('supplier')->whereHas('supplier', function ($q) {
-                                $q->whereNull('deleted_at');
-                            })->latest();
-                    },
-                    'dailyWagers' => function ($q) {
-                        $q->with([
-                            'wagerAttendances',
-                            'supplier'
-                        ])->whereHas('supplier', function ($q) {
-                            $q->whereNull('deleted_at');
-                        })->latest();
-                    },
-                    'dailyExpenses' => function ($q) {
-                        $q->where('verified_by_admin', 1)
-                            ->latest();
-                    },
-                    'wagerAttendances' => function ($q) {
-                        $q->where('verified_by_admin', 1)
-                            ->with(['dailyWager.supplier'])
-                            ->whereHas('dailyWager.supplier', function ($q) {
-                                $q->whereNull('deleted_at');
-                            })->latest();
-                    },
-                ],);
+            'phases' => function ($query) {
+                $query->whereNull('deleted_at');
             },
-            'paymeentSuppliers' => function ($pay) {
-                $pay->where('verified_by_admin', 1);
-            }
-        ])->findOrFail($site_id);
+            'phases.constructionMaterialBillings' => function ($query) {
+                $query->with('supplier')
+                    ->where('verified_by_admin', 1)
+                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+                    ->whereNull('deleted_at')
+                    ->latest();
+            },
+            'phases.squareFootageBills' => function ($query) {
+                $query->with('supplier')
+                    ->where('verified_by_admin', 1)
+                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+                    ->whereNull('deleted_at')
+                    ->latest();
+            },
+            'phases.dailyWagers' => function ($query) {
+                $query->with(['wagerAttendances', 'supplier'])
+                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
+                    ->whereNull('deleted_at')
+                    ->latest();
+            },
+            'phases.dailyExpenses' => function ($query) {
+                $query->whereNull('deleted_at');
+            },
+            'phases.wagerAttendances' => function ($query) {
+                $query->with('dailyWager.supplier')
+                    ->whereHas('dailyWager.supplier', fn($q) => $q->whereNull('deleted_at'))
+                    ->whereNull('deleted_at')
+                    ->latest();
+            },
+            'payments' => function ($query) {
+                $query->where('verified_by_admin', 1);
+            },
+        ])
+        ->find($site_id);
 
-        $totalPaymentSuppliersAmount = $site->paymeentSuppliers()->sum('amount');
+        $totalPaymentSuppliersAmount = $site->payments()
+            ->where('verified_by_admin', 1)
+            ->sum('amount');
 
         $grand_total_amount = 0;
 

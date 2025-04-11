@@ -21,16 +21,13 @@ class UserLedgerController extends Controller
 
         $site = Site::find($id);
 
-
-
         [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
 
         $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
         $ledgers = $ledgers->sortByDesc(function ($d) {
-                return $d['created_at'];
-            });
-
+            return $d['created_at'];
+        });
 
         $balances = $dataService->calculateAllBalances($ledgers);
 
@@ -40,7 +37,7 @@ class UserLedgerController extends Controller
         $total_paid = $withServiceCharge['paid'];
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
-        
+
         $perPage = 10;
 
         $paginatedLedgers = new LengthAwarePaginator(

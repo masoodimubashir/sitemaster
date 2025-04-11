@@ -63,7 +63,7 @@
 
                                 <td class="space-x-4">
 
-                                    <a href="{{ url($user . '/items/' . $item->id . '/edit' ) }}">
+                                    <a href="{{ url($user . '/items/' . $item->id . '/edit') }}">
                                         <i class="fa-regular fa-pen-to-square bg-white rounded-full "></i>
                                     </a>
 
@@ -74,10 +74,12 @@
                                         @method('DELETE')
                                     </form>
 
-                                    <a href="{{ url($user . '/items/' . $item->id) }}"
-                                        onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this supplier?')) document.getElementById('delete-form-{{ $item->id }}').submit();">
-                                        <i class="fa-solid fa-trash-o  text-red-600 bg-white rounded-full"></i>
-                                    </a>
+                                    @if ($user === 'admin')
+                                        <a href="{{ url($user . '/items/' . $item->id) }}"
+                                            onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this supplier?')) document.getElementById('delete-form-{{ $item->id }}').submit();">
+                                            <i class="fa-solid fa-trash-o  text-red-600 bg-white rounded-full"></i>
+                                        </a>
+                                    @endif
 
                                 </td>
 

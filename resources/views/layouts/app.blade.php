@@ -195,9 +195,9 @@
         @if (auth()->user()->role_name === 'admin')
             @include('layouts.admin-navigation')
         @elseif (auth()->user()->role_name === 'site_engineer')
-            {{-- @include('layouts.user-navigation') --}}
+            @include('layouts.user-navigation')
         @else
-            {{-- @include('layouts.client-navigation') --}}
+            @include('layouts.client-navigation')
         @endif
         <!-- partial:partials/_sidebar.html -->
 

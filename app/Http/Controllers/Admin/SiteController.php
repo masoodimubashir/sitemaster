@@ -11,6 +11,9 @@ use App\Models\Site;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Notifications\UserSiteNotification;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Validator;
 
 class SiteController extends Controller
 {
@@ -19,6 +22,7 @@ class SiteController extends Controller
      */
     public function index()
     {
+
         $sites = Site::latest()->paginate(10);
 
         return view('profile.partials.Admin.Site.sites', compact('sites'));
@@ -41,30 +45,56 @@ class SiteController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreSiteRequest $request)
+
+    public function store(Request $request)
     {
 
-        $request->validated();
 
-        $user = User::find($request->user_id);
-
-        $client = Client::find($request->client_id);
-
-        $site = Site::create([
-            'site_name' => $request->site_name,
-            'service_charge' => $request->service_charge,
-            'location' => $request->location,
-            'site_owner_name' => $client->name,
-            'contact_no' => $client->number,
-            'user_id' => $request->user_id,
-            'client_id' => $request->client_id,
-            'is_on_going' => true
+        $validator = Validator::make($request->all(), [
+            'site_name' => 'required|string|min:5',
+            'service_charge' => 'required|decimal:0,2',
+            'location' => 'required|string',
+            'user_id' => 'required|exists:users,id',
+            'client_id' => 'required|exists:clients,id',
+            'contact_no' => 'required|digits:10',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Some Form Fields Are Missing...',
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
-        $user->notify(new UserSiteNotification());
 
-        return redirect()->route('sites.index')->with('status', 'create');
+        try {
+
+            $validatedData = $validator->validated();
+
+            $user = User::find($validatedData['user_id']);
+
+            $client = Client::find($validatedData['client_id']);
+
+            $validatedData['site_owner_name'] = $client->name;
+
+            $site = Site::create($validatedData);
+
+            $user->notify(new UserSiteNotification());
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Site created successfully!',
+                'data' => $site
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Error creating site: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Something went wrong!',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -113,7 +143,7 @@ class SiteController extends Controller
                 $query->where('verified_by_admin', 1);
             },
         ])
-        ->find($site_id);
+            ->find($site_id);
 
         $totalPaymentSuppliersAmount = $site->payments()
             ->where('verified_by_admin', 1)
@@ -126,8 +156,8 @@ class SiteController extends Controller
             $phase->construction_total_amount = $phase->constructionMaterialBillings->sum('amount');
 
             $phase->square_footage_total_amount = $phase->squareFootageBills->reduce(function ($sum, $sqft) {
-                    return $sum + ($sqft->price * $sqft->multiplier);
-                }, 0);
+                return $sum + ($sqft->price * $sqft->multiplier);
+            }, 0);
 
             $phase->daily_expenses_total_amount = $phase->dailyExpenses->sum('price');
 
@@ -139,12 +169,12 @@ class SiteController extends Controller
             $phase->daily_expense_total_service_charge_amount = ($site->service_charge / 100) * $phase->daily_expenses_total_amount + $phase->daily_expenses_total_amount;
             $phase->daily_wagers_total_service_charge_amount = ($site->service_charge / 100) * $phase->daily_wagers_total_amount + $phase->daily_wagers_total_amount;
             $phase->phase_total_amount = $phase->construction_total_amount + $phase->daily_expenses_total_amount + $phase->daily_wagers_total_amount + $phase->square_footage_total_amount;
-           
+
             $phase->sqft_total_service_charge_amount = (($site->service_charge / 100) * $phase->square_footage_total_amount) + $phase->square_footage_total_amount;
             $phase->phase_total_service_charge_amount = ($site->service_charge / 100) * $phase->phase_total_amount;
-           
+
             $phase->phase_total_with_service_charge_amount = $phase->phase_total_amount + $phase->phase_total_service_charge_amount;
-           
+
             $grand_total_amount += $phase->phase_total_with_service_charge_amount;
         }
 

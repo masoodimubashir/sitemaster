@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Class\HelperClass;
 use App\Http\Controllers\Controller;
 use App\Models\DailyExpenses;
 use App\Models\User;
 use App\Notifications\VerificationNotification;
+use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
@@ -13,9 +15,17 @@ use Illuminate\Support\Facades\Validator;
 
 class UserDailyExpensesController extends Controller
 {
+
+
+    use HelperClass;
+
+
     public function store(Request $request)
     {
         if ($request->ajax()) {
+
+            DB::beginTransaction();
+
             // Validation rules
             $validator = Validator::make($request->all(), [
                 'item_name' => 'required|string|max:255',
@@ -23,6 +33,7 @@ class UserDailyExpensesController extends Controller
                 'bill_photo' => 'required|image|mimes:jpg,jpeg,webp|max:1024',
                 'phase_id' => 'required|exists:phases,id',
             ]);
+
 
             // Check for validation errors
             if ($validator->fails()) {
@@ -46,6 +57,13 @@ class UserDailyExpensesController extends Controller
                     'user_id' => auth()->user()->id,
                     'verified_by_admin' => 0,
                 ]);
+
+                if ($expense) {
+
+                    $this->setSiteTotalAmount($request->phase_id, $request->price);
+
+                    DB::commit();
+                }
 
 
                 $data = [
@@ -80,45 +98,59 @@ class UserDailyExpensesController extends Controller
         return view('profile.partials.Admin.DailyExpenses.edit-daily-expense', compact('dialy_expense'));
     }
 
+
     /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
     {
 
-        $request->validate([
-            'item_name' => 'required|string|max:255',
-            'price' => 'required|numeric|max:9999999999',
-            'bill_photo' => 'sometimes|mimes:jpg,jpeg,webp|max:1024',
-            'phase_id' => 'required|exists:phases,id',
-        ]);
+        return DB::transaction(function () use ($request, $id) {
 
-        $daily_expense = DailyExpenses::findorFail($id);
+            $request->validate([
+                'item_name' => 'required|string|max:255',
+                'price' => 'required|numeric|max:9999999999',
+                'bill_photo' => 'sometimes|mimes:jpg,jpeg,webp|max:1024',
+                'phase_id' => 'required|exists:phases,id',
+            ]);
 
-        $image_path = null;
+            $daily_expense = DailyExpenses::findorFail($id);
 
-        if ($request->hasFile('bill_photo')) {
+            $image_path = null;
+            $old_amount = $daily_expense->price;
 
-            if (Storage::disk('public')->exists($daily_expense->bill_photo)) {
 
-                Storage::disk('public')->delete($daily_expense->bill_photo);
+            if ($request->hasFile('bill_photo')) {
+
+                if (Storage::disk('public')->exists($daily_expense->bill_photo)) {
+
+                    Storage::disk('public')->delete($daily_expense->bill_photo);
+                }
+
+                $image_path = $request->file('bill_photo')->store('Expenses', 'public');
+            } else {
+
+                $image_path = $daily_expense->bill_photo;
             }
 
-            $image_path = $request->file('bill_photo')->store('Expenses', 'public');
-        } else {
+            if ($daily_expense) {
 
-            $image_path = $daily_expense->bill_photo;
-        }
+                $new_amount = $this->adjustBalance($request->price, $old_amount);
 
-        $daily_expense->update([
-            'item_name' => $request->item_name,
-            'bill_photo' => $image_path,
-            'price' => $request->price,
-            'phase_id' => $request->phase_id,
-            'user_id' => auth()->user()->id
-        ]);
 
-        return redirect()->route('user.sites.show', [base64_encode($daily_expense->phase->site->id)])
-            ->with('status', 'update');
+                $this->updateSiteTotalAmount($request->phase_id, $new_amount);
+            }
+
+            $daily_expense->update([
+                'item_name' => $request->item_name,
+                'bill_photo' => $image_path,
+                'price' => $request->price,
+                'phase_id' => $request->phase_id,
+                'user_id' => auth()->user()->id
+            ]);
+
+            return redirect()->url('/user/sites/' . [base64_encode($daily_expense->phase->site->id)])
+                ->with('status', 'update');
+        });
     }
 }

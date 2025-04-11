@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('site_name');
             $table->string('location');
             $table->string('contact_no');
-            $table->decimal('service_charge',10,2);
+            $table->integer('service_charge');
             $table->string('site_owner_name');
             $table->boolean('is_on_going');
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();

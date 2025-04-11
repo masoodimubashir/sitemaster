@@ -73,12 +73,12 @@ class ConstructionMaterialBilling extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                    'errors' => $validator->errors()
+                    'errors' => 'Form Fields Are Missing'
                 ], 422);
             }
 
             $image_path = null;
-            
+
             if ($request->hasFile('image')) {
                 $image_path = $request->file('image')->store('ConstructionBillingImage', 'public');
             }

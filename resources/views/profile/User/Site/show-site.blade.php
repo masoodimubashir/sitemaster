@@ -581,8 +581,9 @@
 
                                                                 <td>
                                                                     <img style="cursor: pointer"
-                                                                        data-full="{{ asset($construction_material_billing->item_image_path) }}"
-                                                                        src="{{ asset($construction_material_billing->item_image_path) }}"alt=""
+                                                                        data-full="{{ asset('storage/' . $construction_material_billing->item_image_path) }}"
+                                                                        src="{{ asset('storage/' . $construction_material_billing->item_image_path) }}"
+                                                                        alt=""
                                                                         class="w-20 h-20 rounded-full gallery-image">
                                                                 </td>
 
@@ -697,10 +698,12 @@
 
                                                                 <td>
                                                                     <img style="cursor: pointer"
-                                                                        data-full="{{ asset($sqft->image_path) }}"
-                                                                        src="{{ asset($sqft->image_path) }}"alt=""
+                                                                        data-full="{{ asset('storage/' . $sqft->image_path) }}"
+                                                                        src="{{ asset('storage/' . $sqft->image_path) }}"
+                                                                        alt=""
                                                                         class="w-20 h-20 rounded-full gallery-image">
                                                                 </td>
+
                                                                 <td>
                                                                     {{ ucwords($sqft->wager_name) }}
                                                                 </td>
@@ -827,10 +830,10 @@
                                                                 </td>
 
                                                                 <td>
-                                                                    <img style="cursor: pointer"
-                                                                        data-full="{{ asset($daily_expenses->bill_photo) }}"
-                                                                        src="{{ asset($daily_expenses->bill_photo) }}"alt=""
-                                                                        class="w-20 h-20 rounded-full gallery-image">
+                                                                    <img src="{{ asset('storage/' . $daily_expenses->bill_photo) }}"
+                                                                        alt="{{ asset('storage/' . $daily_expenses->bill_photo) }}"
+                                                                        class="w-20 h-20 rounded-full cursor-pointer"
+                                                                        data-full="{{ asset('storage/' . $daily_expenses->bill_photo) }}">
                                                                 </td>
 
                                                                 <td>

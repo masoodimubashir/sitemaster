@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Class\HelperClass;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\ConstructionMaterialBilling as ModelsConstructionMaterialBilling;
 use App\Models\Supplier;
 use App\Notifications\VerificationNotification;
+use DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -16,11 +18,14 @@ use Illuminate\Support\Facades\Validator;
 class UserConstuctionMaterialBuildingsController extends Controller
 {
 
+    use HelperClass;
+
 
     public function store(Request $request)
     {
         if ($request->ajax()) {
 
+            DB::beginTransaction();
 
             $validator = Validator::make($request->all(), [
                 'image' => 'required|mimes:png,jpg,webp|max:1024',
@@ -31,10 +36,13 @@ class UserConstuctionMaterialBuildingsController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['errors' => 'Form Fields Are Missing'], 422);
+                return response()->json([
+                    'errors' => 'Form Fields Are Missing'
+                ], 422);
             }
 
             $image_path = null;
+
             if ($request->hasFile('image')) {
                 $image_path = $request->file('image')->store('ConstructionBillingImage', 'public');
             }
@@ -54,6 +62,13 @@ class UserConstuctionMaterialBuildingsController extends Controller
                     'user' => auth()->user()->name,
                     'item' => $material->item_name
                 ];
+
+                if ($material) {
+
+                    $this->setSiteTotalAmount($request->phase_id, $request->amount);
+
+                    DB::commit();
+                }
 
                 Notification::send(
                     User::where('role_name', 'admin')->get(),
@@ -90,43 +105,61 @@ class UserConstuctionMaterialBuildingsController extends Controller
     public function update(Request $request, string $id)
     {
 
-        $validatedData = $request->validate([
-            'image' => 'sometimes|mimes:png,jpg,webp|max:1024',
-            'amount' => 'required|numeric|max:9999999999',
-            'item_name' => 'required',
-            'supplier_id' => 'required|exists:suppliers,id',
-            'phase_id' => 'required|exists:phases,id'
-        ]);
+       
+        return DB::transaction(function () use ($request, $id) {
+            $validatedData = $request->validate([
+                'image' => 'sometimes|mimes:png,jpg,webp|max:1024',
+                'amount' => 'required|numeric|max:9999999999',
+                'item_name' => 'required',
+                'supplier_id' => 'required|exists:suppliers,id',
+                'phase_id' => 'required|exists:phases,id'
+            ]);
 
-        $construction_material_billing = ModelsConstructionMaterialBilling::find($id);
+            $construction_material_billing = ModelsConstructionMaterialBilling::find($id);
 
-        $image_path = null;
+            $amount = $construction_material_billing->amount;
 
-        if ($request->hasFile('image')) {
+            $image_path = null;
 
-            if (Storage::disk('public')->exists($construction_material_billing->item_image_path)) {
+            if ($request->hasFile('image')) {
 
-                Storage::disk('public')->delete($construction_material_billing->item_image_path);
+                if (Storage::disk('public')->exists($construction_material_billing->item_image_path)) {
+
+                    Storage::disk('public')->delete($construction_material_billing->item_image_path);
+                }
+
+                $image_path = $request->file('image')->store('ConstructionBillingImage', 'public');
+            } else {
+
+                $image_path = $construction_material_billing->item_image_path;
             }
 
-            $image_path = $request->file('image')->store('ConstructionBillingImage', 'public');
-        } else {
+            $construction_material_billing->amount = $validatedData['amount'];
+            $construction_material_billing->item_image_path = $image_path;
+            $construction_material_billing->item_name = $validatedData['item_name'];
+            $construction_material_billing->supplier_id = $validatedData['supplier_id'];
+            $construction_material_billing->user_id = auth()->user()->id;
+            $construction_material_billing->phase_id = $validatedData['phase_id'];
+            $construction_material_billing->save();
 
-            $image_path = $construction_material_billing->item_image_path;
-        }
+            if ($construction_material_billing) {
 
-        $construction_material_billing->amount = $validatedData['amount'];
-        $construction_material_billing->item_image_path = $image_path;
-        $construction_material_billing->item_name = $validatedData['item_name'];
-        $construction_material_billing->supplier_id = $validatedData['supplier_id'];
-        $construction_material_billing->user_id = auth()->user()->id;
-        $construction_material_billing->phase_id = $validatedData['phase_id'];
-        $construction_material_billing->save();
+                $new_amount = $this->adjustBalance($request->amount, $amount);
 
-        return redirect()->route('user.sites.show', [base64_encode($construction_material_billing->phase->site->id)])
-            ->with('status', 'update');
+                $this->updateSiteTotalAmount($request->phase_id, $new_amount);
+            }
+
+            return redirect()->route(
+                'sites.show',
+                [base64_encode($construction_material_billing->phase->site->id)]
+            )
+                ->with('status', 'update');
+        });
+
+        // return redirect()->route('user.sites.show', [base64_encode($construction_material_billing->phase->site->id)])
+        //     ->with('status', 'update');
+
+
+
     }
-
 }
-
-

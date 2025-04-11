@@ -60,7 +60,7 @@ Route::post('/client-login', [ClientAuthController::class, 'store'])->name('clie
 //  Client Routes
 Route::middleware(['auth:clients', 'isClient'])->prefix('client')->group(function () {
 
-    Route::resource('dashboard', ClientDashboardController::class);
+    Route::resource('/dashboard', ClientDashboardController::class);
 
     Route::post('/logout', [ClientLogoutController::class, 'logout'])->name('client.logout');
     Route::get('/ledger', [ClientLedgerController::class, 'index']);
@@ -198,6 +198,9 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::get('/dashboard', [UserDashboardController::class, 'index'])
         ->name('user.dashboard');
 
+    //  Route For Ypdating The Site Ongoing Status
+    Route::post('sites/update-on-going/{id}', UpdateOnGoingController::class)->name('sites.update-on-going');
+
     // Site Controllers
     Route::get('/sites/create', [ViewSiteController::class, 'create']);
     Route::get('/sites/{id}', [ViewSiteController::class, 'show']);
@@ -240,14 +243,18 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::put('/daily-wager-attendance/{id}', [UserWagerAttendanceController::class, 'update']);
 
     // Site Payments
-    Route::resource('site/payments', UserSitePayments::class);
+    // Route::resource('site/payments', UserSitePayments::class);
 
     // View Ledger
-    Route::get('/site/ledger/{id}', UserLedgerController::class);
+    // Route::get('/site/ledger/{id}', UserLedgerController::class);
+    Route::get('/site/ledger/{id}', SitePaymentController::class)->name('sites.view-ledger');
+
 
     // Site Payments
     Route::resource('supplier/payments', PaymentSupplierController::class);
-    //    Route::get('sites/payments/{id}', PaymentSiteController::class);
+    // Route::get('sites/payments/{id}', PaymentSiteController::class);
+    Route::get('sites/payments/{id}', [PaymentSiteController::class, 'showPayment']);
+
 
     // View Supplier Ledger
     Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');

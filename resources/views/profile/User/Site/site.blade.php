@@ -37,6 +37,7 @@
 
                 </div>
 
+
                 <div class="table-responsive mt-4">
 
                     @if (count($sites))
@@ -101,6 +102,13 @@
                                         </td>
 
                                         <td class="space-x-4">
+
+                                          
+
+                                          
+
+                                          
+
                                             <form action="{{ route('sites.update-on-going', $site->id) }}"
                                                 method="POST" class="d-inline">
 
@@ -109,7 +117,7 @@
                                                 @method('POST')
 
                                                 <button type="submit"
-                                                    class="badge badge-pill text-white {{ $site->is_on_going ? 'text-bg-success' : 'text-bg-danger' }}">
+                                                    class="badge badge-pill btn text-white {{ $site->is_on_going ? 'text-bg-success' : 'text-bg-danger' }}">
                                                     {{ $site->is_on_going ? 'Verified' : 'Verify' }}
                                                 </button>
                                             </form>
