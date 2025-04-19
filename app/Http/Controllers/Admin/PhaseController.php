@@ -41,30 +41,23 @@ class PhaseController extends Controller
     public function store(Request $request)
     {
 
-
-
         if ($request->ajax()) {
+
             $validator = Validator::make($request->all(), [
                 'site_id' => 'required|exists:sites,id',
-                'phase_name' => [
-                    'required',
-                    'string',
-                    Rule::unique('phases', 'phase_name')
-                        ->where(function ($query) use($request) {
-                            return $query->where('site_id', $request->site_id);
-                        })
-                    ],
+                'phase_name' => ['required', 'string',],
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['errors' => 'Phase Already Exists',], 422);
+                return response()->json([
+                    'errors' => 'Some Of The Form Fields Are Missing'
+                ], 422);
             }
 
             try {
                 Phase::create($request->all());
                 return response()->json(['message' => 'Phase created successfully.'], 201);
             } catch (\Exception $e) {
-                Log::info($e);
                 return response()->json(['error' => 'An unexpected error occurred.'], 500);
             }
         }

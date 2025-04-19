@@ -33,9 +33,6 @@ class UserPhaseController extends Controller
 
         if ($request->ajax()) {
 
-        Log::info('User', $request->all());
-
-
             $validator = Validator::make($request->all(), [
                 'site_id' => 'required|exists:sites,id',
                 'phase_name' => [
@@ -55,6 +52,7 @@ class UserPhaseController extends Controller
             try {
 
                 Phase::create($request->all());
+
                 return response()->json(['message' => 'Phase created successfully.'], 201);
             } catch (\Exception $e) {
 

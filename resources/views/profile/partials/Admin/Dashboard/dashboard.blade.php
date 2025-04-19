@@ -91,10 +91,10 @@
                                     </small>
                                 </div>
                                 <div class="text-end">
-                                    <strong class="text-danger">
-                                        {{ $site->total_payments }}
+                                    <strong class="text-success">
+                                        {{ $site->total_payments ? $site->total_payments : 0 }}
                                     </strong><br>
-                                    <small class="text-muted">You'll Get</small>
+                                    <small class="text-muted">Credit</small>
                                 </div>
                             </div>
                         @endforeach
@@ -239,7 +239,7 @@
 
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-
+                            location.reload();
                         }, 2000);
 
                     },
@@ -264,6 +264,7 @@
 
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
+                            location.reload();
                         }, 2000);
                     },
                     complete: function() {

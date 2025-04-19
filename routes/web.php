@@ -110,8 +110,11 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     // Items Controller
     Route::resource('/items', ItemController::class);
 
+    
     // Sites Controller
     Route::resource('/sites', SiteController::class);
+    Route::get('/sites/details/{id}', [SiteController::class, 'showSiteDetails']);
+
 
     //  This Route Is Used To Make Payment In Supplier View
     Route::resource('/supplier/payments', PaymentSupplierController::class);

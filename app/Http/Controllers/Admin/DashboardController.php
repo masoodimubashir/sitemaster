@@ -50,7 +50,6 @@ class DashboardController extends Controller
             }])
             ->paginate(10);
 
-
         return view('profile.partials.Admin.Dashboard.dashboard', [
             'ongoingSites' => $ongoingSitesCount,
             'completedSites' => $completedSitesCount,
@@ -59,7 +58,4 @@ class DashboardController extends Controller
             'clients' => $clients,
         ]);
     }
-
-
-   
 }

@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreSiteRequest;
 use App\Http\Requests\UpdateSiteRequest;
 use App\Models\Client;
 use App\Models\Item;
@@ -11,7 +10,9 @@ use App\Models\Site;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Notifications\UserSiteNotification;
+use App\Services\DataService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Validator;
 
@@ -50,6 +51,7 @@ class SiteController extends Controller
     {
 
 
+
         $validator = Validator::make($request->all(), [
             'site_name' => 'required|string|min:5',
             'service_charge' => 'required|decimal:0,2',
@@ -67,18 +69,23 @@ class SiteController extends Controller
             ], 422);
         }
 
-
         try {
 
             $validatedData = $validator->validated();
 
             $user = User::find($validatedData['user_id']);
-
             $client = Client::find($validatedData['client_id']);
 
-            $validatedData['site_owner_name'] = $client->name;
-
-            $site = Site::create($validatedData);
+            $site = Site::create([
+                'site_name' => $validatedData['site_name'],
+                'location' => $validatedData['location'],
+                'contact_no' => $validatedData['contact_no'],
+                'service_charge' => $validatedData['service_charge'],
+                'site_owner_name' => $client->name,
+                'is_on_going' => true,
+                'user_id' => $validatedData['user_id'],
+                'client_id' => $validatedData['client_id'],
+            ]);
 
             $user->notify(new UserSiteNotification());
 
@@ -100,7 +107,7 @@ class SiteController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function showSiteDetails(string $id)
     {
 
 
@@ -201,7 +208,7 @@ class SiteController extends Controller
         $items = Item::orderBy('item_name')->get();
 
         return view(
-            'profile.partials.Admin.Site.show-site',
+            'profile.partials.Admin.Site.show-site-detail',
             compact(
                 'site',
                 'grand_total_amount',
@@ -214,6 +221,71 @@ class SiteController extends Controller
                 'balance'
             )
         );
+    }
+
+    public function show(Request $request, DataService $dataService, string $id)
+    {
+
+        $id = base64_decode($id);
+
+        $dateFilter = $request->input('date_filter', 'today');
+        $site_id = $request->input('site_id', $id);
+        $supplier_id = $request->input('supplier_id', 'all');
+        $wager_id = $request->input('wager_id', 'all');
+
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData(
+            $dateFilter,
+            $site_id,
+            $supplier_id,
+            $wager_id
+        );
+
+        $ledgers = $dataService->makeData(
+            $payments,
+            $raw_materials,
+            $squareFootageBills,
+            $expenses,
+            $wagers
+        )->sortByDesc(function ($d) {
+            return $d['created_at'];
+        });
+
+        $balances = $dataService->calculateAllBalances($ledgers);
+
+        $withoutServiceCharge = $balances['without_service_charge'];
+        $withServiceCharge = $balances['with_service_charge'];
+        $effective_balance = $withoutServiceCharge['due'];
+        $total_paid = $withServiceCharge['paid'];
+        $total_due = $withServiceCharge['due'];
+        $total_balance = $withServiceCharge['balance'];
+
+        $perPage = $request->get('per_page', 20);
+
+        $paginatedLedgers = new LengthAwarePaginator(
+            $ledgers->forPage(
+                $request->input('page', 1),
+                $perPage
+            ),
+            $ledgers->count(),
+            $perPage,
+            $request->input('page', 10),
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        $suppliers = $paginatedLedgers->filter(
+            fn($supplier) => $supplier['supplier_id'] !== '--'
+        )->unique('supplier_id');
+
+        return view("profile.partials.Admin.Site.show-site", compact(
+            'paginatedLedgers',
+            'total_paid',
+            'total_due',
+            'total_balance',
+            'suppliers',
+            'wagers',
+            'effective_balance',
+            'id'
+        ));
     }
 
     /**

@@ -72,13 +72,6 @@ class PaymentsController extends Controller
         $suppliers = $paginatedLedgers->filter(fn($supplier) => $supplier['supplier_id'] !== '--')->unique('supplier_id');
         $sites = $paginatedLedgers->filter(fn($site) => $site['site_id'] !== '--')->unique('site');
 
-        // $wagers = $paginatedLedgers->map(function ($ledger) {
-        //     $ledger['wager_id'] = isset($ledger['wager_id']) ? $ledger['wager_id'] : null;
-        //     return $ledger;
-        // })->filter(function ($ledger) {
-        //     return !is_null($ledger['wager_id']);
-        // })->unique('wager_id');
-
         return view("profile.partials.Admin.PaymentSuppliers.payments", compact(
             'paginatedLedgers',
             'total_paid',

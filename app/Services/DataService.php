@@ -99,8 +99,8 @@ class DataService
                 'site' => $material->phase->site->site_name ?? '--',
                 'total_amount_with_service_charge' => $service_charge + $material->amount,
                 'supplier' => $material->supplier->name ?? '--',
-                'supplier_id' => $pay->supplier_id ?? '--',
-                'site_id' => $pay->site_id ?? '--',
+                'supplier_id' => $material->supplier_id ?? '--',
+                'site_id' => $material->site_id ?? '--',
                 'phase' => $material->phase->phase_name ?? '--',
                 'created_at' => $material->created_at,
             ];
@@ -122,8 +122,8 @@ class DataService
                 'payment_initiator' => 'Supplier',
                 'site' => $bill->phase->site->site_name ?? '--',
                 'supplier' => $bill->supplier->name ?? '--',
-                'supplier_id' => $pay->supplier_id ?? '--',
-                'site_id' => $pay->site_id ?? '--',
+                'supplier_id' => $bill->supplier_id ?? '--',
+                'site_id' => $bill->site_id ?? '--',
                 'phase' => $bill->phase->phase_name ?? '--',
                 'created_at' => $bill->created_at,
             ];
@@ -143,8 +143,8 @@ class DataService
                 'payment_initiator' => 'Site',
                 'site' => $expense->phase->site->site_name ?? '--',
                 'supplier' => $expense->supplier->name ?? '--',
-                'supplier_id' => $pay->supplier_id ?? '--',
-                'site_id' => $pay->site_id ?? '--',
+                'supplier_id' => $expense->supplier_id ?? '--',
+                'site_id' => $expense->site_id ?? '--',
                 'phase' => $expense->phase->phase_name ?? '--',
                 'created_at' => $expense->created_at,
             ];
