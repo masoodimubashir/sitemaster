@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Class\HelperClass;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
-use App\Models\PaymentSupplier;
 use App\Models\Phase;
 use App\Models\SquareFootageBill;
 use App\Models\Supplier;
-use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -65,8 +65,9 @@ class SquareFootageBillsController extends Controller
             ]);
 
             if ($validator->fails()) {
+                Log::error($validator->errors());
                 return response()->json([
-                    'errors' => 'Validation Error.. Try Again!'
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 

@@ -1,4 +1,5 @@
 <x-app-layout>
+
     @if (session('status') === 'update')
         <x-success-message message="Your Record has been updated..." />
     @endif
@@ -1301,9 +1302,13 @@
                         <!-- Modal 1 -->
                         <div id="modal-construction-billings{{ $phase->id }}" class="modal fade"
                             aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-                            <div class="modal-dialog modal-dialog-centered">
+
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+
                                 <div class="modal-content">
+
                                     <div class="modal-body">
+
                                         <form enctype="multipart/form-data" class="forms-sample material-form"
                                             id="constructionBillingForm">
 
@@ -1315,9 +1320,7 @@
                                                 <input type="number" name="amount" id="amount" />
                                                 <label for="amount" class="control-label">Material Price</label>
                                                 <i class="bar"></i>
-                                                @error('amount')
-                                                    <x-input-error :messages="$message" class="mt-2" />
-                                                @enderror
+                                                <p class=" mt-1 text-danger" id="amount-error"></p>
                                             </div>
 
 
@@ -1335,9 +1338,7 @@
                                                             </option>
                                                         @endforeach
                                                     </select>
-                                                    @error('item_name')
-                                                        <x-input-error :messages="$message" class="mt-2" />
-                                                    @enderror
+                                                    <p class=" mt-1 text-danger" id="item_name-error"></p>
                                                 </div>
 
                                                 <!-- Supplier -->
@@ -1353,18 +1354,13 @@
                                                             </option>
                                                         @endforeach
                                                     </select>
-                                                    @error('supplier_id')
-                                                        <x-input-error :messages="$message" class="mt-2" />
-                                                    @enderror
+                                                    <p class=" mt-1 text-danger" id="supplier_id-error"></p>
                                                 </div>
 
                                                 <!-- Phases -->
                                                 <div class=" col-md-6 mt-3">
                                                     <input id="phase_id" type="hidden" name="phase_id"
                                                         placeholder="Phase" value="{{ $phase->id }}" />
-                                                    @error('phase_id')
-                                                        <x-input-error :messages="$message" class="mt-2" />
-                                                    @enderror
                                                 </div>
                                             </div>
 
@@ -1372,14 +1368,16 @@
                                             <div class="mt-3">
                                                 <input class="form-control form-control-md" id="image"
                                                     type="file" name="image">
+                                                <p class=" mt-1 text-danger" id="image-error"></p>
                                             </div>
 
-                                            <div class="flex items-center justify-end mt-4">
-                                                <x-primary-button class="ms-4">
-                                                    {{ __('Create Billing') }}
-                                                </x-primary-button>
-                                            </div>
+                                            <x-primary-button>
+                                                {{ __('Create Billing') }}
+                                            </x-primary-button>
+
+
                                         </form>
+
                                     </div>
                                 </div>
                             </div>
@@ -1389,14 +1387,16 @@
                         <!-- Modal 2 -->
                         <div id="modal-square-footage-bills{{ $phase->id }}" class="modal fade"
                             aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-                            <div class="modal-dialog modal-dialog-centered">
+
+                            <div class="modal-dialog modal-dialog-centered modal-lg">
+
                                 <div class="modal-content">
+
                                     <div class="modal-body">
 
                                         {{-- Create Square Footage Bills --}}
                                         <form id="squareFootageBills" enctype="multipart/form-data"
                                             class="forms-sample material-form">
-
 
                                             @csrf
 
@@ -1405,10 +1405,7 @@
                                                 <input id="wager_name" type="text" name="wager_name" />
                                                 <label for="wager_name" class="control-label" />Work
                                                 Type</label><i class="bar"></i>
-
-                                                @error('wager_name')
-                                                    <x-input-error :messages="$message" class="mt-2" />
-                                                @enderror
+                                                <p class="text-danger" id="wager_name-error"></p>
                                             </div>
 
                                             <!-- Price -->
@@ -1416,10 +1413,7 @@
                                                 <input id="price" type="number" name="price" />
                                                 <label for="price" class="control-label" />Price</label><i
                                                     class="bar"></i>
-
-                                                @error('price')
-                                                    <x-input-error :messages="$message" class="mt-2" />
-                                                @enderror
+                                                <p class="text-danger" id="price-error"></p>
                                             </div>
 
                                             <!-- Number Of Days -->
@@ -1428,11 +1422,8 @@
                                                 <label for="multiplier" class="control-label">Multiplier</label><i
                                                     class="bar"></i>
 
-                                                @error('multiplier')
-                                                    <x-input-error :messages="$message" class="mt-2" />
-                                                @enderror
+                                                <p class="text-danger" id="multiplier-error"></p>
                                             </div>
-
 
                                             <div class="row">
 
@@ -1447,9 +1438,7 @@
                                                         <option value="full_contract">Full Contract
                                                         </option>
                                                     </select>
-                                                    @error('type')
-                                                        <x-input-error :messages="$message" class="mt-2" />
-                                                    @enderror
+                                                    <p class="text-danger" id="type-error"></p>
                                                 </div>
 
                                                 <div class="col-md-6">
@@ -1463,17 +1452,14 @@
                                                             </option>
                                                         @endforeach
                                                     </select>
-                                                    @error('supplier_id')
-                                                        <x-input-error :messages="$message" class="mt-2" />
-                                                    @enderror
+
+                                                    <p class="text-danger" id="supplier_id-error"></p>
+
                                                 </div>
 
                                                 <div class=" col-md-6 mt-3">
                                                     <input id="phase_id" type="hidden" name="phase_id"
                                                         placeholder="Phase" value="{{ $phase->id }}" />
-                                                    @error('phase_id')
-                                                        <x-input-error :messages="$message" class="mt-2" />
-                                                    @enderror
                                                 </div>
                                             </div>
 
@@ -1483,17 +1469,19 @@
                                                 <label for="image">Item Bill</label>
                                                 <input class="form-control form-control-md" id="image"
                                                     type="file" name="image_path">
-                                                @error('image_path')
-                                                    <x-input-error :messages="$message" class="mt-2" />
-                                                @enderror
+                                                <p class="text-danger" id="image_path-error"></p>
+
                                             </div>
 
-                                            <div class="flex items-center justify-end mt-4">
 
-                                                <x-primary-button class="ms-4">
+                                            <div class="mt-3">
+                                                <x-primary-button>
                                                     {{ __('Create Bill') }}
                                                 </x-primary-button>
                                             </div>
+
+
+
                                         </form>
 
                                     </div>
@@ -1518,9 +1506,7 @@
                                                 <label for="wager_name" class="control-label">Wager
                                                     Name</label><i class="bar"></i>
 
-                                                @error('wager_name')
-                                                    <x-input-error :messages="$message" class="mt-2" />
-                                                @enderror
+                                                <p class="text-danger" id="wager_name-error"></p>
                                             </div>
 
                                             <!-- Price Per day -->
@@ -1528,10 +1514,8 @@
                                                 <input id="price_per_day" type="number" name="price_per_day" />
                                                 <label for="price_per_day" class="control-label">Price Per
                                                     Day</label><i class="bar"></i>
+                                                <p class="text-danger" id="price_per_day-error"></p>
 
-                                                @error('price_per_day')
-                                                    <x-input-error :messages="$message" class="mt-2" />
-                                                @enderror
                                             </div>
 
                                             <div class="row">
@@ -1546,29 +1530,24 @@
                                                             </option>
                                                         @endforeach
                                                     </select>
-                                                    @error('supplier_id')
-                                                        <x-input-error :messages="$message" class="mt-2" />
-                                                    @enderror
+                                                    <p class="text-danger" id="supplier_id-error"></p>
+
                                                 </div>
 
                                                 <!-- Select Phase -->
                                                 <div class=" col-md-6 mt-3">
                                                     <input id="phase_id" type="hidden" name="phase_id"
                                                         placeholder="Phase" value="{{ $phase->id }}" />
-                                                    @error('phase_id')
-                                                        <x-input-error :messages="$message" class="mt-2" />
-                                                    @enderror
+
                                                 </div>
                                             </div>
 
 
-                                            <div class="flex items-center justify-end mt-4">
 
 
-                                                <x-primary-button>
-                                                    {{ __('Create Wager') }}
-                                                </x-primary-button>
-                                            </div>
+                                            <x-primary-button>
+                                                {{ __('Create Wager') }}
+                                            </x-primary-button>
                                         </form>
                                     </div>
                                 </div>
@@ -1592,9 +1571,7 @@
                                                 <input id="item_name" type="text" name="item_name" />
                                                 <label for="item_name" class="control-label">Item
                                                     Name</label><i class="bar"></i>
-                                                @error('item_name')
-                                                    <x-input-error :messages="$message" class="mt-2" />
-                                                @enderror
+                                                <p class="text-danger" id="date-error"></p>
                                             </div>
 
                                             <!-- Price -->
@@ -1602,18 +1579,14 @@
                                                 <input id="price" type="number" name="price" />
                                                 <label for="price" class="control-label">Price</label><i
                                                     class="bar"></i>
-                                                @error('price')
-                                                    <x-input-error :messages="$message" class="mt-2" />
-                                                @enderror
+                                                <p class="text-danger" id="description-error"></p>
                                             </div>
 
                                             <!-- Select Phase -->
                                             <div class=" col-md-6 mt-3">
                                                 <input id="phase_id" type="hidden" name="phase_id"
                                                     placeholder="Phase" value="{{ $phase->id }}" />
-                                                @error('phase_id')
-                                                    <x-input-error :messages="$message" class="mt-2" />
-                                                @enderror
+                                                <p class="text-danger" id="amount-error"></p>
                                             </div>
 
 
@@ -1621,18 +1594,15 @@
 
                                                 <input class="form-control" type="file" id="formFile"
                                                     name="bill_photo">
-                                                @error('bill_photo')
-                                                    <x-input-error :messages="$message" class="mt-2" />
-                                                @enderror
+
+                                                <p class="text-danger" id="category_id-error"></p>
 
                                             </div>
 
-                                            <div class="flex items-center justify-end mt-4">
 
-                                                <x-primary-button class="ms-4">
-                                                    {{ __('Create Bill') }}
-                                                </x-primary-button>
-                                            </div>
+                                            <x-primary-button class="mt-3">
+                                                {{ __('Create Bill') }}
+                                            </x-primary-button>
                                         </form>
                                     </div>
                                 </div>
@@ -2027,6 +1997,7 @@
                     data: formData,
                     contentType: false,
                     processData: false,
+                    
                     success: function(response) {
                         form[0].reset();
                         messageContainer.append(`
@@ -2043,22 +2014,23 @@
                             location.reload();
                         }, 2000);
                     },
+
                     error: function(response) {
 
-                        if (response.status === 422) { // Validation errors
+                        if (response.status === 422) { 
                             messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-                    ${response.responseJSON.errors}
+                             <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
+                                 ${response.responseJSON.errors}
 
-                    </div>`)
+                             </div>`)
 
                         } else {
                             messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                        An unexpected error occurred. Please try again later.
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    An unexpected error occurred. Please try again later.
 
-                    </div>
-                `);
+                                </div>
+                            `);
                         }
                         // Auto-hide error message after 5 seconds
                         setTimeout(function() {
@@ -2071,14 +2043,16 @@
 
             //  Script For Construction Form
             $('form[id^="constructionBillingForm"]').on('submit', function(e) {
+
                 e.preventDefault();
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
-                const messageContainer = $('#messageContainer');
+                const messageContainer = form.find('.message-container'); 
                 messageContainer.empty();
 
-                $('.text-danger').text('');
+                // Clear previous error messages for this form
+                form.find('.text-danger').text('');
 
                 $.ajax({
                     url: '{{ route('construction-material-billings.store') }}',
@@ -2087,178 +2061,267 @@
                     contentType: false,
                     processData: false,
                     success: function(response) {
-                        messageContainer.append(`
-                    <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+
+                        messageContainer.html(`
+                            <div class="alert align-items-center text-white bg-success border-0" role="alert">
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                        `);
+                         `);
 
                         form[0].reset();
 
-                        // Auto-hide success message after 3 seconds
+                        // Auto-hide success message after 2 seconds
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
-
                         }, 2000);
                     },
                     error: function(response) {
 
                         if (response.status === 422) { // Validation errors
-                            messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-                    ${response.responseJSON.errors}
 
-                    </div>`)
+                            const errors = response.responseJSON.errors;
 
+                            // Display general error message
+                            messageContainer.html(`
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    Please fix the errors below
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
+
+                            // Display specific error for each field
+                            for (const field in errors) {
+
+                                const errorMsg = errors[field][0];
+
+                                form.find(`[name="${field}"]`).siblings('.text-danger').text(
+                                    errorMsg);
+
+                                if (!form.find(`[name="${field}"]`).siblings('.text-danger')
+                                    .length) {
+                                    form.find(`#${field}-error`).text(errorMsg);
+                                }
+                            }
                         } else {
-                            messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                        An unexpected error occurred. Please try again later.
-
-                    </div>
-                `);
+                            messageContainer.html(`
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    An unexpected error occurred. Please try again later.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
                         }
-                        // Auto-hide error message after 5 seconds
+
+                        // Auto-hide general error message after 5 seconds
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-                        }, 2000);
+                        }, 5000);
                     }
                 });
             });
 
             // Script For square Footage Bills
+
+
             $('form[id^="squareFootageBills"]').on('submit', function(e) {
                 e.preventDefault();
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
-                const messageContainer = $('#messageContainer');
+                const messageContainer = form.find('.message-container');
                 messageContainer.empty();
 
-                $('.text-danger').text('');
+                // Clear previous error messages for this form only
+                form.find('.text-danger').text('');
 
                 $.ajax({
-                    url: '{{ route('square-footage-bills.store') }} ',
+                    url: '{{ route('square-footage-bills.store') }}',
                     type: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
-                        messageContainer.append(`
-                    <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                            </div>
+                        messageContainer.html(`
+                <div class="alert align-items-center text-white bg-success border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
                         </div>
                     </div>
+                </div>
             `);
+
                         form[0].reset();
 
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
-
                         }, 2000);
                     },
                     error: function(response) {
-
                         if (response.status === 422) { // Validation errors
-                            messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-                    ${response.responseJSON.errors}
+                            const errors = response.responseJSON.errors;
+                            console.log('Validation errors:', errors); // Debug log
 
-                    </div>`)
+                            // Display general error message
+                            messageContainer.html(`
+                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                        Please fix the errors below
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `);
 
+                            // Loop through each error field
+                            for (const field in errors) {
+                                // Get the first error message from the array
+                                const errorMsg = errors[field][0];
+
+                                // First, try to find the field by name and update sibling error element
+                                const inputField = form.find(`[name="${field}"]`);
+                                if (inputField.length > 0) {
+                                    // Try to find sibling error container
+                                    const siblingError = inputField.siblings('.text-danger');
+                                    if (siblingError.length > 0) {
+                                        siblingError.text(errorMsg);
+                                    } else {
+                                        // If no sibling found, try to find by ID
+                                        form.find(`#${field}-error`).text(errorMsg);
+                                    }
+                                } else {
+                                    // If input not found, try to find error container by ID directly
+                                    form.find(`#${field}-error`).text(errorMsg);
+                                }
+                            }
+
+                            // Log fields that couldn't be found for debugging
+                            for (const field in errors) {
+                                const inputField = form.find(`[name="${field}"]`);
+                                const errorContainer = form.find(`#${field}-error`);
+                                if (inputField.length === 0 && errorContainer.length === 0) {
+                                    console.log(
+                                        `Warning: Could not find field or error container for: ${field}`
+                                    );
+                                }
+                            }
                         } else {
-                            messageContainer.append(`
+                            messageContainer.html(`
                     <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
                         An unexpected error occurred. Please try again later.
-
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 `);
                         }
-                        // Auto-hide error message after 5 seconds
+
+                        // Auto-hide general error message after 5 seconds
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-
-                        }, 2000);
+                        }, 5000);
                     }
                 });
             });
 
+
+
+
             $('form[id^="dailyExpenses"]').on('submit', function(e) {
+
                 e.preventDefault();
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
-                const messageContainer = $('#messageContainer');
+                const messageContainer = form.find(
+                    '.message-container'); // Form-specific message container
                 messageContainer.empty();
 
-                $('.text-danger').text('');
+                // Clear previous error messages for this form only
+                form.find('.text-danger').text('');
 
                 $.ajax({
-                    url: '{{ route('daily-expenses.store') }} ',
+                    url: '{{ route('daily-expenses.store') }}',
                     type: 'POST',
                     data: formData,
                     contentType: false,
                     processData: false,
                     success: function(response) {
-
-
-                        messageContainer.append(`
-                    <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+                        messageContainer.html(`
+                    <div class="alert align-items-center text-white bg-success border-0" role="alert">
                         <div class="d-flex">
                             <div class="toast-body">
                                 <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
                             </div>
                         </div>
                     </div>
-            `);
+                `);
+
                         form[0].reset();
 
-                        // Auto-hide success message after 3 seconds
+                        // Auto-hide success message after 2 seconds
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
-
                         }, 2000);
                     },
                     error: function(response) {
 
-
-
                         if (response.status === 422) { // Validation errors
-                            messageContainer.append(`
-                        <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
+                            const errors = response.responseJSON.errors;
 
-                            ${response.responseJSON.errors}
+                            // Display general error message
+                            messageContainer.html(`
+                              <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                  Please fix the errors below
+                                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                             </div>
+                            `);
 
-                        </div>`)
+                            // Loop through each error field
+                            for (const field in errors) {
+                                // Get the first error message from the array
+                                const errorMsg = errors[field][0];
 
+                                // First, try to find the field by name and update sibling error element
+                                const inputField = form.find(`[name="${field}"]`);
+                                if (inputField.length > 0) {
+                                    // Try to find sibling error container
+                                    const siblingError = inputField.siblings(
+                                        '.text-danger');
+                                    if (siblingError.length > 0) {
+                                        siblingError.text(errorMsg);
+                                    } else {
+                                        // If no sibling found, try to find by ID
+                                        form.find(`#${field}-error`).text(errorMsg);
+                                    }
+                                } else {
+                                    // If input not found, try to find error container by ID directly
+                                    form.find(`#${field}-error`).text(errorMsg);
+                                }
+                            }
                         } else {
-                            messageContainer.append(`
-                            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                An unexpected error occurred. Please try again later.
-
-                            </div>
-                        `);
+                            messageContainer.html(`
+                                 <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                     An unexpected error occurred. Please try again later.
+                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                 </div>
+                             `);
                         }
-                        // Auto-hide error message after 5 seconds
+
+                        // Auto-hide general error message after 5 seconds
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-
-                        }, 2000);
+                        }, 5000);
                     }
                 });
             });
 
+
+
+
             $('form[id^="dailyWager"]').on('submit', function(e) {
+
                 e.preventDefault();
 
                 const form = $(this);
@@ -2275,53 +2338,79 @@
                     contentType: false,
                     processData: false,
                     success: function(response) {
-
                         messageContainer.append(`
-                    <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                            <div class="alert align-items-center text-white bg-success border-0" role="alert">
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-            `);
+                        `);
 
                         form[0].reset();
 
-                        // Auto-hide success message after 3 seconds
+                        // Auto-hide success message and reload
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-                            location.reload();
-
+                            location.reload(); // This should reload the page
                         }, 2000);
                     },
                     error: function(response) {
-                        console.log(response);
-
 
                         if (response.status === 422) { // Validation errors
-                            messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-                    ${response.responseJSON.errors}
 
-                    </div>`)
+                            const errors = response.responseJSON.errors;
 
+                            // Display general error message
+                            messageContainer.html(`
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    Please fix the errors below
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
+
+                            // Loop through each error field
+                            for (const field in errors) {
+                                // Get the first error message from the array
+                                const errorMsg = errors[field][0];
+
+                                // First, try to find the field by name and update sibling error element
+                                const inputField = form.find(`[name="${field}"]`);
+                                if (inputField.length > 0) {
+                                    // Try to find sibling error container
+                                    const siblingError = inputField.siblings(
+                                        '.text-danger');
+                                    if (siblingError.length > 0) {
+                                        siblingError.text(errorMsg);
+                                    } else {
+                                        // If no sibling found, try to find by ID
+                                        form.find(`#${field}-error`).text(errorMsg);
+                                    }
+                                } else {
+                                    // If input not found, try to find error container by ID directly
+                                    form.find(`#${field}-error`).text(errorMsg);
+                                }
+                            }
                         } else {
-                            messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                        An unexpected error occurred. Please try again later.
-
-                    </div>
-                `);
+                            messageContainer.html(`
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    An unexpected error occurred. Please try again later.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
                         }
-                        // Auto-hide error message after 5 seconds
+
+                        // Auto-hide general error message after 5 seconds
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-
-                        }, 2000);
+                        }, 5000);
                     }
                 });
             });
+
+
+
 
             $('form[id^="wagerAttendance"]').on('submit', function(e) {
                 e.preventDefault();
@@ -2385,6 +2474,8 @@
                     }
                 });
             });
+
+
 
             $('form[id="payment_supplierForm"]').on('submit', function(e) {
                 e.preventDefault();

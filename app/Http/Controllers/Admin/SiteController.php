@@ -14,7 +14,7 @@ use App\Services\DataService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
-use Validator;
+use Illuminate\Support\Facades\Validator;
 
 class SiteController extends Controller
 {
@@ -26,7 +26,11 @@ class SiteController extends Controller
 
         $sites = Site::latest()->paginate(10);
 
-        return view('profile.partials.Admin.Site.sites', compact('sites'));
+        $users = User::where('role_name', 'site_engineer')->get();
+
+        $clients = Client::all();
+
+        return view('profile.partials.Admin.Site.sites', compact('sites', 'users', 'clients'));
     }
 
     /**
@@ -49,7 +53,6 @@ class SiteController extends Controller
 
     public function store(Request $request)
     {
-
 
 
         $validator = Validator::make($request->all(), [
@@ -223,9 +226,8 @@ class SiteController extends Controller
         );
     }
 
-    public function show(Request $request, DataService $dataService, string $id)
+    public function show($id, Request $request, DataService $dataService)
     {
-
         $id = base64_decode($id);
 
         $dateFilter = $request->input('date_filter', 'today');
@@ -233,11 +235,20 @@ class SiteController extends Controller
         $supplier_id = $request->input('supplier_id', 'all');
         $wager_id = $request->input('wager_id', 'all');
 
+        // Add date range handling for custom filter
+        $startDate = null;
+        $endDate = null;
+
+        if ($dateFilter === 'custom') {
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+        }
+
         [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
-            $wager_id
+            $wager_id,
         );
 
         $ledgers = $dataService->makeData(
@@ -259,16 +270,11 @@ class SiteController extends Controller
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
 
-        $perPage = $request->get('per_page', 20);
-
         $paginatedLedgers = new LengthAwarePaginator(
-            $ledgers->forPage(
-                $request->input('page', 1),
-                $perPage
-            ),
+            $ledgers->forPage($request->input('page', 1), 20),
             $ledgers->count(),
-            $perPage,
-            $request->input('page', 10),
+            20,
+            $request->input('page', 1),
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
@@ -284,7 +290,7 @@ class SiteController extends Controller
             'suppliers',
             'wagers',
             'effective_balance',
-            'id'
+            'id',
         ));
     }
 
@@ -319,7 +325,7 @@ class SiteController extends Controller
 
         $site = Site::find($site_id);
 
-        $site->update($request->all());
+        $site->update($request->validated());
 
         return redirect()->route('sites.index')->with('status', 'update');
     }

@@ -27,7 +27,16 @@
         <x-error-message message="Site Cannot Be Deleted...." />
     @endif
 
-    
+
+    <style>
+        #messageContainer {
+            position: fixed;
+            bottom: 5%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999999999;
+        }
+    </style>
 
     <div class="row">
 
@@ -38,10 +47,15 @@
 
                 <div class="d-flex justify-content-end">
 
-                    <a class="btn btn-success btn-sm" href="{{ url('admin/sites/create') }}">
-                        <i class="fa-solid fa-building mr-2"></i>
-                        Create Site
-                    </a>
+
+
+                    <!-- Create Site Button -->
+                    <div class="col-md-2 text-end">
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal"
+                            data-bs-target="#create-site-modal">
+                            + Create Site
+                        </button>
+                    </div>
 
                 </div>
 
@@ -175,4 +189,173 @@
 
         </div>
     </div>
+
+
+
+    <!-- Create Site Modal -->
+    <div id="create-site-modal" class="modal fade" aria-hidden="true" aria-labelledby="createSiteModalLabel"
+        tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createSiteModalLabel">Create New Site</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createSiteForm" class="forms-sample material-form" enctype="multipart/form-data">
+                        @csrf
+
+                        <!-- Site Name -->
+                        <div class="form-group">
+                            <input type="text" name="site_name" id="site_name" />
+                            <label for="site_name" class="control-label">Site Name</label><i class="bar"></i>
+                        </div>
+
+                        <!-- Service Charge -->
+                        <div class="form-group">
+                            <input type="number" min="0" name="service_charge" id="service_charge"
+                                step="0.01" />
+                            <label for="service_charge" class="control-label">Service Charge</label><i
+                                class="bar"></i>
+                        </div>
+
+                        <!-- Service Charge -->
+                        <div class="form-group">
+                            <input type="number" min="0" name="contact_no" id="contact_no" step="0.01" />
+                            <label for="contact_no" class="control-label">Contact No</label><i class="bar"></i>
+                        </div>
+
+                        <!-- Location -->
+                        <div class="form-group">
+                            <input type="text" name="location" id="location" />
+                            <label for="location" class="control-label">Location</label><i class="bar"></i>
+                        </div>
+
+                        <div class="row">
+                            <!-- Select User -->
+                            <div class="col-md-6">
+                                <select name="user_id" id="user_id" class="form-select text-black form-select-sm"
+                                    style="cursor: pointer">
+                                    <option value="" selected>Select User</option>
+                                    @foreach ($users as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Select Client -->
+                            <div class="col-md-6">
+                                <select name="client_id" id="client_id" class="form-select text-black form-select-sm"
+                                    style="cursor: pointer">
+                                    <option value="" selected>Select Client</option>
+                                    @foreach ($clients as $client)
+                                        <option value="{{ $client->id }}">{{ $client->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+
+                            <div class="flex items-center justify-end mt-4">
+                                <button type="button" class="btn btn-secondary me-2"
+                                    data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-primary" id="submitSiteBtn">
+                                    Create Site
+                                </button>
+                            </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="messageContainer"></div>
+
+
+
+    <script>
+        $(document).ready(function() {
+            const messageContainer = $('#messageContainer');
+
+            $('#createSiteForm').submit(function(e) {
+
+                e.preventDefault();
+
+                // Reset previous error messages and alerts
+                $('.error-message').text('');
+                messageContainer.html('');
+
+                // Disable button and show spinner
+                const submitBtn = $('#submitSiteBtn');
+                submitBtn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...'
+                );
+
+                // Prepare form data
+                const formData = new FormData(this);
+
+                // AJAX request
+                $.ajax({
+                    url: '/admin/sites',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.status) {
+
+                            $('#create-site-modal').modal('hide');
+                            $('#createSiteForm')[0].reset();
+
+                            messageContainer.html(`
+                                <div class="alert alert-success mt-3 alert-dismissible fade show" role="alert">
+                                    ${response.message}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
+                        }
+
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.reload();
+                        }, 2000);
+
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+
+
+                            messageContainer.html(`
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    ${xhr.responseJSON.message}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
+                        } else {
+                            messageContainer.html(`
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    ${xhr.responseJSON?.message || 'An unexpected error occurred.'}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
+                        }
+
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.reload();
+                        }, 2000);
+                    },
+                    complete: function() {
+                        submitBtn.prop('disabled', false).text('Create Site');
+                    }
+                });
+            });
+        });
+    </script>
+
+
+
+
 </x-app-layout>

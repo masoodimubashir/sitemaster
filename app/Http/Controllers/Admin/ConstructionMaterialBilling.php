@@ -11,6 +11,7 @@ use App\Models\Site;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -58,6 +59,9 @@ class ConstructionMaterialBilling extends Controller
      */
     public function store(Request $request)
     {
+
+
+
         if ($request->ajax()) {
 
             DB::beginTransaction();
@@ -71,9 +75,10 @@ class ConstructionMaterialBilling extends Controller
                 'phase_id' => 'required|exists:phases,id',
             ]);
 
+
             if ($validator->fails()) {
                 return response()->json([
-                    'errors' => 'Form Fields Are Missing'
+                    'errors' => $validator->errors()
                 ], 422);
             }
 
@@ -107,6 +112,7 @@ class ConstructionMaterialBilling extends Controller
                 ], 201);
             } catch (\Exception $e) {
 
+
                 DB::rollBack();
 
                 return response()->json([
@@ -114,8 +120,6 @@ class ConstructionMaterialBilling extends Controller
                 ], 500);
             }
         }
-
-        return response()->json(['error' => 'Invalid request.'], 400);
     }
 
 

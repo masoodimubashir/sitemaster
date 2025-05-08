@@ -6,7 +6,6 @@ use App\Class\HelperClass;
 use App\Http\Controllers\Controller;
 use App\Models\DailyWager;
 use App\Models\Payment;
-use App\Models\PaymentSupplier;
 use App\Models\Site;
 use DB;
 use Illuminate\Http\Request;
@@ -55,7 +54,9 @@ class DailyWagerController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json(['errors' => 'Validation Error.. Try Again!'], 422);
+                return response()->json([
+                    'errors' => $validator->errors(),
+                ], 422);
             }
 
             try {
