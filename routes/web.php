@@ -77,7 +77,9 @@ Route::middleware(['auth:clients', 'isClient'])->prefix('client')->group(functio
 Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(function () {
 
 
-    Route::get('/dashboard', [DashboardController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'siteDashboard'])->name('dashboard');
+    Route::get('dashboard/suppliers', [DashboardController::class, 'supplierDashboard'])->name('suppliers.dashboard');
+
 
     Route::get('/markAllAsRead', [MarkNotificationAsReadController::class, 'markAllNotificationAsRead'])
         ->name('admin.markAllAsRead');
@@ -104,11 +106,13 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     // Suppliers Routes
     Route::resource('/suppliers', SupplierController::class);
+    Route::get('/supplier/detail/{id}', [SupplierController::class, 'showSupplierDetail']);
+
 
     // Items Controller
     Route::resource('/items', ItemController::class);
 
-    
+
     // Sites Controller
     Route::resource('/sites', SiteController::class);
     Route::get('/sites/details/{id}', [SiteController::class, 'showSiteDetails']);

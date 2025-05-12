@@ -26,24 +26,39 @@ class PaymentsController extends Controller
     public function index(Request $request, DataService $dataService)
     {
 
+
         $dateFilter = $request->input('date_filter', 'today');
         $site_id = $request->input('site_id', 'all');
         $supplier_id = $request->input('supplier_id', 'all');
         $wager_id = $request->input('wager_id', 'all');
+        $startDate = $request->input('start_date'); 
+        $endDate = $request->input('end_date');
 
+        // Call the service or method
         [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
-            $wager_id
+            $wager_id,
+            $startDate,
+            $endDate
         );
 
-        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers)
-            ->sortByDesc(function ($d) {
-                return $d['created_at'];
-            });
+        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
 
         $balances = $dataService->calculateAllBalances($ledgers);
+
+
+        $ledgers = $dataService->makeData(
+            $payments,
+            $raw_materials,
+            $squareFootageBills,
+            $expenses,
+            $wagers
+        )->sortByDesc(function ($d) {
+            return $d['created_at'];
+        });
+
 
         $withoutServiceCharge = $balances['without_service_charge'];
         $withServiceCharge = $balances['with_service_charge'];

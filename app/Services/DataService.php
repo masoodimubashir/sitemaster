@@ -15,51 +15,21 @@ class DataService
 
     public function __construct() {}
 
-    public function getData($dateFilter, $site_id, $supplier_id, $wager_id)
+    public function getData($dateFilter, $site_id, $supplier_id, $wager_id, $startDate = null, $endDate = null)
     {
-
-
-        $dateRange = $this->filterByDate($dateFilter);
+        $dateRange = $this->filterByDate($dateFilter, $startDate, $endDate);
 
         $supplier_id = $this->getSupplierIdFromWager($wager_id, $supplier_id);
 
-        $payments = $this->getPayments(
-            $dateFilter,
-            $dateRange,
-            $site_id,
-            $supplier_id
-        );
-
-        $raw_materials = $this->getRawMaterials(
-            $dateFilter,
-            $dateRange,
-            $site_id,
-            $supplier_id
-        );
-
-        $squareFootageBills = $this->getSquareFootageBills(
-            $dateFilter,
-            $dateRange,
-            $site_id,
-            $supplier_id
-        );
-
-        $expenses = $this->getExpenses(
-            $dateFilter,
-            $dateRange,
-            $site_id
-        );
-
-        $wagers = $this->getWagers(
-            $dateFilter,
-            $dateRange,
-            $site_id,
-            $supplier_id,
-            $wager_id
-        );
+        $payments = $this->getPayments($dateFilter, $dateRange, $site_id, $supplier_id);
+        $raw_materials = $this->getRawMaterials($dateFilter, $dateRange, $site_id, $supplier_id);
+        $squareFootageBills = $this->getSquareFootageBills($dateFilter, $dateRange, $site_id, $supplier_id);
+        $expenses = $this->getExpenses($dateFilter, $dateRange, $site_id);
+        $wagers = $this->getWagers($dateFilter, $dateRange, $site_id, $supplier_id, $wager_id);
 
         return [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers];
     }
+
 
     public function makeData($payments = null, $raw_materials = null, $squareFootageBills = null, $expenses = null, $wagers = null)
     {
@@ -73,7 +43,7 @@ class DataService
                 'category' => 'Payment',
                 'credit' => $pay->transaction_type === 0 ? $pay->amount : 0,
                 'debit' => $pay->supplier && $pay->site_id ? $pay->amount : (($pay->transaction_type == 1) ? $pay->amount : 0),
-                'transaction_type' => $pay->supplier_id && $pay->site_id ? 'Sent By '. ucwords($pay->site->site_name) : (($pay->transaction_type === 0) ? 'Sent By Firm' : 'Received By Firm'),
+                'transaction_type' => $pay->supplier_id && $pay->site_id ? 'Sent By ' . ucwords($pay->site->site_name) : (($pay->transaction_type === 0) ? 'Sent By Firm' : 'Received By Firm'),
                 'payment_initiator' => !empty($pay->site_id) && empty($pay->supplier_id) ? 'Site' : (!empty($pay->supplier_id) ? 'Supplier' : 'Admin'),
                 'site' => $pay->site->site_name ?? '--',
                 'supplier' => $pay->supplier->name ?? '--',
@@ -100,7 +70,7 @@ class DataService
                 'total_amount_with_service_charge' => $service_charge + $material->amount,
                 'supplier' => $material->supplier->name ?? '--',
                 'supplier_id' => $material->supplier_id ?? '--',
-                'site_id' => $material->site_id ?? '--',
+                'site_id' => $material->phase->site_id ?? '--',
                 'phase' => $material->phase->phase_name ?? '--',
                 'created_at' => $material->created_at,
             ];
@@ -123,7 +93,7 @@ class DataService
                 'site' => $bill->phase->site->site_name ?? '--',
                 'supplier' => $bill->supplier->name ?? '--',
                 'supplier_id' => $bill->supplier_id ?? '--',
-                'site_id' => $bill->site_id ?? '--',
+                'site_id' => $bill->phase->site_id ?? '--',
                 'phase' => $bill->phase->phase_name ?? '--',
                 'created_at' => $bill->created_at,
             ];
@@ -144,7 +114,7 @@ class DataService
                 'site' => $expense->phase->site->site_name ?? '--',
                 'supplier' => $expense->supplier->name ?? '--',
                 'supplier_id' => $expense->supplier_id ?? '--',
-                'site_id' => $expense->site_id ?? '--',
+                'site_id' => $expense->phase->site_id ?? '--',
                 'phase' => $expense->phase->phase_name ?? '--',
                 'created_at' => $expense->created_at,
             ];
@@ -176,18 +146,22 @@ class DataService
 
 
 
-    public function filterByDate($dateFilter)
+    public function filterByDate($dateFilter, $startDate = null, $endDate = null)
     {
-
         return match ($dateFilter) {
             'yesterday' => [now()->yesterday()->startOfDay(), now()->yesterday()->endOfDay()],
             'this_week' => [now()->startOfWeek(), now()->endOfWeek()],
             'this_month' => [now()->startOfMonth(), now()->endOfMonth()],
             'this_year' => [now()->startOfYear(), now()->endOfYear()],
+            'custom' => [
+                $startDate ? \Carbon\Carbon::parse($startDate)->startOfDay() : now()->startOfDay(),
+                $endDate ? \Carbon\Carbon::parse($endDate)->endOfDay() : now()->endOfDay(),
+            ],
             'lifetime' => null,
             default => [now()->startOfDay(), now()->endOfDay()],
         };
     }
+
 
     private function getSupplierIdFromWager($wager_id, $supplier_id)
     {
@@ -309,7 +283,7 @@ class DataService
         return $supplier_id && $supplier_id !== 'all';
     }
 
-    private function isFilteredDate($dateFilter, $dateRange)
+    private function isFilteredDate($dateFilter, $dateRange): bool
     {
 
         return $dateFilter !== 'lifetime' && $dateRange;
@@ -349,9 +323,13 @@ class DataService
                     $totals['without_service_charge']['due'] += $debit;
                     $totals['with_service_charge']['due'] += $debit;
                     break;
+
                 default:
                     $totals['without_service_charge']['due'] += $debit;
-                    $totals['with_service_charge']['due'] += $item['total_amount_with_service_charge'];
+                    // Use total_amount_with_service_charge if it exists, fallback to debit
+                    $totals['with_service_charge']['due'] += isset($item['total_amount_with_service_charge'])
+                        ? (float)$item['total_amount_with_service_charge']
+                        : $debit;
                     break;
             }
         }

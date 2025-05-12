@@ -1,5 +1,6 @@
 <x-app-layout>
 
+
     @php
         $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
     @endphp
@@ -8,551 +9,399 @@
         #messageContainer {
             position: fixed;
             bottom: 5%;
-            right: 45%;
-            z-index: 9999999;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999999999;
+        }
+
+        .header-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header-icon {
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+
+        .tab-container {
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            display: inline-block;
+            padding: 10px 0;
+            margin-right: 30px;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            border-bottom: 2px solid #3b82f6;
+            color: #3b82f6;
+            font-weight: 500;
+        }
+
+        .badge {
+            background-color: #e5e7eb;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        .filters-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .filter-label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+        }
+
+        .summary-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .summary-card {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .summary-card.gave {
+            background-color: #fee2e2;
+        }
+
+        .summary-card.got {
+            background-color: #d1fae5;
+        }
+
+        .summary-card.balance {
+            background-color: #e0e7ff;
+        }
+
+        .summary-amount {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            font-size: 14px;
+        }
+
+        .gave-text {
+            color: #dc2626;
+        }
+
+        .got-text {
+            color: #059669;
+        }
+
+        .balance-text {
+            color: #4f46e5;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .report-table th {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 500;
+            color: #4b5563;
+        }
+
+        .report-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .report-table tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-outline {
+            border: 1px solid #d1d5db;
+            background-color: white;
+            color: #374151;
         }
     </style>
 
-    <x-breadcrumb :names="['Ledger']" :urls="[$user . '/payments']"></x-breadcrumb>
-
-    <div class="row">
-
-        <div class="col-sm-12">
-
-            <div class="home-tab">
-
-                <div class="d-sm-flex align-items-center justify-content-between border-bottom">
-
-                    <ul class="nav nav-tabs" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" id="workforce-tab" data-bs-toggle="tab" href="#workforce"
-                                role="tab" aria-controls="workforce" aria-selected="true">Ledger</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" id="material-tab" data-bs-toggle="tab" href="#material" role="tab"
-                                aria-controls="material" aria-selected="false">Payments History</a>
-                        </li>
-                    </ul>
-
-                </div>
-
-                <div class="tab-content mt-3">
-
-                    <div class="tab-pane fade show active" id="workforce" role="tabpanel"
-                        aria-labelledby="workforce-tab">
-
-                        <div class="row">
-
-                            <div class="col-12 col-md-10 d-flex flex-column flex-md-row gap-2 align-items-center">
-
-                                <form class="d-flex flex-column flex-md-row gap-2 w-100"
-                                    action="{{ url($user . '/payments') }}" method="GET" id="filterForm">
-
-                                    <select style="cursor: pointer"
-                                        class="bg-white text-black form-select form-select-sm" name="site_id"
-                                        onchange="document.getElementById('filterForm').submit();">
-                                        <option value="all" {{ request('site_id') === 'all' ? 'selected' : '' }}>
-                                            All Sites
-                                        </option>
-                                        @foreach ($sites as $site)
-                                            @if ($site['site'] != '--')
-                                                <option value="{{ $site['site_id'] }}"
-                                                    {{ request('site_id') == $site['site_id'] ? 'selected' : '' }}>
-                                                    {{ $site['site'] }}
-                                                </option>
-                                            @endif
-                                        @endforeach
 
 
 
-                                    </select>
-
-                                    <select style="cursor: pointer"
-                                        class="bg-white text-black form-select form-select-sm" name="supplier_id"
-                                        onchange="document.getElementById('filterForm').submit();">
-                                        <option value="all" {{ request('supplier_id') == 'all' ? 'selected' : '' }}>
-                                            All Suppliers
-                                        </option>
-                                        @foreach ($suppliers as $supplier)
-                                            {{-- @if ($supplier['supplier_id'] != '--') --}}
-                                                <option value="{{ $supplier['supplier_id'] }}"
-                                                    {{ request('supplier_id') == $supplier['supplier_id'] ? 'selected' : '' }}>
-                                                    {{ $supplier['supplier'] }}
-                                                </option>
-                                            {{-- @endif --}}
-                                        @endforeach
-                                    </select>
-
-                                    <select style="cursor: pointer"
-                                        class="bg-white text-black form-select form-select-sm" name="date_filter"
-                                        id="date_filter" onchange="document.getElementById('filterForm').submit();">
-                                        <option value="today"
-                                            {{ request('date_filter') === 'today' ? 'selected' : '' }}>
-                                            Today
-                                        </option>
-                                        <option value="yesterday"
-                                            {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>
-                                            Yesterday
-                                        </option>
-                                        <option value="this_week"
-                                            {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>
-                                            This Week
-                                        </option>
-                                        <option value="this_month"
-                                            {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>
-                                            This Month
-                                        </option>
-                                        <option value="this_year"
-                                            {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>
-                                            This Year
-                                        </option>
-                                        <option value="lifetime"
-                                            {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>
-                                            All Data
-                                        </option>
-                                    </select>
+    <div class="header-container">
 
 
-                                </form>
+        <div class="header-icon">
+            <i class="menu-icon fa fa-building"></i>
+        </div>
+        <h1 class="text-xl font-semibold">Ledger Report</h1>
+        <div class="ms-auto action-buttons d-flex gap-2">
+            <!-- Dropdown Menu -->
+             <form action="{{ url($user . '/ledger/report') }}" method="GET">
+                <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
+                <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
+                <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
+                <input type="hidden" name="wager_id" value="{{ request('wager_id', 'all') }}">
+                <button type="submit" class="btn btn-outline">
+                    <i class="far fa-file-pdf"></i> Download PDF
+                </button>
+            </form>
+              
+          
+
+          
+
+        </div>
+    </div>
 
 
-                                <div
-                                    class="col-12 col-md-2 d-flex justify-content-start justify-content-md-end align-items-center">
-                                    <form action="{{ url($user . '/ledger/report') }}" method="GET">
-                                        <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
-                                        <input type="hidden" name="date_filter"
-                                            value="{{ request('date_filter', 'today') }}">
-                                        <input type="hidden" name="supplier_id"
-                                            value="{{ request('supplier_id', 'all') }}">
-                                        <input type="hidden" name="wager_id" value="{{ request('wager_id', 'all') }}">
-                                        <button type="submit" class="btn btn-info text-white btn-sm">
-                                            Generate PDF Report
-                                        </button>
-                                    </form>
-                                </div>
-
-                            </div>
 
 
-                            <div class="table-responsive mt-4">
+    <form class="d-flex flex-column flex-md-row gap-2 w-100" action="{{ url()->current() }}" method="GET"
+        id="filterForm">
+        <!-- Site Select -->
+        <select class="bg-white text-black form-select form-select-sm" name="site_id" id="siteFilter">
+            <option value="all" {{ request('site_id') == 'all' ? 'selected' : '' }}>All Sites</option>
+            @foreach ($sites as $site)
+                <option value="{{ $site['site_id'] }}" {{ request('site_id') == $site['site_id'] ? 'selected' : '' }}>
+                    {{ $site['site'] }}
+                </option>
+            @endforeach
+        </select>
 
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
+        <!-- Supplier Select -->
+        <select class="bg-white text-black form-select form-select-sm" name="supplier_id" id="supplierFilter">
+            <option value="all" {{ request('supplier_id') == 'all' ? 'selected' : '' }}>All Suppliers</option>
+            @foreach ($suppliers as $supplier)
+                <option value="{{ $supplier['supplier_id'] }}"
+                    {{ request('supplier_id') == $supplier['supplier_id'] ? 'selected' : '' }}>
+                    {{ $supplier['supplier'] }}
+                </option>
+            @endforeach
+        </select>
 
-                                            <td colspan="1">
-                                                <div class="p-3 d-flex flex-column gap-2 text-danger">
-                                                    <small>
-                                                        <b>
-                                                            Total Balance
-                                                        </b>
-                                                    </small>
-                                                    <h4 class="fw-bold">
-                                                        {{ Number::currency($total_balance, 'INR') }}
-                                                    </h4>
-                                                </div>
-                                            </td>
+        <!-- Date Period Filter -->
+        <select class="bg-white text-black form-select form-select-sm" name="date_filter" id="dateFilter">
+            <option value="today" {{ request('date_filter') === 'today' ? 'selected' : '' }}>Today</option>
+            <option value="yesterday" {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>Yesterday</option>
+            <option value="this_week" {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>This Week</option>
+            <option value="this_month" {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>This Month
+            </option>
+            <option value="this_year" {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>This Year</option>
+            <option value="custom" {{ request('date_filter') === 'custom' ? 'selected' : '' }}>Custom Range</option>
+        </select>
 
-                                            <td colspan="1">
-                                                <div class="p-3 d-flex flex-column gap-2 text-warning">
-                                                    <small>
-                                                        <b>
-                                                            Total Due
-                                                        </b>
-                                                    </small>
-                                                    <h4 class="fw-bold">
-                                                        {{ Number::currency($total_due, 'INR') }}
-                                                    </h4>
-                                                </div>
-                                            </td>
+        <!-- Date Range Inputs -->
+        <div id="customDateRange"
+            style="display: {{ request('date_filter') === 'custom' ? 'flex' : 'none' }}; gap: 10px;">
+            <input type="date" name="start_date" class="form-control form-control-sm"
+                value="{{ request('start_date') }}" placeholder="Start Date">
+            <input type="date" name="end_date" class="form-control form-control-sm"
+                value="{{ request('end_date') }}" placeholder="End Date">
+        </div>
 
-                                            <td>
-                                                <div class="p-3 d-flex flex-column gap-2 text-info fw-bold">
-
-                                                    <small>
-                                                        <b>
-                                                            Effective Balance
-                                                        </b>
-                                                    </small>
-                                                    <h4>
-                                                        {{ Number::currency($effective_balance, 'INR') }}
-                                                    </h4>
-
-                                                </div>
-                                            </td>
-
-                                            <td colspan="1">
-                                                <div class="p-3 d-flex flex-column gap-2 text-success">
-                                                    <small>
-                                                        <b>
-                                                            Total Paid
-                                                        </b>
-                                                    </small>
-                                                    <h4 class="fw-bold">
-                                                        {{ Number::currency($total_paid, 'INR') }}
-                                                    </h4>
-                                                </div>
-                                            </td>
-
-                                            <td colspan="1">
-                                                <div class="p-3 d-flex flex-column gap-2 text-info fw-bold">
-                                                    <small>
-                                                        <b>
-                                                            Ongoing Sites
-                                                        </b>
-                                                    </small>
-                                                    <h4>
-                                                        {{ $is_ongoing_count }}
-                                                    </h4>
-
-                                                </div>
-                                            </td>
-
-                                            <td>
-                                                <div class="p-3 d-flex flex-column gap-2 text-info fw-bold">
-                                                    <small>
-                                                        <b>
-                                                            Closed Sites
-                                                        </b>
-                                                    </small>
-                                                    <h4>
-                                                        {{ $is_not_ongoing_count }}
-                                                    </h4>
-
-                                                </div>
-                                            </td>
-
-                                        </tr>
-                                        <tr>
-                                            <th class="bg-info text-white fw-bold ">Date | Time</th>
-                                            <th class="bg-info fw-bold text-white">Transaction Type</th>
-                                            <th class="bg-info text-white fw-bold ">Supplier Name</th>
-                                            <th class="bg-info text-white fw-bold ">Site Name</th>
-                                            <th class="bg-info text-white fw-bold ">Phase</th>
-                                            <th class="bg-info text-white fw-bold ">Type</th>
-                                            <th class="bg-info text-white fw-bold">Narration</th>
-                                            <th class="bg-info text-white fw-bold ">Debit</th>
-                                            <th class="bg-info fw-bold text-white">Credit</th>
-
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+        <!-- Reset Button -->
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="resetFilters">
+            <i class="fas fa-undo"></i> Reset
+        </button>
+    </form>
 
 
-                                        @if (count($paginatedLedgers))
 
-                                            @foreach ($paginatedLedgers as $key => $ledger)
-                                                <tr>
+    <div class="mt-4">
 
-                                                    <td>
-                                                        {{ $ledger['created_at'] }}
-                                                    </td>
+        <div class="summary-cards">
 
-                                                    <td>
-                                                        {{ $ledger['transaction_type'] }}
-                                                    </td>
+            <div class="summary-card gave">
+                <div class="summary-amount gave-text">₹{{ number_format($total_balance) }}</div>
+                <div class="summary-label gave-text">Total Balance</div>
+            </div>
 
-                                                    <td>
-                                                        {{ ucwords($ledger['supplier']) }}
-                                                    </td>
+            <div class="summary-card gave">
+                <div class="summary-amount gave-text">₹{{ number_format($total_due) }}</div>
+                <div class="summary-label gave-text">Total Due</div>
+            </div>
 
-                                                    <td>
-                                                        {{ ucwords($ledger['site']) }}
-                                                    </td>
+            <div class="summary-card balance">
+                <div class="summary-amount balance-text">₹{{ number_format($effective_balance) }}</div>
+                <div class="summary-label balance-text">Effective Balance</div>
+            </div>
 
-                                                    <td>
-                                                        {{ ucwords($ledger['phase']) }}
-                                                    </td>
+            <div class="summary-card got">
+                <div class="summary-amount got-text">₹{{ number_format($total_paid) }}</div>
+                <div class="summary-label got-text">Total Paid</div>
+            </div>
+        </div>
 
-                                                    <td>
-                                                        {{ $ledger['category'] }}
-                                                    </td>
 
-                                                    <td>
-                                                        {{ ucwords($ledger['description']) }}
-                                                    </td>
 
-                                                    <td>
-                                                        {{ $ledger['debit'] }}
-                                                    </td>
-
-                                                    <td>
-                                                        {{ $ledger['credit'] }}
-                                                    </td>
-
-                                                </tr>
-                                            @endforeach
+        <div class="card">
+            <div class="table-responsive mt-4">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>Customer Name</th>
+                            <th>DETAILS</th>
+                            <th style="text-align: right;">Debit</th>
+                            <th style="text-align: right;">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (count($paginatedLedgers))
+                            @foreach ($paginatedLedgers as $key => $ledger)
+                                <tr>
+                                    <td>{{ \Carbon\Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
+                                    <td>{{ ucwords($ledger['supplier']) }}</td>
+                                    <td>
+                                        {{ ucwords($ledger['description']) }}
+                                        <div class="text-sm text-gray-500">
+                                            {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
+                                        </div>
+                                    </td>
+                                    <td style="text-align: right;" class="gave-text">
+                                        @if ($ledger['debit'] > 0)
+                                            ₹{{ number_format($ledger['debit']) }}
                                         @else
-                                            <tr>
-                                                <td class="text-danger fw-bold text-center" colspan="8">No Records
-                                                    Available...</td>
-                                            </tr>
+                                            ₹0
                                         @endif
-                                    </tbody>
-                                </table>
-
-                            </div>
-
-                            <div class="mt-4">
-                                {{ $paginatedLedgers->links() }}
-                            </div>
-
-                        </div>
-                        {{--                    <div class="tab-pane fade" id="material" role="tabpanel" aria-labelledby="material-tab"> --}}
-
-
-                        {{--                        <div class="table-responsive mt-4"> --}}
-
-                        {{--                            @if (count($paginatedLedgers)) --}}
-
-                        {{--                                <table class="table table-bordered"> --}}
-
-                        {{--                                    <thead> --}}
-                        {{--                                        <tr> --}}
-
-                        {{--                                            <th class="bg-info fw-bold text-white">Date</th> --}}
-                        {{--                                            <th class="bg-info fw-bold text-white">Site Total</th> --}}
-                        {{--                                            <th class="bg-info fw-bold text-white">Supplier Total</th> --}}
-                        {{--                                            <th class="bg-info fw-bold text-white">Payment Mode</th> --}}
-                        {{--                                            <th class="bg-info fw-bold text-white"> Supplier </th> --}}
-                        {{--                                            <th class="bg-info fw-bold text-white"> Site Name </th> --}}
-                        {{--                                            <th class="bg-info fw-bold text-white"> Site Owner </th> --}}
-                        {{--                                            <th class="bg-info fw-bold text-white"> Contact No </th> --}}
-                        {{--                                            <th class="bg-info fw-bold text-white">Payment Amount</th> --}}
-                        {{--                                        </tr> --}}
-                        {{--                                    </thead> --}}
-
-                        {{--                                    <tbody> --}}
-
-                        {{--                                        @if (count($paginatedLedgers)) --}}
-
-
-                        {{--                                            @foreach ($paginatedLedgers as $key => $ledger) --}}
-
-
-                        {{--                                                @if ($ledger['category'] === 'Payments') --}}
-
-
-                        {{--                                                    <tr> --}}
-                        {{--                                                        <td> --}}
-                        {{--                                                            {{ $ledger['created_at'] }} --}}
-                        {{--                                                        </td> --}}
-
-
-
-                        {{--                                                        <td> --}}
-                        {{--                                                            {{ $ledger['payment_mode'] }} --}}
-                        {{--                                                        </td> --}}
-
-
-                        {{--                                                        <td> --}}
-                        {{--                                                            {{ $ledger['site_payments_total'] }} --}}
-                        {{--                                                        </td> --}}
-
-                        {{--                                                        <td> --}}
-                        {{--                                                            {{ $ledger['supplier_payments_total'] }} --}}
-                        {{--                                                        </td> --}}
-
-                        {{--                                                        <td> --}}
-                        {{--                                                            {{ ucwords($ledger['supplier']) }} --}}
-                        {{--                                                        </td> --}}
-
-                        {{--                                                        <td> --}}
-                        {{--                                                            {{ ucwords($ledger['site']) }} --}}
-                        {{--                                                        </td> --}}
-
-                        {{--                                                        <td> --}}
-                        {{--                                                            {{ ucwords($ledger['site_owner']) }} --}}
-                        {{--                                                        </td> --}}
-
-                        {{--                                                        <td> --}}
-                        {{--                                                            {{ ucwords($ledger['contact_no']) }} --}}
-                        {{--                                                        </td> --}}
-
-                        {{--                                                        <td> --}}
-                        {{--                                                            {{ $ledger['credit'] }} --}}
-                        {{--                                                        </td> --}}
-                        {{--                                                    </tr> --}}
-                        {{--                                                @endif --}}
-                        {{--                                            @endforeach --}}
-                        {{--                                        @else --}}
-                        {{--                                            <tr> --}}
-                        {{--                                                <td class="text-danger fw-bold text-center" colspan="8">No Records --}}
-                        {{--                                                    Available...</td> --}}
-                        {{--                                            </tr> --}}
-                        {{--                                        @endif --}}
-
-                        {{--                                    </tbody> --}}
-
-
-                        {{--                                </table> --}}
-                        {{--                            @else --}}
-                        {{--                                <h1 class="display-4 bg-white p-2 text-center fw-3 text-danger">No records found..</h1> --}}
-                        {{--                            @endif --}}
-                        {{--                        </div> --}}
-
-                        {{--                        <div class="mt-4"> --}}
-                        {{--                            {{ $paginatedLedgers->links() }} --}}
-                        {{--                        </div> --}}
-                        {{--                    </div> --}}
-                    </div>
-
-                </div>
+                                    </td>
+                                    <td style="text-align: right;" class="got-text">
+                                        @if ($ledger['credit'] > 0)
+                                            ₹{{ number_format($ledger['credit']) }}
+                                        @else
+                                            ₹0
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        @else
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-gray-500">No records available</td>
+                            </tr>
+                        @endif
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        {{-- Payment Supplier --}}
-        <div id="payment-supplier" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-            tabindex="-1">
-
-            <div class="modal-dialog modal-dialog-centered">
-
-                <div class="modal-content">
-
-                    <div class="modal-body">
-
-                        <form id="payment_supplierForm" class="forms-sample material-form">
-
-                            @csrf
-
-                            {{-- Phase Name --}}
-                            <div class="form-group">
-                                <input type="number" min="0" name="amount" />
-                                <label for="input" class="control-label">Amount</label><i class="bar"></i>
-                                <x-input-error :messages="$errors->get('amount')" class="mt-2" />
-                            </div>
-
-                            <!-- Site -->
-                            <div class="form-group">
-                                {{-- <input type="hidden" name="site_id" value="{{ $site->id }}" /> --}}
-                                <x-input-error :messages="$errors->get('site_id')" class="mt-2" />
-                            </div>
-
-                            {{-- Supplier --}}
-
-                            <select class="form-select form-select-sm" id="supplier_id" name="supplier_id">
-                                <option value="">Select Supplier</option>
-                                {{-- @foreach ($suppliers as $supplier)
-                                    <option value="{{ $supplier->id }}">
-                                        {{ $supplier->name }}
-                                    </option>
-                                @endforeach --}}
-                            </select>
-                            @error('supplier_id')
-                                <x-input-error :messages="$message" class="mt-2" />
-                            @enderror
-
-
-                            <!-- Is Verified -->
-                            {{-- <div class="form-check">
-                            <label class="form-check-label">
-                                <input type="checkbox" class="form-check-input" name="is_verified"> Verify
-                            </label>
-                            @error('is_verified')
-                                <x-input-error :messages="$message" class="mt-2" />
-                            @enderror
-                        </div> --}}
-
-                            {{-- Screenshot --}}
-                            <div class="mt-3">
-                                <input class="form-control form-control-md" id="image" type="file"
-                                    name="screenshot">
-                            </div>
-
-                            <div class="flex items-center justify-end mt-4">
-                                <x-primary-button>
-                                    {{ __('Pay') }}
-                                </x-primary-button>
-                            </div>
-
-
-                        </form>
-
-                    </div>
-
-                </div>
-
-            </div>
-
+        <div class="mt-4 d-flex justify-content-center">
+            {{ $paginatedLedgers->links() }}
         </div>
+    </div>
 
-        <div id="messageContainer"> </div>
-
-        {{-- // url: '{{ route('supplier-payments.store') }}', --}}
-
-        <script>
-            $(document).ready(function() {
-                $('form[id="payment_supplierForm"]').on('submit', function(e) {
-                    e.preventDefault();
-                    console.log(e);
+    <div id="messageContainer"></div>
 
 
-                    const form = $(this);
-                    const formData = new FormData(form[0]);
-                    const messageContainer = $('#messageContainer');
-                    messageContainer.empty();
+    {{-- ------------------------------------------------------- All The Models Are Here ----------------------------------------------------------- --}}
 
-                    $('.text-danger').remove(); // Clear previous error messages
 
-                    $.ajax({
-                        type: 'POST',
-                        data: formData,
-                        contentType: false,
-                        processData: false,
-                        success: function(response) {
 
-                            form[0].reset();
-                            messageContainer.append(`
-                        <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
-                            <div class="d-flex">
-                                <div class="toast-body">
-                                    <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                </div>
-                            </div>
-                        </div>
-                `);
-                            // Auto-hide success message after 3 seconds
-                            setTimeout(function() {
-                                messageContainer.find('.alert').alert('close');
-                                location.relord();
-                            }, 3000);
-                        },
-                        error: function(response) {
 
-                            if (response.status === 422) {
+    {{-- ------------------------------------------  All The Scripts For This Page Are Below ---------------------------------------- --}}
 
-                                messageContainer.append(`
-                        <div class="alert alert-danger mt-3 alert-dismissible fade show " role="alert">
+   <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const siteFilter = document.getElementById('siteFilter');
+        const supplierFilter = document.getElementById('supplierFilter');  // Fixed this line
+        const filterForm = document.getElementById('filterForm');
+        const dateFilter = document.getElementById('dateFilter');
+        const customDateRange = document.getElementById('customDateRange');
+        const resetBtn = document.getElementById('resetFilters');
 
-                            ${response.responseJSON.errors}
-                        </div>`)
-
-                            } else {
-                                messageContainer.append(`
-                        <div class="alert alert-danger mt-3 alert-dismissible fade show " role="alert">
-                            An unexpected error occurred. Please try again later.
-
-                        </div>
-                    `);
-                            }
-                            // Auto-hide error message after 5 seconds
-                            setTimeout(function() {
-                                messageContainer.find('.alert').alert('close');
-
-                            }, 5000);
-                        }
-                    });
-                });
-            })
-        </script>
-
-        <script>
-            function resetForm() {
-                document.querySelector('select[name="site_id"]').value = 'all';
-                document.querySelector('select[name="date_filter"]').value = 'today';
-                document.querySelector('select[name="supplier_id"]').value = 'all';
-                document.querySelector('select[name="wager_id"]').value = 'all';
-                window.location.href = "{{ url($user . '/payments') }}";
+        // Toggle date range visibility
+        dateFilter.addEventListener('change', function() {
+            if (this.value === 'custom') {
+                customDateRange.style.display = 'flex';
+            } else {
+                customDateRange.style.display = 'none';
+                document.querySelector('input[name="start_date"]').value = '';
+                document.querySelector('input[name="end_date"]').value = '';
             }
-        </script>
+            submitForm();
+        });
+
+        // Auto-submit when filters change
+        siteFilter.addEventListener('change', submitForm);
+        supplierFilter.addEventListener('change', submitForm);  // Simplified this
+
+        // For date inputs, add a small delay before submitting
+        document.querySelectorAll('#customDateRange input').forEach(input => {
+            let timeout;
+            input.addEventListener('change', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(submitForm, 500);
+            });
+        });
+
+        // Reset all filters
+        resetBtn.addEventListener('click', function() {
+            filterForm.reset();
+            siteFilter.value = 'all';
+            supplierFilter.value = 'all';  // Reset supplier filter
+            dateFilter.value = 'today';
+            customDateRange.style.display = 'none';
+            submitForm();
+        });
+
+        // Initialize date range visibility
+        if (dateFilter.value === 'custom') {
+            customDateRange.style.display = 'flex';
+        }
+
+        function submitForm() {
+            const params = new FormData(filterForm);
+            const queryString = new URLSearchParams(params).toString();
+            window.location.href = "{{ url()->current() }}?" + queryString;
+        }
+    });
+</script>
+
+
 </x-app-layout>

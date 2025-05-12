@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateSiteRequest;
 use App\Models\Client;
 use App\Models\Item;
+use App\Models\Phase;
 use App\Models\Site;
 use App\Models\Supplier;
 use App\Models\User;
@@ -228,28 +229,30 @@ class SiteController extends Controller
 
     public function show($id, Request $request, DataService $dataService)
     {
+
         $id = base64_decode($id);
 
         $dateFilter = $request->input('date_filter', 'today');
         $site_id = $request->input('site_id', $id);
         $supplier_id = $request->input('supplier_id', 'all');
         $wager_id = $request->input('wager_id', 'all');
+        $startDate = $request->input('start_date'); // for 'custom'
+        $endDate = $request->input('end_date');
 
-        // Add date range handling for custom filter
-        $startDate = null;
-        $endDate = null;
-
-        if ($dateFilter === 'custom') {
-            $startDate = $request->input('start_date');
-            $endDate = $request->input('end_date');
-        }
-
+        // Call the service or method
         [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
             $wager_id,
+            $startDate,
+            $endDate
         );
+
+        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
+
+        $balances = $dataService->calculateAllBalances($ledgers);
+
 
         $ledgers = $dataService->makeData(
             $payments,
@@ -282,6 +285,12 @@ class SiteController extends Controller
             fn($supplier) => $supplier['supplier_id'] !== '--'
         )->unique('supplier_id');
 
+        $items = Item::orderBy('item_name')->get();
+        $workforce_suppliers = Supplier::where('is_workforce_provider', 1)->orderBy('name')->get();
+        $raw_material_providers = Supplier::where('is_raw_material_provider', 1)->orderBy('name')->get();
+
+        $phases = Phase::latest()->get();
+
         return view("profile.partials.Admin.Site.show-site", compact(
             'paginatedLedgers',
             'total_paid',
@@ -291,6 +300,10 @@ class SiteController extends Controller
             'wagers',
             'effective_balance',
             'id',
+            'items',
+            'workforce_suppliers',
+            'raw_material_providers',
+            'phases'
         ));
     }
 

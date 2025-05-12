@@ -1,16 +1,20 @@
 <?php
 
+
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Supplier;
 use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
-use App\Models\PaymentSupplier;
-use Illuminate\Support\Facades\Log;
+use App\Services\DataService;
 
 class SupplierController extends Controller
 {
+
+    public function __construct(public DataService $dataService) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -44,7 +48,7 @@ class SupplierController extends Controller
             'is_workforce_provider' => $request->provider === 'is_workforce_provider' ? 1 : 0,
         ]);
 
-        return redirect()->to('admin/suppliers')->with('status', 'create');
+        return redirect()->back()->with('status', 'create');
     }
 
     /**
@@ -53,6 +57,63 @@ class SupplierController extends Controller
     public function show(string $id)
     {
 
+        $supplier_id = $id;
+
+        // Optional: use site/wager filters if needed later
+        $site_id = 'all';
+        $wager_id = 'all';
+        $date_filter = 'lifetime'; // Show all data
+        $start_date = null;
+        $end_date = null;
+
+        // Load the supplier
+        $supplier = Supplier::findOrFail($supplier_id);
+
+        // Use existing ledger logic
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $this->dataService->getData(
+            $date_filter,
+            $site_id,
+            $supplier_id,
+            $wager_id,
+            $start_date,
+            $end_date
+        );
+
+        $ledgers = $this->dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
+
+        // Compute balances
+        $totals = $this->dataService->calculateAllBalances($ledgers);
+
+        // Group unique sites
+        $sites = collect($ledgers)
+            ->unique('site_id')
+            ->map(function ($item) {
+                return [
+                    'site_id' => $item['site_id'],
+                    'site_name' => $item['site'],
+                ];
+            })->values();
+
+        // Prepare data
+        $data = [
+            'ledgers' => $ledgers,
+            'supplier' => $supplier,
+            'totalDebit' => $totals['without_service_charge']['due'],
+            'totalCredit' => $totals['without_service_charge']['paid'],
+            'balance' => $totals['without_service_charge']['balance'],
+            'sites' => $sites,
+        ];
+
+
+        if ($supplier->is_raw_material_provider == 1) {
+            return view('profile.partials.Admin.Supplier.show-supplier_raw_material', compact('data', 'sites'));
+        }
+
+        return view('profile.partials.Admin.Supplier.show_supplier_workforce', compact('data', 'sites'));
+    }
+
+    public function showSupplierDetail(string $id)
+    {
 
         $supplier = Supplier::with([
             'constructionMaterialBilling' => function ($material) {
@@ -148,12 +209,10 @@ class SupplierController extends Controller
             'sites' => $sites
         ];
 
-        if ($supplier->is_raw_material_provider === 1) {
-            return view('profile.partials.Admin.Supplier.show-supplier_raw_material', compact('data', 'sites'));
-        }
+            return view('profile.partials.Admin.Supplier.show-supplier-detail', compact('data', 'sites'));
 
 
-        return view('profile.partials.Admin.Supplier.show_supplier_workforce', compact('data', 'sites'));
+
     }
 
     /**

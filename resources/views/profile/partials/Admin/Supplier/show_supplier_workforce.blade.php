@@ -16,51 +16,160 @@
             z-index: 999999999;
         }
 
-        .accordion {
-            margin: 0 auto;
+        .header-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
         }
 
-        /* Accordion item */
-        .accordion-item {
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        .header-icon {
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+
+        .tab-container {
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            display: inline-block;
+            padding: 10px 0;
+            margin-right: 30px;
+            cursor: pointer;
+        }
+
+        .tab.active {
+            border-bottom: 2px solid #3b82f6;
+            color: #3b82f6;
+            font-weight: 500;
+        }
+
+        .badge {
+            background-color: #e5e7eb;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+
+        .filters-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .filter-label {
+            font-weight: 500;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .filter-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+        }
+
+        .summary-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .summary-card {
+            flex: 1;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .summary-card.gave {
+            background-color: #fee2e2;
+        }
+
+        .summary-card.got {
+            background-color: #d1fae5;
+        }
+
+        .summary-card.balance {
+            background-color: #e0e7ff;
+        }
+
+        .summary-amount {
+            font-size: 24px;
+            font-weight: 600;
             margin-bottom: 5px;
         }
 
-        /* Accordion header */
-        .accordion-header {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 15px;
-            text-align: left;
-            font-size: 16px;
-            cursor: pointer;
+        .summary-label {
+            font-size: 14px;
+        }
+
+        .gave-text {
+            color: #dc2626;
+        }
+
+        .got-text {
+            color: #059669;
+        }
+
+        .balance-text {
+            color: #4f46e5;
+        }
+
+        .report-table {
             width: 100%;
-            display: block;
-            outline: none;
-            border-radius: 4px;
+            border-collapse: separate;
+            border-spacing: 0;
         }
 
-        /* Accordion content */
-        .accordion-content {
-            display: none;
-            /* Hidden by default */
-            padding: 15px;
-            background-color: #f1f1f1;
-            border-top: 1px solid #ddd;
+        .report-table th {
+            text-align: left;
+            padding: 12px 15px;
+            border-bottom: 1px solid #e5e7eb;
+            font-weight: 500;
+            color: #4b5563;
         }
 
-        /* Transition for smooth expansion */
-        .accordion-content {
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
+        .report-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f3f4f6;
         }
 
-        .accordion-content.show {
-            display: block;
-            max-height: 500px;
-            /* Arbitrary large value */
+        .report-table tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-outline {
+            border: 1px solid #d1d5db;
+            background-color: white;
+            color: #374151;
         }
     </style>
 
@@ -68,228 +177,164 @@
     <x-breadcrumb :names="['Suppliers', $data['supplier']->name]" :urls="[$user . '/suppliers', $user . '/suppliers/' . $data['supplier']->id]" />
 
 
-    <div class="row mb-4">
 
-        <div class="col-12">
+    <div class="header-container">
 
-            <div class="d-flex flex-wrap justify-content-start gap-2">
 
-                <button class="btn btn-info btns" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                    Make Payment
+        <div class="header-icon">
+            <i class="menu-icon fa fa-building"></i>
+        </div>
+        <h1 class="text-xl font-semibold">Supplier Report</h1>
+        <div class="ms-auto action-buttons d-flex gap-2">
+            <!-- Dropdown Menu -->
+            <div class="dropdown">
+                <button class="btn btn-outline dropdown-toggle " type="button" id="dropdownMenuButton"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+                    Make Entry
                 </button>
 
-                <a href="{{ url($user . '/supplier/payments', [$data['supplier']->id]) }}" class="btn btn-info btns"
-                    data-modal="payment-supplier">
-                    View Payments
-                </a>
+                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 
-                <a href="{{ url($user . '/supplier/ledger', [$data['supplier']->id]) }}" class="btn btn-info btns"
-                    data-modal="payment-supplier">
-                    View Ledger
-                </a>
 
-                <a href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}"
-                    class="btn btn-info">
-                    Generate Payment Report
-                </a>
 
-                @if ($user === 'admin')
-                    <a href="{{ url($user . '/unverified-supplier-payments/' . $data['supplier']->id) }}"
-                        class="btn btn-info">
-                        Unverified Payments
-                    </a>
-                @endif
+                    <li>
 
+                        <a href="{{ url($user . '/supplier/ledger', [$data['supplier']->id]) }}" class="btn  btns"
+                            data-modal="payment-supplier">
+                            View Ledger
+                        </a>
+                    </li>
+
+                    <li>
+                        @if ($user === 'admin')
+                            <a href="{{ url($user . '/unverified-supplier-payments/' . $data['supplier']->id) }}"
+                                class="btn">
+                                Unverified Payments
+                            </a>
+                        @endif
+                    </li>
+
+                    <li>
+                        <a href="{{ url($user . '/supplier/payments', [$data['supplier']->id]) }}"
+                            class="btn btn-info btns" data-modal="payment-supplier">
+                            View Payments
+                        </a>
+                    </li>
+                </ul>
             </div>
 
-        </div>
 
-    </div>
+            {{-- <a href="{{ url('admin/sites/details/' . base64_encode($id)) }}" class="btn btn-outline">
+                <i class="fas fa-eye"></i> View Site Detail
+            </a> --}}
 
 
-    <div class="row g-4">
-        <div class="col-12 col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
 
-                    <div class="d-flex align-items-center  mb-3">
-                        <div class=" bg-opacity-10 ">
-                            <i class="fas fa-user text-info fs-3 p-2"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Supplier</h6>
-                            {{ ucfirst($data['supplier']->name) }}
+            <a href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}"
+                class="btn btn-outline">
+                <i class="far fa-file-pdf"></i>
+                Payment Report
+            </a>
 
-                        </div>
-                    </div>
+            <a href="{{ url($user . '/supplier/detail', ['id' => $data['supplier']->id]) }}"
+                class="btn btn-outline">
+                <i class="far fa-file-pdf"></i>
+                View Deatiled View
+            </a>
 
-                    <div class="d-flex align-items-center">
-                        <div class=" bg-opacity-10 ">
 
-                            <i class="fa-solid fa-phone text-info fs-3  p-2"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Contact</h6>
-                            <h5 class="mb-0">
 
-                                <a href="tel:+91-{{ $data['supplier']->contact_no }}"
-                                    class="text-decoration-none">91-{{ ucfirst($data['supplier']->contact_no) }}</a>
-                            </h5>
-                        </div>
-                    </div>
+            <button class="btn btn-info btns" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                Make Payment
+            </button>
 
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-            <div class="card h-100 shadow-sm">
-                
-                <div class="card-body">
-
-                    <div class="d-flex align-items-center mb-3">
-                        <div class=" bg-opacity-10 ">
-                            <i class="fas fa-map-marker-alt text-info fs-3 p-2"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Location</h6>
-                            {{ ucfirst($data['supplier']->address) }}
-
-                        </div>
-                    </div>
-
-                    <div class="d-flex align-items-center">
-                        <div class=" bg-opacity-10 ">
-                            <i class="fas fa-money-bill text-info fs-3 p-2"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Debit</h6>
-                            {{ Number::currency($data['totalDebit'] ?? 0, 'INR') }}
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-        </div>
-
-        <div class="col-12 col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class=" bg-{{ $data['balance'] >= 0 ? '' : '' }} fs-3 p-2">
-                            <i class="fas fa-balance-scale text-{{ $data['balance'] >= 0 ? 'info' : 'danger' }}"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-{{ $data['balance'] >= 0 ? 'info' : 'danger' }} mb-1">Balance</h6>
-                            <h5 class="mb-0 text-{{ $data['balance'] >= 0 ? 'info' : 'danger' }}">
-                                {{ Number::currency($data['balance'], 'INR') }}
-                            </h5>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class=" fs-3 p-2">
-                            <i class="fas fa-credit-card text-info"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Credit</h6>
-                            {{ Number::currency($data['totalCredit'] ?? 0 , 'INR') }}
-
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 
-    @if (count($data) >= 0)
 
-        <div class="row ">
 
-            <div class="col-lg-12 grid-margin stretch-card">
 
-                <div class="card-body ">
+    <div class="mt-4">
 
-                    <div class="table-responsive mt-4">
+        <div class="summary-cards">
 
-                        <table class="table table-bordered">
+            <div class="summary-card gave">
+                <div class="summary-amount gave-text">₹{{ number_format($data['balance']) }}</div>
+                <div class="summary-label gave-text">Total Balance</div>
+            </div>
 
-                            <thead>
+            <div class="summary-card gave">
+                <div class="summary-amount gave-text">₹{{ number_format($data['totalDebit']) }}</div>
+                <div class="summary-label gave-text">Total Due</div>
+            </div>
 
+            <div class="summary-card balance">
+                <div class="summary-amount balance-text">₹{{ number_format($data['totalDebit']) }}</div>
+                <div class="summary-label balance-text">Effective Balance</div>
+            </div>
+
+            <div class="summary-card got">
+                <div class="summary-amount got-text">₹{{ number_format($data['totalCredit']) }}</div>
+                <div class="summary-label got-text">Total Paid</div>
+            </div>
+        </div>
+
+
+
+        <div class="card">
+            <div class="table-responsive mt-4">
+                <table class="report-table">
+                    <thead>
+                        <tr>
+                            <th>DATE</th>
+                            <th>Customer Name</th>
+                            <th>DETAILS</th>
+                            <th style="text-align: right;">Debit</th>
+                            <th style="text-align: right;">Credit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (count($data['ledgers']))
+                            @foreach ($data['ledgers'] as $key => $ledger)
                                 <tr>
-
-                                    <th class="bg-info fw-bold text-white">
-                                        Date
-                                    </th>
-
-                                    <th class="bg-info fw-bold text-white"> Bill Proof</th>
-
-                                    <th class="bg-info fw-bold text-white"> Item</th>
-
-
-                                    <th class="bg-info fw-bold text-white">
-                                        Total Amount
-                                    </th>
-
+                                    <td>{{ \Carbon\Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
+                                    <td>{{ ucwords($ledger['supplier']) }}</td>
+                                    <td>
+                                        {{ ucwords($ledger['description']) }}
+                                        <div class="text-sm text-gray-500">
+                                            {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
+                                        </div>
+                                    </td>
+                                    <td style="text-align: right;" class="gave-text">
+                                        @if ($ledger['debit'] > 0)
+                                            ₹{{ number_format($ledger['debit']) }}
+                                        @else
+                                            ₹0
+                                        @endif
+                                    </td>
+                                    <td style="text-align: right;" class="got-text">
+                                        @if ($ledger['credit'] > 0)
+                                            ₹{{ number_format($ledger['credit']) }}
+                                        @else
+                                            ₹0
+                                        @endif
+                                    </td>
                                 </tr>
-
-                            </thead>
-
-                            <tbody>
-
-                                @if (count($data['data']) > 0)
-
-                                    @foreach ($data['data'] as $d)
-                                        <tr>
-
-                                            <td>
-                                                {{ $d['created_at'] }}
-                                            </td>
-
-                                            <td>
-
-                                                @if ($d['image'] !== null)
-                                                    <img src="{{ asset('storage/' . $d['image']) }}" alt="">
-                                                @else
-                                                    NA
-                                                @endif
-
-                                            </td>
-
-                                            <td>
-                                                {{ $d['item'] }}
-                                            </td>
-
-
-                                            <td>
-                                                {{ $d['total_price'] }}
-                                            </td>
-
-                                        </tr>
-                                    @endforeach
-                                @else
-                                    <tr>
-                                        <td class="text-danger fw-bold text-center" colspan="7">No Records Found...
-                                        </td>
-                                    </tr>
-                                @endif
-
-
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-                </div>
-
-
+                            @endforeach
+                        @else
+                            <tr>
+                                <td colspan="5" class="text-center py-4 text-gray-500">No records available</td>
+                            </tr>
+                        @endif
+                    </tbody>
+                </table>
             </div>
-
         </div>
 
-    @endif
-
+        <div class="mt-4 d-flex justify-content-center">
+            {{-- {{ $paginatedLedgers->links() }} --}}
+        </div>
+    </div>
 
 
     <!-- Modal -->
@@ -453,16 +498,16 @@
         });
 
         function togglePayOptions() {
-            const payTo = document.getElementById('payment_initiator').value; 
+            const payTo = document.getElementById('payment_initiator').value;
             const supplierOptions = document.getElementById('supplierOptions');
             const adminOptions = document.getElementById('adminOptions');
 
             if (payTo === "1") {
-                supplierOptions.style.display = 'block'; 
-                adminOptions.style.display = 'none'; 
+                supplierOptions.style.display = 'block';
+                adminOptions.style.display = 'none';
             } else if (payTo === "0") {
-                supplierOptions.style.display = 'none'; 
-                adminOptions.style.display = 'block'; 
+                supplierOptions.style.display = 'none';
+                adminOptions.style.display = 'block';
             } else {
 
                 supplierOptions.style.display = 'none';
@@ -473,3 +518,6 @@
 
 
 </x-app-layout>
+
+
+

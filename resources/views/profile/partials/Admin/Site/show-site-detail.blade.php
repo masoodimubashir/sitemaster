@@ -2543,85 +2543,15 @@
             });
 
         });
+
+
+
+
+        
+
+
     </script>
 
 
-    <script>
-        function togglePayOptions() {
-            const payTo = document.getElementById('payment_initiator').value; // Get the selected value
-            const supplierOptions = document.getElementById('supplierOptions'); // Supplier section
-            const adminOptions = document.getElementById('adminOptions'); // Admin section
 
-            // Check selected value and toggle visibility accordingly
-            if (payTo === "1") {
-                supplierOptions.style.display = 'block'; // Show Supplier options
-                adminOptions.style.display = 'none'; // Hide Admin options
-            } else if (payTo === "0") {
-                supplierOptions.style.display = 'none'; // Hide Supplier options
-                adminOptions.style.display = 'block'; // Show Admin options
-            } else {
-                // Hide both sections if "Select Payee" or invalid option is selected
-                supplierOptions.style.display = 'none';
-                adminOptions.style.display = 'none';
-            }
-        }
-
-
-        function setActiveTab(tabId) {
-            // Remove active class from all tabs
-            document.querySelectorAll('.nav-link').forEach(tab => {
-                tab.classList.remove('active');
-            });
-
-            // Add active class to the clicked tab
-            const activeTab = document.querySelector(`a[href="#${tabId}"]`);
-            if (activeTab) {
-                activeTab.classList.add('active');
-            }
-
-            // Store the active tab in localStorage
-            localStorage.setItem('activeTab', tabId);
-        }
-
-        // Restore the active tab on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const activeTab = localStorage.getItem('activeTab');
-            if (activeTab) {
-                // Trigger click on the saved tab to restore its state
-                const tabElement = document.querySelector(`a[href="#${activeTab}"]`);
-                if (tabElement) {
-                    tabElement.classList.add('active');
-                }
-            }
-        });
-
-        // Get modal element
-        var modal = document.getElementById("imageModal");
-        var modalImg = document.getElementById("modalImage");
-        var closeBtn = document.getElementsByClassName("close")[0];
-
-        // Get all gallery images
-        var galleryImages = document.querySelectorAll(".gallery-image");
-
-        // Add event listener to each image
-        galleryImages.forEach(function(image) {
-            image.addEventListener("click", function() {
-                var fullImagePath = this.getAttribute("data-full");
-                modalImg.src = fullImagePath;
-                modal.style.display = "block"; // Show the modal
-            });
-        });
-
-        // When the user clicks on <span> (close button), close the modal
-        closeBtn.onclick = function() {
-            modal.style.display = "none";
-        }
-
-        // Close the modal when clicking anywhere outside of the modal
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-    </script>
-</x-app-layout>
+</x-app-layout> 

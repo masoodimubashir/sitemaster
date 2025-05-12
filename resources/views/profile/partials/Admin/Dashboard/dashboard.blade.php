@@ -31,45 +31,36 @@
 
             <!-- Button aligned right -->
             <div class="col-md-2 text-end">
-                <a class="btn btn-primary w-100" href="">
-                    <i class="menu-icon fa fa-inbox"></i> Suppliers
+                <a class="btn btn-primary btn-sm  w-100" href="{{ route('suppliers.dashboard') }}">
+                    <i class="menu-icon fa fa-inbox"></i> Switch Suppliers
                 </a>
             </div>
 
             <!-- Create Site Button -->
             <div class="col-md-2 text-end">
-                <button class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#create-site-modal">
+                <button class="btn btn-primary btn-sm w-100" data-bs-toggle="modal" data-bs-target="#create-site-modal">
                     + Create Site
                 </button>
             </div>
 
         </div>
 
-
-
-
         <!-- Summary + Charts -->
         <div class="col-12">
             <div class="card card-rounded mb-4">
                 <div class="card-body p-0 d-flex flex-column">
 
-                    <!-- Top Summary -->
-                    <div class="p-3 d-flex justify-content-between align-items-center border-bottom">
-                        <div><strong>You’ll Give:</strong> ₹0</div>
-                        <div><strong>You’ll Get:</strong> ₹1,000 <span class="text-danger">↓</span></div>
-                        <a href="{{ url('/admin/payments') }}" class="btn btn-outline-primary btn-sm">View Report</a>
-                    </div>
-
                     <!-- Filters -->
-                    <div class="p-3 border-bottom d-flex gap-2">
-                        <input type="text" class="form-control w-25" placeholder="Search for customers">
-                        <select class="form-select w-25">
-                            <option selected>Filter By</option>
-                        </select>
-                        <select class="form-select w-25">
-                            <option selected>Sort By</option>
-                        </select>
-                    </div>
+                    <form method="GET" action="{{ url()->current() }}">
+                        <div class="p-3 border-bottom d-flex gap-2">
+                            <input type="text" name="search" class="form-control w-25"
+                                placeholder="Search for customers" value="{{ request('search') }}">
+                            <button type="submit" class="btn btn-primary ">Search</button>
+                            <a href="{{ url()->current() }}" class="btn btn-secondary ">Clear</a>
+                        </div>
+                    </form>
+
+
 
                     <!-- Customer List -->
                     <div class="p-3  bg-white rounded shadow-sm">

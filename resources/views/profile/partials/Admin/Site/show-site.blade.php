@@ -206,19 +206,17 @@
                     </li>
                     <li>
                         <a class="dropdown-item" data-bs-toggle="modal" role="button"
-                            href="#modal-square-footage-bills{{ $id }}">
+                            href="#modal-square-footage-bills">
                             Contractor
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" data-bs-toggle="modal" role="button"
-                            href="#modal-daily-expenses{{ $id }}">
+                        <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#modal-daily-expenses">
                             Expenditure
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" data-bs-toggle="modal" role="button"
-                            href="#modal-daily-wager{{ $id }}">
+                        <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#modal-daily-wager">
                             Wager
                         </a>
                     </li>
@@ -238,6 +236,9 @@
                 <i class="fas fa-eye"></i> View Site Detail
             </a>
 
+            <a class="btn btn-outline" href="#payment-supplier" data-bs-toggle="modal" role="button">
+                <i class="fas fa-money-bill me-2"></i> Pay
+            </a>
 
         </div>
     </div>
@@ -373,6 +374,9 @@
 
     {{-- ------------------------------------------------------- All The Models Are Here ----------------------------------------------------------- --}}
 
+
+    {{-- Phase Form --}}
+
     <div id="phase" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
         tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -407,6 +411,412 @@
         </div>
     </div>
 
+    <!-- Contruction Material Form -->
+    <div id="modal-construction-billings" class="modal fade" aria-hidden="true"
+        aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+
+            <div class="modal-content">
+
+                <div class="modal-body">
+
+                    <form enctype="multipart/form-data" class="forms-sample material-form"
+                        id="constructionBillingForm">
+                        @csrf
+                        <!-- Amount -->
+                        <div class="form-group">
+                            <input type="number" name="amount" id="amount" />
+                            <label for="amount" class="control-label">Material Price</label>
+                            <i class="bar"></i>
+                            <p class=" mt-1 text-danger" id="amount-error"></p>
+                        </div>
+
+
+                        <div class="row">
+                            <!-- Item Name -->
+                            <div class="col-md-6">
+                                <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
+                                    name="item_name" style="cursor: pointer">
+                                    <option value="">Select Item
+                                    </option>
+                                    @foreach ($items as $item)
+                                        <option value="{{ $item->item_name }}">
+                                            {{ $item->item_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class=" mt-1 text-danger" id="item_name-error"></p>
+                            </div>
+
+                            <!-- Supplier -->
+                            <div class="col-md-6">
+                                <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
+                                    name="supplier_id" style="cursor: pointer">
+                                    <option value="">Select Supplier
+                                    </option>
+                                    @foreach ($raw_material_providers as $supplier)
+                                        <option value="{{ $supplier['supplier_id'] }}">
+                                            {{ $supplier['supplier'] }}
+                                        </option>
+                                    @endforeach
+
+                                </select>
+                                <p class=" mt-1 text-danger" id="supplier_id-error"></p>
+                            </div>
+
+                            <!-- Phases -->
+                            <div class=" col-md-6 mt-3">
+                                <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
+                                    name="phase_id" style="cursor: pointer">
+                                    <option value="">Select Phase
+                                    </option>
+                                    @foreach ($phases as $phase)
+                                        <option value="{{ $phase->id }}">
+                                            {{ $phase->phase_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class=" mt-1 text-danger" id="phase_id-error"></p>
+                            </div>
+
+                            <!-- Item Bill Photo -->
+                            <div class=" col-md-6 mt-3">
+                                <input class="form-control form-control-md" id="image" type="file"
+                                    name="image">
+                                <p class=" mt-1 text-danger" id="image-error"></p>
+                            </div>
+
+                        </div>
+
+
+
+                        <x-primary-button>
+                            {{ __('Create Billing') }}
+                        </x-primary-button>
+
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- Square Footage Bill Model --}}
+    <div id="modal-square-footage-bills" class="modal fade" aria-hidden="true"
+        aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+
+            <div class="modal-content">
+
+                <div class="modal-body">
+
+                    {{-- Create Square Footage Bills --}}
+                    <form id="squareFootageBills" enctype="multipart/form-data" class="forms-sample material-form">
+
+                        @csrf
+
+                        <!-- Wager Name -->
+                        <div class="form-group">
+                            <input id="wager_name" type="text" name="wager_name" />
+                            <label for="wager_name" class="control-label" />Work
+                            Type</label><i class="bar"></i>
+                            <p class="text-danger" id="wager_name-error"></p>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="form-group">
+                            <input id="price" type="number" name="price" />
+                            <label for="price" class="control-label" />Price</label><i class="bar"></i>
+                            <p class="text-danger" id="price-error"></p>
+                        </div>
+
+                        <!-- Number Of Days -->
+                        <div class="form-group">
+                            <input id="multiplier" type="number" name="multiplier" />
+                            <label for="multiplier" class="control-label">Multiplier</label><i class="bar"></i>
+
+                            <p class="text-danger" id="multiplier-error"></p>
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-6">
+                                <!-- Type -->
+                                <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
+                                    name="type" style="cursor: pointer">
+                                    <option value="">Select Type</option>
+                                    <option value="per_sqr_ft">Per Square Feet</option>
+                                    <option value="per_unit">Per Unit</option>
+                                    <option value="full_contract">Full Contract
+                                    </option>
+                                </select>
+                                <p class="text-danger" id="type-error"></p>
+                            </div>
+
+                            <div class="col-md-6">
+                                <!-- Select Supplier -->
+                                <select class="form-select text-black form-select-sm" id="supplier_id"
+                                    name="supplier_id" style="cursor: pointer">
+                                    <option value="">Select Supplier</option>
+                                    <option value="{{ $supplier['supplier_id'] }}">
+                                        {{ $supplier['supplier'] }}
+                                    </option>
+                                </select>
+
+                                <p class="text-danger" id="supplier_id-error"></p>
+
+                            </div>
+
+                            <div class=" col-md-6 mt-3">
+                                <input id="phase_id" type="hidden" name="phase_id" placeholder="Phase"
+                                    value="{{ $phase->id }}" />
+                            </div>
+                        </div>
+
+
+                        <!-- Image -->
+                        <div class="mt-3">
+                            <label for="image">Item Bill</label>
+                            <input class="form-control form-control-md" id="image" type="file"
+                                name="image_path">
+                            <p class="text-danger" id="image_path-error"></p>
+
+                        </div>
+
+
+                        <div class="mt-3">
+                            <x-primary-button>
+                                {{ __('Create Bill') }}
+                            </x-primary-button>
+                        </div>
+
+
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Wager Form -->
+    <div id="modal-daily-wager" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
+        tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+
+                    <form class="forms-sample material-form" id="dailyWager">
+
+                        @csrf
+
+                        <!-- Wager Name -->
+                        <div class="form-group">
+                            <input id="wager_name" type="text" name="wager_name" />
+                            <label for="wager_name" class="control-label">Wager
+                                Name</label><i class="bar"></i>
+
+                            <p class="text-danger" id="wager_name-error"></p>
+                        </div>
+
+                        <!-- Price Per day -->
+                        <div class="form-group">
+                            <input id="price_per_day" type="number" name="price_per_day" />
+                            <label for="price_per_day" class="control-label">Price Per
+                                Day</label><i class="bar"></i>
+                            <p class="text-danger" id="price_per_day-error"></p>
+
+                        </div>
+
+                        <div class="row">
+                            <!-- Select Supplier -->
+                            <div class="">
+                                <select class="form-select text-black form-select-sm" id="supplier_id"
+                                    name="supplier_id" style="cursor: pointer">
+                                    <option value="">Select Supplier</option>
+                                    @foreach ($workforce_suppliers as $supplier)
+                                        <option value="{{ $supplier['supplier_id'] }}">
+                                            {{ $supplier['supplier'] }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class="text-danger" id="supplier_id-error"></p>
+
+                            </div>
+
+                            <!-- Select Phase -->
+                            <div class=" col-md-6 mt-3">
+                                <input id="phase_id" type="hidden" name="phase_id" placeholder="Phase"
+                                    value="{{ $phase->id }}" />
+
+                            </div>
+                        </div>
+
+
+
+
+                        <x-primary-button>
+                            {{ __('Create Wager') }}
+                        </x-primary-button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Expense -->
+    <div id="modal-daily-expenses" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
+        tabindex="-1">
+
+        {{-- Daily Expenses  --}}
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <form id="dailyExpenses" class="forms-sample material-form">
+
+                        @csrf
+
+                        <!-- Wager Name -->
+                        <div class="form-group">
+                            <input id="item_name" type="text" name="item_name" />
+                            <label for="item_name" class="control-label">Item
+                                Name</label><i class="bar"></i>
+                            <p class="text-danger" id="date-error"></p>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="form-group">
+                            <input id="price" type="number" name="price" />
+                            <label for="price" class="control-label">Price</label><i class="bar"></i>
+                            <p class="text-danger" id="description-error"></p>
+                        </div>
+
+                        <!-- Select Phase -->
+                        <div class=" col-md-6 mt-3">
+                            <input id="phase_id" type="hidden" name="phase_id" placeholder="Phase"
+                                value="{{ $phase->id }}" />
+                            <p class="text-danger" id="amount-error"></p>
+                        </div>
+
+
+                        <div class="col-12 mt-3">
+
+                            <input class="form-control" type="file" id="formFile" name="bill_photo">
+
+                            <p class="text-danger" id="category_id-error"></p>
+
+                        </div>
+
+
+                        <x-primary-button class="mt-3">
+                            {{ __('Create Bill') }}
+                        </x-primary-button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    {{-- Payment Modal --}}
+    <div id="payment-supplier" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
+        tabindex="-1">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content">
+
+                <div class="modal-body">
+
+                    <form id="payment_supplierForm" class="forms-sample material-form" enctype="multipart/form-data">
+
+                        @csrf
+
+                        {{-- Phase Name --}}
+                        <div class="form-group">
+                            <input type="number" min="0" name="amount" step="0.01" />
+                            <label for="input" class="control-label">Amount</label><i class="bar"></i>
+                            <x-input-error :messages="$errors->get('amount')" class="mt-2" />
+                        </div>
+
+                        <!-- Site -->
+                        <input type="hidden" name="site_id" value="{{ $paginatedLedgers[0]['site_id'] ?? '' }}" />
+
+
+                        {{-- Select Payee Dropdown --}}
+                        <select name="payment_initiator" id="payment_initiator"
+                            class="form-select text-black form-select-sm" style="cursor: pointer"
+                            onchange="togglePayOptions()">
+                            <option value="" selected>Select Payee</option>
+                            <option value="1">Supplier</option>
+                            <option value="0">Admin</option>
+                        </select>
+
+                        {{-- Supplier Options (Shown when Supplier is selected) --}}
+                        <div id="supplierOptions" style="display: none;" class="mt-3">
+                            <select name="supplier_id" id="supplier_id" class="form-select text-black form-select-sm"
+                                style="cursor: pointer">
+                                <option for="supplier_id" value="">Select Supplier</option>
+                                @foreach ($suppliers as $supplier)
+                                   <option value="{{ $supplier['supplier_id'] }}">
+                                            {{ $supplier['supplier'] }}
+                                        </option>
+                                @endforeach
+                            </select>
+
+                            {{-- File Upload for Screenshot --}}
+                            <div class="mt-3">
+                                <input class="form-control form-control-md" id="image" type="file"
+                                    name="screenshot">
+                            </div>
+                        </div>
+
+                        {{-- Admin Options (Shown when Admin is selected) --}}
+                        <div id="adminOptions" style="display: none;" class="mt-4">
+                            <div class="row g-3">
+                                {{-- Sent Radio Option --}}
+                                <div class="col-auto">
+                                    <label for="transaction_sent">
+                                        <input type="radio" name="transaction_type" id="transaction_sent"
+                                            value="1"> Sent
+                                    </label>
+                                </div>
+                                {{-- Received Radio Option --}}
+                                <div class="col-auto">
+                                    <label for="transaction_received">
+                                        <input type="radio" name="transaction_type" id="transaction_received"
+                                            value="0"> Received
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        {{-- Screenshot --}}
+
+
+                        <div class="flex items-center justify-end mt-4">
+
+                            <x-primary-button>
+                                {{ __('Pay') }}
+                            </x-primary-button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 
 
 
@@ -563,9 +973,450 @@
 
 
 
+            // Script For Square Footage Bills
+            $('form[id^="squareFootageBills"]').on('submit', function(e) {
+                e.preventDefault();
+
+                const form = $(this);
+                const formData = new FormData(form[0]);
+                const messageContainer = form.find('.message-container');
+                messageContainer.empty();
+
+                // Clear previous error messages for this form only
+                form.find('.text-danger').text('');
+
+                $.ajax({
+                    url: '{{ route('square-footage-bills.store') }}',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        messageContainer.html(`
+                <div class="alert align-items-center text-white bg-success border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                        </div>
+                    </div>
+                </div>
+            `);
+
+                        form[0].reset();
+
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.reload();
+                        }, 2000);
+                    },
+                    error: function(response) {
+                        if (response.status === 422) { // Validation errors
+                            const errors = response.responseJSON.errors;
+                            console.log('Validation errors:', errors); // Debug log
+
+                            // Display general error message
+                            messageContainer.html(`
+                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                        Please fix the errors below
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `);
+
+                            // Loop through each error field
+                            for (const field in errors) {
+                                // Get the first error message from the array
+                                const errorMsg = errors[field][0];
+
+                                // First, try to find the field by name and update sibling error element
+                                const inputField = form.find(`[name="${field}"]`);
+                                if (inputField.length > 0) {
+                                    // Try to find sibling error container
+                                    const siblingError = inputField.siblings('.text-danger');
+                                    if (siblingError.length > 0) {
+                                        siblingError.text(errorMsg);
+                                    } else {
+                                        // If no sibling found, try to find by ID
+                                        form.find(`#${field}-error`).text(errorMsg);
+                                    }
+                                } else {
+                                    // If input not found, try to find error container by ID directly
+                                    form.find(`#${field}-error`).text(errorMsg);
+                                }
+                            }
+
+                            // Log fields that couldn't be found for debugging
+                            for (const field in errors) {
+                                const inputField = form.find(`[name="${field}"]`);
+                                const errorContainer = form.find(`#${field}-error`);
+                                if (inputField.length === 0 && errorContainer.length === 0) {
+                                    console.log(
+                                        `Warning: Could not find field or error container for: ${field}`
+                                    );
+                                }
+                            }
+                        } else {
+                            messageContainer.html(`
+                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                        An unexpected error occurred. Please try again later.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `);
+                        }
+
+                        // Auto-hide general error message after 5 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                        }, 5000);
+                    }
+                });
+            });
+
+
+
+            // Script For Daily Expense
+            $('form[id^="dailyExpenses"]').on('submit', function(e) {
+
+                e.preventDefault();
+
+                const form = $(this);
+                const formData = new FormData(form[0]);
+                const messageContainer = form.find(
+                    '.message-container'); // Form-specific message container
+                messageContainer.empty();
+
+                // Clear previous error messages for this form only
+                form.find('.text-danger').text('');
+
+                $.ajax({
+                    url: '{{ route('daily-expenses.store') }}',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        messageContainer.html(`
+                    <div class="alert align-items-center text-white bg-success border-0" role="alert">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+                        form[0].reset();
+
+                        // Auto-hide success message after 2 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.reload();
+                        }, 2000);
+                    },
+                    error: function(response) {
+
+                        if (response.status === 422) { // Validation errors
+                            const errors = response.responseJSON.errors;
+
+                            // Display general error message
+                            messageContainer.html(`
+                              <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                  Please fix the errors below
+                                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                             </div>
+                            `);
+
+                            // Loop through each error field
+                            for (const field in errors) {
+                                // Get the first error message from the array
+                                const errorMsg = errors[field][0];
+
+                                // First, try to find the field by name and update sibling error element
+                                const inputField = form.find(`[name="${field}"]`);
+                                if (inputField.length > 0) {
+                                    // Try to find sibling error container
+                                    const siblingError = inputField.siblings(
+                                        '.text-danger');
+                                    if (siblingError.length > 0) {
+                                        siblingError.text(errorMsg);
+                                    } else {
+                                        // If no sibling found, try to find by ID
+                                        form.find(`#${field}-error`).text(errorMsg);
+                                    }
+                                } else {
+                                    // If input not found, try to find error container by ID directly
+                                    form.find(`#${field}-error`).text(errorMsg);
+                                }
+                            }
+                        } else {
+                            messageContainer.html(`
+                                 <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                     An unexpected error occurred. Please try again later.
+                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                 </div>
+                             `);
+                        }
+
+                        // Auto-hide general error message after 5 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                        }, 5000);
+                    }
+                });
+            });
+
+
+
+            // Script For Daily Wager
+            $('form[id^="dailyWager"]').on('submit', function(e) {
+
+                e.preventDefault();
+
+                const form = $(this);
+                const formData = new FormData(form[0]);
+                const messageContainer = $('#messageContainer');
+                messageContainer.empty();
+
+                $('.text-danger').text('');
+
+                $.ajax({
+                    url: '{{ route('dailywager.store') }} ',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        messageContainer.append(`
+                            <div class="alert align-items-center text-white bg-success border-0" role="alert">
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+
+                        form[0].reset();
+
+                        // Auto-hide success message and reload
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.reload(); // This should reload the page
+                        }, 2000);
+                    },
+                    error: function(response) {
+
+                        if (response.status === 422) { // Validation errors
+
+                            const errors = response.responseJSON.errors;
+
+                            // Display general error message
+                            messageContainer.html(`
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    Please fix the errors below
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
+
+                            // Loop through each error field
+                            for (const field in errors) {
+                                // Get the first error message from the array
+                                const errorMsg = errors[field][0];
+
+                                // First, try to find the field by name and update sibling error element
+                                const inputField = form.find(`[name="${field}"]`);
+                                if (inputField.length > 0) {
+                                    // Try to find sibling error container
+                                    const siblingError = inputField.siblings(
+                                        '.text-danger');
+                                    if (siblingError.length > 0) {
+                                        siblingError.text(errorMsg);
+                                    } else {
+                                        // If no sibling found, try to find by ID
+                                        form.find(`#${field}-error`).text(errorMsg);
+                                    }
+                                } else {
+                                    // If input not found, try to find error container by ID directly
+                                    form.find(`#${field}-error`).text(errorMsg);
+                                }
+                            }
+                        } else {
+                            messageContainer.html(`
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    An unexpected error occurred. Please try again later.
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
+                        }
+
+                        // Auto-hide general error message after 5 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                        }, 5000);
+                    }
+                });
+            });
+
+
+            $('form[id^="wagerAttendance"]').on('submit', function(e) {
+                e.preventDefault();
+
+                const form = $(this);
+                const formData = new FormData(form[0]);
+                const messageContainer = $('#messageContainer');
+                messageContainer.empty();
+
+                $('.text-danger').text('');
+
+                $.ajax({
+                    url: '{{ route('daily-wager-attendance.store') }} ',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+
+                        messageContainer.append(`
+                    <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                            </div>
+                        </div>
+                    </div>
+            `);
+
+                        form[0].reset();
+
+                        // Auto-hide success message after 3 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.reload();
+
+                        }, 2000);
+                    },
+                    error: function(response) {
+
+                        if (response.status === 422) {
+                            messageContainer.append(`
+                    <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
+                         ${response.responseJSON.errors}
+
+                    </div>`)
+
+                        } else {
+                            messageContainer.append(`
+                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                        An unexpected error occurred. Please try again later.
+
+                    </div>
+                `);
+                        }
+                        // Auto-hide error message after 5 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+
+                        }, 2000);
+                    }
+                });
+            });
+
+
+            // Script For Payment
+
+            $('form[id="payment_supplierForm"]').on('submit', function(e) {
+                e.preventDefault();
+
+                const form = $(this);
+                const formData = new FormData(form[0]);
+                const messageContainer = $('#messageContainer');
+                messageContainer.empty();
+
+                $('.text-danger').remove();
+
+                $.ajax({
+                    url: '{{ url('admin/sites/payments') }}',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+
+                        console.log(response);
+
+
+                        messageContainer.append(`
+                    <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                            </div>
+                        </div>
+                    </div>
+            `);
+                        form[0].reset();
+
+                        // Auto-hide success message after 3 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.reload();
+
+                        }, 2000);
+                    },
+                    error: function(response) {
+
+                        if (response.status === 422) { // Validation errors
+                            messageContainer.append(`
+                    <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
+                    ${response.responseJSON.errors}
+
+                    </div>`)
+
+                        } else {
+                            messageContainer.append(`
+                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                        An unexpected error occurred. Please try again later.
+
+                    </div>
+                `);
+                        }
+                        // Auto-hide error message after 5 seconds
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+
+                        }, 2000);
+                    }
+                });
+            });
+
 
 
         });
+
+
+
+        // Script For Payment Form
+        function togglePayOptions() {
+            const payTo = document.getElementById('payment_initiator').value; // Get the selected value
+            const supplierOptions = document.getElementById('supplierOptions'); // Supplier section
+            const adminOptions = document.getElementById('adminOptions'); // Admin section
+
+            // Check selected value and toggle visibility accordingly
+            if (payTo === "1") {
+                supplierOptions.style.display = 'block'; // Show Supplier options
+                adminOptions.style.display = 'none'; // Hide Admin options
+            } else if (payTo === "0") {
+                supplierOptions.style.display = 'none'; // Hide Supplier options
+                adminOptions.style.display = 'block'; // Show Admin options
+            } else {
+                // Hide both sections if "Select Payee" or invalid option is selected
+                supplierOptions.style.display = 'none';
+                adminOptions.style.display = 'none';
+            }
+        }
+
+
+
+
 
 
 
