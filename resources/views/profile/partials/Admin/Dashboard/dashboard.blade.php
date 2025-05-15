@@ -83,7 +83,7 @@
                                 </div>
                                 <div class="text-end">
                                     <strong class="text-success">
-                                        {{ $site->total_payments ? $site->total_payments : 0 }}
+                                        {{ $site->total_payments ?? 0 }}
                                     </strong><br>
                                     <small class="text-muted">Credit</small>
                                 </div>

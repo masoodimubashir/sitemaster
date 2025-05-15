@@ -41,8 +41,8 @@ class DataService
             return [
                 'description' => 'Payment',
                 'category' => 'Payment',
-                'credit' => $pay->transaction_type === 0 ? $pay->amount : 0,
-                'debit' => $pay->supplier && $pay->site_id ? $pay->amount : (($pay->transaction_type == 1) ? $pay->amount : 0),
+                'credit' =>  $pay->amount,
+                'debit' => 0,
                 'transaction_type' => $pay->supplier_id && $pay->site_id ? 'Sent By ' . ucwords($pay->site->site_name) : (($pay->transaction_type === 0) ? 'Sent By Firm' : 'Received By Firm'),
                 'payment_initiator' => !empty($pay->site_id) && empty($pay->supplier_id) ? 'Site' : (!empty($pay->supplier_id) ? 'Supplier' : 'Admin'),
                 'site' => $pay->site->site_name ?? '--',

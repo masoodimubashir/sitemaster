@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Attendance extends Model
 {
-    
+
     protected $fillable = [
         'attendable_id',
         'attendable_type',
@@ -14,5 +14,8 @@ class Attendance extends Model
         'attendance_date',
     ];
 
-    
+    public function attendable()
+    {
+        return $this->morphTo();
+    }
 }

@@ -9,6 +9,7 @@ use App\Models\Supplier;
 use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
 use App\Services\DataService;
+use Illuminate\Http\Request;
 
 class SupplierController extends Controller
 {
@@ -54,17 +55,17 @@ class SupplierController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show( string $id, Request $request,)
     {
 
-        $supplier_id = $id;
 
-        // Optional: use site/wager filters if needed later
-        $site_id = 'all';
-        $wager_id = 'all';
-        $date_filter = 'lifetime'; // Show all data
-        $start_date = null;
-        $end_date = null;
+
+        $date_filter = $request->input('date_filter', 'today');
+        $site_id = $request->input('site_id', $id);
+        $supplier_id = $request->input('supplier_id', $id);
+        $wager_id = $request->input('wager_id', 'all');
+        $start_date = $request->input('start_date'); // for 'custom'
+        $end_date = $request->input('end_date');
 
         // Load the supplier
         $supplier = Supplier::findOrFail($supplier_id);
@@ -87,6 +88,9 @@ class SupplierController extends Controller
         // Group unique sites
         $sites = collect($ledgers)
             ->unique('site_id')
+            ->filter(function ($item) {
+                return $item['site_id'] !== '--';
+            })
             ->map(function ($item) {
                 return [
                     'site_id' => $item['site_id'],
@@ -103,7 +107,6 @@ class SupplierController extends Controller
             'balance' => $totals['without_service_charge']['balance'],
             'sites' => $sites,
         ];
-
 
         if ($supplier->is_raw_material_provider == 1) {
             return view('profile.partials.Admin.Supplier.show-supplier_raw_material', compact('data', 'sites'));
@@ -209,10 +212,7 @@ class SupplierController extends Controller
             'sites' => $sites
         ];
 
-            return view('profile.partials.Admin.Supplier.show-supplier-detail', compact('data', 'sites'));
-
-
-
+        return view('profile.partials.Admin.Supplier.show-supplier-detail', compact('data', 'sites'));
     }
 
     /**

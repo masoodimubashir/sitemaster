@@ -223,12 +223,9 @@
                 </ul>
             </div>
 
-
             {{-- <a href="{{ url('admin/sites/details/' . base64_encode($id)) }}" class="btn btn-outline">
                 <i class="fas fa-eye"></i> View Site Detail
             </a> --}}
-
-
 
             <a href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}"
                 class="btn btn-outline">
@@ -242,14 +239,55 @@
                 View Deatiled View
             </a>
 
-
-
-            <button class="btn btn-info btns" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            <button class="btn btn-outline" data-bs-toggle="modal" data-bs-target="#exampleModal">
                 Make Payment
             </button>
 
         </div>
     </div>
+
+
+     <form class="d-flex flex-column flex-md-row gap-2 w-100" action="{{ url()->current() }}" method="GET"
+        id="filterForm">
+       
+        <!-- Supplier Site -->
+        <select class="bg-white text-black form-select form-select-sm" name="site_id" id="supplierFilter">
+            <option value="all" {{ request('site_id') == 'all' ? 'selected' : '' }}>All Sites</option>
+            @foreach ($data['sites'] as $site)
+                <option value="{{ $site['site_id'] }}"
+                    {{ request('site_id') == $site['site_id'] ? 'selected' : '' }}>
+                    {{ $site['site_name'] }}
+                </option>
+            @endforeach
+        </select>
+
+
+        <!-- Date Period Filter -->
+        <select class="bg-white text-black form-select form-select-sm" name="date_filter" id="dateFilter">
+            <option value="today" {{ request('date_filter') === 'today' ? 'selected' : '' }}>Today</option>
+            <option value="yesterday" {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>Yesterday</option>
+            <option value="this_week" {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>This Week</option>
+            <option value="this_month" {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>This Month</option>
+            <option value="this_year" {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>This Year</option>
+            <option value="custom" {{ request('date_filter') === 'custom' ? 'selected' : '' }}>Custom Range</option>
+            <option value="lifetime" {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>All Data</option>
+        </select>
+
+        <!-- Date Range Inputs (shown only when custom is selected) -->
+        <div id="customDateRange"
+            style="display: {{ request('date_filter') === 'custom' ? 'flex' : 'none' }}; gap: 0.5rem;">
+            <input type="date" name="start_date" class="form-control form-control-sm bg-white text-black"
+                value="{{ request('start_date') }}" placeholder="Start Date">
+            <input type="date" name="end_date" class="form-control form-control-sm bg-white text-black"
+                value="{{ request('end_date') }}" placeholder="End Date">
+        </div>
+
+        <!-- Reset Button -->
+        <button type="button" class="btn btn-outline-secondary btn-sm" id="resetFilters">
+            <i class="fas fa-undo"></i> Reset
+        </button>
+
+    </form>
 
 
 
@@ -489,6 +527,7 @@
 
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
+                            location.reload();
                         }, 2000);
                     }
                 });
@@ -514,6 +553,86 @@
                 adminOptions.style.display = 'none';
             }
         }
+
+
+        
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const supplierFilter = document.getElementById('supplierFilter');
+            const filterForm = document.getElementById('filterForm');
+            const dateFilter = document.getElementById('dateFilter');
+            const customDateRange = document.getElementById('customDateRange');
+            const resetBtn = document.getElementById('resetFilters');
+
+            // Ensure form submits to the correct URL with site ID
+            filterForm.action = "{{ url()->current() }}";
+
+            // Toggle date range visibility
+            dateFilter.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customDateRange.style.display = 'flex';
+                } else {
+                    customDateRange.style.display = 'none';
+                    // Clear date inputs when not using custom range
+                    document.querySelector('input[name="start_date"]').value = '';
+                    document.querySelector('input[name="end_date"]').value = '';
+                }
+                submitForm();
+            });
+
+            // Auto-submit when any filter changes (except date inputs)
+            document.querySelectorAll('#filterForm select:not(#dateFilter)').forEach(select => {
+                select.addEventListener('change', function() {
+                    submitForm();
+                });
+            });
+
+            // For date inputs, add a small delay before submitting
+            document.querySelectorAll('#customDateRange input').forEach(input => {
+                let timeout;
+                input.addEventListener('change', function() {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        submitForm();
+                    }, 500);
+                });
+            });
+
+            // Reset all filters
+            resetBtn.addEventListener('click', function() {
+                // Reset form values
+                filterForm.reset();
+                // Ensure default selections
+                document.getElementById('supplierFilter').value = 'all';
+                document.getElementById('dateFilter').value = 'today';
+                // Hide custom date range
+                customDateRange.style.display = 'none';
+                // Submit the form
+                submitForm();
+            });
+
+            // Initialize date range visibility based on current selection
+            if (dateFilter.value === 'custom') {
+                customDateRange.style.display = 'flex';
+            }
+
+            // Custom form submission to preserve URL structure
+            function submitForm() {
+                // Get all current query parameters
+                const params = new URLSearchParams(window.location.search);
+
+                // Update with new form values
+                new FormData(filterForm).forEach((value, key) => {
+                    if (value) params.set(key, value);
+                    else params.delete(key);
+                });
+
+                // Preserve the site ID in the URL path
+                const newUrl = "{{ url()->current() }}?" + params.toString();
+                window.location.href = newUrl;
+            }
+        });
+
     </script>
 
 

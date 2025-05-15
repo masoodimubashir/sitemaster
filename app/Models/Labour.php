@@ -10,6 +10,7 @@ class Labour extends Model
 
 
     protected $fillable = [
+        'wasta_id',
         'labour_name',
         'price',
         'contact_no'

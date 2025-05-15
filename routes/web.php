@@ -42,6 +42,7 @@ use App\Http\Controllers\User\UserSquareFootageBillsController;
 use App\Http\Controllers\User\UserWagerAttendanceController;
 use App\Http\Controllers\User\ViewSiteController;
 use App\Http\Controllers\UserSupplierController;
+use App\Http\Controllers\WastaController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -142,6 +143,8 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     Route::resource('/phase', PhaseController::class);
 
+    Route::resource('/wasta', WastaController::class);
+
     // Route::resource('/payment-bills', PaymentBillsController::class);
 
     Route::get('/site/ledger/{id}', SitePaymentController::class)->name('sites.view-ledger');
@@ -186,6 +189,9 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::get('/item-verification', [ItemsVerificationController::class, 'index']);
     Route::get('/verify-items', [ItemsVerificationController::class, 'verifyItems']);
     Route::get('/wager-attendance', [AttendanceSheetController::class, 'index']);
+    Route::put('/attendance/wasta', [AttendanceSheetController::class, 'updateWastaAttendance']);
+    Route::post('/attendance/labour', [AttendanceSheetController::class, 'storeLabour']);
+
 
     // Route For Managing Payments By Admin
     Route::get('/manage-payment', [AdminPaymentController::class, 'index']);

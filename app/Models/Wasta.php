@@ -5,11 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class Wasta extends Model
 {
 
     protected $fillable = [
+        'wasta_id',
         'wasta_name',
         'price',
         'contact_no'
@@ -23,6 +25,6 @@ class Wasta extends Model
      */
     public function attendances(): MorphMany
     {
-        return $this->morphMany(Attendance::class, 'attendances');
+        return $this->morphMany(Attendance::class, 'attendable');
     }
 }

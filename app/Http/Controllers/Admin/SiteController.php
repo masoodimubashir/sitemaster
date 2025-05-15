@@ -253,7 +253,6 @@ class SiteController extends Controller
 
         $balances = $dataService->calculateAllBalances($ledgers);
 
-
         $ledgers = $dataService->makeData(
             $payments,
             $raw_materials,
@@ -281,14 +280,11 @@ class SiteController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $suppliers = $paginatedLedgers->filter(
-            fn($supplier) => $supplier['supplier_id'] !== '--'
-        )->unique('supplier_id');
+        $suppliers = $paginatedLedgers->filter(  fn($supplier) => $supplier['supplier_id'] !== '--')->unique('supplier_id');
 
         $items = Item::orderBy('item_name')->get();
         $workforce_suppliers = Supplier::where('is_workforce_provider', 1)->orderBy('name')->get();
         $raw_material_providers = Supplier::where('is_raw_material_provider', 1)->orderBy('name')->get();
-
         $phases = Phase::latest()->get();
 
         return view("profile.partials.Admin.Site.show-site", compact(

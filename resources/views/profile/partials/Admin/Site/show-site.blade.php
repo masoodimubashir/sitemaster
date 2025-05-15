@@ -180,7 +180,9 @@
         <div class="header-icon">
             <i class="menu-icon fa fa-building"></i>
         </div>
+        
         <h1 class="text-xl font-semibold">Site Report</h1>
+
         <div class="ms-auto action-buttons d-flex gap-2">
             <!-- Dropdown Menu -->
             <div class="dropdown">
@@ -456,17 +458,16 @@
                                     <option value="">Select Supplier
                                     </option>
                                     @foreach ($raw_material_providers as $supplier)
-                                        <option value="{{ $supplier['supplier_id'] }}">
-                                            {{ $supplier['supplier'] }}
+                                        <option value="{{ $supplier->id }}">
+                                            {{ $supplier->name }}
                                         </option>
                                     @endforeach
-
                                 </select>
                                 <p class=" mt-1 text-danger" id="supplier_id-error"></p>
                             </div>
 
                             <!-- Phases -->
-                            <div class=" col-md-6 mt-3">
+                            <div class=" col-md-6">
                                 <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
                                     name="phase_id" style="cursor: pointer">
                                     <option value="">Select Phase
@@ -481,7 +482,7 @@
                             </div>
 
                             <!-- Item Bill Photo -->
-                            <div class=" col-md-6 mt-3">
+                            <div class="col-md-6">
                                 <input class="form-control form-control-md" id="image" type="file"
                                     name="image">
                                 <p class=" mt-1 text-danger" id="image-error"></p>
@@ -544,7 +545,7 @@
 
                         <div class="row">
 
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <!-- Type -->
                                 <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
                                     name="type" style="cursor: pointer">
@@ -557,13 +558,13 @@
                                 <p class="text-danger" id="type-error"></p>
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <!-- Select Supplier -->
                                 <select class="form-select text-black form-select-sm" id="supplier_id"
                                     name="supplier_id" style="cursor: pointer">
                                     <option value="">Select Supplier</option>
-                                    <option value="{{ $supplier['supplier_id'] }}">
-                                        {{ $supplier['supplier'] }}
+                                    <option value="{{ $supplier->id }}">
+                                        {{ $supplier->name }}
                                     </option>
                                 </select>
 
@@ -571,9 +572,19 @@
 
                             </div>
 
-                            <div class=" col-md-6 mt-3">
-                                <input id="phase_id" type="hidden" name="phase_id" placeholder="Phase"
-                                    value="{{ $phase->id }}" />
+
+                            <!-- Phases -->
+                            <div class="col-md-4">
+                                <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
+                                    name="phase_id" style="cursor: pointer">
+                                    <option value="">Select Phase</option>
+                                    @foreach ($phases as $phase)
+                                        <option value="{{ $phase->id }}">
+                                            {{ $phase->phase_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class=" mt-1 text-danger" id="phase_id-error"></p>
                             </div>
                         </div>
 
@@ -634,13 +645,13 @@
 
                         <div class="row">
                             <!-- Select Supplier -->
-                            <div class="">
+                            <div class="col-md-6 mt-3">
                                 <select class="form-select text-black form-select-sm" id="supplier_id"
                                     name="supplier_id" style="cursor: pointer">
                                     <option value="">Select Supplier</option>
                                     @foreach ($workforce_suppliers as $supplier)
-                                        <option value="{{ $supplier['supplier_id'] }}">
-                                            {{ $supplier['supplier'] }}
+                                        <option value="{{ $supplier->id }}">
+                                            {{ $supplier->name }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -648,16 +659,21 @@
 
                             </div>
 
-                            <!-- Select Phase -->
-                            <div class=" col-md-6 mt-3">
-                                <input id="phase_id" type="hidden" name="phase_id" placeholder="Phase"
-                                    value="{{ $phase->id }}" />
-
+                            <!-- Phases -->
+                            <div class="col-md-6 mt-3">
+                                <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
+                                    name="phase_id" style="cursor: pointer">
+                                    <option value="">Select Phase
+                                    </option>
+                                    @foreach ($phases as $phase)
+                                        <option value="{{ $phase->id }}">
+                                            {{ $phase->phase_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <p class=" mt-1 text-danger" id="phase_id-error"></p>
                             </div>
                         </div>
-
-
-
 
                         <x-primary-button>
                             {{ __('Create Wager') }}
@@ -695,11 +711,19 @@
                             <p class="text-danger" id="description-error"></p>
                         </div>
 
-                        <!-- Select Phase -->
-                        <div class=" col-md-6 mt-3">
-                            <input id="phase_id" type="hidden" name="phase_id" placeholder="Phase"
-                                value="{{ $phase->id }}" />
-                            <p class="text-danger" id="amount-error"></p>
+                        <!-- Phases -->
+                        <div class=" col-12">
+                            <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
+                                name="phase_id" style="cursor: pointer">
+                                <option value="">Select Phase
+                                </option>
+                                @foreach ($phases as $phase)
+                                    <option value="{{ $phase->id }}">
+                                        {{ $phase->phase_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class=" mt-1 text-danger" id="phase_id-error"></p>
                         </div>
 
 
@@ -763,9 +787,9 @@
                                 style="cursor: pointer">
                                 <option for="supplier_id" value="">Select Supplier</option>
                                 @foreach ($suppliers as $supplier)
-                                   <option value="{{ $supplier['supplier_id'] }}">
-                                            {{ $supplier['supplier'] }}
-                                        </option>
+                                    <option value="{{ $supplier['supplier_id'] }}">
+                                        {{ $supplier['supplier'] }}
+                                    </option>
                                 @endforeach
                             </select>
 
@@ -1340,19 +1364,15 @@
                     contentType: false,
                     processData: false,
                     success: function(response) {
-
-                        console.log(response);
-
-
                         messageContainer.append(`
-                    <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                            <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-            `);
+                        `);
                         form[0].reset();
 
                         // Auto-hide success message after 3 seconds
@@ -1366,33 +1386,26 @@
 
                         if (response.status === 422) { // Validation errors
                             messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-                    ${response.responseJSON.errors}
 
-                    </div>`)
+                            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">${response.responseJSON.errors}</div>`)
 
                         } else {
                             messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                        An unexpected error occurred. Please try again later.
-
-                    </div>
-                `);
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    An unexpected error occurred. Please try again later.
+                                </div>
+                            `);
                         }
                         // Auto-hide error message after 5 seconds
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-
+                            
                         }, 2000);
                     }
                 });
             });
 
-
-
         });
-
-
 
         // Script For Payment Form
         function togglePayOptions() {
@@ -1413,11 +1426,6 @@
                 adminOptions.style.display = 'none';
             }
         }
-
-
-
-
-
 
 
         document.addEventListener('DOMContentLoaded', function() {

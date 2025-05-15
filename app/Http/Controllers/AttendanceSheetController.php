@@ -2,72 +2,120 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attendance;
 use App\Models\DailyWager;
+use App\Models\Labour;
 use App\Models\Site;
 use App\Models\WagerAttendance;
+use App\Models\Wasta;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class AttendanceSheetController extends Controller
 {
+
+
     public function index(Request $request)
     {
-        $perPage = $request->get('per_page', 20);
-        $currentPage = $request->input('page', 1);
+        if ($request->filled('monthYear')) {
+            [$year, $month] = explode('-', $request->input('monthYear'));
+        } else {
+            $month = now()->month;
+            $year = now()->year;
+        }
 
-        $siteId = request('site_id', 'all');
-        $wagerId = request('wager_id', 'all');
-        $dateFilter = request('date_filter', 'today');
+        $wastas = Wasta::with(['attendances' => function ($query) use ($month, $year): void {
+            $query->whereMonth('attendance_date', $month)
+                ->whereYear('attendance_date', $year);
+        }])->get();
 
-        $wagers = DailyWager::query()
-            ->with(['phase.site', 'phase.wagerAttendances', 'supplier'])
-            ->whereHas('phase', fn($phase) => $phase->withoutTrashed())
-            ->whereHas('supplier', fn($supplier) => $supplier->withoutTrashed())
-            ->whereHas('phase.site', fn($site) => $site->withoutTrashed())
-            ->when($siteId !== 'all', fn($query) => $query->where('site_id', $siteId))
-            ->when($wagerId !== 'all', fn($query) => $query->where('id', $wagerId))
-            ->when($dateFilter, function ($query) use ($dateFilter) {
-                return match ($dateFilter) {
-                    'today' => $query->whereDate('created_at', today()),
-                    'yesterday' => $query->whereDate('created_at', today()->subDay()),
-                    'this_week' => $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]),
-                    'this_month' => $query->whereMonth('created_at', now()->month),
-                    'this_year' => $query->whereYear('created_at', now()->year),
-                    default => $query
-                };
-            })
-            ->get();
+        $daysInMonth = \Carbon\Carbon::create($year, $month)->daysInMonth;
 
-        $data = $wagers
-            ->filter(fn($wager) => $wager->wagerAttendances->where('verified_by_admin', 1)->isNotEmpty())
-            ->map(fn($wager) => [
-                'id' => $wager->id,
-                'wager_name' => $wager->wager_name,
-                'no_of_persons' => $wager->wagerAttendances->where('verified_by_admin', 1)->sum('no_of_persons'),
-                'supplier' => $wager->supplier->name,
-                'phase' => $wager->phase->phase_name,
-                'site' => $wager->phase->site->site_name,
-                'site_id' => $wager->phase->site->id,
-                'supplier_id' => $wager->supplier->id,
-                'created_at' => $wager->created_at->format('D-m-y : h-s'),
+        return view('profile.partials.Admin.Ledgers.wager-attendance-sheet', compact('wastas', 'month', 'year', 'daysInMonth'));
+    }
+
+    public function updateWastaAttendance(Request $request)
+    {
+
+        try {
+
+
+            $data = Validator::make($request->only('wasta_id',  'is_present', 'date'), [
+                'wasta_id' => 'required|exists:wastas,id',
+                'is_present' => 'required|boolean',
+                'date' => 'required|date'
             ]);
 
-        $paginatedLedgers = new LengthAwarePaginator(
-            $data->forPage($currentPage, $perPage),
-            $data->count(),
-            $perPage,
-            $currentPage,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+            if ($data->fails()) {
+                return response()->json([
+                    'errors' => $data->errors()
+                ], 422);
+            }
 
-        $wagers = $paginatedLedgers->unique('id');
-        $sites = $paginatedLedgers->unique('site_id');
 
-        return view(
-            'profile.partials.Admin.Ledgers.wager-attendance-sheet',
-            compact('paginatedLedgers', 'wagers', 'sites')
-        );
+            $wasta = Wasta::find($data->validated()['wasta_id']);
+
+
+            $wasta->attendances()->create([
+                'attendable_type' => 'App\Models\Wasta',
+                'attendable_id' => $wasta->id,
+                'is_present' => $data->validated()['is_present'],
+                'attendance_date' =>  now(),
+            ]);
+
+            return response()->json([
+                'message' => 'Wasta created successfully',
+            ], 200);
+        } catch (\Exception $e) {
+
+            Log::error($e->getMessage());
+            return response()->json([
+                'message' => 'Something went wrong',
+            ], 500);
+        }
+    }
+
+
+    public function storeLabour(Request $request)
+    {
+
+        try {
+
+
+            $data = Validator::make($request->only('wasta_id', 'labour_name', 'price', 'contact'), [
+                "wasta_id" => "required|exists:wastas,id",
+                "labour_name" => "required|string|max:255",
+                "price" => "required|numeric",
+                "contact" => "required|string|max:10",
+            ]);
+
+            if ($data->fails()) {
+                return response()->json([
+                    'errors' => $data->errors()
+                ], 422);
+            }
+
+            Labour::create([
+                'wasta_id' => $data->validated()['wasta_id'],
+                'labour_name' => $data->validated()['labour_name'],
+                'price' => $data->validated()['price'],
+                'contact_no' => $data->validated()['contact'],
+            ]);
+
+            return response()->json([
+                'message' => 'Labour Created Successfully',
+            ], 200);
+
+        } catch (\Exception $e) {
+
+            log::error($e->getMessage());
+            return response()->json([
+                'message' => 'Something went wrong',
+            ], 500);
+        }
+
     }
 }
