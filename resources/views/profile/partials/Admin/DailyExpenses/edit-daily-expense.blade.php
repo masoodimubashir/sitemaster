@@ -34,6 +34,13 @@
                             @enderror
                         </div>
 
+                        <div class="form-group">
+                            <input id="site_id" type="hidden" name="site_id" value="{{ $dialy_expense->site_id }}" />
+                            @error('site_id')
+                                <x-input-error :messages="$message" class="mt-2" />
+                            @enderror
+                        </div>
+
                         <!-- Price -->
                         <div class="form-group">
                             <input id="price" type="number" name="price" value="{{ $dialy_expense->price }}" />

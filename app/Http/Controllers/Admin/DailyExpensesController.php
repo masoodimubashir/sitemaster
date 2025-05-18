@@ -41,7 +41,7 @@ class DailyExpensesController extends Controller
     {
         if ($request->ajax()) {
 
-
+            
             DB::beginTransaction();
 
             // Validation rules
@@ -50,6 +50,7 @@ class DailyExpensesController extends Controller
                 'price' => 'required|numeric|max:9999999999',
                 'bill_photo' => 'required|image|mimes:jpg,jpeg,webp,png|max:1024',
                 'phase_id' => 'required|exists:phases,id',
+                'site_id' => 'required|exists:sites,id',
             ]);
 
             // Check for validation errors
@@ -74,6 +75,7 @@ class DailyExpensesController extends Controller
                     'price' => $request->price,
                     'phase_id' => $request->phase_id,
                     'user_id' => auth()->user()->id,
+                    'site_id' => $request->site_id,
                     'verified_by_admin' => true,
                 ]);
 

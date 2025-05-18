@@ -25,10 +25,10 @@ class SupplierPaymentController extends Controller
         $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
 
         // Get All the data on the arguments given
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
 
         // Prepare the data for the view
-        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
+        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours);
 
         // Sort the data by created_at
         $ledgers = $ledgers->sortByDesc(function ($d) {

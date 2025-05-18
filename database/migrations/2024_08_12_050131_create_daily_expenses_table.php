@@ -18,6 +18,8 @@ return new class extends Migration
             $table->string('bill_photo');
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('phase_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('site_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('supplier_id')->nullable()->constrained()->cascadeOnDelete();
             $table->boolean('verified_by_admin')->default(false);
             $table->softDeletes();
             $table->timestamps();

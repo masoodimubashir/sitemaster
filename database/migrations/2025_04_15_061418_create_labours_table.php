@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::create('labours', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('wasta__id')->constrained('wastas')->cascadeOnDelete();
+            $table->foreignId('wasta_id')->constrained('wastas')->cascadeOnDelete();
+            $table->foreignId('site_id')->constrained('sites')->cascadeOnDelete();
+            $table->foreignId('supplier_id')->nullable()->constrained('')->cascadeOnDelete();
             $table->string('labour_name');
             $table->integer('price');
             $table->string('contact_no');

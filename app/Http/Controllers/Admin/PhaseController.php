@@ -81,11 +81,13 @@ class PhaseController extends Controller
 
         $phase = Phase::find($phase_id);
 
+        $user = auth()->user();
+
         if (!$phase) {
             return redirect()->back()->with('status', 'not_found');
         }
 
-        return view('profile.partials.Admin.Phase.edit-phase', compact('phase'));
+        return view('profile.partials.Admin.Phase.edit-phase', compact('phase', 'user'));
     }
 
     /**
@@ -97,6 +99,7 @@ class PhaseController extends Controller
         $phase_id = base64_decode($id);
 
         $phase = Phase::find($phase_id);
+
 
         $request->validate([
             'phase_name' => [

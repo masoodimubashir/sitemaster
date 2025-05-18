@@ -70,9 +70,8 @@ class PDF extends Fpdf
         $this->Cell(47 * 2, 10, 'Page ' . $this->PageNo() . '/{nb}', 0, 0, 'R');
     }
 
-    function infoTable(array $headers, array $data)
+    public function infoTable(array $headers, array $data)
     {
-
         if (empty($data)) {
             $this->Cell(0, 10, 'No site data available', 1);
             $this->Ln();
@@ -96,19 +95,6 @@ class PDF extends Fpdf
         $this->Cell($this->width * 2, $this->height, ucwords($data['site_name']), 1, 0, 'L', true);
         $this->Ln();
 
-        $this->Cell($this->width * 2, $this->height, $headers['box2'], 1, 0, 'L', true);
-        $this->Cell($this->width * 2, $this->height, $data['contact_no'], 1, 0, 'L', true);
-        $this->Ln();
-
-        $this->Cell($this->width * 2, $this->height, $headers['box3'], 1, 0, 'L', true);
-        $this->Cell($this->width * 2, $this->height, $data['service_charge'], 1, 0, 'L', true);
-        $this->Ln();
-
-        $this->Cell($this->width * 2, $this->height, $headers['box4'], 1, 0, 'L', true);
-        $this->Cell($this->width * 2, $this->height, $data['balance'], 1, 0, 'L', true);
-        $this->Ln();
-        $this->Ln();
-
         $this->Cell($this->width * 2, $this->height, $headers['box5'], 1, 0, 'L', true);
         $this->Cell($this->width * 2, $this->height, ucwords($data['site_owner_name']), 1, 0, 'L', true);
         $this->Ln();
@@ -117,22 +103,41 @@ class PDF extends Fpdf
         $this->Cell($this->width * 2, $this->height, ucwords($data['location']), 1, 0, 'L', true);
         $this->Ln();
 
-        $this->Cell($this->width * 2, $this->height, $headers['box7'], 1, 0, 'L', true);
-        $this->Cell($this->width * 2, $this->height, $data['debit'], 1, 0, 'L', true);
+        $this->Cell($this->width * 2, $this->height, $headers['box2'], 1, 0, 'L', true);
+        $this->Cell($this->width * 2, $this->height, $data['contact_no'], 1, 0, 'L', true);
+        $this->Ln();
         $this->Ln();
 
-        $this->Cell($this->width * 2, $this->height, $headers['box8'], 1, 0, 'L', true);
-        $this->Cell($this->width * 2, $this->height, $data['credit'], 1, 0, 'L', true);
+        // Financial information section
+        $this->Cell($this->width * 2, $this->height, $headers['box3'], 1, 0, 'L', true);
+        $this->Cell($this->width * 2, $this->height, $data['service_charge'], 1, 0, 'L', true);
         $this->Ln();
+
+        // Add the four financial values
+        $this->Cell($this->width * 2, $this->height, 'Total Balance', 1, 0, 'L', true);
+        $this->Cell($this->width * 2, $this->height, $data['total_balance'], 1, 0, 'L', true);
+        $this->Ln();
+
+        $this->Cell($this->width * 2, $this->height, 'Total Due', 1, 0, 'L', true);
+        $this->Cell($this->width * 2, $this->height, $data['total_due'], 1, 0, 'L', true);
+        $this->Ln();
+
+        $this->Cell($this->width * 2, $this->height, 'Effective Balance', 1, 0, 'L', true);
+        $this->Cell($this->width * 2, $this->height, $data['effective_balance'], 1, 0, 'L', true);
+        $this->Ln();
+
+        $this->Cell($this->width * 2, $this->height, 'Total Paid', 1, 0, 'L', true);
+        $this->Cell($this->width * 2, $this->height, $data['total_paid'], 1, 0, 'L', true);
+        $this->Ln();
+
+       
 
         $this->AddPage();
-
-        // Summary section
-
     }
 
-    function siteTableData($phases)
+    public function siteTableData($phases)
     {
+
 
         if (empty($phases)) {
             $this->Cell(0, 10, 'No data available', 1, 0, 'C');
@@ -140,13 +145,10 @@ class PDF extends Fpdf
             return;
         }
 
-        $this->Ln();
-
-        foreach ($phases as $key =>  $phase) {
-
+        foreach ($phases as $key => $phase) {
+            $this->Ln();
             $this->SetTextColor(0, 170, 183);
             $this->Cell(47 * 4, 10, ucwords($phase['phase']), 0, 1, 'C');
-
             $this->Ln(5);
 
             $this->SetFillColor(245, 245, 245);
@@ -154,242 +156,57 @@ class PDF extends Fpdf
             $this->Cell($this->width, $this->height, 'Phase Costing', 1, 0, 'L', true);
             $this->Ln();
 
-            $phase_total_service_charge_Amount = $this->getServiceChargeAmount($phase['phase_total'], $phase['site_service_charge']);
-            $construction_total_amount_with_service_charge = $this->getServiceChargeAmount($phase['construction_total_amount'], $phase['site_service_charge']) + $phase['construction_total_amount'];
-            $square_footage_total_amount_with_service_charge = $this->getServiceChargeAmount($phase['square_footage_total_amount'], $phase['site_service_charge']) + $phase['square_footage_total_amount'];
-            $daily_expenses_total_amount_with_service_charge = $this->getServiceChargeAmount($phase['daily_expenses_total_amount'], $phase['site_service_charge']) + $phase['daily_expenses_total_amount'];
-            $daily_wagers_total_amount_with_service_charge = $this->getServiceChargeAmount($phase['daily_wagers_total_amount'], $phase['site_service_charge']) + $phase['daily_wagers_total_amount'];
 
-            // Table header styling
-            $this->SetFillColor($this->c_f_r, $this->c_f_g, $this->c_f_b);
+
+            $summaryItems = [
+                ['Raw Material', $phase['construction_total_amount']],
+                ['Square Footage', $phase['square_footage_total_amount']],
+                ['Daily Expenses', $phase['daily_expenses_total_amount']],
+                ['Daily Wagers', $phase['daily_wagers_total_amount']],
+            ];
+
+            $phaseService = $this->getServiceChargeAmount($phase['phase_total'], $phase['site_service_charge']);
+
+            $this->SetFillColor(0, 170, 183);
             $this->SetTextColor(255, 255, 255);
-            $this->Cell($this->width, $this->height, 'Description', 1, 0, 'L', true);
-            $this->Cell($this->width, $this->height, 'Amount', 1, 0, 'L', true);
-            $this->Cell($this->width, $this->height, 'Service Charge', 1, 0, 'L', true);
-            $this->Cell($this->width, $this->height, 'Total', 1, 0, 'L', true);
+            $this->Cell($this->width, $this->height, 'Description', 1);
+            $this->Cell($this->width, $this->height, 'Amount', 1);
+            $this->Cell($this->width, $this->height, 'Service Charge', 1);
+            $this->Cell($this->width, $this->height, 'Total', 1);
             $this->Ln();
 
-            // Table content styling
             $this->SetFillColor(255, 255, 255);
             $this->SetTextColor(51, 51, 51);
 
-            // Raw Material Row
-            $this->Cell($this->width, $this->height, 'Raw Material', 1, 0, 'L', true);
-            $this->Cell($this->width, $this->height, number_format($phase['construction_total_amount'], 2), 1, 0, 'R', true);
-            $this->Cell($this->width, $this->height, '-', 1, 0, 'C', true);
-            $this->Cell($this->width, $this->height, number_format($construction_total_amount_with_service_charge, 2), 1, 0, 'R', true);
-            $this->Ln();
+            foreach ($summaryItems as [$label, $amount]) {
+                $total = $amount + $this->getServiceChargeAmount($amount, $phase['site_service_charge']);
+                $this->Cell($this->width, $this->height, $label, 1);
+                $this->Cell($this->width, $this->height, number_format($amount, 2), 1, 0, 'R');
+                $this->Cell($this->width, $this->height, '-', 1, 0, 'C');
+                $this->Cell($this->width, $this->height, number_format($total, 2), 1, 0, 'R');
+                $this->Ln();
+            }
 
-            // Square Footage Row
-            $this->Cell($this->width, $this->height, 'Square Footage', 1, 0, 'L', true);
-            $this->Cell($this->width, $this->height, number_format($phase['square_footage_total_amount'], 2), 1, 0, 'R', true);
-            $this->Cell($this->width, $this->height, '-', 1, 0, 'C', true);
-            $this->Cell($this->width, $this->height, number_format($square_footage_total_amount_with_service_charge, 2), 1, 0, 'R', true);
-            $this->Ln();
-
-            // Daily Expenses Row
-            $this->Cell($this->width, $this->height, 'Daily Expenses', 1, 0, 'L', true);
-            $this->Cell($this->width, $this->height, number_format($phase['daily_expenses_total_amount'], 2), 1, 0, 'R', true);
-            $this->Cell($this->width, $this->height, '-', 1, 0, 'C', true);
-            $this->Cell($this->width, $this->height, number_format($daily_expenses_total_amount_with_service_charge, 2), 1, 0, 'R', true);
-            $this->Ln();
-
-            // Wager Row
-            $this->Cell($this->width, $this->height, 'Wager', 1, 0, 'L', true);
-            $this->Cell($this->width, $this->height, number_format($phase['daily_wagers_total_amount'], 2), 1, 0, 'R', true);
-            $this->Cell($this->width, $this->height, '-', 1, 0, 'C', true);
-            $this->Cell($this->width, $this->height, number_format($daily_wagers_total_amount_with_service_charge, 2), 1, 0, 'R', true);
-            $this->Ln();
-
-            // Total Row styling
             $this->SetFillColor(245, 245, 245);
-            $this->Cell($this->width, $this->height, 'Sub Total', 1, 0, 'L', true);
-            $this->Cell($this->width, $this->height, number_format($phase['phase_total'], 2), 1, 0, 'R', true);
-            $this->Cell($this->width, $this->height, number_format($phase_total_service_charge_Amount, 2), 1, 0, 'R', true);
-            $this->Cell($this->width, $this->height, number_format($phase['phase_total_with_service_charge'], 2), 1, 0, 'R', true);
-
+            $this->Cell($this->width, $this->height, 'Sub Total', 1);
+            $this->Cell($this->width, $this->height, number_format($phase['phase_total'], 2), 1, 0, 'R');
+            $this->Cell($this->width, $this->height, number_format($phaseService, 2), 1, 0, 'R');
+            $this->Cell($this->width, $this->height, number_format($phase['phase_total_with_service_charge'], 2), 1, 0, 'R');
             $this->Ln();
-            if (!$phase['construction_material_billings']->isEmpty()) {
-
-                // Header styling
-                $this->SetTextColor(0, 170, 183);
-                $this->cell(47 * 4, 10, ucwords('Construction Materials Phase'), 0, 1, 'C');
-
-                // Table header styling
-                $this->SetFillColor(0, 170, 183);
-                $this->SetTextColor(255, 255, 255);
-
-                // Column headers
-                $headers = ['Date', 'Item Name', 'Supplier', 'Price'];
-                foreach ($headers as $header) {
-                    $this->Cell($this->width, $this->height, $header, 1, 0, 'C', true);
-                }
-                $this->Ln();
-
-                // Table content styling
-                $this->SetFillColor(255, 255, 255);
-                $this->SetTextColor(51, 51, 51);
-
-                // Data rows
-                foreach ($phase['construction_material_billings'] as $material) {
-                    $material_total = $this->getServiceChargeAmount($material->amount, $phase['site_service_charge']) + $material->amount;
-
-                    $this->Cell($this->width, $this->height, $material->created_at->format('D-M-y'), 1, 0, 'C', true);
-                    $this->Cell($this->width, $this->height, $material->item_name, 1, 0, 'L', true);
-                    $this->Cell($this->width, $this->height, $material->supplier->name, 1, 0, 'L', true);
-                    $this->Cell($this->width, $this->height, number_format($material_total, 2), 1, 0, 'R', true);
-                    $this->Ln();
-                }
-            }
 
 
-            if (!$phase['square_footage_bills']->isEmpty()) {
-                $this->Ln(5);
-
-                // Header styling
-                $this->SetTextColor(0, 170, 183);
-                $this->cell(47 * 4, 10, ucwords("Square Footage Bills"), 0, 1, 'C');
-
-                // Table header styling
-                $this->SetFillColor(0, 170, 183);
-                $this->SetTextColor(255, 255, 255);
-
-                // Column headers
-                $headers = ['Date', 'Work Type', 'Supplier', 'Price', 'Multiplier', 'Total Price'];
-                foreach ($headers as $header) {
-                    $this->Cell(31.3, $this->height, $header, 1, 0, 'C', true);
-                }
-                $this->Ln();
-
-                // Table content styling
-                $this->SetFillColor(255, 255, 255);
-                $this->SetTextColor(51, 51, 51);
-
-                // Data rows
-                foreach ($phase['square_footage_bills'] as $sqft) {
-                    $sqft_total_price = $sqft->multiplier * $sqft->price;
-                    $sqft_service_charge_amount = $this->getServiceChargeAmount($sqft_total_price, $phase['site_service_charge']);
-                    $total_with_service = $sqft_total_price + $sqft_service_charge_amount;
-
-                    $this->Cell(31.3, $this->height, $sqft->created_at->format('D-M-y'), 1, 0, 'C', true);
-                    $this->Cell(31.3, $this->height, ucwords($sqft->wager_name), 1, 0, 'L', true);
-                    $this->Cell(31.3, $this->height, $sqft->supplier->name, 1, 0, 'L', true);
-                    $this->Cell(31.3, $this->height, number_format($sqft->price, 2), 1, 0, 'R', true);
-                    $this->Cell(31.3, $this->height, number_format($sqft->multiplier, 2), 1, 0, 'R', true);
-                    $this->Cell(31.3, $this->height, number_format($total_with_service, 2), 1, 0, 'R', true);
-                    $this->Ln();
-                }
-            }
-
-
-            if (!$phase['daily_expenses']->isEmpty()) {
-                $this->Ln(5);
-
-                // Header styling
-                $this->SetTextColor(0, 170, 183);
-                $this->cell(47 * 4, 10, ucwords("Daily Expenses"), 0, 1, 'C');
-
-                // Table header styling
-                $this->SetFillColor(0, 170, 183);
-                $this->SetTextColor(255, 255, 255);
-
-                // Column headers
-                $headers = ['Date', 'Item Name', 'Price'];
-                foreach ($headers as $header) {
-                    $this->Cell($this->width * 1.33, $this->height, $header, 1, 0, 'C', true);
-                }
-                $this->Ln();
-
-                // Table content styling
-                $this->SetFillColor(255, 255, 255);
-                $this->SetTextColor(51, 51, 51);
-
-                // Data rows
-                foreach ($phase['daily_expenses'] as $expense) {
-                    $expense_service_charge_amount = $this->getServiceChargeAmount($expense->price, $phase['site_service_charge']);
-                    $total_amount = $expense->price + $expense_service_charge_amount;
-
-                    $this->Cell($this->width * 1.33, $this->height, $expense->created_at->format('D-M-y'), 1, 0, 'C', true);
-                    $this->Cell($this->width * 1.33, $this->height, ucwords($expense->item_name), 1, 0, 'L', true);
-                    $this->Cell($this->width * 1.33, $this->height, number_format($total_amount, 2), 1, 0, 'R', true);
-                    $this->Ln();
-                }
-            }
-
-
-            if (!$phase['daily_wagers']->isEmpty()) {
-                $this->Ln(5);
-
-                // Daily Wager Header
-                $this->SetTextColor(0, 170, 183);
-                $this->cell(47 * 4, 10, ucwords("Daily Wager"), 0, 1, 'C');
-
-                // Table Header Styling
-                $this->SetFillColor(0, 170, 183);
-                $this->SetTextColor(255, 255, 255);
-
-                // Daily Wager Headers
-                $wager_headers = ['Date', 'Wager Name', 'Price Per Day', 'Price Per Wager'];
-                foreach ($wager_headers as $header) {
-                    $this->Cell($this->width, $this->height, $header, 1, 0, 'C', true);
-                }
-                $this->Ln();
-
-                // Daily Wager Content Styling
-                $this->SetFillColor(255, 255, 255);
-                $this->SetTextColor(51, 51, 51);
-
-                foreach ($phase['daily_wagers'] as $daily_wager) {
-                    $wager_service_charge_amount = $this->getServiceChargeAmount($daily_wager->wager_total, $phase['site_service_charge']);
-                    $total_amount = $daily_wager->wager_total + $wager_service_charge_amount;
-
-                    $this->Cell($this->width, $this->height, $daily_wager->created_at->format('D-M-y'), 1, 0, 'C', true);
-                    $this->Cell($this->width, $this->height, ucwords($daily_wager->wager_name), 1, 0, 'L', true);
-                    $this->Cell($this->width, $this->height, number_format($daily_wager->price_per_day, 2), 1, 0, 'R', true);
-                    $this->Cell($this->width, $this->height, number_format($total_amount, 2), 1, 0, 'R', true);
-                    $this->Ln();
-                }
-            }
-
-            if (!$phase['wager_attendances']->isEmpty()) {
-                $this->Ln(5);
-
-                // Attendance Header
-                $this->SetTextColor(0, 170, 183);
-                $this->cell(47 * 4, 10, ucwords("Attendance"), 0, 1, 'C');
-
-                // Table Header Styling
-                $this->SetFillColor(0, 170, 183);
-                $this->SetTextColor(255, 255, 255);
-
-                // Attendance Headers
-                $attendance_headers = ['Date', 'No Of Persons', 'Wager Name', 'Supplier'];
-                foreach ($attendance_headers as $header) {
-                    $this->Cell($this->width, $this->height, $header, 1, 0, 'C', true);
-                }
-                $this->Ln();
-
-                // Attendance Content Styling
-                $this->SetFillColor(255, 255, 255);
-                $this->SetTextColor(51, 51, 51);
-
-                foreach ($phase['wager_attendances'] as $attendance) {
-                    $this->Cell($this->width, $this->height, $attendance->created_at->format('D-M-y'), 1, 0, 'C', true);
-                    $this->Cell($this->width, $this->height, $attendance->no_of_persons, 1, 0, 'C', true);
-                    $this->Cell($this->width, $this->height, ucwords($attendance->dailyWager->wager_name), 1, 0, 'L', true);
-                    $this->Cell($this->width, $this->height, ucwords($attendance->dailyWager->supplier->name), 1, 0, 'L', true);
-                    $this->Ln();
-                }
-            }
-
+            $this->renderMaterialTable($phase['construction_material_billings']);
+            $this->renderSqftTable($phase['square_footage_bills']);
+            $this->renderExpenseTable($phase['daily_expenses'], 'Daily Expenses', ['Date', 'Item Name', 'Price']);
+            $this->renderWastaLabourTable($phase['daily_wastas'], 'Daily Wastas');
+            $this->renderWastaLabourTable($phase['daily_labours'], 'Daily Labours');
 
             if ($key < count($phases) - 1) {
                 $this->AddPage();
-            } else {
-                return;
             }
         }
     }
+
 
     function phaseTableData($headers, $phases, $phaseCosting)
     {
@@ -421,9 +238,9 @@ class PDF extends Fpdf
 
         foreach ($phase_details as $label => $value) {
             $this->Cell($this->width * 2, $this->height, $label, 1, 0, 'L', true);
-           
+
             $this->Cell($this->width * 2, $this->height, ucwords($value), 1, 0, 'L', true);
-           
+
             $this->Ln();
         }
 
@@ -638,26 +455,26 @@ class PDF extends Fpdf
             $this->Ln();
             return;
         }
-        
+
         // Title Section
         $this->SetTextColor(0, 170, 183);
         $this->Cell($this->width * 4, $this->height, 'Payment History', 0, 0, 'C');
         $this->Ln(10);
-        
+
         // Table Headers
         $this->SetFillColor(0, 170, 183);
         $this->SetTextColor(255, 255, 255);
-        
+
         $headers = ['Date', 'Site Name', 'Site Owner', 'Supplier', 'Amount'];
         foreach ($headers as $header) {
             $this->Cell($this->width / 1.15, $this->height, $header, 1, 0, 'C', true);
         }
         $this->Ln();
-        
+
         // Table Content
         $this->SetFillColor(255, 255, 255);
         $this->SetTextColor(51, 51, 51);
-        
+
         foreach ($supplier->payments as $payment) {
             $this->Cell($this->width / 1.15, $this->height, $payment->created_at->format('D-M'), 1, 0, 'C', true);
             $this->Cell($this->width / 1.15, $this->height, $payment->site->site_name ?? '--', 1, 0, 'L', true);
@@ -665,7 +482,6 @@ class PDF extends Fpdf
             $this->Cell($this->width / 1.15, $this->height, ucwords($payment->supplier->name), 1, 0, 'L', true);
             $this->Cell($this->width / 1.15, $this->height, number_format($payment->amount, 2), 1, 1, 'R', true);
         }
-        
     }
 
     function sitePaymentTable($site)
@@ -839,5 +655,120 @@ class PDF extends Fpdf
         $serviceChargeAmount = ($serviceCharge / 100) * $amount;
 
         return $serviceChargeAmount;
+    }
+
+
+
+     private function renderMaterialTable($items)
+    {
+        if (empty($items)) return;
+        $this->Ln(5);
+        $this->SetTextColor(0, 170, 183);
+        $this->Cell(47 * 4, 10, 'Construction Materials Phase', 0, 1, 'C');
+
+        $headers = ['Date', 'Item Name', 'Supplier', 'Price'];
+        $this->SetFillColor(0, 170, 183);
+        $this->SetTextColor(255, 255, 255);
+        foreach ($headers as $header) {
+            $this->Cell($this->width, $this->height, $header, 1, 0, 'C', true);
+        }
+        $this->Ln();
+
+        $this->SetFillColor(255, 255, 255);
+        $this->SetTextColor(51, 51, 51);
+
+        foreach ($items as $item) {
+            $this->Cell($this->width, $this->height, $item['created_at']->format('D-M-y'), 1);
+            $this->Cell($this->width, $this->height, $item['description'], 1);
+            $this->Cell($this->width, $this->height, $item['supplier'], 1);
+            $this->Cell($this->width, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'R');
+            $this->Ln();
+        }
+    }
+
+    private function renderSqftTable($items)
+    {
+        if (empty($items)) return;
+        $this->Ln(5);
+        $this->SetTextColor(0, 170, 183);
+        $this->Cell(47 * 4, 10, 'Square Footage Bills', 0, 1, 'C');
+
+        $headers = ['Date', 'Work Type', 'Supplier', 'Price', 'Multiplier', 'Total Price'];
+        $this->SetFillColor(0, 170, 183);
+        $this->SetTextColor(255, 255, 255);
+        foreach ($headers as $header) {
+            $this->Cell(31.3, $this->height, $header, 1, 0, 'C', true);
+        }
+        $this->Ln();
+
+        $this->SetFillColor(255, 255, 255);
+        $this->SetTextColor(51, 51, 51);
+
+        foreach ($items as $item) {
+            $this->Cell(31.3, $this->height, $item['created_at']->format('D-M-y'), 1);
+            $this->Cell(31.3, $this->height, $item['description'], 1);
+            $this->Cell(31.3, $this->height, $item['supplier'], 1);
+            $this->Cell(31.3, $this->height, number_format($item['debit'], 2), 1, 0, 'R');
+            $this->Cell(31.3, $this->height, '1', 1, 0, 'R');
+            $this->Cell(31.3, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'R');
+            $this->Ln();
+        }
+    }
+
+    private function renderExpenseTable($items, $title, $columns)
+    {
+
+
+
+        if (empty($items)) return;
+        $this->Ln(5);
+        $this->SetTextColor(0, 170, 183);
+        $this->Cell(47 * 4, 10, $title, 0, 1, 'C');
+
+        $this->SetFillColor(0, 170, 183);
+        $this->SetTextColor(255, 255, 255);
+        foreach ($columns as $header) {
+            $this->Cell($this->width * 1.33, $this->height, $header, 1, 0, 'C', true);
+        }
+        $this->Ln();
+
+        $this->SetFillColor(255, 255, 255);
+        $this->SetTextColor(51, 51, 51);
+
+        foreach ($items as $item) {
+            $this->Cell($this->width * 1.33, $this->height, $item['created_at']->format('D-M-y'), 1);
+            $this->Cell($this->width * 1.33, $this->height, $item['description'], 1);
+            $this->Cell($this->width * 1.33, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'R');
+            $this->Ln();
+        }
+    }
+
+    
+
+    private function renderWastaLabourTable($items, $title)
+    {
+        if (empty($items)) return;
+        $this->Ln(5);
+        $this->SetTextColor(0, 170, 183);
+        $this->Cell(47 * 4, 10, $title, 0, 1, 'C');
+
+        $headers = ['Date', 'Name', 'Amount', 'With Service Charge'];
+        $this->SetFillColor(0, 170, 183);
+        $this->SetTextColor(255, 255, 255);
+        foreach ($headers as $header) {
+            $this->Cell($this->width, $this->height, $header, 1, 0, 'C', true);
+        }
+        $this->Ln();
+
+        $this->SetFillColor(255, 255, 255);
+        $this->SetTextColor(51, 51, 51);
+
+        foreach ($items as $item) {
+            $this->Cell($this->width, $this->height, $item['created_at']->format('D-M-y'), 1);
+            $this->Cell($this->width, $this->height, $item['description'], 1);
+            $this->Cell($this->width, $this->height, number_format($item['debit'], 2), 1, 0, 'R');
+            $this->Cell($this->width, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'R');
+            $this->Ln();
+        }
     }
 }

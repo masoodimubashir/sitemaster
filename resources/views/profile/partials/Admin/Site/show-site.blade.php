@@ -180,50 +180,75 @@
         <div class="header-icon">
             <i class="menu-icon fa fa-building"></i>
         </div>
-        
+
         <h1 class="text-xl font-semibold">Site Report</h1>
 
         <div class="ms-auto action-buttons d-flex gap-2">
-            <!-- Dropdown Menu -->
+            <!-- Settings Dropdown -->
             <div class="dropdown">
-                <button class="btn btn-outline dropdown-toggle " type="button" id="dropdownMenuButton"
+
+                <button class="btn btn-outline dropdown-toggle" type="button" id="dropdownMenuButton"
                     data-bs-toggle="dropdown" aria-expanded="false">
-                    Make Entry
+                    <i class="fas fa-bolt me-1"></i> Quick Actions
                 </button>
 
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-
-
+                    <!-- Entry Actions -->
                     <li>
                         <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#phase">
-                            Create Phase
+                            <i class="fas fa-layer-group me-2"></i> Add Phase
                         </a>
                     </li>
-
                     <li>
                         <a class="dropdown-item" data-bs-toggle="modal" role="button"
                             href="#modal-construction-billings">
-                            Construction
+                            <i class="fas fa-truck-loading me-2"></i> Add Construction Billing
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item" data-bs-toggle="modal" role="button"
                             href="#modal-square-footage-bills">
-                            Contractor
+                            <i class="fas fa-ruler-combined me-2"></i> Add Contractor Billing
                         </a>
                     </li>
                     <li>
                         <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#modal-daily-expenses">
-                            Expenditure
+                            <i class="fas fa-receipt me-2"></i> Add Daily Expense
+                        </a>
+                    </li>
+
+                    <li>
+                        <a class="dropdown-item" href="#payment-supplier" data-bs-toggle="modal" role="button">
+                            <i class="fas fa-money-bill me-2"></i> Pay balance
+                        </a>
+                    </li>
+
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+
+                    <!-- View / Utility Actions -->
+                    <li>
+                        <a class="dropdown-item" href="{{ url('admin/sites/details/' . base64_encode($id)) }}">
+                            <i class="fas fa-info-circle me-2"></i> View Site Details
                         </a>
                     </li>
                     <li>
-                        <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#modal-daily-wager">
-                            Wager
+                        <a class="dropdown-item" href="{{ url($user . '/attendance/site/show/' . $id) }}">
+                            <i class="fas fa-calendar-check me-2"></i> View Attendance
                         </a>
                     </li>
+                    <li>
+                        <a class="dropdown-item"
+                            href="{{ url('admin/site-payment/report', ['id' => base64_encode($id)]) }}">
+                            <i class="fas fa-file-invoice-dollar me-2"></i> View Payment Report
+                        </a>
+                    </li>
+
+
                 </ul>
             </div>
+
             <form action="{{ url($user . '/ledger/report') }}" method="GET">
                 <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
                 <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
@@ -233,17 +258,13 @@
                     <i class="far fa-file-pdf"></i> Download PDF
                 </button>
             </form>
-
-            <a href="{{ url('admin/sites/details/' . base64_encode($id)) }}" class="btn btn-outline">
-                <i class="fas fa-eye"></i> View Site Detail
-            </a>
-
-            <a class="btn btn-outline" href="#payment-supplier" data-bs-toggle="modal" role="button">
-                <i class="fas fa-money-bill me-2"></i> Pay
-            </a>
-
         </div>
+
     </div>
+
+
+
+
 
 
 
@@ -264,14 +285,19 @@
         <!-- Date Period Filter -->
         <select class="bg-white text-black form-select form-select-sm" name="date_filter" id="dateFilter">
             <option value="today" {{ request('date_filter') === 'today' ? 'selected' : '' }}>Today</option>
-            <option value="yesterday" {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>Yesterday</option>
-            <option value="this_week" {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>This Week</option>
+            <option value="yesterday" {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>Yesterday
+            </option>
+            <option value="this_week" {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>This Week
+            </option>
             <option value="this_month" {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>This Month
             </option>
-            <option value="this_year" {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>This Year</option>
+            <option value="this_year" {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>This Year
+            </option>
             <option value="custom" {{ request('date_filter') === 'custom' ? 'selected' : '' }}>Custom Range</option>
             <option value="lifetime" {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>All Data</option>
         </select>
+
+
 
         <!-- Date Range Inputs (shown only when custom is selected) -->
         <div id="customDateRange"
@@ -490,10 +516,8 @@
 
                         </div>
 
-
-
                         <x-primary-button>
-                            {{ __('Create Billing') }}
+                            Create Billing
                         </x-primary-button>
 
 
@@ -615,7 +639,7 @@
     </div>
 
     <!-- Daily Wager Form -->
-    <div id="modal-daily-wager" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
+    {{-- <div id="modal-daily-wager" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
         tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -682,7 +706,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> --}}
 
     <!-- Daily Expense -->
     <div id="modal-daily-expenses" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
@@ -709,6 +733,11 @@
                             <input id="price" type="number" name="price" />
                             <label for="price" class="control-label">Price</label><i class="bar"></i>
                             <p class="text-danger" id="description-error"></p>
+                        </div>
+
+                        <!-- sites -->
+                        <div class="form-group">
+                            <input id="site_id" type="hidden" name="site_id" value="{{ $site->id }}" />
                         </div>
 
                         <!-- Phases -->
@@ -1385,9 +1414,11 @@
                     error: function(response) {
 
                         if (response.status === 422) { // Validation errors
-                            messageContainer.append(`
+                            messageContainer.append(
+                                `
 
-                            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">${response.responseJSON.errors}</div>`)
+                            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">${response.responseJSON.errors}</div>`
+                            )
 
                         } else {
                             messageContainer.append(`
@@ -1399,7 +1430,7 @@
                         // Auto-hide error message after 5 seconds
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-                            
+
                         }, 2000);
                     }
                 });

@@ -40,11 +40,6 @@ class DashboardController extends Controller
             ->withSum([
                 'payments as total_payments' => fn($pay) => $pay->where([
                     ['verified_by_admin', '=', 1],
-                    ['transaction_type', '=', 0],
-                ]),
-                'payments as total_site_expenses_from_payments' => fn($pay) => $pay->where([
-                    ['verified_by_admin', '=', 1],
-                    ['transaction_type', '=', 1],
                 ]),
             ], 'amount')
             ->with([
@@ -61,13 +56,28 @@ class DashboardController extends Controller
                         ->withSum([
                             'dailyExpenses as total_daily_expenses' => fn($q) => $q->where('verified_by_admin', 1)
                         ], 'price');
-                }
+                },
             ])
+            ->withSum([
+                'labours as total_labour_cost' => function ($query) {
+                    $query->whereHas('attendances', function ($att) {
+                        $att->where('is_present', 1);
+                    });
+                }
+            ], 'price')
+            ->withSum([
+                'wastas as total_wasta_cost' => function ($query) {
+                    $query->whereHas('attendances', function ($att) {
+                        $att->where('is_present', 1);
+                    });
+                }
+            ], 'price')
+            ->where('is_on_going', 1)
             ->paginate(10);
+
 
         $users = User::where('role_name', 'site_engineer')->get();
         $clients = Client::orderBy('name')->get();
-
 
         return view('profile.partials.Admin.Dashboard.dashboard', [
             'ongoingSites' => $ongoingSitesCount,

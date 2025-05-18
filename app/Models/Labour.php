@@ -11,6 +11,7 @@ class Labour extends Model
 
     protected $fillable = [
         'wasta_id',
+        'site_id',
         'labour_name',
         'price',
         'contact_no'
@@ -24,6 +25,16 @@ class Labour extends Model
      */
     public function attendances(): MorphMany
     {
-        return $this->morphMany(Attendance::class, 'attendances');
+        return $this->morphMany(Attendance::class, 'attendable');
+    }
+
+    public function wasta()
+    {
+        return $this->belongsTo(Wasta::class);
+    }
+
+    public function site()
+    {
+        return $this->belongsTo(Site::class);
     }
 }

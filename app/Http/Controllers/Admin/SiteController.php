@@ -14,7 +14,6 @@ use App\Notifications\UserSiteNotification;
 use App\Services\DataService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class SiteController extends Controller
@@ -99,7 +98,6 @@ class SiteController extends Controller
                 'data' => $site
             ], 201);
         } catch (\Exception $e) {
-            Log::error('Error creating site: ' . $e->getMessage());
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',
@@ -153,8 +151,7 @@ class SiteController extends Controller
             'payments' => function ($query) {
                 $query->where('verified_by_admin', 1);
             },
-        ])
-            ->find($site_id);
+        ])->find($site_id);
 
         $totalPaymentSuppliersAmount = $site->payments()
             ->where('verified_by_admin', 1)
@@ -208,7 +205,6 @@ class SiteController extends Controller
             });
         })->values()->toArray();
 
-
         $items = Item::orderBy('item_name')->get();
 
         return view(
@@ -230,6 +226,7 @@ class SiteController extends Controller
     public function show($id, Request $request, DataService $dataService)
     {
 
+
         $id = base64_decode($id);
 
         $dateFilter = $request->input('date_filter', 'today');
@@ -239,8 +236,8 @@ class SiteController extends Controller
         $startDate = $request->input('start_date'); // for 'custom'
         $endDate = $request->input('end_date');
 
-        // Call the service or method
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData(
+        // Call the service to get all data including wasta and labours
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
@@ -249,20 +246,20 @@ class SiteController extends Controller
             $endDate
         );
 
-        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
-
-        $balances = $dataService->calculateAllBalances($ledgers);
-
         $ledgers = $dataService->makeData(
             $payments,
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wagers
+            $wagers,
+            $wastas,
+            $labours
         )->sortByDesc(function ($d) {
             return $d['created_at'];
         });
 
+
+        // Calculate balances
         $balances = $dataService->calculateAllBalances($ledgers);
 
         $withoutServiceCharge = $balances['without_service_charge'];
@@ -272,6 +269,7 @@ class SiteController extends Controller
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
 
+        // Paginate the ledgers
         $paginatedLedgers = new LengthAwarePaginator(
             $ledgers->forPage($request->input('page', 1), 20),
             $ledgers->count(),
@@ -280,12 +278,17 @@ class SiteController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $suppliers = $paginatedLedgers->filter(  fn($supplier) => $supplier['supplier_id'] !== '--')->unique('supplier_id');
 
+        // Get unique suppliers
+        $suppliers = $paginatedLedgers->filter(fn($supplier) => $supplier['supplier_id'] !== '--')->unique('supplier_id');
+
+        // Get additional data for the view
         $items = Item::orderBy('item_name')->get();
         $workforce_suppliers = Supplier::where('is_workforce_provider', 1)->orderBy('name')->get();
         $raw_material_providers = Supplier::where('is_raw_material_provider', 1)->orderBy('name')->get();
         $phases = Phase::latest()->get();
+        $site = Site::select('id', 'site_name')->where('is_on_going', 1)->find($site_id);
+
 
         return view("profile.partials.Admin.Site.show-site", compact(
             'paginatedLedgers',
@@ -299,7 +302,8 @@ class SiteController extends Controller
             'items',
             'workforce_suppliers',
             'raw_material_providers',
-            'phases'
+            'phases',
+            'site',
         ));
     }
 

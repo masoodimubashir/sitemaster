@@ -55,11 +55,10 @@ class SupplierController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show( string $id, Request $request,)
+    public function show(string $id, Request $request,)
     {
 
-
-
+        
         $date_filter = $request->input('date_filter', 'today');
         $site_id = $request->input('site_id', $id);
         $supplier_id = $request->input('supplier_id', $id);
@@ -70,8 +69,7 @@ class SupplierController extends Controller
         // Load the supplier
         $supplier = Supplier::findOrFail($supplier_id);
 
-        // Use existing ledger logic
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $this->dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $this->dataService->getData(
             $date_filter,
             $site_id,
             $supplier_id,
@@ -80,7 +78,17 @@ class SupplierController extends Controller
             $end_date
         );
 
-        $ledgers = $this->dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
+        $ledgers = $this->dataService->makeData(
+            $payments,
+            $raw_materials,
+            $squareFootageBills,
+            $expenses,
+            $wagers,
+            $wastas,
+            $labours
+        )->sortByDesc(function ($d) {
+            return $d['created_at'];
+        });
 
         // Compute balances
         $totals = $this->dataService->calculateAllBalances($ledgers);

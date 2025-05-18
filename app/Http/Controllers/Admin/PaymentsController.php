@@ -31,11 +31,11 @@ class PaymentsController extends Controller
         $site_id = $request->input('site_id', 'all');
         $supplier_id = $request->input('supplier_id', 'all');
         $wager_id = $request->input('wager_id', 'all');
-        $startDate = $request->input('start_date'); 
+        $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
         // Call the service or method
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
@@ -44,21 +44,21 @@ class PaymentsController extends Controller
             $endDate
         );
 
-        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
-
-        $balances = $dataService->calculateAllBalances($ledgers);
-
-
+        // Create ledger data including wasta and labours
         $ledgers = $dataService->makeData(
             $payments,
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wagers
+            $wagers,
+            $wastas,
+            $labours
         )->sortByDesc(function ($d) {
             return $d['created_at'];
         });
 
+        // Calculate balances including wasta and labours
+        $balances = $dataService->calculateAllBalances($ledgers);
 
         $withoutServiceCharge = $balances['without_service_charge'];
         $withServiceCharge = $balances['with_service_charge'];
@@ -80,12 +80,13 @@ class PaymentsController extends Controller
             ),
             $ledgers->count(),
             $perPage,
-            $request->input('page', 10),
+            $request->input('page', 1), // Changed from 10 to 1 for default page
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
         $suppliers = $paginatedLedgers->filter(fn($supplier) => $supplier['supplier_id'] !== '--')->unique('supplier_id');
         $sites = $paginatedLedgers->filter(fn($site) => $site['site_id'] !== '--')->unique('site');
+
 
         return view("profile.partials.Admin.PaymentSuppliers.payments", compact(
             'paginatedLedgers',
@@ -97,7 +98,7 @@ class PaymentsController extends Controller
             'suppliers',
             'sites',
             'wagers',
-            'effective_balance'
+            'effective_balance',
         ));
     }
 

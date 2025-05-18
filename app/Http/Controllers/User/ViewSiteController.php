@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSiteRequest;
 use App\Models\DailyWager;
 use App\Models\Item;
+use App\Models\Phase;
 use App\Models\Site;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Http\Requests\UpdateSiteRequest;
 use App\Models\Client;
 use App\Models\PaymentSupplier;
+use App\Services\DataService;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ViewSiteController extends Controller
 {
@@ -20,10 +24,12 @@ class ViewSiteController extends Controller
      * Display the specified resource.
      */
 
-    public function show(string $id)
+
+
+    public function showDetails(Request $request, string $id)
     {
 
-        $site_id = base64_decode($id);
+
 
         $site = Site::with([
             'phases' => function ($query) {
@@ -62,7 +68,8 @@ class ViewSiteController extends Controller
                 $query->where('verified_by_admin', 1);
             },
         ])
-        ->find($site_id);
+            ->find($id);
+
 
         $totalPaymentSuppliersAmount = $site->payments()
             ->where('verified_by_admin', 1)
@@ -97,7 +104,6 @@ class ViewSiteController extends Controller
             $phase->phase_total_with_service_charge_amount = $phase->phase_total_amount + $phase->phase_total_service_charge_amount;
 
             $grand_total_amount += $phase->phase_total_with_service_charge_amount;
-
         }
 
         $balance = $grand_total_amount - $totalPaymentSuppliersAmount;
@@ -119,7 +125,8 @@ class ViewSiteController extends Controller
 
         $items = Item::orderBy('item_name')->get();
 
-        return view('profile.User.Site.show-site',
+        return view(
+            'profile.User.Site.show-site-detail',
             compact(
                 'site',
                 'grand_total_amount',
@@ -130,6 +137,90 @@ class ViewSiteController extends Controller
                 'items',
                 'totalPaymentSuppliersAmount',
                 'balance'
+            )
+        );
+    }
+
+
+    public function show($id, Request $request, DataService $dataService)
+    {
+
+
+        $id = base64_decode($id);
+
+        $dateFilter = $request->input('date_filter', 'today');
+        $site_id = $request->input('site_id', $id);
+        $supplier_id = $request->input('supplier_id', 'all');
+        $wager_id = $request->input('wager_id', 'all');
+        $startDate = $request->input('start_date'); // for 'custom'
+        $endDate = $request->input('end_date');
+
+        // Call the service to get all data including wasta and labours
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $dataService->getData(
+            $dateFilter,
+            $site_id,
+            $supplier_id,
+            $wager_id,
+            $startDate,
+            $endDate
+        );
+
+        // Create ledger data including wasta and labours
+        $ledgers = $dataService->makeData(
+            $payments,
+            $raw_materials,
+            $squareFootageBills,
+            $expenses,
+            $wagers,
+            $wastas,
+            $labours
+        )->sortByDesc(function ($d) {
+            return $d['created_at'];
+        });
+
+        // Calculate balances
+        $balances = $dataService->calculateAllBalances($ledgers);
+
+        $withoutServiceCharge = $balances['without_service_charge'];
+        $withServiceCharge = $balances['with_service_charge'];
+        $effective_balance = $withoutServiceCharge['due'];
+        $total_paid = $withServiceCharge['paid'];
+        $total_due = $withServiceCharge['due'];
+        $total_balance = $withServiceCharge['balance'];
+
+        // Paginate the ledgers
+        $paginatedLedgers = new LengthAwarePaginator(
+            $ledgers->forPage($request->input('page', 1), 20),
+            $ledgers->count(),
+            20,
+            $request->input('page', 1),
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        // Get unique suppliers
+        $suppliers = $paginatedLedgers->filter(fn($supplier) => $supplier['supplier_id'] !== '--')->unique('supplier_id');
+
+        // Get additional data for the view
+        $items = Item::orderBy('item_name')->get();
+        $workforce_suppliers = Supplier::where('is_workforce_provider', 1)->orderBy('name')->get();
+        $raw_material_providers = Supplier::where('is_raw_material_provider', 1)->orderBy('name')->get();
+        $phases = Phase::latest()->get();
+
+        return view(
+            'profile.User.Site.show-site',
+            compact(
+                'paginatedLedgers',
+                'total_paid',
+                'total_due',
+                'total_balance',
+                'suppliers',
+                'wagers',
+                'effective_balance',
+                'id',
+                'items',
+                'workforce_suppliers',
+                'raw_material_providers',
+                'phases',
             )
         );
     }

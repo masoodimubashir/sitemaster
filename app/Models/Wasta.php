@@ -12,6 +12,7 @@ class Wasta extends Model
 
     protected $fillable = [
         'wasta_id',
+        'site_id',
         'wasta_name',
         'price',
         'contact_no'
@@ -26,5 +27,17 @@ class Wasta extends Model
     public function attendances(): MorphMany
     {
         return $this->morphMany(Attendance::class, 'attendable');
+    }
+
+
+    public function labours()
+    {
+        return $this->hasMany(Labour::class);
+    }
+
+
+    public function site()
+    {
+        return $this->belongsTo(Site::class);
     }
 }

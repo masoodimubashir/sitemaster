@@ -190,59 +190,45 @@
     <div class="card attendance-card">
 
         <div class="card-header d-flex justify-content-between align-items-center">
-
             <h2 class="h5 mb-0 d-flex align-items-center">
                 <i class="fas fa-calendar-check me-2 text-primary"></i>
                 Attendance Report
             </h2>
 
-            <div class="d-flex align-items-center gap-2">
+            <div class="controls">
 
-                <div class="controls">
+                <div class="ms-auto action-buttons d-flex gap-2">
+                    <!-- Dropdown Menu -->
+                    <div class="dropdown">
 
-                    <div class="ms-auto action-buttons d-flex gap-2">
-                        <!-- Dropdown Menu -->
-                        <div class="dropdown">
+                        <button class="btn btn-outline-primary btn-sm dropdown-toggle " type="button"
+                            id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            Make Entry
+                        </button>
 
-                            <button class="btn btn-outline-primary dropdown-toggle " type="button"
-                                id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                Make Entry
-                            </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                            <li>
+                                <a class="dropdown-item" data-bs-toggle="modal" role="button"
+                                    href="#modal-create-wasta">
+                                    Create Wasta
+                                </a>
+                            </li>
 
-                                <li>
-                                    <a class="dropdown-item" data-bs-toggle="modal" role="button"
-                                        href="#modal-create-wasta">
-                                        Create Wasta
-                                    </a>
-                                </li>
+                            <li>
+                                <!-- Button to Open Modal -->
+                                <a class="dropdown-item" role="button" data-bs-toggle="modal" href="#attendanceModal">
+                                    Create Labour
+                                </a>
+                            </li>
 
-                                <li>
-                                    <!-- Button to Open Modal -->
-                                    <a class="dropdown-item" role="button" data-bs-toggle="modal"
-                                        href="#attendanceModal">
-                                        Create Labour
-                                    </a>
-                                </li>
-
-                            </ul>
-
-                        </div>
+                        </ul>
 
                     </div>
 
                 </div>
 
-                <form method="GET" action="{{ url('admin/wager-attendance') }}" class="d-flex align-items-center">
-                    <input type="month" name="monthYear" class="form-control me-2"
-                        value="{{ request('monthYear', $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT)) }}">
-                    <button type="submit" class="btn btn-primary">Filter</button>
-                </form>
-
-
             </div>
-
         </div>
 
         <div class="table-responsive">
@@ -266,7 +252,6 @@
                     </tr>
                 </thead>
                 <tbody>
-
                     @foreach ($wastas as $index => $wasta)
                         <tr class="employee-row" data-bs-toggle="collapse"
                             data-bs-target="#collapse-{{ $index }}" style="cursor:pointer;">
@@ -274,6 +259,7 @@
                                 <span class="employee-name">{{ $wasta->wasta_name }}</span><br>
                                 <button class="btn btn-sm btn-outline-primary mt-1 wasta-edit-btn"
                                     data-wasta='@json($wasta)'>Edit</button>
+
                             </td>
 
                             @for ($day = 1; $day <= $daysInMonth; $day++)
@@ -281,25 +267,24 @@
                                     $date = \Carbon\Carbon::create($year, $month, $day)->format('Y-m-d');
                                     $attendance = $wasta->attendances->firstWhere('attendance_date', $date);
                                     $isToday = \Carbon\Carbon::today()->format('Y-m-d') === $date;
-                                    $isFuture = \Carbon\Carbon::parse($date)->isFuture();
+                                    $isPast = \Carbon\Carbon::parse($date)->lt(\Carbon\Carbon::today());
                                     $isWeekend = \Carbon\Carbon::parse($date)->isWeekend();
-                                    $tdClass = trim(
-                                        ($isWeekend ? 'weekend-column ' : '') . ($isToday ? 'today-column' : ''),
-                                    );
+                                    $tdClass = ($isWeekend ? 'weekend-column' : '') . ($isToday ? ' today-column' : '');
                                 @endphp
                                 <td class="{{ $tdClass }} text-center">
                                     @if ($attendance && $attendance->is_present)
-                                        <span class="present-marker text-success">&#10003;</span>
+                                        <span class="present-marker">&#10003;</span>
                                     @elseif ($isToday)
                                         <input type="checkbox" class="wasta-attendance-checkbox"
                                             data-wasta-id="{{ $wasta->id }}" data-date="{{ $date }}">
+                                    @elseif ($isPast)
+                                        <span class="absent-indicator">&#10007;</span>
                                     @else
-                                        <span class="absent-indicator text-muted">&#10007;</span>
+                                        <input type="checkbox" class="attendance-checkbox" disabled>
                                     @endif
                                 </td>
                             @endfor
                         </tr>
-
                         <tr class="collapse" id="collapse-{{ $index }}">
                             <td colspan="{{ $daysInMonth + 1 }}" class="p-0">
                                 <table class="table table-sm mb-0">
@@ -309,8 +294,8 @@
                                                 <span class="employee-name">{{ $labour->labour_name }}</span><br>
                                                 <button class="btn btn-sm btn-outline-primary mt-1 labour-edit-btn"
                                                     data-labour='@json($labour)'>Edit</button>
-                                            </td>
 
+                                            </td>
                                             @for ($day = 1; $day <= $daysInMonth; $day++)
                                                 @php
                                                     $date = \Carbon\Carbon::create($year, $month, $day)->format(
@@ -321,22 +306,24 @@
                                                         $date,
                                                     );
                                                     $isToday = \Carbon\Carbon::today()->format('Y-m-d') === $date;
-                                                    $isFuture = \Carbon\Carbon::parse($date)->isFuture();
+                                                    $isPast = \Carbon\Carbon::parse($date)->lt(\Carbon\Carbon::today());
                                                     $isWeekend = \Carbon\Carbon::parse($date)->isWeekend();
-                                                    $tdClass = trim(
-                                                        ($isWeekend ? 'weekend-column ' : '') .
-                                                            ($isToday ? 'today-column' : ''),
-                                                    );
+                                                    $tdClass =
+                                                        ($isWeekend ? 'weekend-column' : '') .
+                                                        ($isToday ? ' today-column' : '');
                                                 @endphp
                                                 <td class="{{ $tdClass }} text-center">
                                                     @if ($attendance && $attendance->is_present)
-                                                        <span class="present-marker text-success">&#10003;</span>
+                                                        <span class="present-marker">&#10003;</span>
                                                     @elseif ($isToday)
                                                         <input type="checkbox" class="labour-attendance-checkbox"
                                                             data-labour-id="{{ $labour->id }}"
                                                             data-date="{{ $date }}">
+                                                    @elseif ($isPast)
+                                                        <span class="absent-indicator">&#10007;</span>
                                                     @else
-                                                        <span class="absent-indicator text-muted">&#10007;</span>
+                                                        <input type="checkbox" class="labour-attendance-checkbox"
+                                                            disabled>
                                                     @endif
                                                 </td>
                                             @endfor
@@ -346,12 +333,9 @@
                             </td>
                         </tr>
                     @endforeach
-
-
                 </tbody>
             </table>
         </div>
-
     </div>
 
     <!-- Create Wasta Modal -->
@@ -527,7 +511,7 @@
                         },
                         success: function() {
                             $this.replaceWith(
-                                '<div class="present-marker text-danger"><i class="fas fa-check"></i></div>'
+                                '<div class="present-marker"><i class="fas fa-check"></i></div>'
                             );
                         },
                         error: function() {
@@ -549,7 +533,7 @@
                         },
                         success: function() {
                             $this.replaceWith(
-                                '<div class="present-marker text-danger"><i class="fas fa-check"></i></div>'
+                                '<div class="present-marker"><i class="fas fa-check"></i></div>'
                             );
                         },
                         error: function() {
@@ -685,6 +669,7 @@
                 // -----------------------------
                 // EDIT LABOUR
                 // -----------------------------
+                // EDIT LABOUR (Use event delegation)
                 $(document).on('click', 'button.labour-edit-btn', function() {
                     const labour = JSON.parse($(this).attr('data-labour'));
                     $('#edit_labour_id').val(labour.id);
@@ -712,6 +697,8 @@
                         error: () => alert('Update failed.')
                     });
                 });
+
+
 
             });
         </script>

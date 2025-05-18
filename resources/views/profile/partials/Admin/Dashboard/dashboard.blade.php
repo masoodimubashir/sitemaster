@@ -85,7 +85,7 @@
                                     <strong class="text-success">
                                         {{ $site->total_payments ?? 0 }}
                                     </strong><br>
-                                    <small class="text-muted">Credit</small>
+                                    <small class="text-muted">Paid</small>
                                 </div>
                             </div>
                         @endforeach

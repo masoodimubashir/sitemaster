@@ -32,13 +32,13 @@ class WastaController extends Controller
 
         if ($request->ajax()) {
 
-
             try {
 
                 $validator = Validator::make($request->all(), [
                     'wager_name' => 'required|string|max:255',
                     'price_per_day' => 'required|numeric',
-                    'contact_no' => 'required|string|max:10',
+                    'contact' => 'required|string|max:10',
+                    'site_id' => 'required|exists:sites,id',
                 ]);
 
                 if ($validator->fails()) {
@@ -49,9 +49,10 @@ class WastaController extends Controller
                 }
 
                 Wasta::create([
+                    'site_id' => $request->site_id,
                     'wasta_name' => $request->wager_name,
                     'price' => $request->price_per_day,
-                    'contact_no' => $request->contact_no,
+                    'contact_no' => $request->contact,
                 ]);
 
                 return response()->json([

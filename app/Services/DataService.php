@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Models\ConstructionMaterialBilling;
 use App\Models\DailyExpenses;
 use App\Models\DailyWager;
+use App\Models\Labour;
 use App\Models\Payment;
 use App\Models\SquareFootageBill;
+use App\Models\Wasta;
 
 
 class DataService
@@ -26,12 +28,14 @@ class DataService
         $squareFootageBills = $this->getSquareFootageBills($dateFilter, $dateRange, $site_id, $supplier_id);
         $expenses = $this->getExpenses($dateFilter, $dateRange, $site_id);
         $wagers = $this->getWagers($dateFilter, $dateRange, $site_id, $supplier_id, $wager_id);
+        $wastas = $this->getWastas($dateFilter, $dateRange, $site_id);
+        $labours = $this->getLabours($dateFilter, $dateRange, $site_id);
 
-        return [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers];
+        return [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours];
     }
 
 
-    public function makeData($payments = null, $raw_materials = null, $squareFootageBills = null, $expenses = null, $wagers = null)
+    public function makeData($payments = null, $raw_materials = null, $squareFootageBills = null,  $expenses = null, $wagers = null, $wastas = null, $labours = null)
     {
 
         $ledgers = collect();
@@ -112,8 +116,8 @@ class DataService
                 'transaction_type' => '--',
                 'payment_initiator' => 'Site',
                 'site' => $expense->phase->site->site_name ?? '--',
-                'supplier' => $expense->supplier->name ?? '--',
-                'supplier_id' => $expense->supplier_id ?? '--',
+                'supplier' =>  '--',
+                'supplier_id' =>  '--',
                 'site_id' => $expense->phase->site_id ?? '--',
                 'phase' => $expense->phase->phase_name ?? '--',
                 'created_at' => $expense->created_at,
@@ -141,10 +145,76 @@ class DataService
             ];
         }));
 
+
+        $ledgers = $ledgers->merge($wastas->map(function ($wasta) {
+
+            $totalAmount = $this->calculateWastaTotal($wasta);
+            $serviceCharge = $this->getServiceChargeAmount($totalAmount, $wasta->site->service_charge ?? 0);
+
+            return [
+                'description' => $wasta->wasta_name ?? '--',
+                'category' => 'Wasta',
+                'credit' => 0,
+                'debit' => $totalAmount,
+                'transaction_type' => '--',
+                'payment_initiator' => 'Site',
+                'site' => $wasta->site->site_name ?? '--',
+                'supplier' => '--',
+                'supplier_id' => '--',
+                'site_id' => $wasta->site_id ?? '--',
+                'phase' => '--',
+                'created_at' => $wasta->created_at,
+                'total_amount_with_service_charge' => $totalAmount + $serviceCharge,
+                'service_charge_amount' => $serviceCharge,
+                'service_charge_percentage' => $wasta->site->service_charge ?? 0,
+            ];
+        }));
+
+        // Add Labour data to ledgers
+        $ledgers = $ledgers->merge($labours->map(function ($labour) {
+
+            $totalAmount = $this->calculateLabourTotal($labour);
+            $serviceCharge = $this->getServiceChargeAmount($totalAmount, $labour->site->service_charge ?? 0);
+
+            return [
+                'description' => $labour->labour_name ?? '--',
+                'category' => 'Labour',
+                'credit' => 0,
+                'debit' => $totalAmount,
+                'transaction_type' => '--',
+                'payment_initiator' => 'Site',
+                'site' => $labour->site->site_name ?? '--',
+                'supplier' => '--',
+                'supplier_id' => '--',
+                'site_id' => $labour->site_id ?? '--',
+                'phase' => '--',
+                'created_at' => $labour->created_at,
+                'total_amount_with_service_charge' => $totalAmount + $serviceCharge,
+                'service_charge_amount' => $serviceCharge,
+            ];
+        }));
+
+
         return $ledgers;
     }
 
 
+
+
+
+    private function calculateWastaTotal($wasta): float|int
+    {
+        // Calculate based on wasta price and attendances
+        $totalDays = $wasta->attendances->where('is_present', true)->count();
+        return $wasta->price * $totalDays;
+    }
+
+    private function calculateLabourTotal($labour)
+    {
+        // Calculate based on labour price and attendances
+        $totalDays = $labour->attendances->where('is_present', true)->count();
+        return $labour->price * $totalDays;
+    }
 
     public function filterByDate($dateFilter, $startDate = null, $endDate = null)
     {
@@ -226,22 +296,22 @@ class DataService
             ->get();
     }
 
-    private function getExpenses($dateFilter, $dateRange, $site_id)
+    private function getExpenses($dateFilter, $dateRange, $site_id, $supplier_id = null)
     {
         return DailyExpenses::with(['phase.site' => fn($site) => $site->withoutTrashed()])
             ->whereHas('phase', fn($q) => $q->whereNull('deleted_at'))
-            ->whereHas('phase.site', function ($site) {
-                $site->where([
-                    'deleted_at' => null,
-                    'is_on_going' => 1
-                ]);
-            })
+            ->whereHas('phase.site', fn($site) => $site->where([
+                'deleted_at' => null,
+                'is_on_going' => 1,
+            ]))
+            ->when($supplier_id, fn($q) => $q->where('supplier_id', $supplier_id)) // add supplier filter if given
             ->where('verified_by_admin', 1)
             ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
             ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
             ->latest()
             ->get();
     }
+
 
     private function getWagers($dateFilter, $dateRange, $site_id, $supplier_id, $wager_id)
     {
@@ -261,6 +331,89 @@ class DataService
             ->latest()
             ->get();
     }
+
+
+    private function getWastas($dateFilter, $dateRange, $site_id)
+    {
+        return Wasta::with([
+            'site',
+            'attendances' => function ($q) {
+                $q->where('is_present', 1); // Always eager-load only present attendances
+            }
+        ])
+            ->whereHas('site', function ($q) {
+                $q->where([
+                    'deleted_at' => null,
+                    'is_on_going' => 1
+                ]);
+            })
+            ->when($this->isValidSite($site_id), function ($q) use ($site_id) {
+                $q->where('site_id', $site_id);
+            })
+            ->whereHas('attendances', function ($q) use ($site_id) {
+                $q->where('is_present', 1) // Always check this
+                    ->when($this->isValidSite($site_id), function ($q) use ($site_id) {
+                        $q->whereHas('attendable', function ($q) use ($site_id) {
+                            $q->where('site_id', $site_id);
+                        });
+                    });
+            })
+            ->when($this->isFilteredDate($dateFilter, $dateRange), function ($q) use ($dateRange) {
+                $q->where(function ($query) use ($dateRange) {
+                    $query->whereBetween('created_at', $dateRange)
+                        ->orWhereHas('attendances', function ($q) use ($dateRange) {
+                            $q->where('is_present', 1)
+                                ->whereBetween('attendance_date', $dateRange);
+                        });
+                });
+            })
+            ->latest()
+            ->get();
+    }
+
+
+
+    private function getLabours($dateFilter, $dateRange, $site_id)
+    {
+        return Labour::with([
+            'wasta',
+            'site',
+            'attendances' => function ($q) {
+                $q->where('is_present', 1); // Always eager-load only present attendances
+            }
+        ])
+            ->whereHas('site', function ($q) {
+                $q->where([
+                    'deleted_at' => null,
+                    'is_on_going' => 1
+                ]);
+            })
+            ->when($this->isValidSite($site_id), function ($q) use ($site_id) {
+                $q->where('site_id', $site_id);
+            })
+            ->whereHas('attendances', function ($q) use ($site_id) {
+                $q->where('is_present', 1) // Always check this
+                    ->when($this->isValidSite($site_id), function ($q) use ($site_id) {
+                        $q->whereHas('attendable', function ($q) use ($site_id) {
+                            $q->where('site_id', $site_id);
+                        });
+                    });
+            })
+            ->when($this->isFilteredDate($dateFilter, $dateRange), function ($q) use ($dateRange) {
+                $q->where(function ($query) use ($dateRange) {
+                    $query->whereBetween('created_at', $dateRange)
+                        ->orWhereHas('attendances', function ($q) use ($dateRange) {
+                            $q->where('is_present', 1)
+                                ->whereBetween('attendance_date', $dateRange);
+                        });
+                });
+            })
+            ->latest()
+            ->get();
+    }
+
+
+
 
     private function isValidWager($wager_id)
     {

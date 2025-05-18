@@ -140,7 +140,9 @@
 
     {{-- Action Buttons Section --}}
     <div class="row mb-4">
+
         <div class="col-12">
+
             <div class="d-flex flex-wrap justify-content-start gap-2">
                 <a class="btn  btn-info" data-bs-toggle="modal" href="#phase" role="button">
                     <i class="fas fa-tasks me-2"></i>Phase
@@ -167,13 +169,15 @@
                     class="btn btn-info px-4">
                     <i class="fas fa-file-invoice me-2"></i>Generate Payments
                 </a>
+
+
             </div>
         </div>
     </div>
 
     {{-- Stats Cards Section --}}
     <div class="row g-4">
-        <div class="col-12 col-md-6 col-xl-3">
+        <div class="col-12 col-md-6 ">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
@@ -198,7 +202,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-md-6 col-xl-3">
+        <div class="col-12 col-md-6 ">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
@@ -228,7 +232,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-md-6 col-xl-3">
+        {{-- <div class="col-12 col-md-6 col-xl-3">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
@@ -252,9 +256,9 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
-        <div class="col-12 col-md-6 col-xl-3">
+        {{-- <div class="col-12 col-md-6 col-xl-3">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
@@ -279,7 +283,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
     </div>
 
 
@@ -306,7 +310,7 @@
                     <div class="tab-pane fade {{ $phase_key === 0 ? 'show active' : '' }}" id="{{ $phase->id }}">
 
 
-                        <div class=" mb-3 d-flex justify-content-end g-2">
+                        <div class=" mb-3 d-flex justify-content-end gap-2">
 
 
                             <a href="{{ url('admin/download-phase/report', ['id' => base64_encode($phase->id)]) }}"
@@ -347,11 +351,11 @@
 
                                 </li>
 
-                                <li>
+                                {{-- <li>
                                     <a class="btn" data-bs-toggle="modal" role="button"
                                         href="#modal-daily-wager{{ $phase->id }}">
                                         Wager </a>
-                                </li>
+                                </li> --}}
 
 
                             </ul>
@@ -446,7 +450,7 @@
                                                     </tr>
 
 
-                                                    <tr>
+                                                    {{-- <tr>
 
                                                         <td>
                                                             Wager
@@ -464,7 +468,7 @@
                                                             {{ $phase->daily_wagers_total_service_charge_amount }}
                                                         </td>
 
-                                                    </tr>
+                                                    </tr> --}}
 
 
                                                     <tr>
@@ -919,7 +923,7 @@
                             </div>
 
                             <!-- Progress Table -->
-                            <div class="col-lg-12 mb-4">
+                            {{-- <div class="col-lg-12 mb-4">
                                 <div class="card stats-card">
                                     <div class="card-body">
                                         <h3 class="card-title-custom mb-4">
@@ -946,8 +950,6 @@
                                                 </thead>
                                                 <tbody>
 
-
-                                                    {{-- Square Footage --}}
 
 
                                                     @if (count($phase->dailyWagers))
@@ -991,24 +993,7 @@
                                                                         <i
                                                                             class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
-                                                                    {{--
-                                                            @if ($daily_wager->verified_by_admin)
-                                                                <a href="#"
-                                                                    class="verify-link ms-3 badge badge-info nav-link text-black"
-                                                                    data-name="wager"
-                                                                    data-id="{{ $daily_wager->id }}"
-                                                                    data-verified="0">
-                                                                    Verified
-                                                                </a>
-                                                            @else
-                                                                <a href="#"
-                                                                    class="verify-link ms-3 badge badge-danger nav-link text-black"
-                                                                    data-name="wager"
-                                                                    data-id="{{ $daily_wager->id }}"
-                                                                    data-verified="1">
-                                                                    Verify
-                                                                </a>
-                                                            @endif --}}
+                                                           
 
                                                                 </td>
 
@@ -1052,10 +1037,10 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
+                            </div> --}}
 
 
-                            <div class="col-lg-12 mb-4">
+                            {{-- <div class="col-lg-12 mb-4">
                                 <div class="card stats-card h-100">
                                     <div class="card-body">
                                         <h3 class="card-title-custom mb-4">
@@ -1081,8 +1066,6 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-
-                                                    {{-- Square Footage --}}
 
 
                                                     @if (count($phase->wagerAttendances))
@@ -1143,19 +1126,6 @@
                                                                     @endif
 
 
-                                                                    {{-- @if ($wager_attendance->verified_by_admin)
-                                                                <a
-                                                                    href="{{ route('verifyAttendance', [$wager_attendance->id]) }}">
-                                                                    <i class="fa-solid fa-x"></i>
-                                                                </a>
-                                                            @else
-                                                                <a
-                                                                    href="{{ route('verifyAttendance', [$wager_attendance->id]) }}">
-                                                                    <i class="fa-solid fa-check"></i>
-
-                                                                </a>
-                                                            @endif --}}
-
                                                                 </td>
 
 
@@ -1190,8 +1160,7 @@
                                                                 <div>
                                                                     <input type="date" name="date"
                                                                         class="form-control"
-                                                                        max="{{ now()->format('Y-m-d') }}"
-                                                                        required />
+                                                                        max="{{ now()->format('Y-m-d') }}" required />
                                                                     @error('date')
                                                                         <x-input-error :messages="$message" class="mt-2" />
                                                                     @enderror
@@ -1200,7 +1169,6 @@
                                                             </td>
 
                                                             <td>
-                                                                <!-- No Of Persons -->
                                                                 <div style="">
                                                                     <input id="no_of_persons" type="number"
                                                                         name="no_of_persons"
@@ -1216,7 +1184,6 @@
 
                                                             <td>
 
-                                                                <!-- Wager -->
                                                                 <select
                                                                     class="form-select text-black form-select-sm bg-white"
                                                                     style="cursor: pointer" id="daily_wager_id"
@@ -1249,37 +1216,7 @@
 
                                                 </tbody>
 
-                                                {{-- <thead>
-                                                <tr>
-                                                    <th>Check</th>
-                                                    <th>Result</th>
-                                                    <th>Date</th>
-                                                    <th>Inspector</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td>Concrete Strength</td>
-                                                    <td><span class="badge bg-success status-badge">Pass</span></td>
-                                                    <td>2024-02-15</td>
-                                                    <td>
-                                                        <img src="https://via.placeholder.com/30"
-                                                            class="rounded-circle me-2" alt="Inspector">
-                                                        John D.
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Steel Quality</td>
-                                                    <td><span class="badge bg-warning status-badge">Pending</span>
-                                                    </td>
-                                                    <td>2024-02-16</td>
-                                                    <td>
-                                                        <img src="https://via.placeholder.com/30"
-                                                            class="rounded-circle me-2" alt="Inspector">
-                                                        Sarah M.
-                                                    </td>
-                                                </tr>
-                                            </tbody> --}}
+
                                             </table>
 
                                         </div>
@@ -1288,7 +1225,7 @@
 
                                 </div>
 
-                            </div>
+                            </div> --}}
 
                         </div>
 
@@ -1490,7 +1427,7 @@
                         </div>
 
                         <!-- Modal 3 -->
-                        <div id="modal-daily-wager{{ $phase->id }}" class="modal fade" aria-hidden="true"
+                        {{-- <div id="modal-daily-wager{{ $phase->id }}" class="modal fade" aria-hidden="true"
                             aria-labelledby="exampleModalToggleLabel" tabindex="-1">
                             <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content">
@@ -1500,16 +1437,13 @@
 
                                             @csrf
 
-                                            <!-- Wager Name -->
                                             <div class="form-group">
                                                 <input id="wager_name" type="text" name="wager_name" />
-                                                <label for="wager_name" class="control-label">Wager
-                                                    Name</label><i class="bar"></i>
+                                                <label for="wager_name" class="control-label">Wager Name</label><i class="bar"></i>
 
                                                 <p class="text-danger" id="wager_name-error"></p>
                                             </div>
 
-                                            <!-- Price Per day -->
                                             <div class="form-group">
                                                 <input id="price_per_day" type="number" name="price_per_day" />
                                                 <label for="price_per_day" class="control-label">Price Per
@@ -1519,7 +1453,6 @@
                                             </div>
 
                                             <div class="row">
-                                                <!-- Select Supplier -->
                                                 <div class="">
                                                     <select class="form-select text-black form-select-sm"
                                                         id="supplier_id" name="supplier_id" style="cursor: pointer">
@@ -1534,7 +1467,6 @@
 
                                                 </div>
 
-                                                <!-- Select Phase -->
                                                 <div class=" col-md-6 mt-3">
                                                     <input id="phase_id" type="hidden" name="phase_id"
                                                         placeholder="Phase" value="{{ $phase->id }}" />
@@ -1552,7 +1484,7 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
 
                         <!-- Modal 4 -->
                         <div id="modal-daily-expenses{{ $phase->id }}" class="modal fade" aria-hidden="true"
@@ -1580,6 +1512,12 @@
                                                 <label for="price" class="control-label">Price</label><i
                                                     class="bar"></i>
                                                 <p class="text-danger" id="description-error"></p>
+                                            </div>
+
+                                            <!-- site -->
+                                            <div class="form-group">
+                                                <input id="site_id" type="number" name="site_id"
+                                                    value="{{ $site->id }}" />
                                             </div>
 
                                             <!-- Select Phase -->
@@ -1997,7 +1935,7 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-                    
+
                     success: function(response) {
                         form[0].reset();
                         messageContainer.append(`
@@ -2017,7 +1955,7 @@
 
                     error: function(response) {
 
-                        if (response.status === 422) { 
+                        if (response.status === 422) {
                             messageContainer.append(`
                              <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
                                  ${response.responseJSON.errors}
@@ -2048,7 +1986,7 @@
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
-                const messageContainer = form.find('.message-container'); 
+                const messageContainer = form.find('.message-container');
                 messageContainer.empty();
 
                 // Clear previous error messages for this form
@@ -2320,160 +2258,160 @@
 
 
 
-            $('form[id^="dailyWager"]').on('submit', function(e) {
+            // $('form[id^="dailyWager"]').on('submit', function(e) {
 
-                e.preventDefault();
+            //     e.preventDefault();
 
-                const form = $(this);
-                const formData = new FormData(form[0]);
-                const messageContainer = $('#messageContainer');
-                messageContainer.empty();
+            //     const form = $(this);
+            //     const formData = new FormData(form[0]);
+            //     const messageContainer = $('#messageContainer');
+            //     messageContainer.empty();
 
-                $('.text-danger').text('');
+            //     $('.text-danger').text('');
 
-                $.ajax({
-                    url: '{{ route('dailywager.store') }} ',
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
-                        messageContainer.append(`
-                            <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                    </div>
-                                </div>
-                            </div>
-                        `);
+            //     $.ajax({
+            //         url: '{{ route('dailywager.store') }} ',
+            //         type: 'POST',
+            //         data: formData,
+            //         contentType: false,
+            //         processData: false,
+            //         success: function(response) {
+            //             messageContainer.append(`
+        //                 <div class="alert align-items-center text-white bg-success border-0" role="alert">
+        //                     <div class="d-flex">
+        //                         <div class="toast-body">
+        //                             <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+        //                         </div>
+        //                     </div>
+        //                 </div>
+        //             `);
 
-                        form[0].reset();
+            //             form[0].reset();
 
-                        // Auto-hide success message and reload
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload(); // This should reload the page
-                        }, 2000);
-                    },
-                    error: function(response) {
+            //             // Auto-hide success message and reload
+            //             setTimeout(function() {
+            //                 messageContainer.find('.alert').alert('close');
+            //                 location.reload(); // This should reload the page
+            //             }, 2000);
+            //         },
+            //         error: function(response) {
 
-                        if (response.status === 422) { // Validation errors
+            //             if (response.status === 422) { // Validation errors
 
-                            const errors = response.responseJSON.errors;
+            //                 const errors = response.responseJSON.errors;
 
-                            // Display general error message
-                            messageContainer.html(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    Please fix the errors below
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
+            //                 // Display general error message
+            //                 messageContainer.html(`
+        //                     <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+        //                         Please fix the errors below
+        //                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        //                     </div>
+        //                 `);
 
-                            // Loop through each error field
-                            for (const field in errors) {
-                                // Get the first error message from the array
-                                const errorMsg = errors[field][0];
+            //                 // Loop through each error field
+            //                 for (const field in errors) {
+            //                     // Get the first error message from the array
+            //                     const errorMsg = errors[field][0];
 
-                                // First, try to find the field by name and update sibling error element
-                                const inputField = form.find(`[name="${field}"]`);
-                                if (inputField.length > 0) {
-                                    // Try to find sibling error container
-                                    const siblingError = inputField.siblings(
-                                        '.text-danger');
-                                    if (siblingError.length > 0) {
-                                        siblingError.text(errorMsg);
-                                    } else {
-                                        // If no sibling found, try to find by ID
-                                        form.find(`#${field}-error`).text(errorMsg);
-                                    }
-                                } else {
-                                    // If input not found, try to find error container by ID directly
-                                    form.find(`#${field}-error`).text(errorMsg);
-                                }
-                            }
-                        } else {
-                            messageContainer.html(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    An unexpected error occurred. Please try again later.
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
-                        }
+            //                     // First, try to find the field by name and update sibling error element
+            //                     const inputField = form.find(`[name="${field}"]`);
+            //                     if (inputField.length > 0) {
+            //                         // Try to find sibling error container
+            //                         const siblingError = inputField.siblings(
+            //                             '.text-danger');
+            //                         if (siblingError.length > 0) {
+            //                             siblingError.text(errorMsg);
+            //                         } else {
+            //                             // If no sibling found, try to find by ID
+            //                             form.find(`#${field}-error`).text(errorMsg);
+            //                         }
+            //                     } else {
+            //                         // If input not found, try to find error container by ID directly
+            //                         form.find(`#${field}-error`).text(errorMsg);
+            //                     }
+            //                 }
+            //             } else {
+            //                 messageContainer.html(`
+        //                     <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+        //                         An unexpected error occurred. Please try again later.
+        //                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        //                     </div>
+        //                 `);
+            //             }
 
-                        // Auto-hide general error message after 5 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                        }, 5000);
-                    }
-                });
-            });
-
-
+            //             // Auto-hide general error message after 5 seconds
+            //             setTimeout(function() {
+            //                 messageContainer.find('.alert').alert('close');
+            //             }, 5000);
+            //         }
+            //     });
+            // });
 
 
-            $('form[id^="wagerAttendance"]').on('submit', function(e) {
-                e.preventDefault();
 
-                const form = $(this);
-                const formData = new FormData(form[0]);
-                const messageContainer = $('#messageContainer');
-                messageContainer.empty();
 
-                $('.text-danger').text('');
+            // $('form[id^="wagerAttendance"]').on('submit', function(e) {
+            //     e.preventDefault();
 
-                $.ajax({
-                    url: '{{ route('daily-wager-attendance.store') }} ',
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
+            //     const form = $(this);
+            //     const formData = new FormData(form[0]);
+            //     const messageContainer = $('#messageContainer');
+            //     messageContainer.empty();
 
-                        messageContainer.append(`
-                    <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                            </div>
-                        </div>
-                    </div>
-            `);
+            //     $('.text-danger').text('');
 
-                        form[0].reset();
+            //     $.ajax({
+            //         url: '{{ route('daily-wager-attendance.store') }} ',
+            //         type: 'POST',
+            //         data: formData,
+            //         contentType: false,
+            //         processData: false,
+            //         success: function(response) {
 
-                        // Auto-hide success message after 3 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload();
+            //             messageContainer.append(`
+        //         <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+        //             <div class="d-flex">
+        //                 <div class="toast-body">
+        //                     <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+        //                 </div>
+        //             </div>
+        //         </div>
+        // `);
 
-                        }, 2000);
-                    },
-                    error: function(response) {
+            //             form[0].reset();
 
-                        if (response.status === 422) {
-                            messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-                         ${response.responseJSON.errors}
+            //             // Auto-hide success message after 3 seconds
+            //             setTimeout(function() {
+            //                 messageContainer.find('.alert').alert('close');
+            //                 location.reload();
 
-                    </div>`)
+            //             }, 2000);
+            //         },
+            //         error: function(response) {
 
-                        } else {
-                            messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                        An unexpected error occurred. Please try again later.
+            //             if (response.status === 422) {
+            //                 messageContainer.append(`
+        //         <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
+        //              ${response.responseJSON.errors}
 
-                    </div>
-                `);
-                        }
-                        // Auto-hide error message after 5 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
+        //         </div>`)
 
-                        }, 2000);
-                    }
-                });
-            });
+            //             } else {
+            //                 messageContainer.append(`
+        //         <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+        //             An unexpected error occurred. Please try again later.
+
+        //         </div>
+        //     `);
+            //             }
+            //             // Auto-hide error message after 5 seconds
+            //             setTimeout(function() {
+            //                 messageContainer.find('.alert').alert('close');
+
+            //             }, 2000);
+            //         }
+            //     });
+            // });
 
 
 
@@ -2543,15 +2481,6 @@
             });
 
         });
-
-
-
-
-        
-
-
     </script>
 
-
-
-</x-app-layout> 
+</x-app-layout>

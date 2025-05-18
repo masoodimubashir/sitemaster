@@ -82,12 +82,9 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::get('dashboard/suppliers', [DashboardController::class, 'supplierDashboard'])->name('suppliers.dashboard');
 
 
-    Route::get('/markAllAsRead', [MarkNotificationAsReadController::class, 'markAllNotificationAsRead'])
-        ->name('admin.markAllAsRead');
-    Route::get('/viewall-notifications', [MarkNotificationAsReadController::class, 'viewAllNotifications'])
-        ->name('admin.viewAllNotifications');
-    Route::get('/markAsRead/{id}', [MarkNotificationAsReadController::class, 'markAsRead'])
-        ->name('admin.markAsRead');
+    Route::get('/markAllAsRead', [MarkNotificationAsReadController::class, 'markAllNotificationAsRead'])->name('admin.markAllAsRead');
+    Route::get('/viewall-notifications', [MarkNotificationAsReadController::class, 'viewAllNotifications'])->name('admin.viewAllNotifications');
+    Route::get('/markAsRead/{id}', [MarkNotificationAsReadController::class, 'markAsRead'])->name('admin.markAsRead');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -169,16 +166,11 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::get('/ledger/report', [PDFController::class, 'showLedgerPdf']);
 
     // Admin Verification Controller
-    Route::post('verify/materials/{id}', [AdminVerificationController::class, 'verifyConstructionMaterials'])
-        ->name('verifyConstructionMaterials');
-    Route::post('verify/square-footage/{id}', [AdminVerificationController::class, 'verifySquareFootage'])
-        ->name('verifySquareFootage');
-    Route::post('verify/expenses/{id}', [AdminVerificationController::class, 'verifyExpenses'])
-        ->name('verifyExpenses');
-    Route::post('verify/wagers/{id}', [AdminVerificationController::class, 'verifyDailyWagers'])
-        ->name('verifyDailyWagers');
-    Route::post('verify/attendance/{id}', [AdminVerificationController::class, 'verifyAttendance'])
-        ->name('verifyAttendance');
+    Route::post('verify/materials/{id}', [AdminVerificationController::class, 'verifyConstructionMaterials'])->name('verifyConstructionMaterials');
+    Route::post('verify/square-footage/{id}', [AdminVerificationController::class, 'verifySquareFootage'])->name('verifySquareFootage');
+    Route::post('verify/expenses/{id}', [AdminVerificationController::class, 'verifyExpenses'])->name('verifyExpenses');
+    Route::post('verify/wagers/{id}', [AdminVerificationController::class, 'verifyDailyWagers'])->name('verifyDailyWagers');
+    Route::post('verify/attendance/{id}', [AdminVerificationController::class, 'verifyAttendance'])->name('verifyAttendance');
 
     // Verify Controllers For Pending Payments
     Route::get('/pay-verification', [PendingPaymentsVerifications::class, 'index']);
@@ -189,16 +181,20 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::get('/item-verification', [ItemsVerificationController::class, 'index']);
     Route::get('/verify-items', [ItemsVerificationController::class, 'verifyItems']);
     Route::get('/wager-attendance', [AttendanceSheetController::class, 'index']);
-    Route::put('/attendance/wasta', [AttendanceSheetController::class, 'updateWastaAttendance']);
-    Route::post('/attendance/labour', [AttendanceSheetController::class, 'storeLabour']);
-
+    Route::put('/attendance/wasta', [AttendanceSheetController::class, 'storeWastaAttendance']);
+    Route::put('/attendance/labour', [AttendanceSheetController::class, 'storelabourAttendance']);
+    Route::post('/labour/store', [AttendanceSheetController::class, 'storeLabour']);
+    Route::put('/attendance/wasta/update/{id}', [AttendanceSheetController::class, 'updateWasta']);
+    Route::put('/attendance/labour/update/{id}', [AttendanceSheetController::class, 'updateLabour']);
+    Route::get('/attendance/site/show/{id}', [AttendanceSheetController::class, 'showAttendanceBySite']);
+    
 
     // Route For Managing Payments By Admin
     Route::get('/manage-payment', [AdminPaymentController::class, 'index']);
-    Route::post('/manage-payment/{id?}', [AdminPaymentController::class, 'storeOrUpdate'])
-        ->name('manage-payment.store-update');
-    Route::get('/manage-payment/{id}/edit', [AdminPaymentController::class, 'edit'])
-        ->name('payments.edit');
+    Route::post('/manage-payment/{id?}', [AdminPaymentController::class, 'storeOrUpdate'])->name('manage-payment.store-update');
+    Route::get('/manage-payment/{id}/edit', [AdminPaymentController::class, 'edit'])->name('payments.edit');
+
+
 });
 
 
@@ -215,6 +211,7 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     // Site Controllers
     Route::get('/sites/create', [ViewSiteController::class, 'create']);
     Route::get('/sites/{id}', [ViewSiteController::class, 'show']);
+    Route::get('/sites/details/{id}', [ViewSiteController::class, 'showDetails']);
 
     // Phase Controller
     Route::resource('/phase', UserPhaseController::class);

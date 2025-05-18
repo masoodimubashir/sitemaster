@@ -1,5 +1,9 @@
 <x-app-layout>
 
+    @php
+        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+    @endphp
+
     <x-breadcrumb :names="['Phase', 'Edit ' . $phase->phase_name]" :urls="['admin/phase', 'admin/phase/' . base64_encode($phase->id) . '/edit']" />
 
     <div class="row">
@@ -11,7 +15,7 @@
                 <div class="card-body">
 
 
-                    <form method="POST" action="{{ route('phase.update', [base64_encode($phase->id)]) }}"
+                    <form method="POST" action="{{ url($user . '/phase/' . base64_encode($phase->id)) }}"
                         class="forms-sample material-form">
 
                         @method('PUT')

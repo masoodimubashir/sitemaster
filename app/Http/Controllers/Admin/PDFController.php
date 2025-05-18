@@ -11,115 +11,114 @@ use Illuminate\Http\Request;
 
 class PDFController extends Controller
 {
+
+
+
+    public function __construct(private DataService $dataService) {}
+
     public function showSitePdf(string $id)
     {
-
+        // Decode site ID from base64
         $site_id = base64_decode($id);
 
-        $site = Site::with([
-            'phases' => function ($query) {
-                $query->whereNull('deleted_at');
-            },
-            'phases.constructionMaterialBillings' => function ($query) {
-                $query->with('supplier')
-                    ->where('verified_by_admin', 1)
-                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-                    ->whereNull('deleted_at')
-                    ->latest();
-            },
-            'phases.squareFootageBills' => function ($query) {
-                $query->with('supplier')
-                    ->where('verified_by_admin', 1)
-                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-                    ->whereNull('deleted_at')
-                    ->latest();
-            },
-            'phases.dailyWagers' => function ($query) {
-                $query->with(['wagerAttendances', 'supplier'])
-                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-                    ->whereNull('deleted_at')
-                    ->latest();
-            },
-            'phases.dailyExpenses' => function ($query) {
-                $query->whereNull('deleted_at');
-            },
-            'phases.wagerAttendances' => function ($query) {
-                $query->with('dailyWager.supplier')
-                    ->whereHas('dailyWager.supplier', fn($q) => $q->whereNull('deleted_at'))
-                    ->whereNull('deleted_at')
-                    ->latest();
-            },
-            'payments' => function ($query) {
-                $query->where('verified_by_admin', 1);
-            },
-        ])
-        ->find($site_id);
+        $dateFilter = 'today';
+        $supplier_id = 'all';
+        $wager_id = 'all';
+        $startDate = 'start_date';
+        $endDate = 'end_date';
 
-        $totalSupplierPaymentAmount = $site->payments()
-        ->where('verified_by_admin', 1)
-        ->sum('amount');
+        // Get filtered collections from your data service
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $this->dataService->getData(
+            $dateFilter,
+            $site_id,
+            $supplier_id,
+            $wager_id,
+            $startDate,
+            $endDate
+        );
 
-        $siteData = [
-            'site' => $site,
-            'phases' => []
-        ];
+        // Merge and sort all financial data
+        $ledgers = $this->dataService->makeData(
+            $payments,
+            $raw_materials,
+            $squareFootageBills,
+            $expenses,
+            $wagers,
+            $wastas,
+            $labours
+        )->sortByDesc(fn($entry) => $entry['created_at']);
 
-        foreach ($site->phases as $phase) {
+        // Group ledgers by phase
+        $ledgersGroupedByPhase = $ledgers->groupBy(function ($item) {
+            return empty($item['category']);
+        });
 
-            // Calculate totals for each phase
-            $construction_total = $phase->constructionMaterialBillings->sum('amount');
-            $daily_expenses_total = $phase->dailyExpenses->sum('price');
+        // Fetch site info for the PDF header
+        $site = Site::findOrFail($site_id);
 
-            foreach ($phase->dailyWagers as $wager) {
-                $phase->daily_wagers_total_amount += $wager->wager_total;
-            }
+        $phaseData = [];
 
-            $square_footage_total = $phase->squareFootageBills->reduce(function ($carry, $bill) {
-                return $carry + ($bill->price * $bill->multiplier);
-            }, 0);
+        foreach ($ledgersGroupedByPhase as $phaseName => $records) {
+            // Sum totals by category (using debit for costs)
+            $construction_total = $records->where('category', 'Material')->sum('debit');
+            $square_total = $records->where('category', 'SQFT')->sum('debit');
+            $expenses_total = $records->where('category', 'Expense')->sum('debit');
+            $wager_total = $records->where('category', 'Wager')->sum('debit');
+            $wasta_total = $records->where('category', 'Wasta')->sum('debit');
+            $labour_total = $records->where('category', 'Labour')->sum('debit');
+            $payments_total = $records->where('category', 'Payment')->sum('credit');
 
-            $daily_wagers_total = $phase->daily_wagers_total_amount;
 
-            $phase_total = $construction_total + $daily_expenses_total + $daily_wagers_total + $square_footage_total;
-            $total_with_service_charge = ($phase_total * $site->service_charge / 100) + $phase_total;
+            $subtotal = $construction_total + $square_total + $expenses_total + $wager_total + $wasta_total + $labour_total;
+            $withService = ($subtotal * $site->service_charge / 100) + $subtotal;
 
-            $siteData['phases'][] = [
-                'phase' => $phase->phase_name,
+            $phaseData[] = [
+                'phase' => $phaseName,
                 'site_service_charge' => $site->service_charge,
                 'construction_total_amount' => $construction_total,
-                'daily_expenses_total_amount' => $daily_expenses_total,
-                'daily_wagers_total_amount' => $daily_wagers_total,
-                'square_footage_total_amount' => $square_footage_total,
-                'phase_total' => $phase_total,
-                'phase_total_with_service_charge' => $total_with_service_charge,
-                'construction_material_billings' => $phase->constructionMaterialBillings,
-                'daily_expenses' => $phase->dailyExpenses,
-                'daily_wagers' => $phase->dailyWagers,
-                'square_footage_bills' => $phase->squareFootageBills,
-                'wager_attendances' => $phase->wagerAttendances,
+                'square_footage_total_amount' => $square_total,
+                'daily_expenses_total_amount' => $expenses_total,
+                'daily_wagers_total_amount' => $wager_total,
+                'daily_wastas_total_amount' => $wasta_total,
+                'daily_labours_total_amount' => $labour_total,
+                'total_payment_amount' => $payments_total,
+                'phase_total' => $subtotal,
+                'phase_total_with_service_charge' => $withService,
+                'construction_material_billings' => $records->where('category', 'Material'),
+                'square_footage_bills' => $records->where('category', 'SQFT'),
+                'daily_expenses' => $records->where('category', 'Expense'),
+                'daily_wagers' => $records->where('category', 'Wager'),
+                'daily_wastas' => $records->where('category', 'Wasta'),
+                'daily_labours' => $records->where('category', 'Labour'),
             ];
         }
 
-        // Optionally calculate the grand total for the site
-        $siteData['grand_total_amount'] = array_reduce($siteData['phases'], function ($carry, $phase) {
-            return $carry + $phase['phase_total_with_service_charge'];
-        }, 0);
+        // Calculate grand totals
+        $grandTotal = collect($phaseData)->sum('phase_total_with_service_charge');
+        $totalSupplierPaymentAmount = $ledgers->sum(fn($p) => floatval($p['credit'] ?? 0));
 
+        $balances = $this->dataService->calculateAllBalances($ledgers);
 
+        $withoutServiceCharge = $balances['without_service_charge'];
+        $withServiceCharge = $balances['with_service_charge'];
+
+        // Prepare header data for PDF
         $data = [
             'site_name' => $site->site_name,
             'contact_no' => $site->contact_no,
             'service_charge' => $site->service_charge,
-            'balance' => $siteData['grand_total_amount'] - $totalSupplierPaymentAmount,
+            'balance' => $grandTotal - $totalSupplierPaymentAmount,
             'site_owner_name' => $site->site_owner_name,
             'location' => $site->location,
-            'debit' =>  $siteData['grand_total_amount'],
-            'credit' => $totalSupplierPaymentAmount,
+            'total_balance' => $withServiceCharge['balance'],
+            'total_due' => $withServiceCharge['due'],
+            'effective_balance' => $withoutServiceCharge['due'],
+            'total_paid' => $withServiceCharge['paid'],
         ];
 
         $headers = [
             'box1' => 'Site Name',
-            'box2' => 'Conatct No',
+            'box2' => 'Contact No',
             'box3' => 'Service Charge',
             'box4' => 'Balance',
             'box5' => 'Site Owner',
@@ -128,16 +127,21 @@ class PDFController extends Controller
             'box8' => 'Credit',
         ];
 
+
+        // Generate PDF
         $pdf = new PDF();
         $pdf->AliasNbPages();
         $pdf->AddPage();
         $pdf->SetFont('Times', '', 12);
         $pdf->SetTitle('Site Info');
         $pdf->infoTable($headers, $data);
-        $pdf->siteTableData($siteData['phases']);
+        $pdf->siteTableData($phaseData);
         $pdf->Output();
         exit;
     }
+
+
+   
 
     public function showPhasePdf(string $id)
     {
@@ -294,11 +298,33 @@ class PDFController extends Controller
         $site_id = $request->input('site_id', $request->input('site_id'));
         $supplier_id = $request->input('supplier_id', 'all');
         $wager_id = $request->input('wager_id', 'all');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
+        // Call the service to get all data including wasta and labours
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $dataService->getData(
+            $dateFilter,
+            $site_id,
+            $supplier_id,
+            $wager_id,
+            $startDate,
+            $endDate
+        );
 
-        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
+        // Create ledger data including wasta and labours
+        $ledgers = $dataService->makeData(
+            $payments,
+            $raw_materials,
+            $squareFootageBills,
+            $expenses,
+            $wagers,
+            $wastas,
+            $labours
+        )->sortByDesc(function ($d) {
+            return $d['created_at'];
+        });
 
+        // Calculate balances
         $balances = $dataService->calculateAllBalances($ledgers);
 
         $withoutServiceCharge = $balances['without_service_charge'];

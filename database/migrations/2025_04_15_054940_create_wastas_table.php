@@ -14,6 +14,8 @@ return new class extends Migration
         Schema::create('wastas', function (Blueprint $table) {
             $table->id();
             $table->string('wasta_name');
+            $table->foreignId('site_id')->constrained('sites')->cascadeOnDelete();
+            $table->foreignId('supplier_id')->nullable()->constrained('')->cascadeOnDelete();
             $table->integer('price');
             $table->string('contact_no');
             $table->timestamps();

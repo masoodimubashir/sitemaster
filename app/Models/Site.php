@@ -64,7 +64,7 @@ class Site extends Model
     {
         return $this->belongsTo(Client::class);
     }
-    
+
 
     /**
      * Polymorphic relationship to AdminPayment.
@@ -74,4 +74,24 @@ class Site extends Model
         return $this->morphMany(AdminPayment::class, 'entity');
     }
 
+
+    /**
+     * Get all of the labours for the Site
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function labours(): HasMany
+    {
+        return $this->hasMany(Labour::class);
+    }
+
+    /**
+     * Get all of the wastas for the Site
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function wastas(): HasMany
+    {
+        return $this->hasMany(Wasta::class);
+    }
 }

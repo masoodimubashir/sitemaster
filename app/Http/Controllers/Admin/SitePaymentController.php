@@ -23,9 +23,9 @@ class SitePaymentController extends Controller
 
         $site = Site::find($id);
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
 
-        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers);
+        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours);
 
         $financialSummary  = $dataService->calculateAllBalances($ledgers);
 
