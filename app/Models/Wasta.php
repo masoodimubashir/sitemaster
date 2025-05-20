@@ -12,7 +12,7 @@ class Wasta extends Model
 
     protected $fillable = [
         'wasta_id',
-        'site_id',
+        'phase_id',
         'wasta_name',
         'price',
         'contact_no'
@@ -36,8 +36,8 @@ class Wasta extends Model
     }
 
 
-    public function site()
+    public function phase()
     {
-        return $this->belongsTo(Site::class);
+        return $this->belongsTo(Phase::class);
     }
 }

@@ -38,7 +38,7 @@ class WastaController extends Controller
                     'wager_name' => 'required|string|max:255',
                     'price_per_day' => 'required|numeric',
                     'contact' => 'required|string|max:10',
-                    'site_id' => 'required|exists:sites,id',
+                    'phase_id' => 'required|exists:phases,id',
                 ]);
 
                 if ($validator->fails()) {
@@ -49,7 +49,7 @@ class WastaController extends Controller
                 }
 
                 Wasta::create([
-                    'site_id' => $request->site_id,
+                    'phase_id' => $request->phase_id,
                     'wasta_name' => $request->wager_name,
                     'price' => $request->price_per_day,
                     'contact_no' => $request->contact,

@@ -230,13 +230,11 @@ class ViewSiteController extends Controller
      */
     public function create()
     {
-        $users = User::where([
-            'role_name' => 'site_engineer'
-        ])->orderBy('id', 'desc')->get();
 
         $clients = Client::orderBy('name')->get();
 
-        return view('profile.partials.Admin.Site.create-site', compact('clients', 'users'));
+
+        return view('profile.partials.Admin.Site.create-site', compact('clients'));
     }
 
     /**
@@ -247,11 +245,9 @@ class ViewSiteController extends Controller
 
         $request->validated();
 
-        $user = User::find($request->user_id);
-
         $client = Client::find($request->client_id);
 
-        $site = Site::create([
+        Site::create([
             'site_name' => $request->site_name,
             'service_charge' => $request->service_charge,
             'location' => $request->location,

@@ -74,6 +74,28 @@ class Phase extends Model
         return $this->hasMany(WagerAttendance::class, 'phase_id', 'id');
     }
 
+
+
+    /**
+     * Get all of the wastas for the Phase
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function wastas(): HasMany
+    {
+        return $this->hasMany(Wasta::class);
+    }
+
+    /**
+     * Get all of the labours for the Phase
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function labours(): HasMany
+    {
+        return $this->hasMany(Labour::class);
+    }
+
     public function getExistsRecordsAttribute()
     {
 

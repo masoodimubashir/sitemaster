@@ -20,8 +20,9 @@ class PhaseController extends Controller
     public function index()
     {
         $phases = Phase::with('site')->paginate(10);
+        $sites = Site::where('is_on_going', 1)->latest()->get();
 
-        return view('profile.partials.Admin.Phase.phase', compact('phases'));
+        return view('profile.partials.Admin.Phase.phase', compact('phases', 'sites'));
     }
 
     /**

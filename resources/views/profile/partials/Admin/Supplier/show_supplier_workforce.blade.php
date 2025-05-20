@@ -185,89 +185,106 @@
             <i class="menu-icon fa fa-building"></i>
         </div>
         <h1 class="text-xl font-semibold">Supplier Report</h1>
+
+
         <div class="ms-auto action-buttons d-flex gap-2">
-            <!-- Dropdown Menu -->
+            <!-- Dropdown Menu for Quick Access -->
             <div class="dropdown">
-                <button class="btn btn-outline dropdown-toggle " type="button" id="dropdownMenuButton"
+                <button class="btn btn-outline dropdown-toggle" type="button" id="dropdownMenuButton"
                     data-bs-toggle="dropdown" aria-expanded="false">
-                    Make Entry
+                    <i class="fas fa-bolt me-1"></i> Quick Actions
                 </button>
 
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
 
+                    <li>
+                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                            <i class="fas fa-hand-holding-usd me-2"></i> Make Payment
+                        </a>
+                    </li>
+                    
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
 
 
                     <li>
-
-                        <a href="{{ url($user . '/supplier/ledger', [$data['supplier']->id]) }}" class="btn  btns"
-                            data-modal="payment-supplier">
-                            View Ledger
+                        <a class="dropdown-item" href="{{ url($user . '/supplier/ledger', [$data['supplier']->id]) }}">
+                            <i class="fas fa-book me-2"></i> View Ledger
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item"
+                            href="{{ url($user . '/supplier/payments', [$data['supplier']->id]) }}">
+                            <i class="fas fa-money-check-alt me-2"></i> View Payments
                         </a>
                     </li>
 
-                    <li>
-                        @if ($user === 'admin')
-                            <a href="{{ url($user . '/unverified-supplier-payments/' . $data['supplier']->id) }}"
-                                class="btn">
-                                Unverified Payments
+                    @if ($user === 'admin')
+                        <li>
+                            <a class="dropdown-item"
+                                href="{{ url($user . '/unverified-supplier-payments/' . $data['supplier']->id) }}">
+                                <i class="fas fa-exclamation-circle me-2"></i> Unverified Payments
                             </a>
-                        @endif
-                    </li>
-
+                        </li>
+                    @endif
                     <li>
-                        <a href="{{ url($user . '/supplier/payments', [$data['supplier']->id]) }}"
-                            class="btn btn-info btns" data-modal="payment-supplier">
-                            View Payments
+                        <a class="dropdown-item"
+                            href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}">
+                            <i class="fas fa-file-invoice me-2"></i> Payment Report
                         </a>
                     </li>
+                    <li>
+                        <a class="dropdown-item"
+                            href="{{ url($user . '/supplier/detail', ['id' => $data['supplier']->id]) }}">
+                            <i class="fas fa-user-circle me-2"></i> View Detailed Profile
+                        </a>
+                    </li>
+
+                    
                 </ul>
             </div>
 
-            {{-- <a href="{{ url('admin/sites/details/' . base64_encode($id)) }}" class="btn btn-outline">
-                <i class="fas fa-eye"></i> View Site Detail
-            </a> --}}
 
-            <a href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}"
-                class="btn btn-outline">
-                <i class="far fa-file-pdf"></i>
-                Payment Report
-            </a>
 
-            <a href="{{ url($user . '/supplier/detail', ['id' => $data['supplier']->id]) }}"
-                class="btn btn-outline">
-                <i class="far fa-file-pdf"></i>
-                View Deatiled View
-            </a>
 
-            <button class="btn btn-outline" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                Make Payment
-            </button>
+
+
+
+
+
+
+
+
+
 
         </div>
+
+
+
     </div>
 
 
-     <form class="d-flex flex-column flex-md-row gap-2 w-100" action="{{ url()->current() }}" method="GET"
+    <form class="d-flex flex-column flex-md-row gap-2 w-100" action="{{ url()->current() }}" method="GET"
         id="filterForm">
-       
+
         <!-- Supplier Site -->
         <select class="bg-white text-black form-select form-select-sm" name="site_id" id="supplierFilter">
             <option value="all" {{ request('site_id') == 'all' ? 'selected' : '' }}>All Sites</option>
             @foreach ($data['sites'] as $site)
-                <option value="{{ $site['site_id'] }}"
-                    {{ request('site_id') == $site['site_id'] ? 'selected' : '' }}>
+                <option value="{{ $site['site_id'] }}" {{ request('site_id') == $site['site_id'] ? 'selected' : '' }}>
                     {{ $site['site_name'] }}
                 </option>
             @endforeach
         </select>
-
 
         <!-- Date Period Filter -->
         <select class="bg-white text-black form-select form-select-sm" name="date_filter" id="dateFilter">
             <option value="today" {{ request('date_filter') === 'today' ? 'selected' : '' }}>Today</option>
             <option value="yesterday" {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>Yesterday</option>
             <option value="this_week" {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>This Week</option>
-            <option value="this_month" {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>This Month</option>
+            <option value="this_month" {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>This Month
+            </option>
             <option value="this_year" {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>This Year</option>
             <option value="custom" {{ request('date_filter') === 'custom' ? 'selected' : '' }}>Custom Range</option>
             <option value="lifetime" {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>All Data</option>
@@ -286,9 +303,7 @@
         <button type="button" class="btn btn-outline-secondary btn-sm" id="resetFilters">
             <i class="fas fa-undo"></i> Reset
         </button>
-
     </form>
-
 
 
 
@@ -376,7 +391,8 @@
 
 
     <!-- Modal -->
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
 
@@ -504,6 +520,7 @@
 
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
+                            location.reload();
                         }, 2000);
                     },
                     error: function(response) {
@@ -527,7 +544,6 @@
 
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-                            location.reload();
                         }, 2000);
                     }
                 });
@@ -555,7 +571,6 @@
         }
 
 
-        
         document.addEventListener('DOMContentLoaded', function() {
 
             const supplierFilter = document.getElementById('supplierFilter');
@@ -632,11 +647,7 @@
                 window.location.href = newUrl;
             }
         });
-
     </script>
 
 
 </x-app-layout>
-
-
-

@@ -95,10 +95,16 @@
 
                                         <td title=" View {{ $site->site_name }} details...">
 
-                                            <a href="{{ route('sites.show', [base64_encode($site->id)]) }}"
-                                                class="fw-bold link-offset-2 link-underline link-underline-opacity-0">
-                                                {{ ucfirst($site->site_name) }}
-                                            </a>
+                                            @if ($site->is_on_going)
+                                                <a href="{{ route('sites.show', [base64_encode($site->id)]) }}"
+                                                    class="fw-bold link-offset-2 link-underline link-underline-opacity-0">
+                                                    {{ ucfirst($site->site_name) }}
+                                                </a>
+                                            @else
+                                                <p>
+                                                    {{ $site->site_name }}
+                                                </p>
+                                            @endif
 
                                         </td>
 
@@ -124,10 +130,12 @@
 
                                         <td class="space-x-4">
 
-                                            <a href="{{ route('sites.edit', base64_encode($site->id)) }}">
-                                                <i
-                                                    class="fa-regular fa-pen-to-square text-xl bg-white rounded-full"></i>
+                                            <a href="{{ url('admin/sites/' . $site->id . '/edit') }}"
+                                                class="text-black" title="Edit Site"
+                                                aria-label="Edit Site">
+                                                <i class="fas fa-edit me-1"></i> 
                                             </a>
+
 
                                             <form id="delete-form-{{ $site->id }}"
                                                 action="{{ route('sites.destroy', [base64_encode($site->id)]) }}"
@@ -142,7 +150,7 @@
                                                     class="fa-solid fa-trash-o text-xl text-red-600 bg-white rounded-full px-2 py-1"></i>
                                             </a>
 
-                                            <form action="{{ route('sites.update-on-going', $site->id) }}"
+                                            <form action="{{ url('/admin/sites/update-on-going', $site->id) }}"
                                                 method="POST" class="d-inline">
 
                                                 @csrf

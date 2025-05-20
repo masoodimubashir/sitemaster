@@ -11,7 +11,7 @@ class Labour extends Model
 
     protected $fillable = [
         'wasta_id',
-        'site_id',
+        'phase_id',
         'labour_name',
         'price',
         'contact_no'
@@ -33,8 +33,8 @@ class Labour extends Model
         return $this->belongsTo(Wasta::class);
     }
 
-    public function site()
+    public function phase()
     {
-        return $this->belongsTo(Site::class);
+        return $this->belongsTo(Phase::class);
     }
 }

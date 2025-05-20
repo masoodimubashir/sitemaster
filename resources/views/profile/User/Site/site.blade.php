@@ -74,10 +74,18 @@
 
                                         <td title=" View {{ $site->site_name }} details...">
 
-                                            <a href="{{ url('user/sites/' . base64_encode($site->id)) }}"
-                                                class="fw-bold link-offset-2 link-underline link-underline-opacity-0">
-                                                {{ ucfirst($site->site_name) }}
-                                            </a>
+
+
+                                            @if ($site->is_on_going)
+                                                <a href="{{ url('user/sites/' . base64_encode($site->id)) }}"
+                                                    class="fw-bold link-offset-2 link-underline link-underline-opacity-0">
+                                                    {{ ucfirst($site->site_name) }}
+                                                </a>
+                                            @else
+                                                <p>
+                                                    {{ $site->site_name }}
+                                                </p>
+                                            @endif
 
                                         </td>
 
@@ -103,11 +111,7 @@
 
                                         <td class="space-x-4">
 
-                                          
-
-                                          
-
-                                          
+                                           
 
                                             <form action="{{ route('sites.update-on-going', $site->id) }}"
                                                 method="POST" class="d-inline">

@@ -196,6 +196,8 @@
                 Attendance Report
             </h2>
 
+            
+
             <div class="d-flex align-items-center gap-2">
 
                 <div class="controls">
@@ -361,13 +363,13 @@
                 <div class="modal-body">
                     <form id="createWastaForm" class="forms-sample material-form">
                         <div class="form-group">
-                            <select name="site_id" id="create_site_id">
-                                <option value="">Select Site</option>
-                                @foreach ($sites as $site)
-                                    <option value="{{ $site->id }}">{{ $site->site_name }}</option>
+                            <select name="phase_id" id="create_phase_id">
+                                <option value="">Select Phase</option>
+                                @foreach ($phases as $phase)
+                                    <option value="{{ $phase->id }}">{{ $phase->phase_name }}</option>
                                 @endforeach
                             </select>
-                            <p class="text-danger" id="create_site_id-error"></p>
+                            <p class="text-danger" id="create_phase_id-error"></p>
                         </div>
 
                         <div class="form-group">
@@ -423,13 +425,13 @@
 
                         <!-- Site -->
                         <div class="form-group">
-                            <select name="site_id" id="labour_site_id">
-                                <option value="">Select Site</option>
-                                @foreach ($sites as $site)
-                                    <option value="{{ $site->id }}">{{ $site->site_name }}</option>
+                            <select name="phase_id" id="labour_phase_id">
+                                <option value="">Select Phase</option>
+                                @foreach ($phases as $phase)
+                                    <option value="{{ $phase->id }}">{{ $phase->phase_name }}</option>
                                 @endforeach
                             </select>
-                            <p class="text-danger" id="site_id-error"></p>
+                            <p class="text-danger" id="phase_id-error"></p>
                         </div>
 
                         <!-- Labour Name -->
@@ -518,7 +520,7 @@
                 $('.wasta-attendance-checkbox').change(function() {
                     const $this = $(this);
                     $.ajax({
-                        url: '/admin/attendance/wasta',
+                       url: '/{{ auth()->user()->role_name === "admin" ? "admin" : "user" }}/attendance/wasta',
                         type: 'PUT',
                         data: {
                             wasta_id: $this.data('wasta-id'),
@@ -540,7 +542,7 @@
                 $('.labour-attendance-checkbox').change(function() {
                     const $this = $(this);
                     $.ajax({
-                        url: '/admin/attendance/labour',
+                        url: '/{{ auth()->user()->role_name === "admin" ? "admin" : "user" }}/attendance/labour',
                         type: 'PUT',
                         data: {
                             labour_id: $this.data('labour-id'),
@@ -601,10 +603,10 @@
                         wager_name: $('#create_wager_name').val(),
                         price_per_day: $('#create_price_per_day').val(),
                         contact: $('#create_contact_no').val(),
-                        site_id: $('#create_site_id').val(),
+                        phase_id: $('#create_phase_id').val(),
                     };
 
-                    $.post('/admin/wasta', data)
+                    $.post('/{{ auth()->user()->role_name === "admin" ? "admin" : "user" }}/wasta', data)
                         .done(response => {
                             alert(response.message || 'Wasta created!');
                             $('#modal-create-wasta').modal('hide');
@@ -639,7 +641,7 @@
                     };
 
                     $.ajax({
-                        url: `/admin/attendance/wasta/update/${id}`,
+                        url: `/{{ auth()->user()->role_name === "admin" ? "admin" : "user" }}/attendance/wasta/update/${id}`,
                         type: 'PUT',
                         data,
                         success: () => {
@@ -658,7 +660,7 @@
                     e.preventDefault();
                     const formData = {
                         wasta_id: $('select[name="wasta_id"]').val(),
-                        site_id: $('#labour_site_id').val(),
+                        phase_id: $('#labour_phase_id').val(),
                         labour_name: $('input[name="labour_name"]').val(),
                         price: $('#price').val(),
                         contact: $('#contact').val(),
@@ -701,7 +703,7 @@
                     };
 
                     $.ajax({
-                        url: `/admin/attendance/labour/update/${id}`,
+                        url: `/{{ auth()->user()->role_name === "admin" ? "admin" : "user" }}/attendance/labour/update/${id}`,
                         type: 'PUT',
                         data,
                         success: () => {

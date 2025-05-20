@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\Validator;
 
 class SiteController extends Controller
 {
+
+    public function __construct(public DataService $dataService) {}
+
     /**
      * Display a listing of the resource.
      */
@@ -115,112 +118,87 @@ class SiteController extends Controller
 
         $site_id = base64_decode($id);
 
-        $site = Site::with([
-            'phases' => function ($query) {
-                $query->whereNull('deleted_at');
-            },
-            'phases.constructionMaterialBillings' => function ($query) {
-                $query->with('supplier')
-                    ->where('verified_by_admin', 1)
-                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-                    ->whereNull('deleted_at')
-                    ->latest();
-            },
-            'phases.squareFootageBills' => function ($query) {
-                $query->with('supplier')
-                    ->where('verified_by_admin', 1)
-                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-                    ->whereNull('deleted_at')
-                    ->latest();
-            },
-            'phases.dailyWagers' => function ($query) {
-                $query->with(['wagerAttendances', 'supplier'])
-                    ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-                    ->whereNull('deleted_at')
-                    ->latest();
-            },
-            'phases.dailyExpenses' => function ($query) {
-                $query->whereNull('deleted_at');
-            },
-            'phases.wagerAttendances' => function ($query) {
-                $query->with('dailyWager.supplier')
-                    ->whereHas('dailyWager.supplier', fn($q) => $q->whereNull('deleted_at'))
-                    ->whereNull('deleted_at')
-                    ->latest();
-            },
-            'payments' => function ($query) {
-                $query->where('verified_by_admin', 1);
-            },
-        ])->find($site_id);
+        // Default filter options — or pull from request if needed
+        $dateFilter = 'lifetime';
+        $supplier_id = 'all';
+        $wager_id = 'all';
+        $startDate = 'start_date';
+        $endDate = 'end_date';
 
-        $totalPaymentSuppliersAmount = $site->payments()
-            ->where('verified_by_admin', 1)
-            ->sum('amount');
+        // Load site (for service charge, name, etc.)
+        $site = Site::findOrFail($site_id);
 
-        $grand_total_amount = 0;
+        // Load processed financial data
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $this->dataService->getData(
+            $dateFilter,
+            $site_id,
+            $supplier_id,
+            $wager_id,
+            $startDate,
+            $endDate
+        );
 
-        foreach ($site->phases as $phase) {
+        // Combine and group all entries by phase
+        $ledgers = $this->dataService->makeData(
+            $payments,
+            $raw_materials,
+            $squareFootageBills,
+            $expenses,
+            $wagers,
+            $wastas,
+            $labours
+        )->sortByDesc(fn($entry) => $entry['created_at']);
 
-            $phase->construction_total_amount = $phase->constructionMaterialBillings->sum('amount');
+        $ledgersGroupedByPhase = $ledgers->groupBy('phase');
 
-            $phase->square_footage_total_amount = $phase->squareFootageBills->reduce(function ($sum, $sqft) {
-                return $sum + ($sqft->price * $sqft->multiplier);
-            }, 0);
+        $balances = $this->dataService->calculateAllBalances($ledgers);
+        $withoutServiceCharge = $balances['without_service_charge'];
+        $withServiceCharge = $balances['with_service_charge'];
 
-            $phase->daily_expenses_total_amount = $phase->dailyExpenses->sum('price');
+        // Per-phase breakdown
+        $phaseData = [];
 
-            foreach ($phase->dailyWagers as $wager) {
-                $phase->daily_wagers_total_amount += $wager->wager_total;
-            }
+        foreach ($ledgersGroupedByPhase as $phaseName => $records) {
 
-            $phase->construction_total_service_charge_amount = ($site->service_charge / 100) * $phase->construction_total_amount +  $phase->construction_total_amount;
-            $phase->daily_expense_total_service_charge_amount = ($site->service_charge / 100) * $phase->daily_expenses_total_amount + $phase->daily_expenses_total_amount;
-            $phase->daily_wagers_total_service_charge_amount = ($site->service_charge / 100) * $phase->daily_wagers_total_amount + $phase->daily_wagers_total_amount;
-            $phase->phase_total_amount = $phase->construction_total_amount + $phase->daily_expenses_total_amount + $phase->daily_wagers_total_amount + $phase->square_footage_total_amount;
+            $construction_total = $records->where('category', 'Material')->sum('debit');
+            $square_total = $records->where('category', 'SQFT')->sum('debit');
+            $expenses_total = $records->where('category', 'Expense')->sum('debit');
+            $wasta_total = $records->where('category', 'Wasta')->sum('debit');
+            $labour_total = $records->where('category', 'Labour')->sum('debit');
+            $payments_total = $records->where('category', 'Payment')->sum('credit');
 
-            $phase->sqft_total_service_charge_amount = (($site->service_charge / 100) * $phase->square_footage_total_amount) + $phase->square_footage_total_amount;
-            $phase->phase_total_service_charge_amount = ($site->service_charge / 100) * $phase->phase_total_amount;
+            $subtotal = $construction_total + $square_total + $expenses_total  + $wasta_total + $labour_total;
+            $withService = ($subtotal * $site->service_charge / 100) + $subtotal;
 
-            $phase->phase_total_with_service_charge_amount = $phase->phase_total_amount + $phase->phase_total_service_charge_amount;
 
-            $grand_total_amount += $phase->phase_total_with_service_charge_amount;
+            $phaseData[] = [
+                'phase' => $phaseName,
+                'phase_id' => $records->first()['phase_id'],
+                'construction_total_amount' => $construction_total,
+                'square_footage_total_amount' => $square_total,
+                'daily_expenses_total_amount' => $expenses_total,
+                'daily_wastas_total_amount' => $wasta_total,
+                'daily_labours_total_amount' => $labour_total,
+                'total_payment_amount' => $payments_total,
+                'phase_total' => $subtotal, 
+                'phase_total_with_service_charge' => $withService,
+                'total_balance' => $withServiceCharge['balance'],
+                'total_due' => $withServiceCharge['due'],
+                'effective_balance' => $withoutServiceCharge['due'],
+                'total_paid' => $withServiceCharge['paid'],
+                'construction_material_billings' => $records->where('category', 'Material'),
+                'square_footage_bills' => $records->where('category', 'SQFT'),
+                'daily_expenses' => $records->where('category', 'Expense'),
+                'daily_wastas' => $records->where('category', 'Wasta'),
+                'daily_labours' => $records->where('category', 'Labour'),
+            ];
         }
 
 
-        $balance = $grand_total_amount - $totalPaymentSuppliersAmount;
-
-        $suppliers = Supplier::orderBy('name')->get();
-
-        $workforce_suppliers = Supplier::where('is_workforce_provider', 1)->orderBy('name')->get();
-
-        $raw_material_providers = Supplier::where('is_raw_material_provider', 1)->orderBy('name')->get();
-
-        $wagers = $site->phases->flatMap(function ($phase) {
-
-            return $phase->dailyWagers->map(function ($wager) {
-                return [
-                    'id' => $wager->id,
-                    'name' => $wager->wager_name,
-                ];
-            });
-        })->values()->toArray();
-
-        $items = Item::orderBy('item_name')->get();
-
-        return view(
-            'profile.partials.Admin.Site.show-site-detail',
-            compact(
-                'site',
-                'grand_total_amount',
-                'suppliers',
-                'workforce_suppliers',
-                'raw_material_providers',
-                'wagers',
-                'items',
-                'totalPaymentSuppliersAmount',
-                'balance'
-            )
-        );
+        return view('profile.partials.Admin.Site.show-site-detail', compact(
+            'site',
+            'phaseData'
+        ));
     }
 
     public function show($id, Request $request, DataService $dataService)
@@ -312,9 +290,8 @@ class SiteController extends Controller
      */
     public function edit(string $id)
     {
-        $site_id = base64_decode($id);
 
-        $site = Site::find($site_id);
+        $site = Site::find($id);
 
         $users = User::where([
             'role_name' => 'site_engineer',

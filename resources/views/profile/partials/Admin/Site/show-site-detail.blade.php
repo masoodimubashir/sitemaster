@@ -1,198 +1,51 @@
 <x-app-layout>
-
-    @if (session('status') === 'update')
-        <x-success-message message="Your Record has been updated..." />
-    @endif
-
-    @if (session('status') === 'delete')
-        <x-success-message message="Your Record has been deleted..." />
-    @endif
-
-    @if (session('status') === 'not_found')
-        <x-success-message message="No Site Payments Available..." />
-    @endif
-
-    @if (session('status') === 'error')
-        <x-success-message message="Something went wrong! try again..." />
-    @endif
-
-    <div id="messageContainer"></div>
-
-    <style>
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 9999999;
-            left: 0;
-            top: 0;
-            width: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
-        }
-
-        .modal-content {
-            position: relative;
-            margin: 15% auto;
-            background-color: white;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 600px;
-        }
-
-        .modal img {
-            width: 100%;
-            height: 400px;
-        }
-
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: black;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .d {
-            position: relative;
-            display: inline-block;
-        }
-
-        .dropdown-button {
-            color: black;
-            border: none;
-            cursor: pointer;
-        }
-
-
-        .dropdown-content li {
-            padding: 10px 20px;
-            cursor: pointer;
-        }
-
-        .dropdown-content li:hover {
-            background-color: lightgray;
-            color: black;
-            /* Ensure text is readable on hover */
-        }
-
-        .d:hover .dropdown-content {
-            display: block;
-        }
-
-        #messageContainer {
-            position: fixed;
-            bottom: 5%;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 999999999;
-        }
-
-        .stats-card {
-            border: none;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
-        }
-
-        .stats-card:hover {
-            transform: translateY(-5px);
-        }
-
-
-        .table-custom th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-
-        .card-title-custom {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #51B1E1;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-    </style>
-
-    <style>
-        /* Active tab styling */
-        .nav-pills .nav-link {
-            background: white;
-            /* Default inactive color */
-            color: black;
-            transition: background-color 0.3s ease;
-        }
-
-        .nav-pills .nav-link.active {
-            background-color: #51B1E1;
-            /* Bright blue for active tab */
-            color: white;
-        }
-    </style>
-
-
     <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['admin/sites', 'admin/sites/' . base64_encode($site->id)]" />
 
-    {{-- Action Buttons Section --}}
+    <!-- Action Buttons -->
     <div class="row mb-4">
-
         <div class="col-12">
-
-            <div class="d-flex flex-wrap justify-content-start gap-2">
-                <a class="btn  btn-info" data-bs-toggle="modal" href="#phase" role="button">
-                    <i class="fas fa-tasks me-2"></i>Phase
+            <div class="d-flex flex-wrap gap-2">
+                <a class="btn btn-info" data-bs-toggle="modal" href="#phase"><i class="fas fa-tasks me-2">
+                    </i>Phase
                 </a>
-
-                <a class="btn btn-info" href="#payment-supplier" data-bs-toggle="modal" role="button">
-                    <i class="fas fa-money-bill me-2"></i>Make Payment
+                <a class="btn btn-info" data-bs-toggle="modal" href="#payment-supplier">
+                    <i class="fas fa-money-bill me-2"></i>
+                    Make Payment
                 </a>
-
-                <a href="{{ url('admin/sites/payments', [$site->id]) }}" class="btn btn-info px-4">
-                    <i class="fas fa-list me-2"></i>View Payments
+                <a class="btn btn-info" href="{{ url('admin/sites/payments', [$site->id]) }}">
+                    <i class="fas fa-list me-2"></i>
+                    View Payments
                 </a>
-
-                <a href="{{ url('admin/site/ledger', $site->id) }}" class="btn btn-info px-4">
-                    <i class="fas fa-book me-2"></i>View Ledger
+                <a class="btn btn-info" href="{{ url('admin/site/ledger', $site->id) }}">
+                    <i class="fas fa-book me-2"></i>
+                    View Ledger
                 </a>
-
-                <a href="{{ url('admin/download-site/report', ['id' => base64_encode($site->id)]) }}"
-                    class="btn btn-info px-4">
-                    <i class="fas fa-file-pdf me-2"></i>Download PDF
+                <a class="btn btn-info"
+                    href="{{ url('admin/download-site/report', ['id' => base64_encode($site->id)]) }}">
+                    <i class="fas fa-file-pdf me-2"></i>
+                    Download PDF
                 </a>
-
-                <a href="{{ url('admin/site-payment/report', ['id' => base64_encode($site->id)]) }}"
-                    class="btn btn-info px-4">
-                    <i class="fas fa-file-invoice me-2"></i>Generate Payments
-                </a>
-
-
+                <a class="btn btn-info"
+                    href="{{ url('admin/site-payment/report', ['id' => base64_encode($site->id)]) }}">
+                    <i class="fas fa-file-invoice me-2"></i>Generate Payments</a>
             </div>
         </div>
     </div>
 
-    {{-- Stats Cards Section --}}
-    <div class="row g-4">
-        <div class="col-12 col-md-6 ">
+    <!-- Site Info Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class=" bg-opacity-10 ">
-                            <i class="fas fa-building  text-info fs-3 p-2"></i>
-                        </div>
+                    <div class="mb-3 d-flex align-items-center">
+                        <i class="fas fa-building text-info fs-3 me-3"></i>
                         <div>
                             <h6 class="text-muted mb-1">Site Name</h6>
                             <h5 class="mb-0">{{ ucwords($site->site_name) }}</h5>
                         </div>
                     </div>
                     <div class="d-flex align-items-center">
-                        <div class=" bg-opacity-10 ">
-                            <i class="fas fa-user text-info fs-3 p-2"></i>
-                        </div>
+                        <i class="fas fa-user text-info fs-3 me-3"></i>
                         <div>
                             <h6 class="text-muted mb-1">Owner</h6>
                             <h5 class="mb-0">{{ ucwords($site->site_owner_name) }}</h5>
@@ -201,28 +54,21 @@
                 </div>
             </div>
         </div>
-
-        <div class="col-12 col-md-6 ">
+        <div class="col-md-6">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class=" bg-opacity-10 ">
-
-                            <i class="fa-solid fa-phone text-info fs-3  p-2"></i>
-                        </div>
+                    <div class="mb-3 d-flex align-items-center">
+                        <i class="fa-solid fa-phone text-info fs-3 me-3"></i>
                         <div>
                             <h6 class="text-muted mb-1">Contact</h6>
                             <h5 class="mb-0">
-                                <a href="tel:+91-{{ $site->contact_no }}" class="text-decoration-none">
-                                    +91-{{ $site->contact_no }}
-                                </a>
+                                <a href="tel:+91-{{ $site->contact_no }}"
+                                    class="text-decoration-none">+91-{{ $site->contact_no }}</a>
                             </h5>
                         </div>
                     </div>
                     <div class="d-flex align-items-center">
-                        <div class=" bg-opacity-10 ">
-                            <i class="fas fa-map-marker-alt text-info fs-3 p-2"></i>
-                        </div>
+                        <i class="fas fa-map-marker-alt text-info fs-3 me-3"></i>
                         <div>
                             <h6 class="text-muted mb-1">Location</h6>
                             <h5 class="mb-0">{{ ucwords($site->location) }}</h5>
@@ -231,1474 +77,563 @@
                 </div>
             </div>
         </div>
-
-        {{-- <div class="col-12 col-md-6 col-xl-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class=" bg-opacity-10 ">
-                            <i class="fas fa-percent text-info fs-3 p-2"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Service Charge</h6>
-                            <h5 class="mb-0">{{ $site->service_charge }}%</h5>
-                        </div>
-                    </div>
-
-                    <div class="d-flex align-items-center">
-                        <div class=" bg-opacity-10 ">
-                            <i class="fas fa-money-bill text-info fs-3 p-2"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Debit</h6>
-                            <h5 class="mb-0">{{ Number::currency($grand_total_amount, 'INR') }}</h5>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> --}}
-
-        {{-- <div class="col-12 col-md-6 col-xl-3">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class=" bg-{{ $balance >= 0 ? '' : '' }} fs-3 p-2">
-                            <i class="fas fa-balance-scale text-{{ $balance >= 0 ? 'info' : 'danger' }}"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-{{ $balance >= 0 ? 'info' : 'danger' }} mb-1">Balance</h6>
-                            <h5 class="mb-0 text-{{ $balance >= 0 ? 'info' : 'danger' }}">
-                                {{ Number::currency($balance, 'INR') }}
-                            </h5>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class=" fs-3 p-2">
-                            <i class="fas fa-credit-card text-info"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Credit</h6>
-                            <h5 class="mb-0">{{ Number::currency($totalPaymentSuppliersAmount, 'INR') }}</h5>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div> --}}
     </div>
 
+    <!-- Site Financial Summary -->
+    <div class="card mb-4 border-info">
 
-    @if ($site)
 
-        @if ($site->phases->count() > 0)
+
+
+
+        <!-- Phase Tabs -->
+        @if (count($phaseData) > 0)
 
             <div class="card-body mt-3">
-
                 <ul class="nav nav-pills mb-4">
-                    @foreach ($site->phases as $phase_key => $phase)
+                    @foreach ($phaseData as $key => $phase)
                         <li class="nav-item">
-                            <a class="nav-link {{ $phase_key === 0 ? 'active' : '' }}" href="#{{ $phase->id }}"
-                                data-bs-toggle="tab" onclick="setActiveTab('{{ $phase->id }}')">
-                                {{ $phase->phase_name }}
-                            </a>
+                            <a class="nav-link {{ $key === 0 ? 'active' : '' }}" href="#phase-{{ $key }}"
+                                data-bs-toggle="tab">{{ ucfirst($phase['phase']) }}</a>
                         </li>
                     @endforeach
                 </ul>
             </div>
 
-            <div class="tab-content border-0 p-0">
-                @foreach ($site->phases as $phase_key => $phase)
-                    <div class="tab-pane fade {{ $phase_key === 0 ? 'show active' : '' }}" id="{{ $phase->id }}">
+            <div class="tab-content">
+                @foreach ($phaseData as $key => $phase)
+                    <div class="tab-pane fade {{ $key === 0 ? 'show active' : '' }}" id="phase-{{ $key }}">
+                        <!-- Phase Summary Card -->
+                        <div class="card mb-4 border-info">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">{{ ucfirst($phase['phase']) }} Phase Summary</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span class="fw-bold">Construction:</span>
+                                            <span>₹{{ number_format($phase['construction_total_amount'], 2) }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span class="fw-bold">Contractor:</span>
+                                            <span>₹{{ number_format($phase['square_footage_total_amount'], 2) }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span class="fw-bold">Expenses:</span>
+                                            <span>₹{{ number_format($phase['daily_expenses_total_amount'], 2) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span class="fw-bold">Wasta:</span>
+                                            <span>₹{{ number_format($phase['daily_wastas_total_amount'], 2) }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span class="fw-bold">Labour:</span>
+                                            <span>₹{{ number_format($phase['daily_labours_total_amount'], 2) }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fw-bold">Subtotal:</span>
+                                            <span>₹{{ number_format($phase['phase_total'], 2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span class="fw-bold">Service Charge (10%):</span>
+                                            <span>₹{{ number_format($phase['phase_total_with_service_charge'] - $phase['phase_total'], 2) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fw-bold">Total Amount:</span>
+                                            <span
+                                                class="fw-bold">₹{{ number_format($phase['phase_total_with_service_charge'], 2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row mt-3">
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span class="fw-bold">Total Paid:</span>
+                                            <span>₹{{ number_format($phase['total_paid'], 2) }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-between mb-3">
+                                            <span class="fw-bold">Total Due:</span>
+                                            <span>₹{{ number_format($phase['total_due'], 2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="fw-bold">Effective Balance:</span>
+                                            <span
+                                                class="fw-bold">₹{{ number_format($phase['effective_balance'], 2) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
+                        <!-- Phase Action Buttons -->
+                        <div class="d-flex justify-content-end gap-2 mb-3">
 
-                        <div class=" mb-3 d-flex justify-content-end gap-2">
+                
 
-
-                            <a href="{{ url('admin/download-phase/report', ['id' => base64_encode($phase->id)]) }}"
+                            <a href="{{ url('admin/download-phase/report', ['id' => base64_encode($phase['phase_id'])]) }}"
                                 class="btn btn-info btn-sm text-white">
                                 Generate Phase PDF
                             </a>
 
-
-                            <button class="btn btn-sm btn-info text-white dropdown-toggle" type="button"
-                                id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                Make Entry
-                            </button>
-
-
-                            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-
-                                <li>
-                                    <a class="btn" data-bs-toggle="modal" role="button"
-                                        href="#modal-construction-billings{{ $phase->id }}">
-                                        Construction
-                                    </a>
-                                </li>
-
-                                <li>
-
-                                    <a class="btn" data-bs-toggle="modal" role="button"
-                                        href="#modal-square-footage-bills{{ $phase->id }}">
-                                        Contractor </a>
-
-                                </li>
-
-                                <li class="nav-item dropdown-button">
-
-                                    <a class="btn" data-bs-toggle="modal" role="button"
-                                        href="#modal-daily-expenses{{ $phase->id }}">
-                                        Expenditure
-                                    </a>
-
-                                </li>
-
-                                {{-- <li>
-                                    <a class="btn" data-bs-toggle="modal" role="button"
-                                        href="#modal-daily-wager{{ $phase->id }}">
-                                        Wager </a>
-                                </li> --}}
-
-
-                            </ul>
-
-
                         </div>
 
-                        <div class="row">
+                        <!-- Phase Data Tables -->
+                        @php
+                            $tables = [
+                                'construction_material_billings' => [
+                                    'label' => 'Materials',
+                                    'data' => $phase['construction_material_billings'],
+                                ],
+                                'square_footage_bills' => [
+                                    'label' => 'Contractor',
+                                    'data' => $phase['square_footage_bills'],
+                                ],
+                                'daily_expenses' => ['label' => 'Expenses', 'data' => $phase['daily_expenses']],
+                                'daily_wastas' => ['label' => 'Wasta', 'data' => $phase['daily_wastas']],
+                                'daily_labours' => ['label' => 'Labour', 'data' => $phase['daily_labours']],
+                            ];
+                        @endphp
 
-                            <div class="col-lg-12 mb-4">
-                                <div class="card stats-card h-100">
-                                    <div class="card-body">
-                                        <h3 class="card-title-custom mb-4">
-                                            <i class="fas fa-tasks"></i>
-                                            Phase Total
-                                        </h3>
-                                        <div class="table-responsive">
-                                            <table class="table table-hover table-custom">
-
-                                                <thead>
-                                                    <tr>
-
-                                                        <th>..</th>
-                                                        <th>Amount</th>
-                                                        <th> Service Charge {{ $site->service_charge }}%</th>
-                                                        <th> Total</th>
-
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        {{-- <td>
-                                                        Service Charge + Total Amount
-                                                    </td> --}}
-
-                                                    </tr>
-                                                    <tr>
-
-                                                        <td>
-                                                            Materials
-                                                        </td>
-                                                        <td>
-                                                            {{ $phase->construction_total_amount }}
-                                                        </td>
-                                                        <td>
-                                                            ....
-                                                        </td>
-                                                        <td>
-                                                            {{ $phase->construction_total_service_charge_amount }}
-                                                        </td>
-
-                                                    </tr>
-
-                                                    <tr>
-
-                                                        <td>
-                                                            Contracts
-                                                        </td>
-
-                                                        <td>
-                                                            {{ $phase->square_footage_total_amount }}
-                                                        </td>
-
-                                                        <td>
-                                                            ....
-                                                        </td>
-
-                                                        <td>
-                                                            {{ $phase->sqft_total_service_charge_amount }}
-                                                        </td>
-
-                                                    </tr>
-
-                                                    <tr>
-
-                                                        <td>
-                                                            Expenses
-                                                        </td>
-
-                                                        <td>
-                                                            {{ $phase->daily_expenses_total_amount }}
-                                                        </td>
-
-                                                        <td>
-                                                            ....
-                                                        </td>
-
-                                                        <td>
-                                                            {{ $phase->daily_expense_total_service_charge_amount }}
-                                                        </td>
-
-                                                    </tr>
-
-
-                                                    {{-- <tr>
-
-                                                        <td>
-                                                            Wager
-                                                        </td>
-
-                                                        <td>
-                                                            {{ $phase->daily_wagers_total_amount }}
-                                                        </td>
-
-                                                        <td>
-                                                            ...
-                                                        </td>
-
-                                                        <td>
-                                                            {{ $phase->daily_wagers_total_service_charge_amount }}
-                                                        </td>
-
-                                                    </tr> --}}
-
-
-                                                    <tr>
-
-                                                        <td>Sub Total</td>
-
-                                                        <td>
-                                                            {{ $phase->phase_total_amount }}
-                                                        </td>
-
-                                                        <td>
-                                                            {{ $phase->phase_total_service_charge_amount }}
-                                                        </td>
-
-                                                        <td>
-                                                            {{ $phase->phase_total_with_service_charge_amount }}
-                                                        </td>
-
-                                                    </tr>
-
-                                                </tbody>
-
-                                            </table>
-                                        </div>
-                                    </div>
+                        @foreach ($tables as $tableKey => $table)
+                            <div class="card mb-4">
+                                <div class="card-header bg-info text-white fw-bold text-uppercase">
+                                    {{ $table['label'] }}
+                                    {{-- <span class="float-end">Total: ₹{{ number_format($phase["{$tableKey}"], 2) }}</span> --}}
                                 </div>
-                            </div>
-
-                            <!-- Materials Table -->
-                            <div class="col-lg-12 mb-4">
-                                <div class="card stats-card h-100">
-                                    <div class="card-body">
-                                        <h3 class="card-title-custom mb-4">
-                                            <i class="fas fa-boxes"></i>
-                                            Materials
-                                        </h3>
-                                        <div class="table-responsive">
-                                            <table class="table table-hover table-custom">
-
-                                                <thead>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Description</th>
+                                                    <th>Supplier</th>
+                                                    <th>Amount</th>
+                                                    <th>Total (with SC)</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($table['data'] as $entry)
                                                     <tr>
+                                                        <td>{{ \Carbon\Carbon::parse($entry['created_at'])->format('d-M-Y') }}
+                                                        </td>
+                                                        <td>{{ $entry['description'] ?? '-' }}</td>
+                                                        <td>{{ $entry['supplier'] ?? '-' }}</td>
+                                                        <td>₹{{ number_format($entry['debit'], 2) }}</td>
+                                                        <td>₹{{ number_format($entry['total_amount_with_service_charge'], 2) }}
+                                                        </td>
+                                                        <td class="text-nowrap">
 
-                                                        <th>Date</th>
-                                                        <th> Image</th>
-                                                        <th> Name</th>
-                                                        <th> Item Name</th>
-                                                        <th> Price</th>
-                                                        <th>
-                                                            Actions
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {{-- Construction Material --}}
 
-                                                    @if (count($phase->constructionMaterialBillings))
-                                                        @foreach ($phase->constructionMaterialBillings as $construction_material_billing)
-                                                            <tr>
 
-                                                                <td>
-                                                                    {{ $construction_material_billing->created_at->format('d-M-Y') }}
-                                                                </td>
-                                                                <td>
-                                                                    <img style="cursor: pointer"
-                                                                        data-full="{{ asset('storage/' . $construction_material_billing->item_image_path) }}"
-                                                                        src="{{ asset('storage/' . $construction_material_billing->item_image_path) }}"
-                                                                        alt=""
-                                                                        class="w-20 h-20 rounded-full gallery-image">
-                                                                </td>
-
-                                                                <td>
-                                                                    <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
-                                                                        href="{{ url('/admin/suppliers', $construction_material_billing->supplier->id) }}">
-                                                                        {{ $construction_material_billing->supplier->name ?? '' }}
+                                                            @switch($entry['category'])
+                                                                @case('Material')
+                                                                    <a href="{{ route('construction-material-billings.edit', [base64_encode($entry['id'])]) }}"
+                                                                        class="btn btn-sm btn-outline-primary">
+                                                                        <i class="fa-regular fa-pen-to-square"></i>
                                                                     </a>
-                                                                </td>
-
-                                                                <td>
-                                                                    {{ $construction_material_billing->item_name }}
-                                                                </td>
-
-                                                                <td>
-                                                                    {{ $construction_material_billing->amount }}
-                                                                    <br>
-                                                                </td>
-
-                                                                <td>
-
+                                                                @break;
+                                                                @case('SQFT')
+                                                                    <a href="{{ route('square-footage-bills.edit', [base64_encode($entry['id'])]) }}"
+                                                                        class="btn btn-sm btn-outline-primary">
+                                                                        <i class="fa-regular fa-pen-to-square"></i>
+                                                                    </a>
+                                                                @break;
+                                                                @case('Expense')
                                                                     <a
-                                                                        href="{{ route('construction-material-billings.edit', [base64_encode($construction_material_billing->id)]) }}">
-                                                                        <i
-                                                                            class="fa-regular fa-pen-to-square fs-5  bg-white rounded-full px-2 py-1"></i>
-                                                                    </a>
-
-                                                                    <a href="#" class="delete-link"
-                                                                        data-id="{{ $construction_material_billing->id }}"
-                                                                        data-name="materials">
-                                                                        <i
-                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                    </a>
-
-                                                                    @if ($construction_material_billing->verified_by_admin)
-                                                                        <a href="#"
-                                                                            class="verify-link ms-3 badge badge-info nav-link text-black"
-                                                                            data-name="materials"
-                                                                            data-id="{{ $construction_material_billing->id }}"
-                                                                            data-verified="0">
-                                                                            Verified
-                                                                        </a>
-                                                                    @else
-                                                                        <a href="#"
-                                                                            class="verify-link ms-3 badge badge-danger nav-link text-black"
-                                                                            data-name="materials"
-                                                                            data-id="{{ $construction_material_billing->id }}"
-                                                                            data-verified="1">
-                                                                            Verify
-                                                                        </a>
-                                                                    @endif
-
-
-                                                                </td>
-
-
-                                                            </tr>
-
-                                                            @if ($loop->last)
-                                                                <tr class="">
-                                                                    <td colspan="4"
-                                                                        class="text-right font-bold bg-info text-white fw-bold">
-                                                                        Cost + Service Charge:
-                                                                    </td>
-
-                                                                    <td colspan="2"
-                                                                        class="font-bold bg-info text-white fw-bold">
-
-                                                                        {{ $phase->construction_total_amount }}
-                                                                        +
-                                                                        {{ ($site->service_charge / 100) * $phase->construction_total_amount }}
-                                                                        =
-                                                                        {{ ($site->service_charge / 100) * $phase->construction_total_amount + $phase->construction_total_amount }}
-                                                                    </td>
-                                                                </tr>
-                                                            @endif
-                                                        @endforeach
-                                                    @else
-                                                        <tr>
-                                                            <td colspan="6" class="text-center text-danger">No
-                                                                Records Found..
-                                                            </td>
-                                                        </tr>
-                                                    @endif
-
-                                                </tbody>
-
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Labor Table -->
-                            <div class="col-lg-12 mb-4">
-                                <div class="card stats-card h-100">
-                                    <div class="card-body">
-                                        <h3 class="card-title-custom mb-4">
-                                            <i class="fas fa-hard-hat"></i>
-                                            Contracts
-                                        </h3>
-                                        <div class="table-responsive">
-                                            <table class="table table-hover table-custom">
-                                                <thead>
-                                                    <tr>
-
-                                                        <th>Date</th>
-
-                                                        <th> Image</th>
-                                                        <th> Wager type</th>
-                                                        <th>Supplier Name</th>
-                                                        <th> Type</th>
-                                                        <th> Price</th>
-
-                                                        <th>Multiplier</th>
-                                                        <th>
-                                                            Total Price
-                                                        </th>
-
-                                                        <th>
-                                                            Actions
-                                                        </th>
-
-
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-
-
-                                                    {{-- Square Footage --}}
-
-
-
-                                                    @if (count($phase->squareFootageBills))
-                                                        @foreach ($phase->squareFootageBills as $sqft)
-                                                            <tr>
-
-                                                                <td>{{ $sqft->created_at->format('d-M-Y') }}
-                                                                </td>
-
-                                                                <td>
-                                                                    <img style="cursor: pointer"
-                                                                        data-full="{{ asset('storage/' . $sqft->image_path) }}"
-                                                                        src="{{ asset('storage/' . $sqft->image_path) }}"
-                                                                        alt=""
-                                                                        class="w-20 h-20 rounded-full gallery-image">
-                                                                </td>
-
-                                                                <td>
-                                                                    {{ ucwords($sqft->wager_name) }}
-                                                                </td>
-
-                                                                <td>
-                                                                    <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
-                                                                        href="{{ url('/admin/suppliers', $sqft->supplier->id) }}">
-                                                                        {{ ucwords($sqft->supplier->name) }}
-
-                                                                    </a>
-
-                                                                </td>
-
-
-                                                                <td>
-                                                                    {{ ucwords($sqft->type) }}
-                                                                </td>
-
-                                                                <td>
-                                                                    {{ Number::currency($sqft->price ?? 0, 'INR') }}
-                                                                </td>
-
-                                                                <td>
-                                                                    {{ $sqft->multiplier }}
-                                                                </td>
-
-
-                                                                <td>
-                                                                    {{ $sqft->type === 'full_contract' ? $sqft->price : $sqft->price * $sqft->multiplier }}
-                                                                </td>
-
-                                                                <td>
-                                                                    <a
-                                                                        href="{{ route('square-footage-bills.edit', [base64_encode($sqft->id)]) }}">
+                                                                        href="{{ route('daily-expenses.edit', [base64_encode($entry['id'])]) }}">
                                                                         <i
                                                                             class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
                                                                     </a>
+                                                                @break
 
+                                                                @default
+                                                            @endswitch
+                                                            <!-- Edit Button -->
 
-                                                                    <a href="#" class="delete-link"
-                                                                        data-id="{{ $sqft->id }}"
-                                                                        data-name="sqft">
-                                                                        <i
-                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                    </a>
-
-
-                                                                    @if ($sqft->verified_by_admin)
-                                                                        <a href="#"
-                                                                            class="verify-link ms-3 badge badge-info nav-link text-black"
-                                                                            data-name="sqft"
-                                                                            data-id="{{ $sqft->id }}"
-                                                                            data-verified="0">
-                                                                            Verified
-                                                                        </a>
-                                                                    @else
-                                                                        <a href="#"
-                                                                            class="verify-link ms-3 badge badge-danger nav-link text-black"
-                                                                            data-name="sqft"
-                                                                            data-id="{{ $sqft->id }}"
-                                                                            data-verified="1">
-                                                                            Verify
-                                                                        </a>
-                                                                    @endif
-
-
-                                                                </td>
-                                                            </tr>
-                                                            @if ($loop->last)
-                                                                <tr class="">
-                                                                    <td colspan="7"
-                                                                        class="text-right font-bold bg-info text-white fw-bold">
-
-                                                                        Cost + Service Charge
-                                                                    </td>
-
-                                                                    <td colspan="2"
-                                                                        class="font-bold bg-info text-white fw-bold">
-
-                                                                        {{ $phase->square_footage_total_amount }}
-
-                                                                        +
-
-                                                                        {{ ($site->service_charge / 100) * $phase->square_footage_total_amount }}
-
-                                                                        =
-                                                                        {{ ($site->service_charge / 100) * $phase->square_footage_total_amount + $phase->square_footage_total_amount }}
-                                                                    </td>
-                                                                </tr>
-                                                            @endif
-                                                        @endforeach
-                                                    @else
-                                                        <tr>
-                                                            <td colspan="9" class="text-center text-danger">
-                                                                No
-                                                                Records Found
-                                                            </td>
-                                                        </tr>
-                                                    @endif
-
-                                                </tbody>
-
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                            <!-- Quality Checks -->
-                            <div class="col-lg-12 mb-4">
-                                <div class="card stats-card h-100">
-                                    <div class="card-body">
-                                        <h3 class="card-title-custom mb-4">
-                                            <i class="fas fa-clipboard-check"></i>
-                                            Daily Expenses
-                                        </h3>
-                                        <div class="table-responsive">
-                                            <table class="table table-hover table-custom">
-
-                                                <thead>
-                                                    <tr>
-
-                                                        <th>Date</th>
-                                                        <th>Bill Photo</th>
-                                                        <th> Item Name</th>
-                                                        <th> Total Price</th>
-                                                        <th>
-                                                            Actions
-                                                        </th>
+                                                        </td>
                                                     </tr>
-                                                </thead>
-                                                <tbody>
-
-
-                                                    {{-- Contractor --}}
-
-
-
-                                                    @if (count($phase->dailyExpenses))
-                                                        @foreach ($phase->dailyExpenses as $daily_expenses)
-                                                            <tr>
-
-
-                                                                <td>
-                                                                    {{ $daily_expenses->created_at->format('d-M-Y') }}
-                                                                </td>
-
-                                                                <td>
-                                                                    <img src="{{ asset('storage/' . $daily_expenses->bill_photo) }}"
-                                                                        alt="{{ asset('storage/' . $daily_expenses->bill_photo) }}"
-                                                                        class="w-20 h-20 rounded-full cursor-pointer"
-                                                                        data-full="{{ asset('storage/' . $daily_expenses->bill_photo) }}">
-                                                                </td>
-
-                                                                <td>
-                                                                    {{ ucwords($daily_expenses->item_name) }}
-                                                                </td>
-
-
-                                                                <td>
-                                                                    {{ $daily_expenses->price }}
-                                                                </td>
-
-                                                                <td>
-
-                                                                    <a
-                                                                        href="{{ route('daily-expenses.edit', [base64_encode($daily_expenses->id)]) }}">
-                                                                        <i
-                                                                            class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                    </a>
-
-
-                                                                    <a href="#" class="delete-link"
-                                                                        data-id="{{ $daily_expenses->id }}"
-                                                                        data-name="expenses">
-                                                                        <i
-                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                    </a>
-
-                                                                    @if ($daily_expenses->verified_by_admin)
-                                                                        <a href="#"
-                                                                            class="verify-link ms-3 badge badge-info nav-link text-black"
-                                                                            data-name="expenses"
-                                                                            data-id="{{ $daily_expenses->id }}"
-                                                                            data-verified="0">
-                                                                            Verified
-                                                                        </a>
-                                                                    @else
-                                                                        <a href="#"
-                                                                            class="verify-link ms-3 badge badge-danger nav-link text-black"
-                                                                            data-name="expenses"
-                                                                            data-id="{{ $daily_expenses->id }}"
-                                                                            data-verified="1">
-                                                                            Verify
-                                                                        </a>
-                                                                    @endif
-                                                                </td>
-
-                                                            </tr>
-                                                            @if ($loop->last)
-                                                                <tr>
-                                                                    <td colspan="3"
-                                                                        class="text-right font-bold bg-info text-white   fw-bold">
-                                                                        Cost + Service Charge:
-                                                                    </td>
-                                                                    <td colspan="2"
-                                                                        class="font-bold bg-info text-white  fw-bold">
-
-                                                                        {{ $phase->daily_expenses_total_amount }}
-                                                                        +
-                                                                        {{ ($site->service_charge / 100) * $phase->daily_expenses_total_amount }}
-                                                                        =
-                                                                        {{ ($site->service_charge / 100) * $phase->daily_expenses_total_amount + $phase->daily_expenses_total_amount }}
-                                                                    </td>
-                                                                </tr>
-                                                            @endif
-                                                        @endforeach
-                                                    @else
-                                                        <tr>
-                                                            <td colspan="4" class="text-center text-danger">
-                                                                No Records Found
-                                                            </td>
-                                                        </tr>
-                                                    @endif
-
-                                                </tbody>
-
-                                            </table>
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <!-- Progress Table -->
-                            {{-- <div class="col-lg-12 mb-4">
-                                <div class="card stats-card">
-                                    <div class="card-body">
-                                        <h3 class="card-title-custom mb-4">
-                                            <i class="fas fa-user"></i>
-                                            Daily Wager
-                                        </h3>
-                                        <div class="table-responsive">
-                                            <table class="table table-hover table-custom">
-
-                                                <thead>
-                                                    <tr>
-
-                                                        <th>Date</th>
-
-                                                        <th> Wager Name</th>
-                                                        <th>Price Per Wager</th>
-                                                        <th> Total Price</th>
-                                                        <th>
-                                                            Actions
-                                                        </th>
-
-
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-
-
-
-                                                    @if (count($phase->dailyWagers))
-                                                        @foreach ($phase->dailyWagers as $daily_wager)
-                                                            <tr>
-
-                                                                <td>
-
-                                                                    {{ $daily_wager->created_at->format('d-M-Y') }}
-
-                                                                </td>
-
-                                                                <td>
-
-                                                                    {{ ucwords($daily_wager->wager_name) }}
-
-                                                                </td>
-
-                                                                <td>
-
-                                                                    {{ $daily_wager->price_per_day }}
-
-                                                                </td>
-
-                                                                <td>
-
-                                                                    {{ $daily_wager->wager_total }}
-
-                                                                </td>
-                                                                <td>
-
-                                                                    <a
-                                                                        href="{{ route('dailywager.edit', [base64_encode($daily_wager->id)]) }}">
-                                                                        <i
-                                                                            class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                    </a>
-
-                                                                    <a href="#" class="delete-link"
-                                                                        data-id="{{ $daily_wager->id }}"
-                                                                        data-name="wager">
-                                                                        <i
-                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                    </a>
-                                                           
-
-                                                                </td>
-
-                                                            </tr>
-
-                                                            @if ($loop->last)
-                                                                <tr>
-                                                                    <td colspan="3"
-                                                                        class="text-right font-bold bg-info text-white fw-bold">
-                                                                        Cost + Service Charge
-                                                                    </td>
-
-                                                                    <td colspan="2"
-                                                                        class=" font-bold bg-info text-white fw-bold">
-
-                                                                        {{ $phase->daily_wagers_total_amount }}
-                                                                        +
-                                                                        {{ ($site->service_charge / 100) * $phase->daily_wagers_total_amount }}
-                                                                        =
-                                                                        {{ ($site->service_charge / 100) * $phase->daily_wagers_total_amount + $phase->daily_wagers_total_amount }}
-                                                                    </td>
-                                                                </tr>
-                                                            @endif
-                                                        @endforeach
-                                                    @else
-                                                        <tr>
-                                                            <td colspan="4"
-                                                                class="text-center text-danger fw-bold">
-                                                                No
-                                                                Records Found
-                                                            </td>
-                                                            <td>
-                                                        </tr>
-                                                    @endif
-
-
-                                                </tbody>
-
-
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div> --}}
-
-
-                            {{-- <div class="col-lg-12 mb-4">
-                                <div class="card stats-card h-100">
-                                    <div class="card-body">
-                                        <h3 class="card-title-custom mb-4">
-                                            <i class="fas fa-clipboard-check"></i>
-                                            Attendance
-                                        </h3>
-                                        <div class="table-responsive">
-                                            <table class="table table-hover table-custom">
-
-                                                <thead>
-                                                    <tr>
-
-                                                        <th>Date</th>
-
-                                                        <th> No Of Persons</th>
-                                                        <th>Wager Name</th>
-                                                        <th>
-                                                            Supplier
-                                                        </th>
-                                                        <th>
-                                                            Actions
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-
-
-                                                    @if (count($phase->wagerAttendances))
-                                                        @foreach ($phase->wagerAttendances as $wager_attendance)
-                                                            <tr aria-colspan="4">
-
-
-                                                                <td>{{ $wager_attendance->created_at->format('d-M-Y') }}
-                                                                </td>
-
-                                                                <td>
-                                                                    {{ $wager_attendance->no_of_persons }}
-                                                                </td>
-
-                                                                <td>
-                                                                    {{ ucwords($wager_attendance->dailyWager->wager_name) }}
-                                                                </td>
-
-                                                                <td>
-
-                                                                    <a class="fw-bold link-offset-2 link-underline link-underline-opacity-0"
-                                                                        href="{{ url('/admin/suppliers', $wager_attendance->dailyWager->supplier->id) }}">
-                                                                        {{ ucwords($wager_attendance->dailyWager->supplier->name ?? '') }}
-                                                                </td>
-
-
-                                                                <td>
-                                                                    <a
-                                                                        href="{{ route('daily-wager-attendance.edit', [base64_encode($wager_attendance->id)]) }}">
-                                                                        <i
-                                                                            class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                    </a>
-
-
-                                                                    <a href="#" class="delete-link"
-                                                                        data-id="{{ $wager_attendance->id }}"
-                                                                        data-name="attendance">
-                                                                        <i
-                                                                            class="fa fa-trash text-danger fs-5 bg-white rounded-full px-2 py-1"></i>
-                                                                    </a>
-
-                                                                    @if ($wager_attendance->verified_by_admin)
-                                                                        <a href="#"
-                                                                            class="verify-link ms-3 badge badge-info nav-link text-black"
-                                                                            data-name="attendance"
-                                                                            data-id="{{ $wager_attendance->id }}"
-                                                                            data-verified="0">
-                                                                            Verified
-                                                                        </a>
-                                                                    @else
-                                                                        <a href="#"
-                                                                            class="verify-link ms-3 badge badge-danger nav-link text-black"
-                                                                            data-name="attendance"
-                                                                            data-id="{{ $wager_attendance->id }}"
-                                                                            data-verified="1">
-                                                                            Verify
-                                                                        </a>
-                                                                    @endif
-
-
-                                                                </td>
-
-
-                                                            </tr>
-                                                        @endforeach
-                                                    @else
-                                                        <tr>
-                                                            <td colspan="4" class="text-center text-danger">
-                                                                No Records Found
-                                                            </td>
-                                                        </tr>
-                                                    @endif
-
-
-                                                    <tr>
-                                                        <form class="forms-sample material-form" id="wagerAttendance">
-
-                                                            @csrf
-
-
-                                                            <td>
-
-                                                                <div>
-                                                                    <input id="phase_id" type="hidden"
-                                                                        name="phase_id" placeholder="Phase"
-                                                                        value="{{ $phase->id }}" />
-                                                                    @error('phase_id')
-                                                                        <x-input-error :messages="$message" class="mt-2" />
-                                                                    @enderror
-                                                                </div>
-
-                                                                <div>
-                                                                    <input type="date" name="date"
-                                                                        class="form-control"
-                                                                        max="{{ now()->format('Y-m-d') }}" required />
-                                                                    @error('date')
-                                                                        <x-input-error :messages="$message" class="mt-2" />
-                                                                    @enderror
-                                                                </div>
-
-                                                            </td>
-
-                                                            <td>
-                                                                <div style="">
-                                                                    <input id="no_of_persons" type="number"
-                                                                        name="no_of_persons"
-                                                                        placeholder="No Of Persons"
-                                                                        style="width: 100%; border: 0; outline: 1px solid #dee2e6; border-radius: 5px;" />
-
-                                                                    @error('no_of_persons')
-                                                                        <x-input-error :messages="$message" class="mt-2" />
-                                                                    @enderror
-                                                                </div>
-
-                                                            </td>
-
-                                                            <td>
-
-                                                                <select
-                                                                    class="form-select text-black form-select-sm bg-white"
-                                                                    style="cursor: pointer" id="daily_wager_id"
-                                                                    name="daily_wager_id">
-
-                                                                    <option value="">Select Wager</option>
-
-                                                                    @foreach ($wagers as $wager)
-                                                                        <option value="{{ $wager['id'] }}">
-                                                                            {{ $wager['name'] }}
-                                                                        </option>
-                                                                    @endforeach
-
-                                                                </select>
-                                                                @error('daily_wager_id')
-                                                                    <x-input-error :messages="$message" class="mt-2" />
-                                                                @enderror
-                                                            </td>
-
-
-                                                            <td>
-                                                                <button class="btn  btn-info text-white">
-                                                                    {{ __('Make Attendance') }}
-                                                                </button>
-                                                            </td>
-
-
-                                                        </form>
-                                                    </tr>
-
-                                                </tbody>
-
-
-                                            </table>
-
-                                        </div>
-
-                                    </div>
-
-                                </div>
-
-                            </div> --}}
-
-                        </div>
-
-
-                    </div>
-
-
-                    {{-- All Models Are Here --}}
-                    <div>
-
-                        <!-- Modal 1 -->
-                        <div id="modal-construction-billings{{ $phase->id }}" class="modal fade"
-                            aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-
-                            <div class="modal-dialog modal-dialog-centered modal-lg">
-
-                                <div class="modal-content">
-
-                                    <div class="modal-body">
-
-                                        <form enctype="multipart/form-data" class="forms-sample material-form"
-                                            id="constructionBillingForm">
-
-                                            @csrf
-
-
-                                            <!-- Amount -->
-                                            <div class="form-group">
-                                                <input type="number" name="amount" id="amount" />
-                                                <label for="amount" class="control-label">Material Price</label>
-                                                <i class="bar"></i>
-                                                <p class=" mt-1 text-danger" id="amount-error"></p>
-                                            </div>
-
-
-                                            <div class="row">
-                                                <!-- Item Name -->
-                                                <div class="col-md-6">
-                                                    <select class="form-select text-black form-select-sm"
-                                                        id="exampleFormControlSelect3" name="item_name"
-                                                        style="cursor: pointer">
-                                                        <option value="">Select Item
-                                                        </option>
-                                                        @foreach ($items as $item)
-                                                            <option value="{{ $item->item_name }}">
-                                                                {{ $item->item_name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    <p class=" mt-1 text-danger" id="item_name-error"></p>
-                                                </div>
-
-                                                <!-- Supplier -->
-                                                <div class="col-md-6">
-                                                    <select class="form-select text-black form-select-sm"
-                                                        id="exampleFormControlSelect3" name="supplier_id"
-                                                        style="cursor: pointer">
-                                                        <option value="">Select Supplier
-                                                        </option>
-                                                        @foreach ($raw_material_providers as $supplier)
-                                                            <option value="{{ $supplier->id }}">
-                                                                {{ $supplier->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    <p class=" mt-1 text-danger" id="supplier_id-error"></p>
-                                                </div>
-
-                                                <!-- Phases -->
-                                                <div class=" col-md-6 mt-3">
-                                                    <input id="phase_id" type="hidden" name="phase_id"
-                                                        placeholder="Phase" value="{{ $phase->id }}" />
-                                                </div>
-                                            </div>
-
-                                            <!-- Item Bill Photo -->
-                                            <div class="mt-3">
-                                                <input class="form-control form-control-md" id="image"
-                                                    type="file" name="image">
-                                                <p class=" mt-1 text-danger" id="image-error"></p>
-                                            </div>
-
-                                            <x-primary-button>
-                                                {{ __('Create Billing') }}
-                                            </x-primary-button>
-
-
-                                        </form>
-
+                                                @endforeach
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
-
-                        </div>
-
-                        <!-- Modal 2 -->
-                        <div id="modal-square-footage-bills{{ $phase->id }}" class="modal fade"
-                            aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-
-                            <div class="modal-dialog modal-dialog-centered modal-lg">
-
-                                <div class="modal-content">
-
-                                    <div class="modal-body">
-
-                                        {{-- Create Square Footage Bills --}}
-                                        <form id="squareFootageBills" enctype="multipart/form-data"
-                                            class="forms-sample material-form">
-
-                                            @csrf
-
-                                            <!-- Wager Name -->
-                                            <div class="form-group">
-                                                <input id="wager_name" type="text" name="wager_name" />
-                                                <label for="wager_name" class="control-label" />Work
-                                                Type</label><i class="bar"></i>
-                                                <p class="text-danger" id="wager_name-error"></p>
-                                            </div>
-
-                                            <!-- Price -->
-                                            <div class="form-group">
-                                                <input id="price" type="number" name="price" />
-                                                <label for="price" class="control-label" />Price</label><i
-                                                    class="bar"></i>
-                                                <p class="text-danger" id="price-error"></p>
-                                            </div>
-
-                                            <!-- Number Of Days -->
-                                            <div class="form-group">
-                                                <input id="multiplier" type="number" name="multiplier" />
-                                                <label for="multiplier" class="control-label">Multiplier</label><i
-                                                    class="bar"></i>
-
-                                                <p class="text-danger" id="multiplier-error"></p>
-                                            </div>
-
-                                            <div class="row">
-
-                                                <div class="col-md-6">
-                                                    <!-- Type -->
-                                                    <select class="form-select text-black form-select-sm"
-                                                        id="exampleFormControlSelect3" name="type"
-                                                        style="cursor: pointer">
-                                                        <option value="">Select Type</option>
-                                                        <option value="per_sqr_ft">Per Square Feet</option>
-                                                        <option value="per_unit">Per Unit</option>
-                                                        <option value="full_contract">Full Contract
-                                                        </option>
-                                                    </select>
-                                                    <p class="text-danger" id="type-error"></p>
-                                                </div>
-
-                                                <div class="col-md-6">
-                                                    <!-- Select Supplier -->
-                                                    <select class="form-select text-black form-select-sm"
-                                                        id="supplier_id" name="supplier_id" style="cursor: pointer">
-                                                        <option value="">Select Supplier</option>
-                                                        @foreach ($workforce_suppliers as $supplier)
-                                                            <option value="{{ $supplier->id }}">
-                                                                {{ $supplier->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-
-                                                    <p class="text-danger" id="supplier_id-error"></p>
-
-                                                </div>
-
-                                                <div class=" col-md-6 mt-3">
-                                                    <input id="phase_id" type="hidden" name="phase_id"
-                                                        placeholder="Phase" value="{{ $phase->id }}" />
-                                                </div>
-                                            </div>
-
-
-                                            <!-- Image -->
-                                            <div class="mt-3">
-                                                <label for="image">Item Bill</label>
-                                                <input class="form-control form-control-md" id="image"
-                                                    type="file" name="image_path">
-                                                <p class="text-danger" id="image_path-error"></p>
-
-                                            </div>
-
-
-                                            <div class="mt-3">
-                                                <x-primary-button>
-                                                    {{ __('Create Bill') }}
-                                                </x-primary-button>
-                                            </div>
-
-
-
-                                        </form>
-
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Modal 3 -->
-                        {{-- <div id="modal-daily-wager{{ $phase->id }}" class="modal fade" aria-hidden="true"
-                            aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-body">
-
-                                        <form class="forms-sample material-form" id="dailyWager">
-
-                                            @csrf
-
-                                            <div class="form-group">
-                                                <input id="wager_name" type="text" name="wager_name" />
-                                                <label for="wager_name" class="control-label">Wager Name</label><i class="bar"></i>
-
-                                                <p class="text-danger" id="wager_name-error"></p>
-                                            </div>
-
-                                            <div class="form-group">
-                                                <input id="price_per_day" type="number" name="price_per_day" />
-                                                <label for="price_per_day" class="control-label">Price Per
-                                                    Day</label><i class="bar"></i>
-                                                <p class="text-danger" id="price_per_day-error"></p>
-
-                                            </div>
-
-                                            <div class="row">
-                                                <div class="">
-                                                    <select class="form-select text-black form-select-sm"
-                                                        id="supplier_id" name="supplier_id" style="cursor: pointer">
-                                                        <option value="">Select Supplier</option>
-                                                        @foreach ($workforce_suppliers as $supplier)
-                                                            <option value="{{ $supplier->id }}">
-                                                                {{ $supplier->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                    <p class="text-danger" id="supplier_id-error"></p>
-
-                                                </div>
-
-                                                <div class=" col-md-6 mt-3">
-                                                    <input id="phase_id" type="hidden" name="phase_id"
-                                                        placeholder="Phase" value="{{ $phase->id }}" />
-
-                                                </div>
-                                            </div>
-
-
-
-
-                                            <x-primary-button>
-                                                {{ __('Create Wager') }}
-                                            </x-primary-button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> --}}
-
-                        <!-- Modal 4 -->
-                        <div id="modal-daily-expenses{{ $phase->id }}" class="modal fade" aria-hidden="true"
-                            aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-
-                            {{-- Daily Expenses  --}}
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-body">
-                                        <form id="dailyExpenses" class="forms-sample material-form">
-
-                                            @csrf
-
-                                            <!-- Wager Name -->
-                                            <div class="form-group">
-                                                <input id="item_name" type="text" name="item_name" />
-                                                <label for="item_name" class="control-label">Item
-                                                    Name</label><i class="bar"></i>
-                                                <p class="text-danger" id="date-error"></p>
-                                            </div>
-
-                                            <!-- Price -->
-                                            <div class="form-group">
-                                                <input id="price" type="number" name="price" />
-                                                <label for="price" class="control-label">Price</label><i
-                                                    class="bar"></i>
-                                                <p class="text-danger" id="description-error"></p>
-                                            </div>
-
-                                            <!-- site -->
-                                            <div class="form-group">
-                                                <input id="site_id" type="number" name="site_id"
-                                                    value="{{ $site->id }}" />
-                                            </div>
-
-                                            <!-- Select Phase -->
-                                            <div class=" col-md-6 mt-3">
-                                                <input id="phase_id" type="hidden" name="phase_id"
-                                                    placeholder="Phase" value="{{ $phase->id }}" />
-                                                <p class="text-danger" id="amount-error"></p>
-                                            </div>
-
-
-                                            <div class="col-12 mt-3">
-
-                                                <input class="form-control" type="file" id="formFile"
-                                                    name="bill_photo">
-
-                                                <p class="text-danger" id="category_id-error"></p>
-
-                                            </div>
-
-
-                                            <x-primary-button class="mt-3">
-                                                {{ __('Create Bill') }}
-                                            </x-primary-button>
-                                        </form>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-
+                        @endforeach
                     </div>
                 @endforeach
-
             </div>
         @else
-            <table class=" mt-2 table table-bordered">
-                <thead></thead>
-                <tbody>
-                    <tr>
-                        <td class="text-danger fw-bold text-center">No Site Data Availiable..</td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="alert alert-info">
+                No phase data available for this site.
+            </div>
         @endif
 
-        {{-- Phase Form --}}
-        <div id="phase" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-            tabindex="-1">
 
-            <div class="modal-dialog modal-dialog-centered">
+
+        {{-- <div id="modal-construction-billings{{ $phase->id }}" class="modal fade" aria-hidden="true"
+            aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+
+            <div class="modal-dialog modal-dialog-centered modal-lg">
 
                 <div class="modal-content">
 
                     <div class="modal-body">
 
-                        <form class="forms-sample material-form" id="phaseForm">
+                        <form enctype="multipart/form-data" class="forms-sample material-form"
+                            id="constructionBillingForm">
 
                             @csrf
 
-                            {{-- Phase Name --}}
+
                             <div class="form-group">
-                                <input type="text" name="phase_name" id="phase_name" />
-                                <label for="phase_name" class="control-label">Phase Name</label>
+                                <input type="number" name="amount" id="amount" />
+                                <label for="amount" class="control-label">Material Price</label>
                                 <i class="bar"></i>
-                                <x-input-error :messages="$errors->get('phase_name')" class="mt-2" />
+                                <p class=" mt-1 text-danger" id="amount-error"></p>
                             </div>
 
-                            <!-- Site -->
-                            <div class="form-group">
-                                <input type="hidden" name="site_id" value="{{ $site->id }}" />
-                                <x-input-error :messages="$errors->get('site_id')" class="mt-2" />
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <select class="form-select text-black form-select-sm"
+                                        id="exampleFormControlSelect3" name="item_name" style="cursor: pointer">
+                                        <option value="">Select Item
+                                        </option>
+                                        @foreach ($items as $item)
+                                            <option value="{{ $item->item_name }}">
+                                                {{ $item->item_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <p class=" mt-1 text-danger" id="item_name-error"></p>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <select class="form-select text-black form-select-sm"
+                                        id="exampleFormControlSelect3" name="supplier_id" style="cursor: pointer">
+                                        <option value="">Select Supplier
+                                        </option>
+                                        @foreach ($raw_material_providers as $supplier)
+                                            <option value="{{ $supplier->id }}">
+                                                {{ $supplier->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <p class=" mt-1 text-danger" id="supplier_id-error"></p>
+                                </div>
+
+                                <div class=" col-md-6 mt-3">
+                                    <input id="phase_id" type="hidden" name="phase_id" placeholder="Phase"
+                                        value="{{ $phase->id }}" />
+                                </div>
                             </div>
 
-                            <div class="flex items-center justify-end mt-4">
-                                <x-primary-button>
-                                    {{ __('Create Phase') }}
-                                </x-primary-button>
+                            <div class="mt-3">
+                                <input class="form-control form-control-md" id="image" type="file"
+                                    name="image">
+                                <p class=" mt-1 text-danger" id="image-error"></p>
                             </div>
+
+                            <x-primary-button>
+                                {{ __('Create Billing') }}
+                            </x-primary-button>
+
 
                         </form>
 
                     </div>
                 </div>
-
             </div>
 
         </div>
 
+        <div id="modal-square-footage-bills{{ $phase->id }}" class="modal fade" aria-hidden="true"
+            aria-labelledby="exampleModalToggleLabel" tabindex="-1">
 
-
-        {{-- Payment Supplier --}}
-        <div id="payment-supplier" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-            tabindex="-1">
-
-            <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
 
                 <div class="modal-content">
 
                     <div class="modal-body">
 
-                        <form id="payment_supplierForm" class="forms-sample material-form"
-                            enctype="multipart/form-data">
+                        <form id="squareFootageBills" enctype="multipart/form-data"
+                            class="forms-sample material-form">
 
                             @csrf
 
-                            {{-- Phase Name --}}
                             <div class="form-group">
-                                <input type="number" min="0" name="amount" step="0.01" />
-                                <label for="input" class="control-label">Amount</label><i class="bar"></i>
-                                <x-input-error :messages="$errors->get('amount')" class="mt-2" />
+                                <input id="wager_name" type="text" name="wager_name" />
+                                <label for="wager_name" class="control-label" />Work
+                                Type</label><i class="bar"></i>
+                                <p class="text-danger" id="wager_name-error"></p>
                             </div>
 
-                            <!-- Site -->
                             <div class="form-group">
-                                <input type="hidden" name="site_id" value="{{ $site->id }}" />
-                                <x-input-error :messages="$errors->get('site_id')" class="mt-2" />
+                                <input id="price" type="number" name="price" />
+                                <label for="price" class="control-label" />Price</label><i class="bar"></i>
+                                <p class="text-danger" id="price-error"></p>
                             </div>
 
-                            {{-- Select Payee Dropdown --}}
-                            <select name="payment_initiator" id="payment_initiator"
-                                class="form-select text-black form-select-sm" style="cursor: pointer"
-                                onchange="togglePayOptions()">
-                                <option value="" selected>Select Payee</option>
-                                <option value="1">Supplier</option>
-                                <option value="0">Admin</option>
+                            <div class="form-group">
+                                <input id="multiplier" type="number" name="multiplier" />
+                                <label for="multiplier" class="control-label">Multiplier</label><i
+                                    class="bar"></i>
+
+                                <p class="text-danger" id="multiplier-error"></p>
+                            </div>
+
+                            <div class="row">
+
+                                <div class="col-md-6">
+                                    <select class="form-select text-black form-select-sm"
+                                        id="exampleFormControlSelect3" name="type" style="cursor: pointer">
+                                        <option value="">Select Type</option>
+                                        <option value="per_sqr_ft">Per Square Feet</option>
+                                        <option value="per_unit">Per Unit</option>
+                                        <option value="full_contract">Full Contract
+                                        </option>
+                                    </select>
+                                    <p class="text-danger" id="type-error"></p>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <select class="form-select text-black form-select-sm" id="supplier_id"
+                                        name="supplier_id" style="cursor: pointer">
+                                        <option value="">Select Supplier</option>
+                                        @foreach ($workforce_suppliers as $supplier)
+                                            <option value="{{ $supplier->id }}">
+                                                {{ $supplier->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+
+                                    <p class="text-danger" id="supplier_id-error"></p>
+
+                                </div>
+
+                                <div class=" col-md-6 mt-3">
+                                    <input id="phase_id" type="hidden" name="phase_id" placeholder="Phase"
+                                        value="{{ $phase->id }}" />
+                                </div>
+                            </div>
+
+
+                            <div class="mt-3">
+                                <label for="image">Item Bill</label>
+                                <input class="form-control form-control-md" id="image" type="file"
+                                    name="image_path">
+                                <p class="text-danger" id="image_path-error"></p>
+
+                            </div>
+
+
+                            <div class="mt-3">
+                                <x-primary-button>
+                                    {{ __('Create Bill') }}
+                                </x-primary-button>
+                            </div>
+
+
+
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-daily-expenses{{ $phase->id }}" class="modal fade" aria-hidden="true"
+            aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <form id="dailyExpenses" class="forms-sample material-form">
+
+                            @csrf
+
+                            <div class="form-group">
+                                <input id="item_name" type="text" name="item_name" />
+                                <label for="item_name" class="control-label">Item
+                                    Name</label><i class="bar"></i>
+                                <p class="text-danger" id="date-error"></p>
+                            </div>
+
+                            <div class="form-group">
+                                <input id="price" type="number" name="price" />
+                                <label for="price" class="control-label">Price</label><i class="bar"></i>
+                                <p class="text-danger" id="description-error"></p>
+                            </div>
+
+                            <div class="form-group">
+                                <input id="site_id" type="number" name="site_id" value="{{ $site->id }}" />
+                            </div>
+
+                            <div class=" col-md-6 mt-3">
+                                <input id="phase_id" type="hidden" name="phase_id" placeholder="Phase"
+                                    value="{{ $phase->id }}" />
+                                <p class="text-danger" id="amount-error"></p>
+                            </div>
+
+
+                            <div class="col-12 mt-3">
+
+                                <input class="form-control" type="file" id="formFile" name="bill_photo">
+
+                                <p class="text-danger" id="category_id-error"></p>
+
+                            </div>
+
+
+                            <x-primary-button class="mt-3">
+                                {{ __('Create Bill') }}
+                            </x-primary-button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div> --}}
+
+    </div>
+
+    {{-- 
+    <div id="phase" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
+        tabindex="-1">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content">
+
+                <div class="modal-body">
+
+                    <form class="forms-sample material-form" id="phaseForm">
+
+                        @csrf
+
+                        <div class="form-group">
+                            <input type="text" name="phase_name" id="phase_name" />
+                            <label for="phase_name" class="control-label">Phase Name</label>
+                            <i class="bar"></i>
+                            <x-input-error :messages="$errors->get('phase_name')" class="mt-2" />
+                        </div>
+
+                        <div class="form-group">
+                            <input type="hidden" name="site_id" value="{{ $site->id }}" />
+                            <x-input-error :messages="$errors->get('site_id')" class="mt-2" />
+                        </div>
+
+                        <div class="flex items-center justify-end mt-4">
+                            <x-primary-button>
+                                {{ __('Create Phase') }}
+                            </x-primary-button>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div> --}}
+
+
+
+    {{-- <div id="payment-supplier" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
+        tabindex="-1">
+
+        <div class="modal-dialog modal-dialog-centered">
+
+            <div class="modal-content">
+
+                <div class="modal-body">
+
+                    <form id="payment_supplierForm" class="forms-sample material-form" enctype="multipart/form-data">
+
+                        @csrf
+
+                        <div class="form-group">
+                            <input type="number" min="0" name="amount" step="0.01" />
+                            <label for="input" class="control-label">Amount</label><i class="bar"></i>
+                            <x-input-error :messages="$errors->get('amount')" class="mt-2" />
+                        </div>
+
+                        <div class="form-group">
+                            <input type="hidden" name="site_id" value="{{ $site->id }}" />
+                            <x-input-error :messages="$errors->get('site_id')" class="mt-2" />
+                        </div>
+
+                        <select name="payment_initiator" id="payment_initiator"
+                            class="form-select text-black form-select-sm" style="cursor: pointer"
+                            onchange="togglePayOptions()">
+                            <option value="" selected>Select Payee</option>
+                            <option value="1">Supplier</option>
+                            <option value="0">Admin</option>
+                        </select>
+
+                        <div id="supplierOptions" style="display: none;" class="mt-3">
+                            <select name="supplier_id" id="supplier_id" class="form-select text-black form-select-sm"
+                                style="cursor: pointer">
+                                <option for="supplier_id" value="">Select Supplier</option>
+                                @foreach ($suppliers as $supplier)
+                                    <option value="{{ $supplier->id }}">
+                                        {{ $supplier->name }}
+                                    </option>
+                                @endforeach
                             </select>
 
-                            {{-- Supplier Options (Shown when Supplier is selected) --}}
-                            <div id="supplierOptions" style="display: none;" class="mt-3">
-                                <select name="supplier_id" id="supplier_id"
-                                    class="form-select text-black form-select-sm" style="cursor: pointer">
-                                    <option for="supplier_id" value="">Select Supplier</option>
-                                    @foreach ($suppliers as $supplier)
-                                        <option value="{{ $supplier->id }}">
-                                            {{ $supplier->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
+                            <div class="mt-3">
+                                <input class="form-control form-control-md" id="image" type="file"
+                                    name="screenshot">
+                            </div>
+                        </div>
 
-                                {{-- File Upload for Screenshot --}}
-                                <div class="mt-3">
-                                    <input class="form-control form-control-md" id="image" type="file"
-                                        name="screenshot">
+                        <div id="adminOptions" style="display: none;" class="mt-4">
+                            <div class="row g-3">
+                                <div class="col-auto">
+                                    <label for="transaction_sent">
+                                        <input type="radio" name="transaction_type" id="transaction_sent"
+                                            value="1"> Sent
+                                    </label>
+                                </div>
+                                <div class="col-auto">
+                                    <label for="transaction_received">
+                                        <input type="radio" name="transaction_type" id="transaction_received"
+                                            value="0"> Received
+                                    </label>
                                 </div>
                             </div>
+                        </div>
 
-                            {{-- Admin Options (Shown when Admin is selected) --}}
-                            <div id="adminOptions" style="display: none;" class="mt-4">
-                                <div class="row g-3">
-                                    {{-- Sent Radio Option --}}
-                                    <div class="col-auto">
-                                        <label for="transaction_sent">
-                                            <input type="radio" name="transaction_type" id="transaction_sent"
-                                                value="1"> Sent
-                                        </label>
-                                    </div>
-                                    {{-- Received Radio Option --}}
-                                    <div class="col-auto">
-                                        <label for="transaction_received">
-                                            <input type="radio" name="transaction_type" id="transaction_received"
-                                                value="0"> Received
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="flex items-center justify-end mt-4">
 
+                            <x-primary-button>
+                                {{ __('Pay') }}
+                            </x-primary-button>
 
-                            {{-- Screenshot --}}
+                        </div>
 
-
-                            <div class="flex items-center justify-end mt-4">
-
-                                <x-primary-button>
-                                    {{ __('Pay') }}
-                                </x-primary-button>
-
-                            </div>
-
-                        </form>
-
-                    </div>
+                    </form>
 
                 </div>
 
@@ -1706,781 +641,80 @@
 
         </div>
 
-    @endif
+    </div> --}}
 
-    <script>
-        $(document).on('click', '.delete-link', function(e) {
-            e.preventDefault();
-
-            const link = $(this);
-            const id = link.data('id');
-            const name = link.data('name');
-            const messageContainer = $('#messageContainer');
-            messageContainer.empty();
-
-            let url = '';
-
-            switch (name) {
-                case 'materials':
-                    url = 'construction-material-billings';
-                    break;
-                case 'expenses':
-                    url = 'daily-expenses';
-                    break;
-                case 'sqft':
-                    url = 'square-footage-bills';
-                    break;
-                case 'wager':
-                    url = 'dailywager';
-                    break;
-                case 'attendance':
-                    url = 'daily-wager-attendance'
-                    break;
-                default:
-                    console.error('Invalid name parameter');
-                    return;
-            }
-
-            if (!confirm('Are you sure you want to delete this item?')) {
-                return;
-            }
-
-            if (!url) {
-                console.error('URL not set');
-                return;
-            }
-
-            $.ajax({
-                url: `{{ url('admin') }}/${url}/${id}`,
-                type: 'DELETE',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                },
-                success: function(response, xhr) {
-
-
-                    link.closest('tr').remove();
-
-                    messageContainer.append(`
-                             <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                                             <div class="d-flex">
-                                                 <div class="toast-body">
-                                                     <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                                </div>
-                                            </div>
-                                </div>`);
-
-                    setTimeout(function() {
-                        messageContainer.find('.alert').fadeOut('slow', function() {
-                            $(this).remove();
-                            location.reload();
-                        });
-                    }, 2000);
-                },
-                error: function(error) {
-
-                    let errorMessage;
-
-
-                    if (error.status === 404) {
-                        errorMessage = error.responseJSON?.error || 'Resource not found.';
-                    } else {
-                        errorMessage = 'An error occurred. Please try again.';
-                    }
-
-                    messageContainer.append(`
-                            <div class="alert align-items-center text-white bg-danger border-0" role="alert">
-                                 <div class="d-flex">
-                                    <div class="toast-body">
-                                         <strong><i class="fas fa-exclamation-circle me-2"></i></strong>${errorMessage}
-                                     </div>
-                                </div>
-                            </div> `);
-
-                    setTimeout(function() {
-                        messageContainer.find('.alert').fadeOut('slow', function() {
-                            $(this).remove();
-                            // location.reload();
-                        });
-                    }, 2000);
-                }
-            });
-
-        });
-
-        $(document).on('click', '.verify-link', function(e) {
-
-            e.preventDefault();
-
-            const link = $(this);
-            const id = link.data('id');
-            const verified = link.data('verified');
-            const messageContainer = $('#messageContainer');
-            const name = link.data('name');
-            messageContainer.empty();
-
-            let url = '';
-
-            switch (name) {
-                case 'materials':
-                    url = 'verify/materials';
-                    break;
-                case 'expenses':
-                    url = 'verify/expenses';
-                    break;
-                case 'sqft':
-                    url = 'verify/square-footage';
-                    break;
-                case 'wager':
-                    url = 'verify/wagers';
-                    break;
-                case 'attendance':
-                    url = 'verify/attendance'
-                    break;
-                default:
-                    console.error('Invalid name parameter');
-                    return;
-            }
-
-            // Make sure url is not empty before proceeding
-            if (!url) {
-                console.error('URL not set');
-                return;
-            }
-
-            $.ajax({
-                url: `{{ url('admin') }}/${url}/${id}`,
-                type: 'POST',
-                data: {
-                    _token: '{{ csrf_token() }}',
-                    verified: verified
-                },
-                success: function(response) {
-
-                    if (verified == 1) {
-
-                        link.html('Verified');
-                        link.data('verified', 0);
-                        link.removeClass('badge-danger').addClass('badge-info');
-
-                    } else {
-
-                        link.html('Verify');
-                        link.data('verified', 1);
-                        link.removeClass('badge-info').addClass('badge-danger');
-
-                    }
-
-                    // Show success message
-                    if (response.message) {
-
-                        messageContainer.append(`
-                <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                        </div>
-                    </div>
-                </div>
-            `);
-                    }
-
-                    setTimeout(function() {
-                        messageContainer.find('.alert').fadeOut('slow', function() {
-                            $(this).remove();
-                            location.reload();
-                        });
-                    }, 500);
-                },
-                error: function(xhr) {
-                    console.error('Error:', xhr);
-                    messageContainer.append(`
-            <div class="alert align-items-center text-white bg-danger border-0" role="alert">
-                <div class="d-flex">
-                    <div class="toast-body">
-                        <strong><i class="fas fa-exclamation-circle me-2"></i></strong>An error occurred. Please try again.
-                    </div>
-                </div>
-            </div>
-        `);
-
-                    setTimeout(function() {
-                        messageContainer.find('.alert').fadeOut('slow', function() {
-                            $(this).remove();
-                            location.reload();
-
-                        });
-                    }, 500);
-                }
-            });
-        });
-
-        $(document).ready(function() {
-
-
-            $('form[id="phaseForm"]').on('submit', function(e) {
+    @push('scripts')
+        <script>
+            // Delete functionality
+            $(document).on('click', '.delete-link', function(e) {
                 e.preventDefault();
 
-                const form = $(this);
-                const formData = new FormData(form[0]);
-                const messageContainer = $('#messageContainer');
-                messageContainer.empty();
+                const button = $(this);
+                const id = button.data('id');
+                const type = button.data('type');
+                const row = button.closest('tr');
 
+                const routes = {
+                    'Materials': 'construction-material-billings',
+                    'Contractor': 'square-footage-bills',
+                    'Expenses': 'daily-expenses',
+                    'Wasta': 'dailywager',
+                    'Labour': 'daily-wager-attendance'
+                };
 
-                $('.text-danger').remove();
+                if (!routes[type]) {
+                    showAlert('error', 'Invalid operation type');
+                    return;
+                }
+
+                if (!confirm('Are you sure you want to delete this item?')) {
+                    return;
+                }
 
                 $.ajax({
-                    url: '{{ url('admin/phase') }}',
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-
-                    success: function(response) {
-                        form[0].reset();
-                        messageContainer.append(`
-                             <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
-                                 <div class="d-flex">
-                                    <div class="toast-body">
-                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                    </div>
-                                </div>
-                            </div> `);
-                        // Auto-hide success message after 3 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload();
-                        }, 2000);
+                    url: `{{ url('admin') }}/${routes[type]}/${id}`,
+                    type: 'DELETE',
+                    data: {
+                        _token: '{{ csrf_token() }}',
                     },
-
-                    error: function(response) {
-
-                        if (response.status === 422) {
-                            messageContainer.append(`
-                             <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-                                 ${response.responseJSON.errors}
-
-                             </div>`)
-
-                        } else {
-                            messageContainer.append(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    An unexpected error occurred. Please try again later.
-
-                                </div>
-                            `);
-                        }
-                        // Auto-hide error message after 5 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-
-                        }, 2000);
+                    success: function(response) {
+                        showAlert('success', response.message);
+                        row.fadeOut(400, function() {
+                            $(this).remove();
+                        });
+                    },
+                    error: function(error) {
+                        const message = error.status === 404 ?
+                            (error.responseJSON?.error || 'Resource not found') :
+                            'An error occurred. Please try again.';
+                        showAlert('error', message);
                     }
                 });
             });
 
-            //  Script For Construction Form
-            $('form[id^="constructionBillingForm"]').on('submit', function(e) {
-
-                e.preventDefault();
-
-                const form = $(this);
-                const formData = new FormData(form[0]);
-                const messageContainer = form.find('.message-container');
-                messageContainer.empty();
-
-                // Clear previous error messages for this form
-                form.find('.text-danger').text('');
-
-                $.ajax({
-                    url: '{{ route('construction-material-billings.store') }}',
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
-
-                        messageContainer.html(`
-                            <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                    </div>
-                                </div>
-                            </div>
-                         `);
-
-                        form[0].reset();
-
-                        // Auto-hide success message after 2 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload();
-                        }, 2000);
-                    },
-                    error: function(response) {
-
-                        if (response.status === 422) { // Validation errors
-
-                            const errors = response.responseJSON.errors;
-
-                            // Display general error message
-                            messageContainer.html(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    Please fix the errors below
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
-
-                            // Display specific error for each field
-                            for (const field in errors) {
-
-                                const errorMsg = errors[field][0];
-
-                                form.find(`[name="${field}"]`).siblings('.text-danger').text(
-                                    errorMsg);
-
-                                if (!form.find(`[name="${field}"]`).siblings('.text-danger')
-                                    .length) {
-                                    form.find(`#${field}-error`).text(errorMsg);
-                                }
-                            }
-                        } else {
-                            messageContainer.html(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    An unexpected error occurred. Please try again later.
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
-                        }
-
-                        // Auto-hide general error message after 5 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                        }, 5000);
-                    }
-                });
-            });
-
-            // Script For square Footage Bills
 
 
-            $('form[id^="squareFootageBills"]').on('submit', function(e) {
-                e.preventDefault();
+            // Helper function for showing alerts
+            function showAlert(type, message) {
+                const container = $('#messageContainer');
+                const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
 
-                const form = $(this);
-                const formData = new FormData(form[0]);
-                const messageContainer = form.find('.message-container');
-                messageContainer.empty();
-
-                // Clear previous error messages for this form only
-                form.find('.text-danger').text('');
-
-                $.ajax({
-                    url: '{{ route('square-footage-bills.store') }}',
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
-                        messageContainer.html(`
-                <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                        </div>
-                    </div>
-                </div>
-            `);
-
-                        form[0].reset();
-
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload();
-                        }, 2000);
-                    },
-                    error: function(response) {
-                        if (response.status === 422) { // Validation errors
-                            const errors = response.responseJSON.errors;
-                            console.log('Validation errors:', errors); // Debug log
-
-                            // Display general error message
-                            messageContainer.html(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                        Please fix the errors below
+                container.empty().append(`
+                    <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                        <i class="fas ${icon} me-2"></i>
+                        ${message}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 `);
 
-                            // Loop through each error field
-                            for (const field in errors) {
-                                // Get the first error message from the array
-                                const errorMsg = errors[field][0];
-
-                                // First, try to find the field by name and update sibling error element
-                                const inputField = form.find(`[name="${field}"]`);
-                                if (inputField.length > 0) {
-                                    // Try to find sibling error container
-                                    const siblingError = inputField.siblings('.text-danger');
-                                    if (siblingError.length > 0) {
-                                        siblingError.text(errorMsg);
-                                    } else {
-                                        // If no sibling found, try to find by ID
-                                        form.find(`#${field}-error`).text(errorMsg);
-                                    }
-                                } else {
-                                    // If input not found, try to find error container by ID directly
-                                    form.find(`#${field}-error`).text(errorMsg);
-                                }
-                            }
-
-                            // Log fields that couldn't be found for debugging
-                            for (const field in errors) {
-                                const inputField = form.find(`[name="${field}"]`);
-                                const errorContainer = form.find(`#${field}-error`);
-                                if (inputField.length === 0 && errorContainer.length === 0) {
-                                    console.log(
-                                        `Warning: Could not find field or error container for: ${field}`
-                                    );
-                                }
-                            }
-                        } else {
-                            messageContainer.html(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                        An unexpected error occurred. Please try again later.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `);
-                        }
-
-                        // Auto-hide general error message after 5 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                        }, 5000);
-                    }
-                });
-            });
-
-
-
-
-            $('form[id^="dailyExpenses"]').on('submit', function(e) {
-
-                e.preventDefault();
-
-                const form = $(this);
-                const formData = new FormData(form[0]);
-                const messageContainer = form.find(
-                    '.message-container'); // Form-specific message container
-                messageContainer.empty();
-
-                // Clear previous error messages for this form only
-                form.find('.text-danger').text('');
-
-                $.ajax({
-                    url: '{{ route('daily-expenses.store') }}',
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
-                        messageContainer.html(`
-                    <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                            </div>
-                        </div>
-                    </div>
-                `);
-
-                        form[0].reset();
-
-                        // Auto-hide success message after 2 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload();
-                        }, 2000);
-                    },
-                    error: function(response) {
-
-                        if (response.status === 422) { // Validation errors
-                            const errors = response.responseJSON.errors;
-
-                            // Display general error message
-                            messageContainer.html(`
-                              <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                  Please fix the errors below
-                                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                             </div>
-                            `);
-
-                            // Loop through each error field
-                            for (const field in errors) {
-                                // Get the first error message from the array
-                                const errorMsg = errors[field][0];
-
-                                // First, try to find the field by name and update sibling error element
-                                const inputField = form.find(`[name="${field}"]`);
-                                if (inputField.length > 0) {
-                                    // Try to find sibling error container
-                                    const siblingError = inputField.siblings(
-                                        '.text-danger');
-                                    if (siblingError.length > 0) {
-                                        siblingError.text(errorMsg);
-                                    } else {
-                                        // If no sibling found, try to find by ID
-                                        form.find(`#${field}-error`).text(errorMsg);
-                                    }
-                                } else {
-                                    // If input not found, try to find error container by ID directly
-                                    form.find(`#${field}-error`).text(errorMsg);
-                                }
-                            }
-                        } else {
-                            messageContainer.html(`
-                                 <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                     An unexpected error occurred. Please try again later.
-                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                 </div>
-                             `);
-                        }
-
-                        // Auto-hide general error message after 5 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                        }, 5000);
-                    }
-                });
-            });
-
-
-
-
-            // $('form[id^="dailyWager"]').on('submit', function(e) {
-
-            //     e.preventDefault();
-
-            //     const form = $(this);
-            //     const formData = new FormData(form[0]);
-            //     const messageContainer = $('#messageContainer');
-            //     messageContainer.empty();
-
-            //     $('.text-danger').text('');
-
-            //     $.ajax({
-            //         url: '{{ route('dailywager.store') }} ',
-            //         type: 'POST',
-            //         data: formData,
-            //         contentType: false,
-            //         processData: false,
-            //         success: function(response) {
-            //             messageContainer.append(`
-        //                 <div class="alert align-items-center text-white bg-success border-0" role="alert">
-        //                     <div class="d-flex">
-        //                         <div class="toast-body">
-        //                             <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-        //                         </div>
-        //                     </div>
-        //                 </div>
-        //             `);
-
-            //             form[0].reset();
-
-            //             // Auto-hide success message and reload
-            //             setTimeout(function() {
-            //                 messageContainer.find('.alert').alert('close');
-            //                 location.reload(); // This should reload the page
-            //             }, 2000);
-            //         },
-            //         error: function(response) {
-
-            //             if (response.status === 422) { // Validation errors
-
-            //                 const errors = response.responseJSON.errors;
-
-            //                 // Display general error message
-            //                 messageContainer.html(`
-        //                     <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-        //                         Please fix the errors below
-        //                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        //                     </div>
-        //                 `);
-
-            //                 // Loop through each error field
-            //                 for (const field in errors) {
-            //                     // Get the first error message from the array
-            //                     const errorMsg = errors[field][0];
-
-            //                     // First, try to find the field by name and update sibling error element
-            //                     const inputField = form.find(`[name="${field}"]`);
-            //                     if (inputField.length > 0) {
-            //                         // Try to find sibling error container
-            //                         const siblingError = inputField.siblings(
-            //                             '.text-danger');
-            //                         if (siblingError.length > 0) {
-            //                             siblingError.text(errorMsg);
-            //                         } else {
-            //                             // If no sibling found, try to find by ID
-            //                             form.find(`#${field}-error`).text(errorMsg);
-            //                         }
-            //                     } else {
-            //                         // If input not found, try to find error container by ID directly
-            //                         form.find(`#${field}-error`).text(errorMsg);
-            //                     }
-            //                 }
-            //             } else {
-            //                 messageContainer.html(`
-        //                     <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-        //                         An unexpected error occurred. Please try again later.
-        //                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        //                     </div>
-        //                 `);
-            //             }
-
-            //             // Auto-hide general error message after 5 seconds
-            //             setTimeout(function() {
-            //                 messageContainer.find('.alert').alert('close');
-            //             }, 5000);
-            //         }
-            //     });
-            // });
-
-
-
-
-            // $('form[id^="wagerAttendance"]').on('submit', function(e) {
-            //     e.preventDefault();
-
-            //     const form = $(this);
-            //     const formData = new FormData(form[0]);
-            //     const messageContainer = $('#messageContainer');
-            //     messageContainer.empty();
-
-            //     $('.text-danger').text('');
-
-            //     $.ajax({
-            //         url: '{{ route('daily-wager-attendance.store') }} ',
-            //         type: 'POST',
-            //         data: formData,
-            //         contentType: false,
-            //         processData: false,
-            //         success: function(response) {
-
-            //             messageContainer.append(`
-        //         <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
-        //             <div class="d-flex">
-        //                 <div class="toast-body">
-        //                     <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-        //                 </div>
-        //             </div>
-        //         </div>
-        // `);
-
-            //             form[0].reset();
-
-            //             // Auto-hide success message after 3 seconds
-            //             setTimeout(function() {
-            //                 messageContainer.find('.alert').alert('close');
-            //                 location.reload();
-
-            //             }, 2000);
-            //         },
-            //         error: function(response) {
-
-            //             if (response.status === 422) {
-            //                 messageContainer.append(`
-        //         <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-        //              ${response.responseJSON.errors}
-
-        //         </div>`)
-
-            //             } else {
-            //                 messageContainer.append(`
-        //         <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-        //             An unexpected error occurred. Please try again later.
-
-        //         </div>
-        //     `);
-            //             }
-            //             // Auto-hide error message after 5 seconds
-            //             setTimeout(function() {
-            //                 messageContainer.find('.alert').alert('close');
-
-            //             }, 2000);
-            //         }
-            //     });
-            // });
-
-
-
-            $('form[id="payment_supplierForm"]').on('submit', function(e) {
-                e.preventDefault();
-
-                const form = $(this);
-                const formData = new FormData(form[0]);
-                const messageContainer = $('#messageContainer');
-                messageContainer.empty();
-
-                $('.text-danger').remove();
-
-                $.ajax({
-                    url: '{{ url('admin/sites/payments') }}',
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
-
-                        console.log(response);
-
-
-                        messageContainer.append(`
-                    <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                            </div>
-                        </div>
-                    </div>
-            `);
-                        form[0].reset();
-
-                        // Auto-hide success message after 3 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload();
-
-                        }, 2000);
-                    },
-                    error: function(response) {
-
-                        if (response.status === 422) { // Validation errors
-                            messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-                    ${response.responseJSON.errors}
-
-                    </div>`)
-
-                        } else {
-                            messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                        An unexpected error occurred. Please try again later.
-
-                    </div>
-                `);
-                        }
-                        // Auto-hide error message after 5 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-
-                        }, 2000);
-                    }
-                });
-            });
-
-        });
-    </script>
+                setTimeout(() => {
+                    container.find('.alert').fadeOut(400, function() {
+                        $(this).remove();
+                    });
+                }, 3000);
+            }
+        </script>
+    @endpush
 
 </x-app-layout>

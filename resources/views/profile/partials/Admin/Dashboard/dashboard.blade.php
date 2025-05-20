@@ -81,12 +81,40 @@
                                         {{ $site->created_at->diffForHumans() }}
                                     </small>
                                 </div>
+
+                                @php
+                                    $baseCost = 0;
+
+                                    foreach ($site->phases as $phase) {
+                                        $baseCost +=
+                                            ($phase->total_material_billing ?? 0) +
+                                            ($phase->total_square_footage ?? 0) +
+                                            ($phase->total_daily_expenses ?? 0) +
+                                            ($phase->total_labour_cost ?? 0) +
+                                            ($phase->total_wasta_cost ?? 0);
+                                    }
+
+                                    $servicePercentage = $site->service_charge ?? 0; // assuming this is stored as a number like 5 for 5%
+                                    $serviceAmount = ($baseCost * $servicePercentage) / 100;
+                                    $totalCost = $baseCost + $serviceAmount;
+
+                                    $paid = $site->total_payments ?? 0;
+                                    $balance = $totalCost - $paid;
+                                @endphp
+
+
                                 <div class="text-end">
                                     <strong class="text-success">
-                                        {{ $site->total_payments ?? 0 }}
+                                        {{ number_format($paid, 2) }}
                                     </strong><br>
-                                    <small class="text-muted">Paid</small>
+                                    <small class="text-muted">Paid</small><br>
+
+                                    <strong class="text-danger">
+                                        {{ number_format($balance, 2) }}
+                                    </strong><br>
+                                    <small class="text-muted">Balance</small>
                                 </div>
+
                             </div>
                         @endforeach
                     </div>

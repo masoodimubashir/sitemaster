@@ -55,7 +55,7 @@ class SupplierController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id, Request $request,)
+    public function show(string $id, Request $request)
     {
 
         

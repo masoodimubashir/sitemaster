@@ -110,7 +110,8 @@
 
 
     <div class="row g-4">
-        <div class="col-12 col-md-4">
+
+        <div class="col-12 col-md-6">
             <div class="card h-100 shadow-sm">
                 <div class="card-body">
 
@@ -144,7 +145,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-6">
             <div class="card h-100 shadow-sm">
                 
                 <div class="card-body">
@@ -175,33 +176,7 @@
             </div>
         </div>
 
-        <div class="col-12 col-md-4">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class=" bg-{{ $data['balance'] >= 0 ? '' : '' }} fs-3 p-2">
-                            <i class="fas fa-balance-scale text-{{ $data['balance'] >= 0 ? 'info' : 'danger' }}"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-{{ $data['balance'] >= 0 ? 'info' : 'danger' }} mb-1">Balance</h6>
-                            <h5 class="mb-0 text-{{ $data['balance'] >= 0 ? 'info' : 'danger' }}">
-                                {{ Number::currency($data['balance'], 'INR') }}
-                            </h5>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class=" fs-3 p-2">
-                            <i class="fas fa-credit-card text-info"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Credit</h6>
-                            {{ Number::currency($data['totalCredit'] ?? 0 , 'INR') }}
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    
     </div>
 
     @if (count($data) >= 0)

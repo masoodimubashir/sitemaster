@@ -2,16 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Attendance;
-use App\Models\DailyWager;
 use App\Models\Labour;
+use App\Models\Phase;
 use App\Models\Site;
-use App\Models\WagerAttendance;
 use App\Models\Wasta;
 use Exception;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
@@ -34,11 +30,11 @@ class AttendanceSheetController extends Controller
             'labours.attendances' => fn($query) => $query->whereMonth('attendance_date', $month)->whereYear('attendance_date', $year),
         ])->get();
 
-        $sites = Site::where('is_on_going', 1)->get();
-        
+        $phases = Phase::latest()->get();
+
         $daysInMonth = \Carbon\Carbon::create($year, $month)->daysInMonth;
 
-        return view('profile.partials.Admin.Ledgers.wager-attendance-sheet', compact('wastas', 'month', 'year', 'daysInMonth', 'sites'));
+        return view('profile.partials.Admin.Ledgers.wager-attendance-sheet', compact('wastas', 'month', 'year', 'daysInMonth', 'phases'));
     }
 
     public function storeWastaAttendance(Request $request)
@@ -120,10 +116,9 @@ class AttendanceSheetController extends Controller
 
         try {
 
-
-            $data = Validator::make($request->only('wasta_id', 'labour_name', 'price', 'contact', 'site_id'), [
+            $data = Validator::make($request->only('wasta_id', 'labour_name', 'price', 'contact', 'phase_id'), [
                 "wasta_id" => "required|exists:wastas,id",
-                "site_id" => "required|exists:sites,id",
+                "phase_id" => "required|exists:phases,id",
                 "labour_name" => "required|string|max:255",
                 "price" => "required|numeric",
                 "contact" => "required|string|max:10",
@@ -140,7 +135,7 @@ class AttendanceSheetController extends Controller
                 'labour_name' => $data->validated()['labour_name'],
                 'price' => $data->validated()['price'],
                 'contact_no' => $data->validated()['contact'],
-                'site_id' => $data->validated()['site_id'],
+                'phase_id' => $data->validated()['phase_id'],
             ]);
 
             return response()->json([
@@ -213,8 +208,8 @@ class AttendanceSheetController extends Controller
             return response()->json([
                 'message' => 'Wasta Updated Successfully',
             ], 200);
+
         } catch (Exception $e) {
-            Log::error($e->getMessage());
 
             return response()->json([
                 'message' => 'Something went wrong',
@@ -245,7 +240,9 @@ class AttendanceSheetController extends Controller
                     ->whereYear('attendance_date', $year);
             }
         ])
-            ->where('site_id', $id)
+            ->whereHas('phase.site', function ($query) use ($site) {
+                $query->where('id', $site->id);
+            })
             ->get();
 
         $sites = Site::where('is_on_going', 1)->get();

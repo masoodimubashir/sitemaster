@@ -48,6 +48,8 @@
                                                 {{ ucfirst($site->site_name) }}
                                             </a>
 
+                                            
+
                                         </td>
 
                                         <td>

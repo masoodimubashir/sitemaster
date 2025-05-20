@@ -22,10 +22,59 @@
         <x-error-message message="Phase Cannot Be deleted......" />
     @endif
 
+    {{-- Phase Form --}}
+
+    <div id="phase" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <form class="forms-sample material-form" id="phaseForm">
+                        @csrf
+
+                        {{-- Phase Name --}}
+                        <div class="form-group">
+                            <input type="text" name="phase_name" id="phase_name" />
+                            <label for="phase_name" class="control-label">Phase Name</label>
+                            <i class="bar"></i>
+                            <x-input-error :messages="$errors->get('phase_name')" class="mt-2" />
+                        </div>
+
+                        {{-- Site --}}
+                        <div class="form-group">
+
+                            <select name="site_id" id="site_id">
+                                <option value="">Select Site</option>
+                                @foreach ($sites as $site)
+                                    <option value="{{ $site->id }}">{{ ucfirst($site->site_name) }}</option>
+                                @endforeach
+                            </select>
+                            <x-input-error :messages="$errors->get('site_id')" class="mt-2" />
+                        </div>
+
+                        <div class="flex items-center justify-end mt-4">
+                            <x-primary-button>
+                                Create Phase
+                            </x-primary-button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <div class="row">
 
         <div class="col-lg-12">
+
+            <div class="d-flex justify-content-end align-items-center">
+
+                <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#phase">
+                    <i class="fas fa-layer-group me-2"></i> Add Phase
+                </a>
+            
+            </div>
 
             <div class="card-body">
 
@@ -121,4 +170,72 @@
 
         </div>
     </div>
+
+    @push('scripts')
+        <script>
+            $(document).ready(function() {
+
+
+                // Model Ajax Functions
+                $('form[id="phaseForm"]').on('submit', function(e) {
+                    e.preventDefault();
+
+                    const form = $(this);
+                    const formData = new FormData(form[0]);
+                    const messageContainer = $('#messageContainer');
+                    messageContainer.empty();
+
+
+                    $('.text-danger').remove();
+
+                    $.ajax({
+                        url: '{{ url('admin/phase') }}',
+                        type: 'POST',
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        success: function(response) {
+                            form[0].reset();
+                            messageContainer.append(`
+                             <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
+                                 <div class="d-flex">
+                                    <div class="toast-body">
+                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                    </div>
+                                </div>
+                            </div> `);
+                            // Auto-hide success message after 3 seconds
+                            setTimeout(function() {
+                                messageContainer.find('.alert').alert('close');
+                                location.reload();
+                            }, 2000);
+                        },
+                        error: function(response) {
+
+                            if (response.status === 422) { // Validation errors
+                                messageContainer.append(`
+                    <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
+                    ${response.responseJSON.errors}
+
+                    </div>`)
+
+                            } else {
+                                messageContainer.append(`
+                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                        An unexpected error occurred. Please try again later.
+
+                    </div>
+                `);
+                            }
+                            // Auto-hide error message after 5 seconds
+                            setTimeout(function() {
+                                messageContainer.find('.alert').alert('close');
+
+                            }, 2000);
+                        }
+                    });
+                });
+            });
+        </script>
+    @endpush
 </x-app-layout>

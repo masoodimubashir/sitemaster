@@ -140,7 +140,6 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     Route::resource('/phase', PhaseController::class);
 
-    Route::resource('/wasta', WastaController::class);
 
     // Route::resource('/payment-bills', PaymentBillsController::class);
 
@@ -180,21 +179,23 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     // Verification Controller For Items
     Route::get('/item-verification', [ItemsVerificationController::class, 'index']);
     Route::get('/verify-items', [ItemsVerificationController::class, 'verifyItems']);
+
+
+    // Routes For Attendance Sheet
     Route::get('/wager-attendance', [AttendanceSheetController::class, 'index']);
     Route::put('/attendance/wasta', [AttendanceSheetController::class, 'storeWastaAttendance']);
     Route::put('/attendance/labour', [AttendanceSheetController::class, 'storelabourAttendance']);
     Route::post('/labour/store', [AttendanceSheetController::class, 'storeLabour']);
+    Route::resource('/wasta', WastaController::class);
     Route::put('/attendance/wasta/update/{id}', [AttendanceSheetController::class, 'updateWasta']);
     Route::put('/attendance/labour/update/{id}', [AttendanceSheetController::class, 'updateLabour']);
     Route::get('/attendance/site/show/{id}', [AttendanceSheetController::class, 'showAttendanceBySite']);
-    
+
 
     // Route For Managing Payments By Admin
     Route::get('/manage-payment', [AdminPaymentController::class, 'index']);
     Route::post('/manage-payment/{id?}', [AdminPaymentController::class, 'storeOrUpdate'])->name('manage-payment.store-update');
     Route::get('/manage-payment/{id}/edit', [AdminPaymentController::class, 'edit'])->name('payments.edit');
-
-
 });
 
 
@@ -202,8 +203,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
     // Route::get('/markread', [MarkNotificationAsReadController::class, 'markNotificationAsRead'])->name('user.markAsRead');
-    Route::get('/dashboard', [UserDashboardController::class, 'index'])
-        ->name('user.dashboard');
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
 
     //  Route For Ypdating The Site Ongoing Status
     Route::post('sites/update-on-going/{id}', UpdateOnGoingController::class)->name('sites.update-on-going');
@@ -212,12 +212,14 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::get('/sites/create', [ViewSiteController::class, 'create']);
     Route::get('/sites/{id}', [ViewSiteController::class, 'show']);
     Route::get('/sites/details/{id}', [ViewSiteController::class, 'showDetails']);
+    Route::post('/sites/store', [ViewSiteController::class, 'store']);
 
     // Phase Controller
     Route::resource('/phase', UserPhaseController::class);
 
     // User Supplier Controller
     Route::resource('/suppliers', UserSupplierController::class);
+    Route::get('/supplier/detail/{id}', [UserSupplierController::class, 'showSupplierDetail']);
 
     // Client Controller
     Route::resource('/clients', ClientController::class);
@@ -287,6 +289,13 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
 
     Route::get('wager-attendance', [AttendanceSheetController::class, 'index']);
+    Route::put('/attendance/wasta', [AttendanceSheetController::class, 'storeWastaAttendance']);
+    Route::put('/attendance/labour', [AttendanceSheetController::class, 'storelabourAttendance']);
+    Route::post('/labour/store', [AttendanceSheetController::class, 'storeLabour']);
+    Route::resource('/wasta', WastaController::class);
+    Route::put('/attendance/wasta/update/{id}', [AttendanceSheetController::class, 'updateWasta']);
+    Route::put('/attendance/labour/update/{id}', [AttendanceSheetController::class, 'updateLabour']);
+    Route::get('/attendance/site/show/{id}', [AttendanceSheetController::class, 'showAttendanceBySite']);
 });
 
 

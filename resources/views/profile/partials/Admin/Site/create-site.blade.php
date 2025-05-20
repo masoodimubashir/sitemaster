@@ -13,7 +13,7 @@
                 <div class="card-body">
 
 
-                    <form method="POST" action="{{ route('sites.store') }}" class="forms-sample material-form">
+                    <form method="POST" action="{{ url('user/sites/store') }}" class="forms-sample material-form">
 
                         @csrf
 
@@ -37,19 +37,14 @@
                         </div>
 
                         <div class="row">
+
+
                             <div class="col-md-6">
 
-                                <select class="form-select form-select-sm text-black" style="cursor: pointer" id="exampleFormControlSelect3"
-                                    name="user_id">
-                                    <option value="">Select Site Engineer</option>
-                                    @foreach ($users as $user)
-                                        <option value="{{ $user->id }}">{{ ucfirst($user->name) }}</option>
-                                    @endforeach
-                                </select>
-                                <x-input-error :messages="$errors->get('user_id')" class="mt-2" />
+                                <input type="hidden" value="{{ auth()->user()->id }}" name="user_id" />
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-12">
 
                                 <select class="form-select form-select-sm text-black" style="cursor: pointer" id="exampleFormControlSelect3"
                                     name="client_id">

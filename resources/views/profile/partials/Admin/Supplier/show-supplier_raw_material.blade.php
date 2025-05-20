@@ -241,31 +241,11 @@
                         </a>
                     </li>
 
-                    <li>
-                        <a href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}"
-                            class="dropdown-item">
-                            <i class="fas fa-file-invoice me-1"></i> Generate Payment Report
-                        </a>
-                    </li>
+                    
                 </ul>
             </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
         </div>
-
-
 
     </div>
 
