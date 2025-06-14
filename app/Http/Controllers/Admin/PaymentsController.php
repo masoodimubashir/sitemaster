@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AdminPayment;
 use App\Models\Payment;
+use App\Models\Phase;
 use App\Models\Site;
 use App\Models\Supplier;
 use App\Services\DataService;
@@ -30,18 +31,19 @@ class PaymentsController extends Controller
         $dateFilter = $request->input('date_filter', 'today');
         $site_id = $request->input('site_id', 'all');
         $supplier_id = $request->input('supplier_id', 'all');
+        $phase_id = $request->input('phase_id', 'all');
         $wager_id = $request->input('wager_id', 'all');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
         // Call the service or method
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
-            $wager_id,
             $startDate,
-            $endDate
+            $endDate,
+            $phase_id,
         );
 
         // Create ledger data including wasta and labours
@@ -50,7 +52,6 @@ class PaymentsController extends Controller
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wagers,
             $wastas,
             $labours
         )->sortByDesc(function ($d) {
@@ -84,8 +85,17 @@ class PaymentsController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $suppliers = $paginatedLedgers->filter(fn($supplier) => $supplier['supplier_id'] !== '--')->unique('supplier_id');
-        $sites = $paginatedLedgers->filter(fn($site) => $site['site_id'] !== '--')->unique('site');
+        $suppliers = Supplier::where([
+            'deleted_at' => null,
+        ])->orderBy('name', 'asc')->get();
+
+        $sites = Site::where([
+            'deleted_at' => null,
+        ])->orderBy('site_name', 'asc')->get();
+
+        $phases = Phase::with('site')->where([
+            'deleted_at' => null,
+        ])->get();
 
 
         return view("profile.partials.Admin.PaymentSuppliers.payments", compact(
@@ -97,8 +107,8 @@ class PaymentsController extends Controller
             'is_not_ongoing_count',
             'suppliers',
             'sites',
-            'wagers',
             'effective_balance',
+            'phases'
         ));
     }
 

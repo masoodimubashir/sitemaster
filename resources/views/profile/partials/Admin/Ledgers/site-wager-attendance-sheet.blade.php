@@ -185,6 +185,8 @@
         }
     </style>
 
+    <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['admin/sites', 'admin/sites/' . base64_encode($site->id)]" />
+
 
 
     <div class="card attendance-card">
@@ -235,7 +237,7 @@
             <table class="table table-bordered mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Labours</th>
+                        <th></th>
                         @for ($day = 1; $day <= $daysInMonth; $day++)
                             @php
                                 $date = \Carbon\Carbon::create($year, $month, $day);
@@ -253,83 +255,118 @@
                 </thead>
                 <tbody>
                     @foreach ($wastas as $index => $wasta)
-                        <tr class="employee-row" data-bs-toggle="collapse"
-                            data-bs-target="#collapse-{{ $index }}" style="cursor:pointer;">
-                            <td>
-                                <span class="employee-name">{{ $wasta->wasta_name }}</span><br>
-                                <button class="btn btn-sm btn-outline-primary mt-1 wasta-edit-btn"
-                                    data-wasta='@json($wasta)'>Edit</button>
-
+                        <!-- Wasta Row - Compact Header -->
+                        <tr class="wasta-row bg-light" data-bs-toggle="collapse"
+                            data-bs-target="#collapse-{{ $index }}" style="cursor: pointer;">
+                            <td class="align-middle" style="width: 200px;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>{{ $wasta->wasta_name }}</strong>
+                                        <span class="badge bg-primary ms-2">{{ $wasta->labours->count() }}</span>
+                                    </div>
+                                    <x-primary-button class="wasta-edit-btn"
+                                        data-wasta='@json($wasta)'>
+                                        Edit
+                                    </x-primary-button>
+                                </div>
                             </td>
 
                             @for ($day = 1; $day <= $daysInMonth; $day++)
                                 @php
-                                    $date = \Carbon\Carbon::create($year, $month, $day)->format('Y-m-d');
-                                    $attendance = $wasta->attendances->firstWhere('attendance_date', $date);
-                                    $isToday = \Carbon\Carbon::today()->format('Y-m-d') === $date;
-                                    $isPast = \Carbon\Carbon::parse($date)->lt(\Carbon\Carbon::today());
-                                    $isWeekend = \Carbon\Carbon::parse($date)->isWeekend();
-                                    $tdClass = ($isWeekend ? 'weekend-column' : '') . ($isToday ? ' today-column' : '');
+                                    $date = \Carbon\Carbon::create($year, $month, $day);
+                                    $dateFormatted = $date->format('Y-m-d');
+                                    $attendance = $wasta->attendances->firstWhere('attendance_date', $dateFormatted);
+                                    $isToday = \Carbon\Carbon::today()->format('Y-m-d') === $dateFormatted;
+                                    $isPast = $date->lt(\Carbon\Carbon::today());
+                                    $isWeekend = $date->isWeekend();
+                                    $dayInitial = $date->format('D')[0];
+                                    $tdClass = ($isWeekend ? 'bg-light' : '') . ($isToday ? ' table-success' : '');
                                 @endphp
-                                <td class="{{ $tdClass }} text-center">
-                                    @if ($attendance && $attendance->is_present)
-                                        <span class="present-marker">&#10003;</span>
-                                    @elseif ($isToday)
-                                        <input type="checkbox" class="wasta-attendance-checkbox"
-                                            data-wasta-id="{{ $wasta->id }}" data-date="{{ $date }}">
-                                    @elseif ($isPast)
-                                        <span class="absent-indicator">&#10007;</span>
-                                    @else
-                                        <input type="checkbox" class="attendance-checkbox" disabled>
-                                    @endif
+                                <td class=" text-center align-middle p-1" style="width: 30px;">
+                                    <div class="d-flex flex-column small">
+                                        <div class="text-muted">{{ $dayInitial }}</div>
+                                        <div class="mt-2">
+                                            @if ($attendance && $attendance->is_present)
+                                                <span class="text-success fs-6">✓</span>
+                                            @elseif ($isToday)
+                                                <input type="checkbox"
+                                                    class="form-check-input wasta-attendance-checkbox"
+                                                    data-wasta-id="{{ $wasta->id }}"
+                                                    data-date="{{ $dateFormatted }}">
+                                            @elseif ($isPast)
+                                                <span class="text-danger fs-6">✗</span>
+                                            @else
+                                                <span class="text-muted fs-6">-</span>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </td>
                             @endfor
                         </tr>
-                        <tr class="collapse" id="collapse-{{ $index }}">
-                            <td colspan="{{ $daysInMonth + 1 }}" class="p-0">
-                                <table class="table table-sm mb-0">
-                                    @foreach ($wasta->labours as $labour)
-                                        <tr class="collapse-inner">
-                                            <td>
-                                                <span class="employee-name">{{ $labour->labour_name }}</span><br>
-                                                <button class="btn btn-sm btn-outline-primary mt-1 labour-edit-btn"
-                                                    data-labour='@json($labour)'>Edit</button>
 
-                                            </td>
-                                            @for ($day = 1; $day <= $daysInMonth; $day++)
-                                                @php
-                                                    $date = \Carbon\Carbon::create($year, $month, $day)->format(
-                                                        'Y-m-d',
-                                                    );
-                                                    $attendance = $labour->attendances->firstWhere(
-                                                        'attendance_date',
-                                                        $date,
-                                                    );
-                                                    $isToday = \Carbon\Carbon::today()->format('Y-m-d') === $date;
-                                                    $isPast = \Carbon\Carbon::parse($date)->lt(\Carbon\Carbon::today());
-                                                    $isWeekend = \Carbon\Carbon::parse($date)->isWeekend();
-                                                    $tdClass =
-                                                        ($isWeekend ? 'weekend-column' : '') .
-                                                        ($isToday ? ' today-column' : '');
-                                                @endphp
-                                                <td class="{{ $tdClass }} text-center">
-                                                    @if ($attendance && $attendance->is_present)
-                                                        <span class="present-marker">&#10003;</span>
-                                                    @elseif ($isToday)
-                                                        <input type="checkbox" class="labour-attendance-checkbox"
-                                                            data-labour-id="{{ $labour->id }}"
-                                                            data-date="{{ $date }}">
-                                                    @elseif ($isPast)
-                                                        <span class="absent-indicator">&#10007;</span>
-                                                    @else
-                                                        <input type="checkbox" class="labour-attendance-checkbox"
-                                                            disabled>
-                                                    @endif
+                        <!-- Labour Sub-table Row -->
+                        <tr class="collapse bg-white" id="collapse-{{ $index }}">
+                            <td colspan="{{ $daysInMonth + 1 }}" class="p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered mb-0 labour-table">
+                                        @foreach ($wasta->labours as $labour)
+                                            <tr>
+                                                <td class="align-middle" style="width: 200px;">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <div>
+                                                            <strong>{{ $labour->labour_name }}</strong>
+                                                            @if ($labour->position)
+                                                                <small
+                                                                    class="d-block text-muted">{{ $labour->position }}</small>
+                                                            @endif
+                                                        </div>
+                                                        <x-primary-button class="labour-edit-btn"
+                                                            data-labour='@json($labour)'>
+                                                            Edit
+                                                        </x-primary-button>
+                                                    </div>
                                                 </td>
-                                            @endfor
-                                        </tr>
-                                    @endforeach
-                                </table>
+                                                @for ($day = 1; $day <= $daysInMonth; $day++)
+                                                    @php
+                                                        $date = \Carbon\Carbon::create($year, $month, $day);
+                                                        $dateFormatted = $date->format('Y-m-d');
+                                                        $attendance = $labour->attendances->firstWhere(
+                                                            'attendance_date',
+                                                            $dateFormatted,
+                                                        );
+                                                        $isToday =
+                                                            \Carbon\Carbon::today()->format('Y-m-d') === $dateFormatted;
+                                                        $isPast = $date->lt(\Carbon\Carbon::today());
+                                                        $isWeekend = $date->isWeekend();
+                                                        $tdClass =
+                                                            ($isWeekend ? 'bg-light' : '') .
+                                                            ($isToday ? ' table-info' : '');
+                                                        $dayInitial = $date->format('D')[0];
+                                                    @endphp
+                                                    <td class=" text-center align-middle p-1" style="width: 30px;">
+                                                        <div class="text-muted">{{ $dayInitial }}</div>
+                                                        <div class="mt-2">
+                                                            @if ($attendance && $attendance->is_present)
+                                                                <span class="text-success">✓</span>
+                                                            @elseif ($isToday)
+                                                                <input type="checkbox"
+                                                                    class="form-check-input labour-attendance-checkbox"
+                                                                    data-labour-id="{{ $labour->id }}"
+                                                                    data-date="{{ $dateFormatted }}">
+                                                            @elseif ($isPast)
+                                                                <span class="text-danger">✗</span>
+                                                            @else
+                                                                <span class="text-muted">-</span>
+                                                            @endif
+
+                                                        </div>
+
+                                                    </td>
+                                                @endfor
+                                            </tr>
+                                        @endforeach
+                                    </table>
+                                </div>
                             </td>
                         </tr>
                     @endforeach
@@ -343,35 +380,39 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
-                    <form id="createWastaForm" class="forms-sample material-form">
+                    <form id="createWastaForm">
                         <div class="form-group">
-                            <select name="site_id" id="create_site_id">
-                                <option value="">Select Site</option>
-                                @foreach ($sites as $site)
-                                    <option value="{{ $site->id }}">{{ $site->site_name }}</option>
-                                @endforeach
-                            </select>
+                            <input id="create_site_id" name="site_id" value="{{ $site->id }}" type="hidden" />
                             <p class="text-danger" id="create_site_id-error"></p>
                         </div>
 
                         <div class="form-group">
-                            <input id="create_wager_name" name="wager_name" type="text" />
-                            <label for="create_wager_name" class="control-label">Wager Name</label><i
-                                class="bar"></i>
+                            <label for="phase_id" class="control-label">Select Phase</label>
+                            <select name="phase_id" id="phase_id" class="form-select form-select-md">
+                                <option value="">Select Phase</option>
+                                @foreach ($phases as $phase)
+                                    <option value="{{ $phase->id }}">{{ $phase->phase_name }}</option>
+                                @endforeach
+                            </select>
+                            <p class="text-danger" id="phase_id-error"></p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="create_wager_name" class="control-label">Wager Name</label>
+                            <input id="create_wager_name" name="wager_name" type="text" class="form-control" />
                             <p class="text-danger" id="create_wager_name-error"></p>
                         </div>
 
                         <div class="form-group">
-                            <input id="create_price_per_day" name="price_per_day" type="number" />
-                            <label for="create_price_per_day" class="control-label">Price Per Day</label><i
-                                class="bar"></i>
+                            <label for="create_price_per_day" class="control-label">Price Per Day</label>
+                            <input id="create_price_per_day" name="price_per_day" type="number"
+                                class="form-control" />
                             <p class="text-danger" id="create_price_per_day-error"></p>
                         </div>
 
                         <div class="form-group">
-                            <input id="create_contact_no" name="contact_no" type="text" />
-                            <label for="create_contact_no" class="control-label">Contact No</label><i
-                                class="bar"></i>
+                            <label for="create_contact_no" class="control-label">Contact No</label>
+                            <input id="create_contact_no" name="contact_no" type="text" class="form-control" />
                             <p class="text-danger" id="create_contact-error"></p>
                         </div>
 
@@ -385,58 +426,62 @@
     <!-- Labour Attendance Modal -->
     <div class="modal fade" id="attendanceModal" tabindex="-1" aria-labelledby="attendanceModalLabel"
         aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
-                    <form id="labourForm" method="POST" class="forms-sample material-form">
+                    <form id="labourForm" method="POST">
                         @csrf
-                        <h5 class="modal-title mb-4" id="attendanceModalLabel">Create labour</h5>
+                        <h5 class="modal-title" id="attendanceModalLabel">Create labour</h5>
 
                         <!-- Wasta -->
-                        <div class="form-group">
+                        <div class="form-group mt-2">
+                            <label for="wasta_id" class="control-label">Select Wasta</label>
+
                             <select name="wasta_id" class="form-select form-select-md">
                                 <option value="">Select Wasta</option>
                                 @foreach ($wastas as $wasta)
                                     <option value="{{ $wasta->id }}">{{ $wasta->wasta_name }}</option>
                                 @endforeach
                             </select>
-                            <label for="wasta_id" class="control-label">Select Wasta</label>
-                            <i class="bar"></i>
                             <p class="text-danger" id="wasta_id-error"></p>
                         </div>
 
-                        <!-- Site -->
                         <div class="form-group">
-                            <select name="site_id" id="labour_site_id">
-                                <option value="">Select Site</option>
-                                @foreach ($sites as $site)
-                                    <option value="{{ $site->id }}">{{ $site->site_name }}</option>
+                            <label for="phase_id" class="control-label">Select Phase</label>
+
+                            <select name="phase_id" id="labour_phase_id" class="form-select form-select-md">
+                                <option value="">Select Phase</option>
+                                @foreach ($phases as $phase)
+                                    <option value="{{ $phase->id }}">{{ $phase->phase_name }}</option>
                                 @endforeach
                             </select>
+                            <p class="text-danger" id="phase_id-error"></p>
+                        </div>
+                        <!-- Site -->
+                        <div class="form-group">
+                            <input name="site_id" id="labour_site_id" class="form-control"
+                                value="{{ $site->id }}" type="hidden" />
                             <p class="text-danger" id="site_id-error"></p>
                         </div>
 
                         <!-- Labour Name -->
                         <div class="form-group">
-                            <input type="text" name="labour_name" class="form-control" />
                             <label for="labour_name" class="control-label">Labour Name</label>
-                            <i class="bar"></i>
+                            <input type="text" name="labour_name" class="form-control" />
                             <p class="text-danger" id="labour_name-error"></p>
                         </div>
 
                         <!-- Price -->
                         <div class="form-group">
-                            <input type="text" name="price" id="price" class="form-control" />
                             <label for="price" class="control-label">Price</label>
-                            <i class="bar"></i>
+                            <input type="text" name="price" id="price" class="form-control" />
                             <p class="text-danger" id="price-error"></p>
                         </div>
 
                         <!-- Contact -->
                         <div class="form-group">
-                            <input type="text" name="contact" id="contact" class="form-control" />
                             <label for="contact" class="control-label">Contact No</label>
-                            <i class="bar"></i>
+                            <input type="text" name="contact" id="contact" class="form-control" />
                             <p class="text-danger" id="contact-error"></p>
                         </div>
 
@@ -586,6 +631,8 @@
                         price_per_day: $('#create_price_per_day').val(),
                         contact: $('#create_contact_no').val(),
                         site_id: $('#create_site_id').val(),
+                        phase_id: $('#phase_id').val(),
+
                     };
 
                     $.post('/admin/wasta', data)
@@ -647,6 +694,7 @@
                         price: $('#price').val(),
                         contact: $('#contact').val(),
                         is_present: $('#is_present').is(':checked') ? 1 : 0,
+                        phase_id: $('#labour_phase_id').val(),
                         _token: '{{ csrf_token() }}'
                     };
 

@@ -140,7 +140,6 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     Route::resource('/phase', PhaseController::class);
 
-
     // Route::resource('/payment-bills', PaymentBillsController::class);
 
     Route::get('/site/ledger/{id}', SitePaymentController::class)->name('sites.view-ledger');
@@ -259,12 +258,10 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     // Route::get('/site/ledger/{id}', UserLedgerController::class);
     Route::get('/site/ledger/{id}', SitePaymentController::class)->name('sites.view-ledger');
 
-
     // Site Payments
     Route::resource('supplier/payments', PaymentSupplierController::class);
     // Route::get('sites/payments/{id}', PaymentSiteController::class);
     Route::get('sites/payments/{id}', [PaymentSiteController::class, 'showPayment']);
-
 
     // View Supplier Ledger
     Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');
@@ -296,6 +293,8 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::put('/attendance/wasta/update/{id}', [AttendanceSheetController::class, 'updateWasta']);
     Route::put('/attendance/labour/update/{id}', [AttendanceSheetController::class, 'updateLabour']);
     Route::get('/attendance/site/show/{id}', [AttendanceSheetController::class, 'showAttendanceBySite']);
+
+    
 });
 
 

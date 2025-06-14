@@ -5,29 +5,14 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex flex-wrap gap-2">
-                <a class="btn btn-info" data-bs-toggle="modal" href="#phase"><i class="fas fa-tasks me-2">
-                    </i>Phase
-                </a>
-                <a class="btn btn-info" data-bs-toggle="modal" href="#payment-supplier">
-                    <i class="fas fa-money-bill me-2"></i>
-                    Make Payment
-                </a>
-                <a class="btn btn-info" href="{{ url('admin/sites/payments', [$site->id]) }}">
-                    <i class="fas fa-list me-2"></i>
-                    View Payments
-                </a>
-                <a class="btn btn-info" href="{{ url('admin/site/ledger', $site->id) }}">
-                    <i class="fas fa-book me-2"></i>
-                    View Ledger
-                </a>
+              
+               
                 <a class="btn btn-info"
                     href="{{ url('admin/download-site/report', ['id' => base64_encode($site->id)]) }}">
                     <i class="fas fa-file-pdf me-2"></i>
                     Download PDF
                 </a>
-                <a class="btn btn-info"
-                    href="{{ url('admin/site-payment/report', ['id' => base64_encode($site->id)]) }}">
-                    <i class="fas fa-file-invoice me-2"></i>Generate Payments</a>
+              
             </div>
         </div>
     </div>

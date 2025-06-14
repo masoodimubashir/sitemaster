@@ -68,14 +68,6 @@
 
         <div class="col-lg-12">
 
-            <div class="d-flex justify-content-end align-items-center">
-
-                <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#phase">
-                    <i class="fas fa-layer-group me-2"></i> Add Phase
-                </a>
-            
-            </div>
-
             <div class="card-body">
 
                 <div class="table-responsive mt-4">

@@ -183,19 +183,19 @@
         <h1 class="text-xl font-semibold">Ledger Report</h1>
         <div class="ms-auto action-buttons d-flex gap-2">
             <!-- Dropdown Menu -->
-             <form action="{{ url($user . '/ledger/report') }}" method="GET">
+            <form action="{{ url($user . '/ledger/report') }}" method="GET">
                 <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
                 <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
                 <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
-                <input type="hidden" name="wager_id" value="{{ request('wager_id', 'all') }}">
+                <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
                 <button type="submit" class="btn btn-outline">
                     <i class="far fa-file-pdf"></i> Download PDF
                 </button>
             </form>
-              
-          
 
-          
+
+
+
 
         </div>
     </div>
@@ -205,12 +205,25 @@
 
     <form class="d-flex flex-column flex-md-row gap-2 w-100" action="{{ url()->current() }}" method="GET"
         id="filterForm">
+
+        <!-- Supplier Select -->
+        <select class="bg-white text-black form-select form-select-sm" name="phase_id" id="phaseFilter">
+            <option value="all" {{ request('phase_id') == 'all' ? 'selected' : '' }}>All Phases</option>
+            @if (!empty($phases))
+                @foreach ($phases as $phase)
+                    <option value="{{ $phase->id }}" {{ request('phase_id') == $phase->id ? 'selected' : '' }}>
+                        {{ $phase->phase_name }} - {{ $phase->site->site_name }}
+                    </option>
+                @endforeach
+            @endif
+        </select>
+
         <!-- Site Select -->
         <select class="bg-white text-black form-select form-select-sm" name="site_id" id="siteFilter">
             <option value="all" {{ request('site_id') == 'all' ? 'selected' : '' }}>All Sites</option>
             @foreach ($sites as $site)
-                <option value="{{ $site['site_id'] }}" {{ request('site_id') == $site['site_id'] ? 'selected' : '' }}>
-                    {{ $site['site'] }}
+                <option value="{{ $site->id }}" {{ request('site_id') == $site->id ? 'selected' : '' }}>
+                    {{ $site->site_name }}
                 </option>
             @endforeach
         </select>
@@ -219,9 +232,9 @@
         <select class="bg-white text-black form-select form-select-sm" name="supplier_id" id="supplierFilter">
             <option value="all" {{ request('supplier_id') == 'all' ? 'selected' : '' }}>All Suppliers</option>
             @foreach ($suppliers as $supplier)
-                <option value="{{ $supplier['supplier_id'] }}"
-                    {{ request('supplier_id') == $supplier['supplier_id'] ? 'selected' : '' }}>
-                    {{ $supplier['supplier'] }}
+                <option value="{{ $supplier->id }}"
+                    {{ request('supplier_id') == $supplier->id ? 'selected' : '' }}>
+                    {{ $supplier->name }}
                 </option>
             @endforeach
         </select>
@@ -346,62 +359,86 @@
 
     {{-- ------------------------------------------  All The Scripts For This Page Are Below ---------------------------------------- --}}
 
-   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const siteFilter = document.getElementById('siteFilter');
-        const supplierFilter = document.getElementById('supplierFilter');  // Fixed this line
-        const filterForm = document.getElementById('filterForm');
-        const dateFilter = document.getElementById('dateFilter');
-        const customDateRange = document.getElementById('customDateRange');
-        const resetBtn = document.getElementById('resetFilters');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
 
-        // Toggle date range visibility
-        dateFilter.addEventListener('change', function() {
-            if (this.value === 'custom') {
-                customDateRange.style.display = 'flex';
-            } else {
-                customDateRange.style.display = 'none';
-                document.querySelector('input[name="start_date"]').value = '';
-                document.querySelector('input[name="end_date"]').value = '';
-            }
-            submitForm();
-        });
+            const supplierFilter = document.getElementById('supplierFilter');
+            const filterForm = document.getElementById('filterForm');
+            const dateFilter = document.getElementById('dateFilter');
+            const phaseFilter = document.getElementById('phaseFilter');
+            const customDateRange = document.getElementById('customDateRange');
+            const resetBtn = document.getElementById('resetFilters');
 
-        // Auto-submit when filters change
-        siteFilter.addEventListener('change', submitForm);
-        supplierFilter.addEventListener('change', submitForm);  // Simplified this
+            // Ensure form submits to the correct URL with site ID
+            filterForm.action = "{{ url()->current() }}";
 
-        // For date inputs, add a small delay before submitting
-        document.querySelectorAll('#customDateRange input').forEach(input => {
-            let timeout;
-            input.addEventListener('change', function() {
-                clearTimeout(timeout);
-                timeout = setTimeout(submitForm, 500);
+            // Toggle date range visibility
+            dateFilter.addEventListener('change', function() {
+                if (this.value === 'custom') {
+                    customDateRange.style.display = 'flex';
+                } else {
+                    customDateRange.style.display = 'none';
+                    // Clear date inputs when not using custom range
+                    document.querySelector('input[name="start_date"]').value = '';
+                    document.querySelector('input[name="end_date"]').value = '';
+                }
+                submitForm();
             });
+
+            // Auto-submit when any filter changes (except date inputs)
+            document.querySelectorAll('#filterForm select:not(#dateFilter)').forEach(select => {
+                select.addEventListener('change', function() {
+                    submitForm();
+                });
+            });
+
+            // For date inputs, add a small delay before submitting
+            document.querySelectorAll('#customDateRange input').forEach(input => {
+                let timeout;
+                input.addEventListener('change', function() {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        submitForm();
+                    }, 500);
+                });
+            });
+
+            // Reset all filters
+            resetBtn.addEventListener('click', function() {
+                // Reset form values
+                filterForm.reset();
+                // Ensure default selections
+                document.getElementById('supplierFilter').value = 'all';
+                document.getElementById('dateFilter').value = 'today';
+                document.getElementById('phaseFilter').value = 'all';
+                // Hide custom date range
+                customDateRange.style.display = 'none';
+                // Submit the form
+                submitForm();
+            });
+
+            // Initialize date range visibility based on current selection
+            if (dateFilter.value === 'custom') {
+                customDateRange.style.display = 'flex';
+            }
+
+            // Custom form submission to preserve URL structure
+            function submitForm() {
+                // Get all current query parameters
+                const params = new URLSearchParams(window.location.search);
+
+                // Update with new form values
+                new FormData(filterForm).forEach((value, key) => {
+                    if (value) params.set(key, value);
+                    else params.delete(key);
+                });
+
+                // Preserve the site ID in the URL path
+                const newUrl = "{{ url()->current() }}?" + params.toString();
+                window.location.href = newUrl;
+            }
         });
-
-        // Reset all filters
-        resetBtn.addEventListener('click', function() {
-            filterForm.reset();
-            siteFilter.value = 'all';
-            supplierFilter.value = 'all';  // Reset supplier filter
-            dateFilter.value = 'today';
-            customDateRange.style.display = 'none';
-            submitForm();
-        });
-
-        // Initialize date range visibility
-        if (dateFilter.value === 'custom') {
-            customDateRange.style.display = 'flex';
-        }
-
-        function submitForm() {
-            const params = new FormData(filterForm);
-            const queryString = new URLSearchParams(params).toString();
-            window.location.href = "{{ url()->current() }}?" + queryString;
-        }
-    });
-</script>
+    </script>
 
 
 </x-app-layout>

@@ -229,8 +229,6 @@ class PDF extends Fpdf
     }
 
 
-
-
     function phaseTableData($headers, $phases, $phaseCosting)
     {
         if (empty($phases)) {
@@ -325,7 +323,7 @@ class PDF extends Fpdf
         if (!$phases['construction_material_billings']->isEmpty()) {
             $this->Ln(5);
             $this->SetFont('Arial', 'B', 14);
-            $this->Cell($this->width / 1 , 10, 'Construction Materials', 0, 1, 'C');
+            $this->Cell($this->width / 1, 10, 'Construction Materials', 0, 1, 'C');
 
             // Header
             $this->SetFont('Arial', 'B', 11);
@@ -576,96 +574,124 @@ class PDF extends Fpdf
         }
     }
 
-    function ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance)
+    public function ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance, $service_charge_amount)
     {
-
-        $this->SetTextColor(0, 170, 183);
-        $this->Text(188 / 2, 40, 'SiteMaster');
-
+        // Set top margin before rendering
         $this->SetMargins($this->m_left, $this->m_top, $this->m_right);
+        $this->SetY($this->m_top); // Respect top margin
+
+        // Title
+        $this->SetTextColor(0, 170, 183);
+        $this->SetFontSize(16);
+        $this->SetXY(10, 20); // Adjust position
+        $this->Cell(0, 10, 'SiteMaster', 0, 1, 'C');
+
+        $this->Ln(10); // Add space before table
+
         $this->SetFontSize($this->font_size);
 
-        $this->Ln();
-        $this->Ln();
+        // Column widths (transaction_type removed)
+        $columns = [
+            'date' => $this->width / 2.9,
+            'supplier' => $this->width / 1.55,
+            'site' => $this->width / 1.4,
+            'phase' => $this->width / 1.9,
+            'category' => $this->width / 2,
+            'description' => $this->width / 1.4,
+            'debit' => $this->width / 2.2,
+            'credit' => $this->width / 2.2,
+        ];
 
-        // Summary section styling
-        $this->SetFillColor($this->fill_r, $this->fill_g, $this->fill_b);
-        $this->SetTextColor($this->r, $this->g, $this->b);
-
-        // Summary cells
-        $this->Cell($this->width * 2.18, $this->height, 'Total Balance', 1, 0, 'L', true);
-        $this->Cell($this->width * 2.18, $this->height, $total_balance, 1, 0, 'L', true);
-        $this->Ln();
-
-        $this->Cell($this->width * 2.18, $this->height, 'Total Due', 1, 0, 'L', true);
-        $this->Cell($this->width * 2.18, $this->height, $total_due, 1, 0, 'L', true);
-        $this->Ln();
-
-        $this->Cell($this->width * 2.18, $this->height, 'Total Paid', 1, 0, 'L', true);
-        $this->Cell($this->width * 2.18, $this->height, $total_paid, 1, 0, 'L', true);
-        $this->Ln();
-
-        $this->Cell($this->width * 2.18, $this->height, 'Effective Balance', 1, 0, 'L', true);
-        $this->Cell($this->width * 2.18, $this->height, $effective_balance, 1, 0, 'L', true);
-        $this->Ln();
-        $this->Ln();
-
-        // Table header styling
+        // Table header (transaction_type removed)
         $this->SetFillColor(81, 177, 225);
         $this->SetTextColor(255, 255, 255);
 
-        // Table headers
-        $this->Cell($this->width / 3.5, $this->height, 'Date', 1, 0, 'L', true);
-        $this->Cell($this->width / 1.7, $this->height, 'Transaction Type', 1, 0, 'L', true);
-        $this->Cell($this->width / 1.55, $this->height, 'Supplier Name', 1, 0, 'L', true);
-        $this->Cell($this->width / 1.68, $this->height, 'Site Name', 1, 0, 'L', true);
-        $this->Cell($this->width / 2, $this->height, 'Phase', 1, 0, 'L', true);
-        $this->Cell($this->width / 2.6, $this->height, 'Type', 1, 0, 'L', true);
-        $this->Cell($this->width / 1.7, $this->height, 'Narration', 1, 0, 'L', true);
-        $this->Cell($this->width / 2.6, $this->height, 'Debit', 1, 0, 'L', true);
-        $this->Cell($this->width / 2.6, $this->height, 'Credit', 1, 0, 'L', true);
+        foreach (['Date', 'Supplier Name', 'Site Name', 'Phase', 'Type', 'Narration', 'Debit', 'Credit'] as $i => $label) {
+            $this->Cell(array_values($columns)[$i], $this->height, $label, 1, 0, 'L', true);
+        }
         $this->Ln();
 
-        // Table content styling
+        // Table content
         $this->SetTextColor($this->r, $this->g, $this->b);
 
-        // Table content
         foreach ($ledgers as $ledger) {
-            $cellHeight = 6;
-            $maxHeight = 0;
-
-            // Calculate max height needed for wrapped text
-            $descriptionWidth = $this->GetStringWidth(ucwords($ledger['description']));
-            $supplierWidth = $this->GetStringWidth(ucwords($ledger['supplier']));
-
-            $descriptionHeight = ceil($descriptionWidth / ($this->width / 1.7)) * $cellHeight;
-            $supplierHeight = ceil($supplierWidth / ($this->width / 1.55)) * $cellHeight;
-
-            $maxHeight = max($cellHeight, $descriptionHeight, $supplierHeight);
-
             $x = $this->GetX();
             $y = $this->GetY();
+            $cellHeight = 6;
 
-            $this->Cell($this->width / 3.5, $maxHeight, $ledger['created_at']->format('d-M-y'), 1, 0, 'L');
-            $this->Cell($this->width / 1.7, $maxHeight, ucwords($ledger['transaction_type']), 1, 0, 'L');
+            $supplierText = ucwords($ledger['supplier']);
+            $descriptionText = ucwords($ledger['description']);
 
-            // MultiCell for supplier name
-            $this->MultiCell($this->width / 1.55, $cellHeight, ucwords($ledger['supplier']), 1, 'L');
-            $this->SetXY($x + ($this->width / 3.5) + ($this->width / 1.7) + ($this->width / 1.55), $y);
+            $supplierHeight = ceil($this->GetStringWidth($supplierText) / $columns['supplier']) * $cellHeight;
+            $descriptionHeight = ceil($this->GetStringWidth($descriptionText) / $columns['description']) * $cellHeight;
+            $maxHeight = max($cellHeight, $supplierHeight, $descriptionHeight);
 
-            $this->Cell($this->width / 1.68, $maxHeight, ucwords($ledger['site']), 1, 0, 'L');
-            $this->Cell($this->width / 2, $maxHeight, ucwords($ledger['phase']), 1, 0, 'L');
-            $this->Cell($this->width / 2.6, $maxHeight, $ledger['category'], 1, 0, 'L');
+            // Date
+            $this->SetXY($x, $y);
+            $this->Cell($columns['date'], $maxHeight, $ledger['created_at']->format('d-M-y'), 1);
+            $x += $columns['date'];
 
-            // MultiCell for description
-            $x = $this->GetX();
-            $this->MultiCell($this->width / 1.7, $cellHeight, ucwords($ledger['description']), 1, 'L');
-            $this->SetXY($x + ($this->width / 1.7), $y);
+            // Supplier (MultiCell)
+            $this->SetXY($x, $y);
+            $this->MultiCell($columns['supplier'], $cellHeight, $supplierText, 1);
+            $x += $columns['supplier'];
+            $this->SetXY($x, $y); // Realign to same row
 
-            $this->Cell($this->width / 2.6, $maxHeight, $ledger['debit'], 1, 0, 'L');
-            $this->Cell($this->width / 2.6, $maxHeight, $ledger['credit'], 1, 1, 'L');
+            // Site
+            $this->Cell($columns['site'], $maxHeight, ucwords($ledger['site']), 1);
+            $x += $columns['site'];
+
+            // Phase
+            $this->SetXY($x, $y);
+            $this->Cell($columns['phase'], $maxHeight, ucwords($ledger['phase']), 1);
+            $x += $columns['phase'];
+
+            // Category
+            $this->SetXY($x, $y);
+            $this->Cell($columns['category'], $maxHeight, $ledger['category'], 1);
+            $x += $columns['category'];
+
+            // Description (MultiCell)
+            $this->SetXY($x, $y);
+            $this->MultiCell($columns['description'], $cellHeight, $descriptionText, 1);
+            $x += $columns['description'];
+            $this->SetXY($x, $y);
+
+            // Debit
+            $this->Cell($columns['debit'], $maxHeight, $ledger['debit'], 1);
+            $x += $columns['debit'];
+
+            // Credit
+            $this->SetXY($x, $y);
+            $this->Cell($columns['credit'], $maxHeight, $ledger['credit'], 1);
+
+            // Move to next row
+            $this->Ln($maxHeight);
         }
+
+        $this->Ln(5);
+
+        // Summary Section
+        $this->SetFillColor($this->fill_r, $this->fill_g, $this->fill_b);
+        $this->SetTextColor($this->r, $this->g, $this->b);
+
+        $summaryWidth = $this->width * 2.18;
+        $summaryRows = [
+            'Grand Effective Amount' => $total_balance,
+            'Service Charges' => $service_charge_amount,
+            'Payment Made' => $total_paid,
+            'Total Amount' => $effective_balance,
+            'Balance' => $total_due,
+        ];
+
+        foreach ($summaryRows as $label => $value) {
+            $this->Cell($summaryWidth, $this->height, $label, 1, 0, 'L', true);
+            $this->Cell($summaryWidth, $this->height, $value, 1, 1, 'L', true);
+        }
+
+        $this->Ln();
     }
+
 
     private function getServiceChargeAmount($amount, $serviceCharge)
     {

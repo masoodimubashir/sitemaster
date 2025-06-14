@@ -58,24 +58,26 @@ class SupplierController extends Controller
     public function show(string $id, Request $request)
     {
 
-        
+
         $date_filter = $request->input('date_filter', 'today');
-        $site_id = $request->input('site_id', $id);
+        $site_id = $request->input('site_id', 'all');
         $supplier_id = $request->input('supplier_id', $id);
         $wager_id = $request->input('wager_id', 'all');
         $start_date = $request->input('start_date'); // for 'custom'
         $end_date = $request->input('end_date');
+        $phase_id = $request->input('phase_id', 'all');
+
 
         // Load the supplier
         $supplier = Supplier::findOrFail($supplier_id);
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $this->dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses,  $wastas, $labours] = $this->dataService->getData(
             $date_filter,
             $site_id,
             $supplier_id,
-            $wager_id,
             $start_date,
-            $end_date
+            $end_date,
+            $phase_id
         );
 
         $ledgers = $this->dataService->makeData(
@@ -83,7 +85,6 @@ class SupplierController extends Controller
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wagers,
             $wastas,
             $labours
         )->sortByDesc(function ($d) {
@@ -94,17 +95,7 @@ class SupplierController extends Controller
         $totals = $this->dataService->calculateAllBalances($ledgers);
 
         // Group unique sites
-        $sites = collect($ledgers)
-            ->unique('site_id')
-            ->filter(function ($item) {
-                return $item['site_id'] !== '--';
-            })
-            ->map(function ($item) {
-                return [
-                    'site_id' => $item['site_id'],
-                    'site_name' => $item['site'],
-                ];
-            })->values();
+        $sites = $this->dataService->getSuppliersWithSites(null, $supplier_id);
 
         // Prepare data
         $data = [
@@ -117,10 +108,10 @@ class SupplierController extends Controller
         ];
 
         if ($supplier->is_raw_material_provider == 1) {
-            return view('profile.partials.Admin.Supplier.show-supplier_raw_material', compact('data', 'sites'));
+            return view('profile.partials.Admin.Supplier.show-supplier_raw_material', compact('data', 'sites', 'supplier'));
         }
 
-        return view('profile.partials.Admin.Supplier.show_supplier_workforce', compact('data', 'sites'));
+        return view('profile.partials.Admin.Supplier.show_supplier_workforce', compact('data', 'sites', 'supplier'));
     }
 
     public function showSupplierDetail(string $id)

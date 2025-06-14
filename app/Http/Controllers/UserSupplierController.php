@@ -59,19 +59,21 @@ class UserSupplierController extends Controller
         $site_id = $request->input('site_id', $id);
         $supplier_id = $request->input('supplier_id', $id);
         $wager_id = $request->input('wager_id', 'all');
-        $start_date = $request->input('start_date'); // for 'custom'
+        $start_date = $request->input('start_date'); 
         $end_date = $request->input('end_date');
+        $phase_id = $request->input('phase_id', 'all');
+
 
         // Load the supplier
         $supplier = Supplier::findOrFail($supplier_id);
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $this->dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses,  $wastas, $labours] = $this->dataService->getData(
             $date_filter,
             $site_id,
             $supplier_id,
-            $wager_id,
             $start_date,
-            $end_date
+            $end_date,
+            $phase_id
         );
 
         $ledgers = $this->dataService->makeData(
@@ -79,7 +81,6 @@ class UserSupplierController extends Controller
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wagers,
             $wastas,
             $labours
         )->sortByDesc(function ($d) {

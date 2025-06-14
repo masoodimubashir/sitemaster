@@ -181,7 +181,7 @@
             <i class="menu-icon fa fa-building"></i>
         </div>
 
-        <h1 class="text-xl font-semibold">Site Report</h1>
+        <h1 class="text-xl font-semibold">{{ $site->site_name }}</h1>
 
         <div class="ms-auto action-buttons d-flex gap-2">
             <!-- Settings Dropdown -->
@@ -199,7 +199,7 @@
                             <i class="fas fa-layer-group me-2"></i> Add Phase
                         </a>
                     </li>
-                    
+
                     <li>
                         <a class="dropdown-item" data-bs-toggle="modal" role="button"
                             href="#modal-construction-billings">
@@ -246,15 +246,26 @@
                         </a>
                     </li>
 
+                    <li>
+                        <a class="dropdown-item" href="{{ url('admin/sites/payments', [$id]) }}">
+                            <i class="fas fa-list me-2"></i>
+                            View Payments
+                        </a>
+                    </li>
+
+
+
+
 
                 </ul>
             </div>
 
             <form action="{{ url($user . '/ledger/report') }}" method="GET">
-                <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
+                <input type="hidden" name="site_id" value="{{ request('site_id', $id) }}">
                 <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
                 <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
                 <input type="hidden" name="wager_id" value="{{ request('wager_id', 'all') }}">
+                <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
                 <button type="submit" class="btn btn-outline">
                     <i class="far fa-file-pdf"></i> Download PDF
                 </button>
@@ -272,15 +283,30 @@
 
     <form class="d-flex flex-column flex-md-row gap-2 w-100" action="{{ url()->current() }}" method="GET"
         id="filterForm">
+
+        <!-- Supplier Select -->
+        <select class="bg-white text-black form-select form-select-sm" name="phase_id" id="phaseFilter">
+            <option value="all" {{ request('phase_id') == 'all' ? 'selected' : '' }}>All Phases</option>
+            @if (!empty($phases))
+                @foreach ($phases as $phase)
+                    <option value="{{ $phase->id }}" {{ request('phase_id') == $phase->id ? 'selected' : '' }}>
+                        {{ $phase->phase_name }}
+                    </option>
+                @endforeach
+            @endif
+        </select>
+
         <!-- Supplier Select -->
         <select class="bg-white text-black form-select form-select-sm" name="supplier_id" id="supplierFilter">
             <option value="all" {{ request('supplier_id') == 'all' ? 'selected' : '' }}>All Suppliers</option>
-            @foreach ($suppliers as $supplier)
-                <option value="{{ $supplier['supplier_id'] }}"
-                    {{ request('supplier_id') == $supplier['supplier_id'] ? 'selected' : '' }}>
-                    {{ $supplier['supplier'] }}
-                </option>
-            @endforeach
+            @if (!empty($suppliers))
+                @foreach ($suppliers as $supplier)
+                    <option value="{{ $supplier['supplier_id'] }}"
+                        {{ request('supplier_id') == $supplier['supplier_id'] ? 'selected' : '' }}>
+                        {{ $supplier['supplier_name'] }}
+                    </option>
+                @endforeach
+            @endif
         </select>
 
         <!-- Date Period Filter -->
@@ -444,7 +470,7 @@
     <div id="modal-construction-billings" class="modal fade" aria-hidden="true"
         aria-labelledby="exampleModalToggleLabel" tabindex="-1">
 
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered">
 
             <div class="modal-content">
 
@@ -534,7 +560,7 @@
     <div id="modal-square-footage-bills" class="modal fade" aria-hidden="true"
         aria-labelledby="exampleModalToggleLabel" tabindex="-1">
 
-        <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-dialog modal-dialog-centered">
 
             <div class="modal-content">
 
@@ -588,9 +614,11 @@
                                 <select class="form-select text-black form-select-sm" id="supplier_id"
                                     name="supplier_id" style="cursor: pointer">
                                     <option value="">Select Supplier</option>
-                                    <option value="{{ $supplier->id }}">
-                                        {{ $supplier->name }}
-                                    </option>
+                                    @foreach ($workforce_suppliers as $supplier)
+                                        <option value="{{ $supplier->id }}">
+                                            {{ $supplier->name }}
+                                        </option>
+                                    @endforeach
                                 </select>
 
                                 <p class="text-danger" id="supplier_id-error"></p>
@@ -818,7 +846,7 @@
                                 <option for="supplier_id" value="">Select Supplier</option>
                                 @foreach ($suppliers as $supplier)
                                     <option value="{{ $supplier['supplier_id'] }}">
-                                        {{ $supplier['supplier'] }}
+                                        {{ $supplier['supplier_name'] }}
                                     </option>
                                 @endforeach
                             </select>
@@ -1465,6 +1493,7 @@
             const supplierFilter = document.getElementById('supplierFilter');
             const filterForm = document.getElementById('filterForm');
             const dateFilter = document.getElementById('dateFilter');
+            const phaseFilter = document.getElementById('phaseFilter');
             const customDateRange = document.getElementById('customDateRange');
             const resetBtn = document.getElementById('resetFilters');
 
@@ -1509,6 +1538,7 @@
                 // Ensure default selections
                 document.getElementById('supplierFilter').value = 'all';
                 document.getElementById('dateFilter').value = 'today';
+                document.getElementById('phaseFilter').value = 'all';
                 // Hide custom date range
                 customDateRange.style.display = 'none';
                 // Submit the form

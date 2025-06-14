@@ -14,6 +14,7 @@ use App\Notifications\UserSiteNotification;
 use App\Services\DataService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class SiteController extends Controller
@@ -115,7 +116,6 @@ class SiteController extends Controller
     public function showSiteDetails(string $id)
     {
 
-
         $site_id = base64_decode($id);
 
         // Default filter options — or pull from request if needed
@@ -124,18 +124,20 @@ class SiteController extends Controller
         $wager_id = 'all';
         $startDate = 'start_date';
         $endDate = 'end_date';
+        $phase_id = 'all';
+
 
         // Load site (for service charge, name, etc.)
         $site = Site::findOrFail($site_id);
 
         // Load processed financial data
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $this->dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses,  $wastas, $labours] = $this->dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
-            $wager_id,
             $startDate,
-            $endDate
+            $endDate,
+            $phase_id
         );
 
         // Combine and group all entries by phase
@@ -144,10 +146,10 @@ class SiteController extends Controller
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wagers,
             $wastas,
             $labours
         )->sortByDesc(fn($entry) => $entry['created_at']);
+
 
         $ledgersGroupedByPhase = $ledgers->groupBy('phase');
 
@@ -180,7 +182,7 @@ class SiteController extends Controller
                 'daily_wastas_total_amount' => $wasta_total,
                 'daily_labours_total_amount' => $labour_total,
                 'total_payment_amount' => $payments_total,
-                'phase_total' => $subtotal, 
+                'phase_total' => $subtotal,
                 'phase_total_with_service_charge' => $withService,
                 'total_balance' => $withServiceCharge['balance'],
                 'total_due' => $withServiceCharge['due'],
@@ -210,19 +212,20 @@ class SiteController extends Controller
         $dateFilter = $request->input('date_filter', 'today');
         $site_id = $request->input('site_id', $id);
         $supplier_id = $request->input('supplier_id', 'all');
-        $wager_id = $request->input('wager_id', 'all');
+        $phase_id = $request->input('phase_id', 'all');
         $startDate = $request->input('start_date'); // for 'custom'
         $endDate = $request->input('end_date');
 
         // Call the service to get all data including wasta and labours
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers,  $labours] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
-            $wager_id,
             $startDate,
-            $endDate
+            $endDate,
+            $phase_id
         );
+        
 
         $ledgers = $dataService->makeData(
             $payments,
@@ -230,12 +233,10 @@ class SiteController extends Controller
             $squareFootageBills,
             $expenses,
             $wagers,
-            $wastas,
             $labours
         )->sortByDesc(function ($d) {
             return $d['created_at'];
         });
-
 
         // Calculate balances
         $balances = $dataService->calculateAllBalances($ledgers);
@@ -256,17 +257,32 @@ class SiteController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-
         // Get unique suppliers
-        $suppliers = $paginatedLedgers->filter(fn($supplier) => $supplier['supplier_id'] !== '--')->unique('supplier_id');
+        $suppliers = $dataService->getSuppliersWithSites($site_id);
+
 
         // Get additional data for the view
         $items = Item::orderBy('item_name')->get();
-        $workforce_suppliers = Supplier::where('is_workforce_provider', 1)->orderBy('name')->get();
-        $raw_material_providers = Supplier::where('is_raw_material_provider', 1)->orderBy('name')->get();
-        $phases = Phase::latest()->get();
-        $site = Site::select('id', 'site_name')->where('is_on_going', 1)->find($site_id);
 
+        $workforce_suppliers = Supplier::where([
+            'is_workforce_provider' => 1,
+            'deleted_at' => null
+        ])->orderBy('name')->get();
+
+        $raw_material_providers = Supplier::where([
+            'is_raw_material_provider' => 1,
+            'deleted_at' => null
+        ])->orderBy('name')->get();
+
+        $phases = Phase::where([
+            'deleted_at' =>  null,
+            'site_id' => $site_id
+        ])->latest()->get();
+
+        $site = Site::select('id', 'site_name')->where([
+            'is_on_going' => 1,
+            'deleted_at' => null
+        ])->find($site_id);
 
         return view("profile.partials.Admin.Site.show-site", compact(
             'paginatedLedgers',

@@ -208,7 +208,6 @@ class AttendanceSheetController extends Controller
             return response()->json([
                 'message' => 'Wasta Updated Successfully',
             ], 200);
-
         } catch (Exception $e) {
 
             return response()->json([
@@ -245,10 +244,17 @@ class AttendanceSheetController extends Controller
             })
             ->get();
 
-        $sites = Site::where('is_on_going', 1)->get();
-
         $daysInMonth = \Carbon\Carbon::create($year, $month)->daysInMonth;
 
-        return view('profile.partials.Admin.Ledgers.site-wager-attendance-sheet', compact('wastas', 'month', 'year', 'daysInMonth', 'sites', 'site'));
+        $phases = Phase::where('site_id', $site->id)->orderBy('phase_name')->get();
+
+        return view('profile.partials.Admin.Ledgers.site-wager-attendance-sheet', compact(
+            'wastas',
+            'month',
+            'year',
+            'daysInMonth',
+            'site',
+            'phases'
+        ));
     }
 }

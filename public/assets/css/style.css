@@ -32909,7 +32909,15 @@ dl li {
     transform: rotate(180deg);
 }
 
-.sidebar .nav .nav-item.active>.nav-link {
+ .active {
+    border-radius: 0px 20px 0px 0px;
+    background: #fff;
+    position: relative;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+/* .sidebar .nav .nav-item.active>.nav-link {
     border-radius: 0px 20px 0px 0px;
     background: #fff;
     position: relative;
@@ -32921,7 +32929,7 @@ dl li {
 .sidebar .nav .nav-item.active>.nav-link .menu-title,
 .sidebar .nav .nav-item.active>.nav-link .menu-arrow {
     color: #1F3BB3;
-}
+} */
 
 .purple .sidebar .nav .nav-item.active>.nav-link i,
 .purple .sidebar .nav .nav-item.active>.nav-link .menu-title,

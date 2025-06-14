@@ -20,20 +20,19 @@ class DataService
         string $dateFilter,
         $site_id,
         $supplier_id,
-        $wager_id,
         ?string $startDate = null,
-        ?string $endDate = null
+        ?string $endDate = null,
+        $phase_id
     ): array {
         $dateRange = $this->filterByDate($dateFilter, $startDate, $endDate);
 
         return [
-            $this->getPayments($dateFilter, $dateRange, $site_id, $supplier_id),
-            $this->getRawMaterials($dateFilter, $dateRange, $site_id, $supplier_id),
-            $this->getSquareFootageBills($dateFilter, $dateRange, $site_id, $supplier_id),
-            $this->getExpenses($dateFilter, $dateRange, $site_id, $supplier_id),
-            $this->getWagers($dateFilter, $dateRange, $site_id, $supplier_id, $wager_id),
-            $this->getWastas($dateFilter, $dateRange, $site_id, $supplier_id),
-            $this->getLabours($dateFilter, $dateRange, $site_id, $supplier_id),
+            $this->getPayments($dateFilter, $dateRange, $site_id, $supplier_id, $phase_id),
+            $this->getRawMaterials($dateFilter, $dateRange, $site_id, $supplier_id, $phase_id),
+            $this->getSquareFootageBills($dateFilter, $dateRange, $site_id, $supplier_id, $phase_id),
+            $this->getExpenses($dateFilter, $dateRange, $site_id, $supplier_id, $phase_id),
+            $this->getWastas($dateFilter, $dateRange, $site_id, $supplier_id, $phase_id),
+            $this->getLabours($dateFilter, $dateRange, $site_id, $supplier_id, $phase_id),
         ];
     }
 
@@ -42,7 +41,6 @@ class DataService
         ?Collection $rawMaterials = null,
         ?Collection $squareFootageBills = null,
         ?Collection $expenses = null,
-        ?Collection $wagers = null,
         ?Collection $wastas = null,
         ?Collection $labours = null
     ): Collection {
@@ -62,10 +60,6 @@ class DataService
 
         if ($expenses) {
             $ledgers = $ledgers->merge($this->transformExpenses($expenses));
-        }
-
-        if ($wagers) {
-            $ledgers = $ledgers->merge($this->transformWagers($wagers));
         }
 
         if ($wastas) {
@@ -94,6 +88,7 @@ class DataService
             ],
             'total_debits' => 0,
             'total_credits' => 0,
+            'service_charge_amount' => 0,
         ];
 
         foreach ($ledgers as $item) {
@@ -111,6 +106,7 @@ class DataService
             } else {
                 $totals['without_service_charge']['due'] += $debit;
                 $totals['with_service_charge']['due'] += $item['total_amount_with_service_charge'] ?? $debit;
+                $totals['service_charge_amount'] += $item['service_charge_amount'] ?? 0;
             }
         }
 
@@ -141,12 +137,12 @@ class DataService
                 'payment_initiator' => !empty($pay->site_id) && empty($pay->supplier_id)
                     ? 'Site'
                     : (!empty($pay->supplier_id) ? 'Supplier' : 'Admin'),
-                'site' => $pay->site->site_name ?? '--',
-                'supplier' => $pay->supplier->name ?? '--',
-                'supplier_id' => $pay->supplier_id ?? '--',
-                'site_id' => $pay->site_id ?? '--',
-                'phase' => $pay->phase->phase_name ?? '--',
-                'phase_id' => $pay->phase_id ?? '--',
+                'site' => $pay->site->site_name ?? null,
+                'supplier' => $pay->supplier->name ?? null,
+                'supplier_id' => $pay->supplier_id ?? null,
+                'site_id' => $pay->site_id ?? null,
+                'phase' => $pay->phase->phase_name ?? null,
+                'phase_id' => $pay->phase_id ?? null,
                 'created_at' => $pay->created_at,
             ];
         });
@@ -160,22 +156,24 @@ class DataService
 
 
             return [
-                'id'=> $material->id,
+                'id' => $material->id,
                 'verified_by_admin' => $material->verified_by_admin,
-                'description' => $material->item_name ?? '--',
+                'description' => $material->item_name ?? null,
                 'category' => 'Material',
                 'credit' => 0,
                 'debit' => $material->amount,
-                'transaction_type' => '--',
+                'transaction_type' => null,
                 'payment_initiator' => 'Supplier',
-                'site' => $material->phase->site->site_name ?? '--',
+                'site' => $material->phase->site->site_name ?? null,
                 'total_amount_with_service_charge' => $serviceCharge + $material->amount,
-                'supplier' => $material->supplier->name ?? '--',
-                'supplier_id' => $material->supplier_id ?? '--',
-                'site_id' => $material->phase->site_id ?? '--',
-                'phase' => $material->phase->phase_name ?? '--',
-                'phase_id' => $material->phase_id ?? '--',
+                'supplier' => $material->supplier->name ?? null,
+                'supplier_id' => $material->supplier_id ?? null,
+                'site_id' => $material->phase->site_id ?? null,
+                'phase' => $material->phase->phase_name ?? null,
+                'phase_id' => $material->phase_id ?? null,
                 'created_at' => $material->created_at,
+                'service_charge_amount' => $serviceCharge,
+
             ];
         });
     }
@@ -191,20 +189,22 @@ class DataService
 
                 'id' => $bill->id,
                 'verified_by_admin' => $bill->verified_by_admin,
-                'description' => $bill->wager_name ?? '--',
+                'description' => $bill->wager_name ?? null,
                 'category' => 'SQFT',
                 'debit' => $amount,
                 'credit' => 0,
                 'total_amount_with_service_charge' => $serviceCharge + $amount,
-                'transaction_type' => '--',
+                'transaction_type' => null,
                 'payment_initiator' => 'Supplier',
-                'site' => $bill->phase->site->site_name ?? '--',
-                'supplier' => $bill->supplier->name ?? '--',
-                'supplier_id' => $bill->supplier_id ?? '--',
-                'site_id' => $bill->phase->site_id ?? '--',
-                'phase' => $bill->phase->phase_name ?? '--',
-                'phase_id' => $bill->phase_id ?? '--',
+                'site' => $bill->phase->site->site_name ?? null,
+                'supplier' => $bill->supplier->name ?? null,
+                'supplier_id' => $bill->supplier_id ?? null,
+                'site_id' => $bill->phase->site_id ?? null,
+                'phase' => $bill->phase->phase_name ?? null,
+                'phase_id' => $bill->phase_id ?? null,
                 'created_at' => $bill->created_at,
+                'service_charge_amount' => $serviceCharge,
+
             ];
         });
     }
@@ -218,52 +218,54 @@ class DataService
             return [
 
                 'id' => $expense->id,
-                'verified_by_admin'=> $expense->paid_by_admin,
-                'description' => $expense->item_name ?? '--',
+                'verified_by_admin' => $expense->paid_by_admin,
+                'description' => $expense->item_name ?? null,
                 'category' => 'Expense',
                 'credit' => 0,
                 'debit' => $expense->price,
                 'total_amount_with_service_charge' => $serviceCharge + $expense->price,
-                'transaction_type' => '--',
+                'transaction_type' => null,
                 'payment_initiator' => 'Site',
-                'site' => $expense->phase->site->site_name ?? '--',
-                'supplier' => '--',
-                'supplier_id' => '--',
-                'site_id' => $expense->phase->site_id ?? '--',
-                'phase' => $expense->phase->phase_name ?? '--',
-                'phase_id' => $expense->phase_id ?? '--',
+                'site' => $expense->phase->site->site_name ?? null,
+                'supplier' => null,
+                'supplier_id' => null,
+                'site_id' => $expense->phase->site_id ?? null,
+                'phase' => $expense->phase->phase_name ?? null,
+                'phase_id' => $expense->phase_id ?? null,
                 'created_at' => $expense->created_at,
+                'service_charge_amount' => $serviceCharge,
+
             ];
         });
     }
 
-    private function transformWagers(Collection $wagers): Collection
-    {
-        return $wagers->map(function ($wager) {
+    // private function transformWagers(Collection $wagers): Collection
+    // {
+    //     return $wagers->map(function ($wager) {
 
-            $serviceCharge = $this->calculateServiceCharge($wager->wager_total, $wager->phase->site->service_charge);
+    //         $serviceCharge = $this->calculateServiceCharge($wager->wager_total, $wager->phase->site->service_charge);
 
-            return [
+    //         return [
 
-                'id' => $wager->id,
-                'verified_by_admin' => $wager->verified_by_admin,
-                'description' => $wager->wager_name ?? '--',
-                'category' => 'Wager',
-                'credit' => 0,
-                'debit' => $wager->wager_total,
-                'transaction_type' => '--',
-                'payment_initiator' => 'Supplier',
-                'total_amount_with_service_charge' => $serviceCharge + $wager->wager_total,
-                'site' => $wager->phase->site->site_name ?? '--',
-                'supplier' => $wager->supplier->name ?? '--',
-                'supplier_id' => $wager->supplier_id ?? '--',
-                'site_id' => $wager->phase->site_id ?? '--',
-                'phase' => $wager->phase->phase_name ?? '--',
-                'phase_id' => $wager->phase_id ?? '--',
-                'created_at' => $wager->created_at,
-            ];
-        });
-    }
+    //             'id' => $wager->id,
+    //             'verified_by_admin' => $wager->verified_by_admin,
+    //             'description' => $wager->wager_name ?? null,
+    //             'category' => 'Wager',
+    //             'credit' => 0,
+    //             'debit' => $wager->wager_total,
+    //             'transaction_type' => null,
+    //             'payment_initiator' => 'Supplier',
+    //             'total_amount_with_service_charge' => $serviceCharge + $wager->wager_total,
+    //             'site' => $wager->phase->site->site_name ?? null,
+    //             'supplier' => $wager->supplier->name ?? null,
+    //             'supplier_id' => $wager->supplier_id ?? null,
+    //             'site_id' => $wager->phase->site_id ?? null,
+    //             'phase' => $wager->phase->phase_name ?? null,
+    //             'phase_id' => $wager->phase_id ?? null,
+    //             'created_at' => $wager->created_at,
+    //         ];
+    //     });
+    // }
 
     private function transformWastas(Collection $wastas): Collection
     {
@@ -276,18 +278,18 @@ class DataService
 
                 'id' => $wasta->id,
                 'verified_by_admin' => $wasta->verified_by_admin,
-                'description' => $wasta->wasta_name ?? '--',
+                'description' => $wasta->wasta_name ?? null,
                 'category' => 'Wasta',
                 'credit' => 0,
                 'debit' => $totalAmount,
-                'transaction_type' => '--',
+                'transaction_type' => null,
                 'payment_initiator' => 'Site',
-                'site' => $wasta->phase->site->site_name ?? '--',
-                'supplier' => '--',
-                'supplier_id' => '--',
-                'site_id' => $wasta->phase->site_id ?? '--',
-                'phase' => $wasta->phase->phase_name ?? '--',
-                'phase_id' => $wasta->phase_id ?? '--',
+                'site' => $wasta->phase->site->site_name ?? null,
+                'supplier' => null,
+                'supplier_id' => null,
+                'site_id' => $wasta->phase->site_id ?? null,
+                'phase' => $wasta->phase->phase_name ?? null,
+                'phase_id' => $wasta->phase_id ?? null,
                 'created_at' => $wasta->created_at,
                 'total_amount_with_service_charge' => $totalAmount + $serviceCharge,
                 'service_charge_amount' => $serviceCharge,
@@ -299,7 +301,7 @@ class DataService
     private function transformLabours(Collection $labours): Collection
     {
         return $labours->map(function ($labour) {
-     
+
             $totalAmount = $this->calculateLabourTotal($labour);
             $serviceCharge = $this->calculateServiceCharge($totalAmount, $labour->phase->site->service_charge ?? 0);
 
@@ -307,18 +309,18 @@ class DataService
 
                 'id' => $labour->id,
                 'verified_by_admin' => $labour->verified_by_admin,
-                'description' => $labour->labour_name ?? '--',
+                'description' => $labour->labour_name ?? null,
                 'category' => 'Labour',
                 'credit' => 0,
                 'debit' => $totalAmount,
-                'transaction_type' => '--',
+                'transaction_type' => null,
                 'payment_initiator' => 'Site',
-                'site' => $labour->phase->site->site_name ?? '--',
-                'supplier' => '--',
-                'supplier_id' => '--',
-                'site_id' => $labour->phase->site_id ?? '--',
-                'phase' => $labour->phase->phase_name ?? '--',
-                'phase_id' => $labour->phase_id ?? '--',
+                'site' => $labour->phase->site->site_name ?? null,
+                'supplier' => null,
+                'supplier_id' => null,
+                'site_id' => $labour->phase->site_id ?? null,
+                'phase' => $labour->phase->phase_name ?? null,
+                'phase_id' => $labour->phase_id ?? null,
                 'created_at' => $labour->created_at,
                 'total_amount_with_service_charge' => $totalAmount + $serviceCharge,
                 'service_charge_amount' => $serviceCharge,
@@ -341,7 +343,6 @@ class DataService
     private function calculateServiceCharge(float $amount, float $serviceChargePercentage): float
     {
         return ($amount * $serviceChargePercentage) / 100;
-
     }
 
     private function filterByDate(string $dateFilter, ?string $startDate, ?string $endDate): ?array
@@ -369,151 +370,172 @@ class DataService
         return $supplier_id;
     }
 
-    private function getPayments(string $dateFilter, ?array $dateRange, $site_id, $supplier_id): Collection
+    private function getPayments(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
     {
         return Payment::query()
+            ->where('verified_by_admin', 1)
+            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
+            ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
+            ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('site', fn($sq) => $sq->where('id', $site_id)))
             ->with(['site', 'supplier'])
-            ->where('verified_by_admin', 1)
-            ->when($this->isValidSite($site_id), fn($q) => $q->where('site_id', $site_id))
+            ->get();
+    }
+
+    private function getRawMaterials(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
+    {
+
+
+        return ConstructionMaterialBilling::query()
+            ->with(['phase.site', 'supplier'])
             ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
             ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
-            ->get();
-    }
-
-    private function getRawMaterials(string $dateFilter, ?array $dateRange, $site_id, $supplier_id): Collection
-    {
-        return ConstructionMaterialBilling::with(['phase.site', 'supplier'])
-            ->whereHas('phase', fn($q) => $q->whereNull('deleted_at'))
-            ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-            ->whereHas('phase.site', $this->activeSiteQuery())
-            ->where('verified_by_admin', 1)
-            ->when($dateRange, fn($q) => $q->whereBetween('created_at', $dateRange))
+            ->when($this->isValidPhase($phase_id), fn($q) => $q->whereHas('phase', fn($sq) => $sq->where('id', $phase_id)))
             ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
-            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
+            ->where('verified_by_admin', 1)
             ->latest()
             ->get();
     }
 
-    private function getSquareFootageBills(string $dateFilter, ?array $dateRange, $site_id, $supplier_id): Collection
+    private function getSquareFootageBills(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
     {
-        return SquareFootageBill::with([
-            'phase' => fn($phase) => $phase->with(['site' => fn($site) => $site->withoutTrashed()])->withoutTrashed(),
-            'supplier' => fn($supplier) => $supplier->withoutTrashed(),
-        ])
-            ->whereHas('phase', fn($q) => $q->whereNull('deleted_at'))
-            ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-            ->whereHas('phase.site', $this->activeSiteQuery())
-            ->where('verified_by_admin', 1)
+        return SquareFootageBill::query()
+            ->with([
+                'phase' => fn($phase) => $phase->with(['site' => fn($site) => $site->withoutTrashed()])->withoutTrashed(),
+                'supplier' => fn($supplier) => $supplier->withoutTrashed(),
+            ])
+            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
             ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
+            ->when($this->isValidPhase($phase_id), fn($q) => $q->whereHas('phase', fn($sq) => $sq->where('id', $phase_id)))
             ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
-            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
-            ->latest()
-            ->get();
-    }
-
-    private function getExpenses(string $dateFilter, ?array $dateRange, $site_id, $supplier_id): Collection
-    {
-
-
-
-        return DailyExpenses::with(['phase.site' => fn($site) => $site->withoutTrashed()])
-            ->whereHas('phase', fn($q) => $q->whereNull('deleted_at'))
-            ->whereHas('phase.site', $this->activeSiteQuery())
-            ->when($supplier_id !== 'all', fn($q) => $q->whereNotNull('supplier_id'))
-            ->when($supplier_id === 'all', fn($q) => $q->whereNull('supplier_id'))
             ->where('verified_by_admin', 1)
-            ->when(
-                $this->isFilteredDate($dateFilter, $dateRange),
-                fn($q) =>
-                $q->whereBetween('created_at', $dateRange)
-            )
+            ->latest()
+            ->get();
+    }
 
-            ->when(
-                $this->isValidSite($site_id),
-                fn($q) =>
-                $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id))
-            )
+    private function getExpenses(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
+    {
+        return DailyExpenses::query()
+            ->with(['phase.site' => fn($site) => $site->withoutTrashed()])
+            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
+            ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
+            ->when($this->isValidPhase($phase_id), fn($q) => $q->whereHas('phase', fn($sq) => $sq->where('id', $phase_id)))
+            ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
+            ->where('verified_by_admin', 1)
 
             ->latest()
             ->get();
     }
 
 
-    private function getWagers(
-        string $dateFilter,
-        ?array $dateRange,
-        $site_id,
-        $supplier_id,
-        $wager_id
+    private function getWastas(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
+    {
+        return Wasta::query()
+            ->with([
+                'phase.site',
+                'attendances' => fn($q) => $q->where('is_present', 1),
+            ])
+            ->whereHas('attendances', fn($q) => $q->where('is_present', 1)) // <-- Enforce at least one presence
+            ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
+            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
+            ->when($this->isValidPhase($phase_id), fn($q) => $q->whereHas('phase', fn($sq) => $sq->where('id', $phase_id)))
+            ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
+            ->latest()
+            ->get();
+    }
+    private function getLabours(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
+    {
+        return Labour::query()
+            ->with([
+                'wasta',
+                'phase.site',
+                'attendances' => fn($q) => $q->where('is_present', 1),
+            ])
+            ->whereHas('attendances', fn($q) => $q->where('is_present', 1)) // <-- Enforce at least one presence
+            ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
+            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
+            ->when($this->isValidPhase($phase_id), fn($q) => $q->whereHas('phase', fn($sq) => $sq->where('id', $phase_id)))
+            ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
+            ->latest()
+            ->get();
+    }
+
+
+    /**
+     * Get all suppliers with their site info (without date filters)
+     * 
+     * @param int|null $site_id
+     * @param int|null $supplier_id
+     * @param int|null $phase_id
+     * @return Collection
+     */
+    public function getSuppliersWithSites(
+        $site_id = null,
+        $supplier_id = null,
+        $phase_id = null
     ): Collection {
-        return DailyWager::with(['phase.site', 'supplier', 'wagerAttendances' => fn($q) => $q->where('verified_by_admin', 1)])
-            ->whereHas('phase', fn($q) => $q->whereNull('deleted_at'))
-            ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-            ->whereHas('phase.site', $this->activeSiteQuery())
-            ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
-            ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
-            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
-            ->when($this->isValidWager($wager_id), fn($q) => $q->where('id', $wager_id))
-            ->latest()
-            ->get();
+        $suppliers = collect();
+
+        // Define models and their relationships
+        $models = [
+            Payment::class => ['relation' => 'site', 'type' => 'direct'],
+            ConstructionMaterialBilling::class => ['relation' => 'phase.site', 'type' => 'nested'],
+            SquareFootageBill::class => ['relation' => 'phase.site', 'type' => 'nested'],
+            DailyExpenses::class => ['relation' => 'phase.site', 'type' => 'nested'],
+            Wasta::class => ['relation' => 'phase.site', 'type' => 'nested'],
+            Labour::class => ['relation' => 'phase.site', 'type' => 'nested']
+        ];
+
+        foreach ($models as $model => $config) {
+            $query = $model::query()
+                ->whereNotNull('supplier_id')
+                ->with(['supplier', $config['relation']]);
+
+            // Apply site filter if provided
+            if ($this->isValidSite($site_id)) {
+                if ($config['type'] === 'nested') {
+                    $query->whereHas('phase', fn($q) => $q->whereHas('site', fn($sq) => $sq->where('id', $site_id)));
+                } else {
+                    $query->where('site_id', $site_id);
+                }
+            }
+
+            // Apply supplier filter if provided
+            if ($this->isValidSupplier($supplier_id)) {
+                $query->where('supplier_id', $supplier_id);
+            }
+
+            // Apply phase filter if provided
+            if ($this->isValidPhase($phase_id)) {
+                if ($config['type'] === 'nested') {
+                    $query->whereHas('phase', fn($q) => $q->where('id', $phase_id));
+                }
+            }
+
+            $suppliers = $suppliers->merge(
+                $query->get()
+                    ->map(function ($record) use ($config) {
+                        $site = $config['type'] === 'nested'
+                            ? ($record->phase->site ?? null)
+                            : ($record->site ?? null);
+
+                        return [
+                            'supplier_id' => $record->supplier_id,
+                            'supplier_name' => $record->supplier->name ?? null,
+                            'site_id' => $site->id ?? null,
+                            'site_name' => $site->site_name ?? null
+                        ];
+                    })
+            );
+        }
+
+        // Return unique suppliers sorted by name
+        return $suppliers->unique('supplier_id')
+            ->sortBy('supplier_name')
+            ->values();
     }
 
-    private function getWastas(string $dateFilter, ?array $dateRange, $site_id, $supplier_id): Collection
-    {
-        return Wasta::with([
-            'phase.site',
-            'attendances' => fn($q) => $q->where('is_present', 1),
-        ])
-            ->whereHas('phase.site', $this->activeSiteQuery())
-            ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('phase', fn($q) => $q->where('site_id', $site_id)))
-            
-            ->when($supplier_id !== 'all', fn($q) => $q->whereNotNull('supplier_id'))
-            ->when($supplier_id === 'all', fn($q) => $q->whereNull('supplier_id'))
-            ->when(
-                $this->isFilteredDate($dateFilter, $dateRange),
-                fn($q) =>
-                $q->where(function ($query) use ($dateRange) {
-                    $query->whereBetween('created_at', $dateRange)
-                        ->orWhereHas('attendances', fn($q) => $q->where('is_present', 1)->whereBetween('attendance_date', $dateRange));
-                })
-            )
-            ->latest()
-            ->get();
-    }
 
 
-    private function getLabours(string $dateFilter, ?array $dateRange, $site_id, $supplier_id): Collection
-    {
-
-
-        return Labour::with([
-            'wasta',
-            'phase.site',
-            'attendances' => fn($q) => $q->where('is_present', 1),
-        ])
-            ->whereHas('phase.site', $this->activeSiteQuery())
-            ->when(
-                $this->isValidSite($site_id),
-                fn($q) =>
-                $q->whereHas(
-                    'phase',
-                    fn($q) =>
-                    $q->where('site_id', $site_id)
-                )
-            )
-            ->when($supplier_id !== 'all', fn($q) => $q->whereNotNull('supplier_id'))
-            ->when($supplier_id === 'all', fn($q) => $q->whereNull('supplier_id'))
-            ->when(
-                $this->isFilteredDate($dateFilter, $dateRange),
-                fn($q) =>
-                $q->where(function ($query) use ($dateRange) {
-                    $query->whereBetween('created_at', $dateRange)
-                        ->orWhereHas('attendances', fn($q) => $q->where('is_present', 1)->whereBetween('attendance_date', $dateRange));
-                })
-            )
-            ->latest()
-            ->get();
-    }
 
 
     private function activeSiteQuery(): \Closure
@@ -532,6 +554,11 @@ class DataService
     private function isValidSite($site_id): bool
     {
         return $site_id && $site_id !== 'all';
+    }
+
+    private function isValidPhase($phase_id)
+    {
+        return $phase_id && $phase_id !== 'all';
     }
 
     private function isValidSupplier($supplier_id): bool

@@ -142,7 +142,7 @@ class PDFController extends Controller
         $endDate = 'end_date';
 
         // Get filtered collections from your data service
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $this->dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
@@ -157,9 +157,9 @@ class PDFController extends Controller
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wagers,
             $wastas,
             $labours
+
         )->sortByDesc(fn($entry) => $entry['created_at']);
 
         // Group ledgers by phase
@@ -212,6 +212,7 @@ class PDFController extends Controller
         $totalSupplierPaymentAmount = $ledgers->sum(fn($p) => floatval($p['credit'] ?? 0));
 
         $balances = $this->dataService->calculateAllBalances($ledgers);
+
 
         $withoutServiceCharge = $balances['without_service_charge'];
         $withServiceCharge = $balances['with_service_charge'];
@@ -630,18 +631,18 @@ class PDFController extends Controller
         $dateFilter = $request->get('date_filter', 'lifetime');
         $site_id = $request->input('site_id', $request->input('site_id'));
         $supplier_id = $request->input('supplier_id', 'all');
-        $wager_id = $request->input('wager_id', 'all');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
+        $phase_id = $request->input('phase_id', 'all');
 
         // Call the service to get all data including wasta and labours
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses,  $wastas, $labours] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
-            $wager_id,
             $startDate,
-            $endDate
+            $endDate,
+            $phase_id
         );
 
         // Create ledger data including wasta and labours
@@ -650,9 +651,9 @@ class PDFController extends Controller
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wagers,
             $wastas,
             $labours
+            
         )->sortByDesc(function ($d) {
             return $d['created_at'];
         });
@@ -666,19 +667,18 @@ class PDFController extends Controller
         $total_paid = $withServiceCharge['paid'];
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
-
+        $service_charge_amount = $balances['service_charge_amount'];
 
         $ledgers = $ledgers->sortByDesc(function ($d) {
             return $d['created_at'];
         });
-
 
         $pdf = new PDF();
         $pdf->AliasNbPages();
         $pdf->AddPage();
         $pdf->SetFont('Times', '', 10);
         $pdf->SetTitle('Supplier Payment History');
-        $pdf->ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance);
+        $pdf->ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance, $service_charge_amount);
         $pdf->Output();
         exit;
     }

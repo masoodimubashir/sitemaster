@@ -184,7 +184,7 @@
         <div class="header-icon">
             <i class="menu-icon fa fa-building"></i>
         </div>
-        <h1 class="text-xl font-semibold">Supplier Report</h1>
+        <h1 class="text-xl font-semibold">Supplier {{ $supplier->name }}</h1>
 
 
         <div class="ms-auto action-buttons d-flex gap-2">
