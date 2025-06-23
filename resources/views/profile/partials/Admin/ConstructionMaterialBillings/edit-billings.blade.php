@@ -93,7 +93,7 @@
                             @enderror
                         </div>
 
-                        <button class="btn btn-info mt-4">Save</button>
+                        <button class="btn btn-success mt-4">Save</button>
 
                     </form>
 

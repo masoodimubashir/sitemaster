@@ -1,117 +1,162 @@
 <x-app-layout>
-
     @php
         $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
     @endphp
 
-    <x-breadcrumb :names="['Items']" :urls="[$user . '/items']" />
+    <!-- Flash Messages Container -->
+    <div id="messageContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; max-width: 400px;">
+        @if (session('status') === 'create')
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <div>Item Created Successfully</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
-    @if (session('status') === 'create')
-        <x-success-message message="Item Created..." />
-    @endif
+        @if (session('status') === 'update')
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <div>Item Updated Successfully</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
-    @if (session('status') === 'update')
-        <x-success-message message="Item Updated..." />
-    @endif
+        @if (session('status') === 'delete')
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <div>Item Deleted</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
-    @if (session('status') === 'delete')
-        <x-error-message message="Item Deleted..." />
-    @endif
+        @if (session('status') === 'error')
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <div>Sorry! Item Not Found</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
 
-    @if (session('status') === 'error')
-        <x-error-message message="Sorry! Item Not Found..." />
-    @endif
-
-    @if (session('status') === 'hasItem')
-        <x-error-message message="This Item Cannot Be deleted" />
-    @endif
-
-    <div class="row">
-
-
-        <div class="d-flex justify-content-end">
-
-            <a class="btn btn-sm btn-success ps-2" href="{{ url($user . '/items/create') }}">
-                <i class="fa-solid fa-boxes-stacked me-1"></i> <!-- me-2 adds margin-right -->
-                Create Item
-            </a>
-
-        </div>
-
-        <div class="table-responsive mt-4">
-
-            @if (count($items) > 0)
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th class="bg-info fw-bold text-white"> Item </th>
-                            @if ($user === 'admin')
-                                <th class="bg-info fw-bold text-white"> Actions</th>
-                            @endif
-                        </tr>
-                    </thead>
-                    <tbody>
-
-                        @foreach ($items as $item)
-                            <tr>
-
-                                <td>
-                                    {{ $item->item_name }}
-                                </td>
-
-                                @if ($user === 'admin')
-                                    <td class="d-flex align-items-center"> <!-- Added flex container with gap -->
-                                        <!-- Edit Icon -->
-                                        <a href="{{ url($user . '/items/' . $item->id . '/edit') }}"
-                                            class="text-decoration-none me-2"> <!-- Added me-2 for right margin -->
-                                            <i class="fa-regular fa-pen-to-square bg-white rounded-full p-2"></i>
-                                            <!-- Added p-2 for padding -->
-                                        </a>
-
-                                        <!-- Delete Form -->
-                                        <form id="delete-form-{{ $item->id }}"
-                                            action="{{ url($user . '/items/' . $item->id) }}" method="POST"
-                                            style="display: none;">
-                                            @csrf
-                                            @method('DELETE')
-                                        </form>
-
-                                        <!-- Delete Icon -->
-                                        <a href="{{ url($user . '/items/' . $item->id) }}"
-                                            onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this item?')) document.getElementById('delete-form-{{ $item->id }}').submit();"
-                                            class="text-decoration-none"> <!-- Added text-decoration-none -->
-                                            <i class="fa-solid fa-trash text-danger bg-white rounded-full p-2"></i>
-                                            <!-- Changed to fa-trash and added p-2 -->
-                                        </a>
-                                    </td>
-                                @endif
-
-
-                            </tr>
-                        @endforeach
-
-                    </tbody>
-
-
-                </table>
-            @else
-                <table class="table table-bordered">
-                    <thead></thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-center text-danger fw-bold">No Records Available Yet</td>
-                        </tr>
-                    </tbody>
-                </table>
-
-            @endif
-
-        </div>
-
-        <div class="mt-4">
-            {{ $items->links() }}
-
-        </div>
+        @if (session('status') === 'hasItem')
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <div>This Item Cannot Be Deleted</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
     </div>
 
+    <x-breadcrumb :names="['Items']" :urls="[$user . '/items']" />
+
+        <div class="row">
+            <div class="col-12">
+                <div class=" mb-4 border-0">
+                    <div class="card-heade  py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-boxes-stacked me-2 text-primary"></i>
+                                Items Management
+                            </h5>
+                            <a class="btn btn-sm btn-success" href="{{ url($user . '/items/create') }}">
+                                <i class="fas fa-plus me-1"></i>
+                                Create Item
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="table-responsive rounded">
+                            @if (count($items) > 0)
+                                <table class="table table-hover align-middle">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="fw-bold ps-4">Item Name</th>
+                                            @if ($user === 'admin')
+                                                <th class="fw-bold text-center pe-4">Actions</th>
+                                            @endif
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($items as $item)
+                                            <tr>
+                                                <td class="ps-4">
+                                                    <span class="fw-semibold">{{ $item->item_name }}</span>
+                                                </td>
+                                                @if ($user === 'admin')
+                                                    <td class="text-center pe-4">
+                                                        <div class="d-flex justify-content-center gap-2">
+                                                            <a href="{{ url($user . '/items/' . $item->id . '/edit') }}" 
+                                                               class="btn btn-sm btn-primary"
+                                                               data-bs-toggle="tooltip" title="Edit">
+                                                                <i class="fas fa-edit"></i>
+                                                            </a>
+                                                            
+                                                            <form id="delete-form-{{ $item->id }}"
+                                                                action="{{ url($user . '/items/' . $item->id) }}"
+                                                                method="POST">
+                                                                @csrf
+                                                                @method('DELETE')
+                                                                <button type="submit" 
+                                                                        class="btn btn-sm btn-danger"
+                                                                        data-bs-toggle="tooltip" 
+                                                                        title="Delete"
+                                                                        onclick="return confirm('Are you sure you want to delete this item?');">
+                                                                    <i class="fas fa-trash-alt"></i>
+                                                                </button>
+                                                            </form>
+                                                        </div>
+                                                    </td>
+                                                @endif
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            @else
+                                <div class="alert alert-light text-center py-5">
+                                    <div class="py-4">
+                                        <i class="fas fa-box-open fa-4x text-muted mb-4"></i>
+                                        <h4 class="text-muted">No Items Found</h4>
+                                        <p class="text-muted mb-4">There are no item records available at the moment.</p>
+                                        <a class="btn btn-primary" href="{{ url($user . '/items/create') }}">
+                                            <i class="fas fa-plus me-1"></i>
+                                            Create New Item
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+
+                        @if($items->hasPages())
+                            <div class="d-flex justify-content-center mt-4">
+                                <nav aria-label="Page navigation">
+                                    {{ $items->onEachSide(1)->links('pagination::bootstrap-5') }}
+                                </nav>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+            
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(() => {
+                $('.alert').alert('close');
+            }, 5000);
+        });
+    </script>
 </x-app-layout>

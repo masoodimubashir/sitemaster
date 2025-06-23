@@ -15,27 +15,51 @@ class AttendanceSheetController extends Controller
 {
 
 
-    public function index(Request $request)
-    {
-
-        if ($request->filled('monthYear')) {
-            [$year, $month] = explode('-', $request->input('monthYear'));
-        } else {
-            $month = now()->month;
-            $year = now()->year;
-        }
-
-        $wastas = Wasta::with([
-            'attendances' => fn($query) => $query->whereMonth('attendance_date', $month)->whereYear('attendance_date', $year),
-            'labours.attendances' => fn($query) => $query->whereMonth('attendance_date', $month)->whereYear('attendance_date', $year),
-        ])->get();
-
-        $phases = Phase::latest()->get();
-
-        $daysInMonth = \Carbon\Carbon::create($year, $month)->daysInMonth;
-
-        return view('profile.partials.Admin.Ledgers.wager-attendance-sheet', compact('wastas', 'month', 'year', 'daysInMonth', 'phases'));
+ public function index(Request $request)
+{
+    // Get month/year from request or use current
+    if ($request->filled('monthYear')) {
+        [$year, $month] = explode('-', $request->input('monthYear'));
+    } else {
+        $month = now()->month;
+        $year = now()->year;
     }
+
+    // Base query for Wastas with eager loading
+    $wastasQuery = Wasta::with([
+        'attendances' => fn($query) => $query->whereMonth('attendance_date', $month)
+                                           ->whereYear('attendance_date', $year),
+        'labours.attendances' => fn($query) => $query->whereMonth('attendance_date', $month)
+                                                    ->whereYear('attendance_date', $year),
+        'phase.site' // Include phase and site relationship
+    ]);
+
+    // Apply site filter if provided
+    if ($request->filled('site_id')) {
+        $wastasQuery->whereHas('phase', function($query) use ($request) {
+            $query->where('site_id', $request->input('site_id'));
+        });
+    }
+
+    // Get filtered wastas
+    $wastas = $wastasQuery->get();
+
+    // Get phases and sites for filters
+    $phases = Phase::with('site')->latest()->get();
+    $sites = Site::where('is_on_going', 1)->get();
+
+    $daysInMonth = \Carbon\Carbon::create($year, $month)->daysInMonth;
+
+    return view('profile.partials.Admin.Ledgers.wager-attendance-sheet', [
+        'wastas' => $wastas,
+        'month' => $month,
+        'year' => $year,
+        'daysInMonth' => $daysInMonth,
+        'phases' => $phases,
+        'sites' => $sites,
+        'selectedSiteId' => $request->input('site_id') // Pass selected site ID to view
+    ]);
+}
 
     public function storeWastaAttendance(Request $request)
     {

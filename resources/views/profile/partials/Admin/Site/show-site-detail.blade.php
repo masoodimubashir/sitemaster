@@ -2,7 +2,7 @@
     <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['admin/sites', 'admin/sites/' . base64_encode($site->id)]" />
 
     <!-- Action Buttons -->
-    <div class="row mb-4">
+    {{-- <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex flex-wrap gap-2">
               
@@ -15,7 +15,7 @@
               
             </div>
         </div>
-    </div>
+    </div> --}}
 
     <!-- Site Info Cards -->
     <div class="row g-4 mb-4">
@@ -228,13 +228,13 @@
                                                             @switch($entry['category'])
                                                                 @case('Material')
                                                                     <a href="{{ route('construction-material-billings.edit', [base64_encode($entry['id'])]) }}"
-                                                                        class="btn btn-sm btn-outline-primary">
+                                                                        >
                                                                         <i class="fa-regular fa-pen-to-square"></i>
                                                                     </a>
                                                                 @break;
                                                                 @case('SQFT')
                                                                     <a href="{{ route('square-footage-bills.edit', [base64_encode($entry['id'])]) }}"
-                                                                        class="btn btn-sm btn-outline-primary">
+                                                                      >
                                                                         <i class="fa-regular fa-pen-to-square"></i>
                                                                     </a>
                                                                 @break;
@@ -242,7 +242,7 @@
                                                                     <a
                                                                         href="{{ route('daily-expenses.edit', [base64_encode($entry['id'])]) }}">
                                                                         <i
-                                                                            class="fa-regular fa-pen-to-square fs-5 bg-white rounded-full px-2 py-1"></i>
+                                                                            class="fa-regular fa-pen-to-square"></i>
                                                                     </a>
                                                                 @break
 
@@ -270,359 +270,8 @@
 
 
 
-        {{-- <div id="modal-construction-billings{{ $phase->id }}" class="modal fade" aria-hidden="true"
-            aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-
-                <div class="modal-content">
-
-                    <div class="modal-body">
-
-                        <form enctype="multipart/form-data" class="forms-sample material-form"
-                            id="constructionBillingForm">
-
-                            @csrf
-
-
-                            <div class="form-group">
-                                <input type="number" name="amount" id="amount" />
-                                <label for="amount" class="control-label">Material Price</label>
-                                <i class="bar"></i>
-                                <p class=" mt-1 text-danger" id="amount-error"></p>
-                            </div>
-
-
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <select class="form-select text-black form-select-sm"
-                                        id="exampleFormControlSelect3" name="item_name" style="cursor: pointer">
-                                        <option value="">Select Item
-                                        </option>
-                                        @foreach ($items as $item)
-                                            <option value="{{ $item->item_name }}">
-                                                {{ $item->item_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <p class=" mt-1 text-danger" id="item_name-error"></p>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <select class="form-select text-black form-select-sm"
-                                        id="exampleFormControlSelect3" name="supplier_id" style="cursor: pointer">
-                                        <option value="">Select Supplier
-                                        </option>
-                                        @foreach ($raw_material_providers as $supplier)
-                                            <option value="{{ $supplier->id }}">
-                                                {{ $supplier->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                    <p class=" mt-1 text-danger" id="supplier_id-error"></p>
-                                </div>
-
-                                <div class=" col-md-6 mt-3">
-                                    <input id="phase_id" type="hidden" name="phase_id" placeholder="Phase"
-                                        value="{{ $phase->id }}" />
-                                </div>
-                            </div>
-
-                            <div class="mt-3">
-                                <input class="form-control form-control-md" id="image" type="file"
-                                    name="image">
-                                <p class=" mt-1 text-danger" id="image-error"></p>
-                            </div>
-
-                            <x-primary-button>
-                                {{ __('Create Billing') }}
-                            </x-primary-button>
-
-
-                        </form>
-
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-        <div id="modal-square-footage-bills{{ $phase->id }}" class="modal fade" aria-hidden="true"
-            aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-
-            <div class="modal-dialog modal-dialog-centered modal-lg">
-
-                <div class="modal-content">
-
-                    <div class="modal-body">
-
-                        <form id="squareFootageBills" enctype="multipart/form-data"
-                            class="forms-sample material-form">
-
-                            @csrf
-
-                            <div class="form-group">
-                                <input id="wager_name" type="text" name="wager_name" />
-                                <label for="wager_name" class="control-label" />Work
-                                Type</label><i class="bar"></i>
-                                <p class="text-danger" id="wager_name-error"></p>
-                            </div>
-
-                            <div class="form-group">
-                                <input id="price" type="number" name="price" />
-                                <label for="price" class="control-label" />Price</label><i class="bar"></i>
-                                <p class="text-danger" id="price-error"></p>
-                            </div>
-
-                            <div class="form-group">
-                                <input id="multiplier" type="number" name="multiplier" />
-                                <label for="multiplier" class="control-label">Multiplier</label><i
-                                    class="bar"></i>
-
-                                <p class="text-danger" id="multiplier-error"></p>
-                            </div>
-
-                            <div class="row">
-
-                                <div class="col-md-6">
-                                    <select class="form-select text-black form-select-sm"
-                                        id="exampleFormControlSelect3" name="type" style="cursor: pointer">
-                                        <option value="">Select Type</option>
-                                        <option value="per_sqr_ft">Per Square Feet</option>
-                                        <option value="per_unit">Per Unit</option>
-                                        <option value="full_contract">Full Contract
-                                        </option>
-                                    </select>
-                                    <p class="text-danger" id="type-error"></p>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <select class="form-select text-black form-select-sm" id="supplier_id"
-                                        name="supplier_id" style="cursor: pointer">
-                                        <option value="">Select Supplier</option>
-                                        @foreach ($workforce_suppliers as $supplier)
-                                            <option value="{{ $supplier->id }}">
-                                                {{ $supplier->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-
-                                    <p class="text-danger" id="supplier_id-error"></p>
-
-                                </div>
-
-                                <div class=" col-md-6 mt-3">
-                                    <input id="phase_id" type="hidden" name="phase_id" placeholder="Phase"
-                                        value="{{ $phase->id }}" />
-                                </div>
-                            </div>
-
-
-                            <div class="mt-3">
-                                <label for="image">Item Bill</label>
-                                <input class="form-control form-control-md" id="image" type="file"
-                                    name="image_path">
-                                <p class="text-danger" id="image_path-error"></p>
-
-                            </div>
-
-
-                            <div class="mt-3">
-                                <x-primary-button>
-                                    {{ __('Create Bill') }}
-                                </x-primary-button>
-                            </div>
-
-
-
-                        </form>
-
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="modal-daily-expenses{{ $phase->id }}" class="modal fade" aria-hidden="true"
-            aria-labelledby="exampleModalToggleLabel" tabindex="-1">
-
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        <form id="dailyExpenses" class="forms-sample material-form">
-
-                            @csrf
-
-                            <div class="form-group">
-                                <input id="item_name" type="text" name="item_name" />
-                                <label for="item_name" class="control-label">Item
-                                    Name</label><i class="bar"></i>
-                                <p class="text-danger" id="date-error"></p>
-                            </div>
-
-                            <div class="form-group">
-                                <input id="price" type="number" name="price" />
-                                <label for="price" class="control-label">Price</label><i class="bar"></i>
-                                <p class="text-danger" id="description-error"></p>
-                            </div>
-
-                            <div class="form-group">
-                                <input id="site_id" type="number" name="site_id" value="{{ $site->id }}" />
-                            </div>
-
-                            <div class=" col-md-6 mt-3">
-                                <input id="phase_id" type="hidden" name="phase_id" placeholder="Phase"
-                                    value="{{ $phase->id }}" />
-                                <p class="text-danger" id="amount-error"></p>
-                            </div>
-
-
-                            <div class="col-12 mt-3">
-
-                                <input class="form-control" type="file" id="formFile" name="bill_photo">
-
-                                <p class="text-danger" id="category_id-error"></p>
-
-                            </div>
-
-
-                            <x-primary-button class="mt-3">
-                                {{ __('Create Bill') }}
-                            </x-primary-button>
-                        </form>
-                    </div>
-                </div>
-
-            </div>
-        </div> --}}
 
     </div>
-
-    {{-- 
-    <div id="phase" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-        tabindex="-1">
-
-        <div class="modal-dialog modal-dialog-centered">
-
-            <div class="modal-content">
-
-                <div class="modal-body">
-
-                    <form class="forms-sample material-form" id="phaseForm">
-
-                        @csrf
-
-                        <div class="form-group">
-                            <input type="text" name="phase_name" id="phase_name" />
-                            <label for="phase_name" class="control-label">Phase Name</label>
-                            <i class="bar"></i>
-                            <x-input-error :messages="$errors->get('phase_name')" class="mt-2" />
-                        </div>
-
-                        <div class="form-group">
-                            <input type="hidden" name="site_id" value="{{ $site->id }}" />
-                            <x-input-error :messages="$errors->get('site_id')" class="mt-2" />
-                        </div>
-
-                        <div class="flex items-center justify-end mt-4">
-                            <x-primary-button>
-                                {{ __('Create Phase') }}
-                            </x-primary-button>
-                        </div>
-
-                    </form>
-
-                </div>
-            </div>
-
-        </div>
-
-    </div> --}}
-
-
-
-    {{-- <div id="payment-supplier" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-        tabindex="-1">
-
-        <div class="modal-dialog modal-dialog-centered">
-
-            <div class="modal-content">
-
-                <div class="modal-body">
-
-                    <form id="payment_supplierForm" class="forms-sample material-form" enctype="multipart/form-data">
-
-                        @csrf
-
-                        <div class="form-group">
-                            <input type="number" min="0" name="amount" step="0.01" />
-                            <label for="input" class="control-label">Amount</label><i class="bar"></i>
-                            <x-input-error :messages="$errors->get('amount')" class="mt-2" />
-                        </div>
-
-                        <div class="form-group">
-                            <input type="hidden" name="site_id" value="{{ $site->id }}" />
-                            <x-input-error :messages="$errors->get('site_id')" class="mt-2" />
-                        </div>
-
-                        <select name="payment_initiator" id="payment_initiator"
-                            class="form-select text-black form-select-sm" style="cursor: pointer"
-                            onchange="togglePayOptions()">
-                            <option value="" selected>Select Payee</option>
-                            <option value="1">Supplier</option>
-                            <option value="0">Admin</option>
-                        </select>
-
-                        <div id="supplierOptions" style="display: none;" class="mt-3">
-                            <select name="supplier_id" id="supplier_id" class="form-select text-black form-select-sm"
-                                style="cursor: pointer">
-                                <option for="supplier_id" value="">Select Supplier</option>
-                                @foreach ($suppliers as $supplier)
-                                    <option value="{{ $supplier->id }}">
-                                        {{ $supplier->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            <div class="mt-3">
-                                <input class="form-control form-control-md" id="image" type="file"
-                                    name="screenshot">
-                            </div>
-                        </div>
-
-                        <div id="adminOptions" style="display: none;" class="mt-4">
-                            <div class="row g-3">
-                                <div class="col-auto">
-                                    <label for="transaction_sent">
-                                        <input type="radio" name="transaction_type" id="transaction_sent"
-                                            value="1"> Sent
-                                    </label>
-                                </div>
-                                <div class="col-auto">
-                                    <label for="transaction_received">
-                                        <input type="radio" name="transaction_type" id="transaction_received"
-                                            value="0"> Received
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-end mt-4">
-
-                            <x-primary-button>
-                                {{ __('Pay') }}
-                            </x-primary-button>
-
-                        </div>
-
-                    </form>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </div> --}}
 
     @push('scripts')
         <script>

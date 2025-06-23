@@ -1,304 +1,285 @@
 <x-app-layout>
+    <!-- Flash Messages Container -->
+    <div id="messageContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; max-width: 400px;">
+        @if (session('status') === 'create')
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <div>Site Created Successfully</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if (session('status') === 'update' || session('status') === 'verify')
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle me-2"></i>
+                    <div>Site Verification Updated</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if (session('status') === 'delete')
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <div>Site Deleted</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if (session('status') === 'error' || session('status') === 'hasPaymentRecords')
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    <div>Site Cannot Be Deleted</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+    </div>
 
     <x-breadcrumb :names="['Sites']" :urls="['admin/sites']" />
 
-    @if (session('status') === 'create')
-        <x-success-message message="Site Created..." />
-    @endif
-
-    @if (session('status') === 'update')
-        <x-success-message message="Site Verification Updated..." />
-    @endif
-
-    @if (session('status') === 'verify')
-        <x-success-message message="Site Verification Updated..." />
-    @endif
-
-    @if (session('status') === 'delete')
-        <x-error-message message="Site Deleted...." />
-    @endif
-
-    @if (session('status') === 'error')
-        <x-error-message message="Site Cannot Be Deleted...." />
-    @endif
-
-
-    @if (session('status') === 'hasPaymentRecords')
-        <x-error-message message="Site Cannot Be Deleted...." />
-    @endif
-
-
-    <style>
-        #messageContainer {
-            position: fixed;
-            bottom: 5%;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 999999999;
-        }
-    </style>
-
-    <div class="row">
-
-        <div class="col-lg-12">
-
-            <div class="card-body">
-
-                <div class="d-flex justify-content-end">
-
-                    <!-- Create Site Button -->
-                    <div class="col-md-2 text-end">
-                        <button class="btn btn-success btn-sm" data-bs-toggle="modal"
-                            data-bs-target="#create-site-modal">
-                            + Create Site
-                        </button>
-                      
+        <div class="row">
+            <div class="col-12">
+                <div class="mb-4 border-0">
+                    <div class="card-header  py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="fas fa-map-marker-alt me-2 text-primary"></i>
+                                Sites 
+                            </h5>
+                            <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#create-site-modal">
+                                <i class="fas fa-plus me-1"></i>
+                                Create Site
+                            </button>
+                        </div>
                     </div>
+                    
+                    <div class="card-body">
+                        <div class="table-responsive rounded">
+                            @if (count($sites))
+                                <table class="table table-hover align-middle">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="fw-bold">Status</th>
+                                            <th class="fw-bold">Date</th>
+                                            <th class="fw-bold">Site Name</th>
+                                            <th class="fw-bold">Location</th>
+                                            <th class="fw-bold">Contact No</th>
+                                            <th class="fw-bold">Owner</th>
+                                            <th class="fw-bold">Service Charge</th>
+                                            <th class="fw-bold text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($sites as $site)
+                                            <tr>
+                                                <td>
+                                                    <span class="badge bg-{{ $site->is_on_going ? 'success' : 'danger' }}">
+                                                        {{ $site->is_on_going ? 'Open' : 'Closed' }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ $site->created_at->format('d-M-Y') }}</td>
+                                                <td>
+                                                    @if ($site->is_on_going)
+                                                        <a href="{{ route('sites.show', [base64_encode($site->id)]) }}" 
+                                                           class="fw-bold text-primary text-decoration-none">
+                                                            {{ ucfirst($site->site_name) }}
+                                                        </a>
+                                                    @else
+                                                        <span>{{ $site->site_name }}</span>
+                                                    @endif
+                                                </td>
+                                                <td>{{ ucfirst($site->location) }}</td>
+                                                <td>
+                                                    <a href="tel:{{ $site->contact_no }}" class="text-decoration-none">
+                                                        <i class="fas fa-phone me-1 text-muted"></i>
+                                                        +91-{{ $site->contact_no }}
+                                                    </a>
+                                                </td>
+                                                <td>{{ ucfirst($site->site_owner_name) }}</td>
+                                                <td>{{ $site->service_charge }}%</td>
+                                                <td class="text-center">
+                                                    <div class="d-flex justify-content-center gap-2">
+                                                        <a href="{{ url('admin/sites/' . $site->id . '/edit') }}" 
+                                                           class="btn btn-sm btn-primary"
+                                                           data-bs-toggle="tooltip" title="Edit">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        
+                                                        <form id="delete-form-{{ $site->id }}"
+                                                            action="{{ route('sites.destroy', [base64_encode($site->id)]) }}"
+                                                            method="POST">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" 
+                                                                    class="btn btn-sm btn-danger"
+                                                                    data-bs-toggle="tooltip" 
+                                                                    title="Delete"
+                                                                    onclick="return confirm('Are you sure you want to delete this site?');">
+                                                                <i class="fas fa-trash-alt"></i>
+                                                            </button>
+                                                        </form>
+                                                        
+                                                        <form action="{{ url('/admin/sites/update-on-going', $site->id) }}"
+                                                            method="POST">
+                                                            @csrf
+                                                            @method('POST')
+                                                            <button type="submit" 
+                                                                    class="btn btn-sm btn-{{ $site->is_on_going ? 'success' : 'danger' }}"
+                                                                    data-bs-toggle="tooltip" 
+                                                                    title="{{ $site->is_on_going ? 'Verified' : 'Verify' }}">
+                                                                <i class="fas fa-{{ $site->is_on_going ? 'check' : 'hourglass' }}"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            @else
+                                <div class="alert alert-light text-center py-5">
+                                    <div class="py-4">
+                                        <i class="fas fa-map-marked-alt fa-4x text-muted mb-4"></i>
+                                        <h4 class="text-muted">No Sites Found</h4>
+                                        <p class="text-muted mb-4">There are no site records available at the moment.</p>
+                                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#create-site-modal">
+                                            <i class="fas fa-plus me-1"></i>
+                                            Create New Site
+                                        </button>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
 
+                        @if($sites->hasPages())
+                            <div class="d-flex justify-content-center mt-4">
+                                <nav aria-label="Page navigation">
+                                    {{ $sites->onEachSide(1)->links('pagination::bootstrap-5') }}
+                                </nav>
+                            </div>
+                        @endif
+                    </div>
                 </div>
-
-                <div class="table-responsive mt-4">
-
-                    @if (count($sites))
-
-
-                        <table class="table table-bordered">
-
-                            <thead>
-
-                                <tr>
-                                    <th class="bg-info text-white fw-bold"> Site Status </th>
-                                    <th class="bg-info text-white fw-bold">Date</th>
-                                    <th class="bg-info text-white fw-bold">Site Name</th>
-                                    <th class="bg-info text-white fw-bold"> Location </th>
-                                    <th class="bg-info text-white fw-bold">Contact No</th>
-                                    <th class="bg-info text-white fw-bold"> Site Owner Name </th>
-                                    <th class="bg-info text-white fw-bold"> Service Charge(%) </th>
-                                    <th class="bg-info text-white fw-bold">Actions</th>
-                                </tr>
-
-                            </thead>
-
-                            <tbody>
-                                @foreach ($sites as $site)
-                                    <tr>
-
-                                        <td class="fw-bold {{ $site->is_on_going ? 'text-success' : 'text-danger' }}">
-
-                                            {{ $site->is_on_going ? 'Open' : 'Closed' }}
-
-                                        </td>
-
-                                        <td> {{ $site->created_at->format('d-M-Y') }} </td>
-
-                                        <td title=" View {{ $site->site_name }} details...">
-
-                                            @if ($site->is_on_going)
-                                                <a href="{{ route('sites.show', [base64_encode($site->id)]) }}"
-                                                    class="fw-bold link-offset-2 link-underline link-underline-opacity-0">
-                                                    {{ ucfirst($site->site_name) }}
-                                                </a>
-                                            @else
-                                                <p>
-                                                    {{ $site->site_name }}
-                                                </p>
-                                            @endif
-
-                                        </td>
-
-                                        <td>
-
-                                            {{ ucfirst($site->location) }} </td>
-
-                                        <td>
-
-                                            <a href="tel:{{ $site->contact_no }}">
-                                                +91-{{ $site->contact_no }}
-                                            </a>
-
-                                        </td>
-
-                                        <td>
-                                            {{ ucfirst($site->site_owner_name) }}
-                                        </td>
-
-                                        <td>
-                                            {{ $site->service_charge }}
-                                        </td>
-
-                                        <td>
-
-                                            <a href="{{ url('admin/sites/' . $site->id . '/edit') }}"
-                                                class="text-black" title="Edit Site" aria-label="Edit Site">
-                                                <i class="fas fa-edit me-1"></i>
-                                            </a>
-
-
-                                            <form id="delete-form-{{ $site->id }}"
-                                                action="{{ route('sites.destroy', [base64_encode($site->id)]) }}"
-                                                method="POST" style="display: none;">
-                                                @csrf
-                                                @method('DELETE')
-                                            </form>
-
-                                            <a href="#"
-                                                onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this supplier?')) document.getElementById('delete-form-{{ $site->id }}').submit();">
-                                                <i
-                                                    class="fa-solid fa-trash-o px-2 py-1"></i>
-                                            </a>
-
-                                            <form action="{{ url('/admin/sites/update-on-going', $site->id) }}"
-                                                method="POST" class="d-inline">
-
-                                                @csrf
-
-                                                @method('POST')
-
-                                                <button type="submit"
-                                                    class="badge badge-pill btn btn-sm text-white {{ $site->is_on_going ? 'text-bg-success' : 'text-bg-danger' }}">
-                                                    {{ $site->is_on_going ? 'Verified' : 'Verify' }}
-                                                </button>
-                                            </form>
-
-                                        </td>
-
-                                    </tr>
-                                @endforeach
-
-                            </tbody>
-
-
-                        </table>
-                    @else
-                        <table class="table table-bordered">
-                            <thead></thead>
-                            <tbody>
-                                <tr>
-                                    <td class="text-danger fw-bold text-center">No Sites Found...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-
-
-                    @endif
-                </div>
-
-
-                <div class="mt-4">
-
-                    {{ $sites->links() }}
-
-                </div>
-
             </div>
-
         </div>
-    </div>
-
-
 
     <!-- Create Site Modal -->
-    <div id="create-site-modal" class="modal fade" aria-hidden="true" aria-labelledby="createSiteModalLabel"
-        tabindex="-1">
+    <div id="create-site-modal" class="modal fade" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="createSiteModalLabel">Create New Site</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus-circle me-2"></i>
+                        Create New Site
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="createSiteForm" class="forms-sample material-form" enctype="multipart/form-data">
+                    <form id="createSiteForm" class="needs-validation" novalidate enctype="multipart/form-data">
                         @csrf
-
-                        <!-- Site Name -->
-                        <div class="form-group">
-                            <input type="text" name="site_name" id="site_name" />
-                            <label for="site_name" class="control-label">Site Name</label><i class="bar"></i>
+                        
+                        <div class="mb-3">
+                            <label for="site_name" class="form-label">Site Name</label>
+                            <input type="text" class="form-control" id="site_name" name="site_name" required>
+                            <div class="invalid-feedback">Please provide a site name.</div>
                         </div>
-
-                        <!-- Service Charge -->
-                        <div class="form-group">
-                            <input type="number" min="0" name="service_charge" id="service_charge"
-                                step="0.01" />
-                            <label for="service_charge" class="control-label">Service Charge</label><i
-                                class="bar"></i>
-                        </div>
-
-                        <!-- Service Charge -->
-                        <div class="form-group">
-                            <input type="number" min="0" name="contact_no" id="contact_no" step="0.01" />
-                            <label for="contact_no" class="control-label">Contact No</label><i class="bar"></i>
-                        </div>
-
-                        <!-- Location -->
-                        <div class="form-group">
-                            <input type="text" name="location" id="location" />
-                            <label for="location" class="control-label">Location</label><i class="bar"></i>
-                        </div>
-
-                        <div class="row">
-                            <!-- Select User -->
+                        
+                        <div class="row mb-3">
                             <div class="col-md-6">
-                                <select name="user_id" id="user_id" class="form-select text-black form-select-sm"
-                                    style="cursor: pointer">
-                                    <option value="" selected>Select User</option>
+                                <label for="service_charge" class="form-label">Service Charge (%)</label>
+                                <input type="number" class="form-control" id="service_charge" name="service_charge" min="0" step="0.01" required>
+                                <div class="invalid-feedback">Please provide a valid service charge.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="contact_no" class="form-label">Contact No</label>
+                                <input type="tel" class="form-control" id="contact_no" name="contact_no" required>
+                                <div class="invalid-feedback">Please provide a contact number.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" name="location" required>
+                            <div class="invalid-feedback">Please provide a location.</div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="user_id" class="form-label">Select User</label>
+                                <select class="form-select" id="user_id" name="user_id" required>
+                                    <option value="" selected disabled>Select User</option>
                                     @foreach ($users as $user)
                                         <option value="{{ $user->id }}">{{ $user->name }}</option>
                                     @endforeach
                                 </select>
+                                <div class="invalid-feedback">Please select a user.</div>
                             </div>
-
-                            <!-- Select Client -->
                             <div class="col-md-6">
-                                <select name="client_id" id="client_id" class="form-select text-black form-select-sm"
-                                    style="cursor: pointer">
-                                    <option value="" selected>Select Client</option>
+                                <label for="client_id" class="form-label">Select Client</label>
+                                <select class="form-select" id="client_id" name="client_id" required>
+                                    <option value="" selected disabled>Select Client</option>
                                     @foreach ($clients as $client)
                                         <option value="{{ $client->id }}">{{ $client->name }}</option>
                                     @endforeach
                                 </select>
+                                <div class="invalid-feedback">Please select a client.</div>
                             </div>
-
-
-                            <div class="flex items-center justify-end mt-4">
-                                <button type="button" class="btn btn-secondary btn-sm me-2"
-                                    data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-success btn-sm" id="submitSiteBtn">
-                                    Create Site
-                                </button>
-                            </div>
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" id="submitSiteBtn">
+                                <span class="submit-text">Create Site</span>
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <div id="messageContainer"></div>
-
-
-
     <script>
         $(document).ready(function() {
-            const messageContainer = $('#messageContainer');
-
+            // Initialize tooltips
+            $('[data-bs-toggle="tooltip"]').tooltip();
+            
+            // Auto-dismiss alerts after 5 seconds
+            setTimeout(() => {
+                $('.alert').alert('close');
+            }, 5000);
+            
+            // Form validation and submission
             $('#createSiteForm').submit(function(e) {
                 e.preventDefault();
-
-                // Clear previous messages and errors
-                $('.invalid-feedback').remove();
-                $('.is-invalid').removeClass('is-invalid');
-                messageContainer.html('');
-
-                // Button state
+                
+                const form = $(this);
                 const submitBtn = $('#submitSiteBtn');
-                const originalBtnText = submitBtn.html();
-                submitBtn.prop('disabled', true).html(
-                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...'
-                );
-
+                const spinner = submitBtn.find('.spinner-border');
+                const submitText = submitBtn.find('.submit-text');
+                
+                // Validate form
+                if (form[0].checkValidity() === false) {
+                    e.stopPropagation();
+                    form.addClass('was-validated');
+                    return;
+                }
+                
+                // Show loading state
+                submitBtn.prop('disabled', true);
+                spinner.removeClass('d-none');
+                submitText.text('Creating...');
+                
                 // Form data
                 const formData = new FormData(this);
-
+                
                 // AJAX request
                 $.ajax({
                     url: '/admin/sites',
@@ -312,69 +293,72 @@
                     success: function(response) {
                         if (response.status) {
                             // Show success message
-                            messageContainer.html(`
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                ${response.message}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        `);
-
+                            $('#messageContainer').html(`
+                                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <div>${response.message}</div>
+                                    </div>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
+                            
                             // Reset form and hide modal
-                            $('#createSiteForm')[0].reset();
+                            form[0].reset();
+                            form.removeClass('was-validated');
                             $('#create-site-modal').modal('hide');
-
-                            // Optional: reload after delay
+                            
+                            // Reload after delay
                             setTimeout(() => {
                                 location.reload();
                             }, 1500);
                         }
                     },
                     error: function(xhr) {
-                        let errorMsg = 'An unexpected error occurred.';
-
-                        if (xhr.responseJSON) {
-                            errorMsg = xhr.responseJSON.message || errorMsg;
-
-                            // Handle validation errors (422 status)
-                            if (xhr.status === 422 && xhr.responseJSON.errors) {
-                                const errors = xhr.responseJSON.errors;
-                                $.each(errors, function(field, messages) {
-                                    const input = $(`[name="${field}"]`);
-                                    const formGroup = input.closest('.form-group');
-
-                                    if (input.length) {
-                                        input.addClass('is-invalid');
-                                        if (formGroup.length) {
-                                            formGroup.append(
-                                                `<div class="invalid-feedback">${messages.join('<br>')}</div>`
-                                                );
-                                        } else {
-                                            input.after(
-                                                `<div class="invalid-feedback">${messages.join('<br>')}</div>`
-                                                );
-                                        }
-                                    }
-                                });
-                            }
+                        let errorMsg = 'An error occurred. Please try again.';
+                        
+                        if (xhr.status === 422 && xhr.responseJSON.errors) {
+                            const errors = xhr.responseJSON.errors;
+                            form.find('.is-invalid').removeClass('is-invalid');
+                            
+                            $.each(errors, function(field, messages) {
+                                const input = form.find(`[name="${field}"]`);
+                                const feedback = input.next('.invalid-feedback');
+                                
+                                input.addClass('is-invalid');
+                                if (feedback.length) {
+                                    feedback.text(messages.join(' '));
+                                } else {
+                                    input.after(`<div class="invalid-feedback">${messages.join(' ')}</div>`);
+                                }
+                            });
+                        } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMsg = xhr.responseJSON.message;
                         }
-
+                        
+                        $('#messageContainer').html(`
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-exclamation-circle me-2"></i>
+                                    <div>${errorMsg}</div>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `);
                     },
                     complete: function() {
-                        submitBtn.prop('disabled', false).html(originalBtnText);
+                        submitBtn.prop('disabled', false);
+                        spinner.addClass('d-none');
+                        submitText.text('Create Site');
                     }
                 });
             });
-
-            // Clear validation errors when modal is hidden
+            
+            // Clear validation when modal is hidden
             $('#create-site-modal').on('hidden.bs.modal', function() {
-                $('.invalid-feedback').remove();
-                $('.is-invalid').removeClass('is-invalid');
-                messageContainer.html('');
+                $('#createSiteForm').removeClass('was-validated');
+                $('#createSiteForm').find('.is-invalid').removeClass('is-invalid');
             });
         });
     </script>
-
-
-
-
 </x-app-layout>

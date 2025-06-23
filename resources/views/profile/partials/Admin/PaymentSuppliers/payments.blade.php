@@ -232,8 +232,7 @@
         <select class="bg-white text-black form-select form-select-sm" name="supplier_id" id="supplierFilter">
             <option value="all" {{ request('supplier_id') == 'all' ? 'selected' : '' }}>All Suppliers</option>
             @foreach ($suppliers as $supplier)
-                <option value="{{ $supplier->id }}"
-                    {{ request('supplier_id') == $supplier->id ? 'selected' : '' }}>
+                <option value="{{ $supplier->id }}" {{ request('supplier_id') == $supplier->id ? 'selected' : '' }}>
                     {{ $supplier->name }}
                 </option>
             @endforeach
@@ -294,59 +293,100 @@
 
 
 
-        <div class="card">
-            <div class="table-responsive mt-4">
-                <table class="report-table">
-                    <thead>
-                        <tr>
-                            <th>DATE</th>
-                            <th>Customer Name</th>
-                            <th>DETAILS</th>
-                            <th style="text-align: right;">Debit</th>
-                            <th style="text-align: right;">Credit</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (count($paginatedLedgers))
-                            @foreach ($paginatedLedgers as $key => $ledger)
-                                <tr>
-                                    <td>{{ \Carbon\Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
-                                    <td>{{ ucwords($ledger['supplier']) }}</td>
-                                    <td>
-                                        {{ ucwords($ledger['description']) }}
-                                        <div class="text-sm text-gray-500">
-                                            {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
-                                        </div>
-                                    </td>
-                                    <td style="text-align: right;" class="gave-text">
-                                        @if ($ledger['debit'] > 0)
-                                            ₹{{ number_format($ledger['debit']) }}
-                                        @else
-                                            ₹0
-                                        @endif
-                                    </td>
-                                    <td style="text-align: right;" class="got-text">
-                                        @if ($ledger['credit'] > 0)
-                                            ₹{{ number_format($ledger['credit']) }}
-                                        @else
-                                            ₹0
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @else
+
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th class="fw-bold">DATE</th>
+                        <th class="fw-bold">Customer Name</th>
+                        <th class="fw-bold">DETAILS</th>
+                        <th class="fw-bold text-end">Debit</th>
+                        <th class="fw-bold text-end">Credit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if ($paginatedLedgers->count())
+                        @foreach ($paginatedLedgers as $ledger)
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-gray-500">No records available</td>
+                                <td>{{ \Carbon\Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
+                                <td>
+                                    <strong>{{ ucwords($ledger['supplier']) }}</strong>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ ucwords($ledger['description']) }}</div>
+                                    <small class="text-muted">
+                                        {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
+                                    </small>
+                                </td>
+                                <td class="text-end text-danger fw-bold">
+                                    @if ($ledger['debit'] > 0)
+                                        ₹{{ number_format($ledger['debit']) }}
+                                    @else
+                                        ₹0
+                                    @endif
+                                </td>
+                                <td class="text-end text-success fw-bold">
+                                    @if ($ledger['credit'] > 0)
+                                        ₹{{ number_format($ledger['credit']) }}
+                                    @else
+                                        ₹0
+                                    @endif
+                                </td>
                             </tr>
-                        @endif
-                    </tbody>
-                </table>
-            </div>
+                        @endforeach
+                    @else
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No records available</td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
         </div>
 
-        <div class="mt-4 d-flex justify-content-center">
-            {{ $paginatedLedgers->links() }}
-        </div>
+        @if ($paginatedLedgers->hasPages())
+            <div class="p-3 border-top">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end mb-0">
+                        @if ($paginatedLedgers->onFirstPage())
+                            <li class="page-item disabled">
+                                <span class="page-link">&laquo;</span>
+                            </li>
+                        @else
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $paginatedLedgers->previousPageUrl() }}"
+                                    rel="prev">&laquo;</a>
+                            </li>
+                        @endif
+
+                        @foreach ($paginatedLedgers->getUrlRange(1, $paginatedLedgers->lastPage()) as $page => $url)
+                            @if ($page == $paginatedLedgers->currentPage())
+                                <li class="page-item active">
+                                    <span class="page-link">{{ $page }}</span>
+                                </li>
+                            @else
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                </li>
+                            @endif
+                        @endforeach
+
+                        @if ($paginatedLedgers->hasMorePages())
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $paginatedLedgers->nextPageUrl() }}"
+                                    rel="next">&raquo;</a>
+                            </li>
+                        @else
+                            <li class="page-item disabled">
+                                <span class="page-link">&raquo;</span>
+                            </li>
+                        @endif
+                    </ul>
+                </nav>
+            </div>
+        @endif
+
+
     </div>
 
     <div id="messageContainer"></div>
