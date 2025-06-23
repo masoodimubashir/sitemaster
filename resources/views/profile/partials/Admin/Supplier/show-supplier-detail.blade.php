@@ -1,5 +1,3 @@
-
-
 <x-app-layout>
 
     @php
@@ -70,45 +68,6 @@
     <x-breadcrumb :names="['Suppliers', $data['supplier']->name]" :urls="[$user . '/suppliers', $user . '/suppliers/' . $data['supplier']->id]" />
 
 
-    <div class="row mb-4">
-
-        <div class="col-12">
-
-            <div class="d-flex flex-wrap justify-content-start gap-2">
-
-                <button class="btn btn-info btns" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                    Make Payment
-                </button>
-
-                <a href="{{ url($user . '/supplier/payments', [$data['supplier']->id]) }}" class="btn btn-info btns"
-                    data-modal="payment-supplier">
-                    View Payments
-                </a>
-
-                <a href="{{ url($user . '/supplier/ledger', [$data['supplier']->id]) }}" class="btn btn-info btns"
-                    data-modal="payment-supplier">
-                    View Ledger
-                </a>
-
-                <a href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}"
-                    class="btn btn-info">
-                    Generate Payment Report
-                </a>
-
-                @if ($user === 'admin')
-                    <a href="{{ url($user . '/unverified-supplier-payments/' . $data['supplier']->id) }}"
-                        class="btn btn-info">
-                        Unverified Payments
-                    </a>
-                @endif
-
-            </div>
-
-        </div>
-
-    </div>
-
-
     <div class="row g-4">
 
         <div class="col-12 col-md-6">
@@ -147,7 +106,7 @@
 
         <div class="col-12 col-md-6">
             <div class="card h-100 shadow-sm">
-                
+
                 <div class="card-body">
 
                     <div class="d-flex align-items-center mb-3">
@@ -176,277 +135,112 @@
             </div>
         </div>
 
-    
+
     </div>
 
     @if (count($data) >= 0)
-
-        <div class="row ">
-
-            <div class="col-lg-12 grid-margin stretch-card">
-
-                <div class="card-body ">
-
-                    <div class="table-responsive mt-4">
-
-                        <table class="table table-bordered">
-
-                            <thead>
-
-                                <tr>
-
-                                    <th class="bg-info fw-bold text-white">
-                                        Date
-                                    </th>
-
-                                    <th class="bg-info fw-bold text-white"> Bill Proof</th>
-
-                                    <th class="bg-info fw-bold text-white"> Item</th>
-
-
-                                    <th class="bg-info fw-bold text-white">
-                                        Total Amount
-                                    </th>
-
-                                </tr>
-
-                            </thead>
-
-                            <tbody>
-
-                                @if (count($data['data']) > 0)
-
-                                    @foreach ($data['data'] as $d)
-                                        <tr>
-
-                                            <td>
-                                                {{ $d['created_at'] }}
-                                            </td>
-
-                                            <td>
-
-                                                @if ($d['image'] !== null)
-                                                    <img src="{{ asset('storage/' . $d['image']) }}" alt="">
-                                                @else
-                                                    NA
-                                                @endif
-
-                                            </td>
-
-                                            <td>
-                                                {{ $d['item'] }}
-                                            </td>
-
-
-                                            <td>
-                                                {{ $d['total_price'] }}
-                                            </td>
-
-                                        </tr>
-                                    @endforeach
-                                @else
+        <div class="row mt-2">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body p-0">
+                      
+                        <div class="table-responsive">
+                            <table class="table table-bordered mb-0">
+                                <thead>
                                     <tr>
-                                        <td class="text-danger fw-bold text-center" colspan="7">No Records Found...
-                                        </td>
+                                        <th class="fw-bold bg-info text-white">Date</th>
+                                        <th class="fw-bold bg-info text-white">Bill Proof</th>
+                                        <th class="fw-bold bg-info text-white">Type</th>
+                                        <th class="fw-bold bg-info text-white">Item</th>
+                                        <th class="fw-bold bg-info text-white">Amount</th>
                                     </tr>
-                                @endif
+                                </thead>
+                                <tbody>
+                                    @forelse ($data['data'] as $d)
+                                        <tr>
+                                            <td>{{ \Carbon\Carbon::parse($d['created_at'])->format('d-M-Y') }}</td>
+                                            <td>
+                                                @if ($d['image'])
+                                                    <a href="{{ asset('storage/' . $d['image']) }}"
+                                                        data-fancybox="gallery">
+                                                        <img src="{{ asset('storage/' . $d['image']) }}"
+                                                            alt="Bill proof" class="img-thumbnail"
+                                                            style="width: 50px; height: 50px;">
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">NA</span>
+                                                @endif
+                                            </td>
+                                            <td>{{ $d['type'] }}</td>
+                                            <td>{{ $d['item'] }}</td>
+                                            <td
+                                                class="text-end fw-bold {{ $d['transaction_type'] === 'debit' ? 'text-danger' : 'text-success' }}">
+                                                ₹{{ number_format($d['total_price'], 2) }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center text-muted py-4">
+                                                No transaction records found
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
 
+                        <!-- Pagination -->
+                        @if ($data['data']->hasPages())
+                            <div class="p-3 border-top">
+                                <nav aria-label="Page navigation">
+                                    <ul class="pagination justify-content-center mb-0">
+                                        {{-- Previous Page --}}
+                                        @if ($data['data']->onFirstPage())
+                                            <li class="page-item disabled">
+                                                <span class="page-link">&laquo;</span>
+                                            </li>
+                                        @else
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $data['data']->previousPageUrl() }}"
+                                                    rel="prev">&laquo;</a>
+                                            </li>
+                                        @endif
 
-                            </tbody>
+                                        {{-- Page Numbers --}}
+                                        @foreach ($data['data']->getUrlRange(1, $data['data']->lastPage()) as $page => $url)
+                                            @if ($page == $data['data']->currentPage())
+                                                <li class="page-item active">
+                                                    <span class="page-link">{{ $page }}</span>
+                                                </li>
+                                            @else
+                                                <li class="page-item">
+                                                    <a class="page-link"
+                                                        href="{{ $url }}">{{ $page }}</a>
+                                                </li>
+                                            @endif
+                                        @endforeach
 
-                        </table>
-
+                                        {{-- Next Page --}}
+                                        @if ($data['data']->hasMorePages())
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ $data['data']->nextPageUrl() }}"
+                                                    rel="next">&raquo;</a>
+                                            </li>
+                                        @else
+                                            <li class="page-item disabled">
+                                                <span class="page-link">&raquo;</span>
+                                            </li>
+                                        @endif
+                                    </ul>
+                                </nav>
+                            </div>
+                        @endif
                     </div>
-
                 </div>
-
-
             </div>
-
         </div>
-
     @endif
 
-
-
-    <!-- Modal -->
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-
-                <div class="modal-body">
-                    <form id="payment_form" class="forms-sample material-form" enctype="multipart/form-data">
-
-                        @csrf
-
-                        {{-- Phase Name --}}
-                        <div class="form-group">
-                            <input type="number" min="0" name="amount" step="0.01" />
-                            <label for="input" class="control-label">Amount</label><i class="bar"></i>
-                            <x-input-error :messages="$errors->get('amount')" class="mt-2" />
-                        </div>
-
-                        <!-- Site -->
-                        <div class="form-group">
-                            <input type="hidden" name="supplier_id" value="{{ $data['supplier']->id }}" />
-                            <x-input-error :messages="$errors->get('supplier_id')" class="mt-2" />
-                        </div>
-
-                        {{-- Select Payee Dropdown --}}
-                        <select name="payment_initiator" id="payment_initiator"
-                            class="form-select text-black form-select-sm" style="cursor: pointer"
-                            onchange="togglePayOptions()">
-                            <option value="" selected>Select Payee</option>
-                            <option value="1">Supplier</option>
-                            <option value="0">Admin</option>
-                        </select>
-
-                        {{-- Supplier Options (Shown when Supplier is selected) --}}
-                        <div id="supplierOptions" style="display: none;" class="mt-3">
-                            <select name="site_id" id="site_id" class="form-select text-black form-select-sm"
-                                style="cursor: pointer">
-                                <option for="site_id" value="">Select Site</option>
-                                @foreach ($sites as $site)
-                                    <option value="{{ $site['site_id'] }}">
-                                        {{ $site['site_name'] }}
-                                    </option>
-                                @endforeach
-                            </select>
-
-                            {{-- File Upload for Screenshot --}}
-                            <div class="mt-3">
-                                <input class="form-control form-control-md" id="image" type="file"
-                                    name="screenshot">
-                            </div>
-                        </div>
-
-                        {{-- Admin Options (Shown when Admin is selected) --}}
-                        <div id="adminOptions" style="display: none;" class="mt-4">
-                            <div class="row g-3">
-                                {{-- Sent Radio Option --}}
-                                <div class="col-auto">
-                                    <label for="transaction_sent">
-                                        <input type="radio" name="transaction_type" id="transaction_sent"
-                                            value="1">
-                                        Sent
-                                    </label>
-                                </div>
-                                {{-- Received Radio Option --}}
-                                <div class="col-auto">
-                                    <label for="transaction_received">
-                                        <input type="radio" name="transaction_type" id="transaction_received"
-                                            value="0">
-                                        Received
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        {{-- Screenshot --}}
-
-
-                        <div class="flex items-center justify-end mt-4">
-
-                            <x-primary-button>
-                                {{ __('Pay') }}
-                            </x-primary-button>
-
-                        </div>
-
-                    </form>
-                </div>
-
-            </div>
-        </div>
-    </div>
-
-
-    <div id="messageContainer">
-
-    </div>
-
-    <script>
-        $(document).ready(function() {
-            $('form[id="payment_form"]').on('submit', function(e) {
-                e.preventDefault();
-
-                const form = $(this);
-                const formData = new FormData(form[0]);
-                const messageContainer = $('#messageContainer');
-                messageContainer.empty();
-
-                $('.text-danger').remove();
-
-                $.ajax({
-                    url: '{{ url($user . '/supplier/payments') }}',
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
-                        messageContainer.append(`
-                        <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                            <div class="d-flex">
-                                <div class="toast-body">
-                                    <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                </div>
-                            </div>
-                        </div>
-                    `);
-                        form[0].reset();
-
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                        }, 2000);
-                    },
-                    error: function(response) {
-
-                        if (response.status === 422) {
-
-                            messageContainer.append(`
-                            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                ${response.responseJSON.errors}
-                            </div>`)
-
-                            location.reload();
-
-                        } else {
-                            messageContainer.append(`
-                            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                An unexpected error occurred. Please try again later.
-                            </div>
-                        `);
-                        }
-
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                        }, 2000);
-                    }
-                });
-            });
-
-
-        });
-
-        function togglePayOptions() {
-            const payTo = document.getElementById('payment_initiator').value; 
-            const supplierOptions = document.getElementById('supplierOptions');
-            const adminOptions = document.getElementById('adminOptions');
-
-            if (payTo === "1") {
-                supplierOptions.style.display = 'block'; 
-                adminOptions.style.display = 'none'; 
-            } else if (payTo === "0") {
-                supplierOptions.style.display = 'none'; 
-                adminOptions.style.display = 'block'; 
-            } else {
-
-                supplierOptions.style.display = 'none';
-                adminOptions.style.display = 'none';
-            }
-        }
-    </script>
 
 
 </x-app-layout>

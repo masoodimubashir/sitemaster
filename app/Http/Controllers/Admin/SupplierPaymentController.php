@@ -13,22 +13,37 @@ class SupplierPaymentController extends Controller
     public function __invoke(Request $request, string $id, DataService $dataService)
     {
 
-        //  Get The Data From The Request 
-        $dateFilter = $request->get('date_filter', 'today');
+        $dateFilter = $request->input('date_filter', 'today');
         $site_id = $request->input('site_id', 'all');
-        $supplier_id = $request->input('supplier_id', $id);
+        $supplier_id = $request->input('supplier_id', 'all');
+        $phase_id = $request->input('phase_id', 'all');
         $wager_id = $request->input('wager_id', 'all');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
-        // Get ongoing sites is ongoing count  and is not ongoing count
-        $ongoingSites = Site::where('is_on_going', 1)->pluck('id');
-        $is_ongoing_count = $ongoingSites->count();
-        $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
 
-        // Get All the data on the arguments given
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $dataService->getData($dateFilter, $site_id, $supplier_id, $wager_id);
 
-        // Prepare the data for the view
-        $ledgers = $dataService->makeData($payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours);
+        // Call the service or method
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $dataService->getData(
+            $dateFilter,
+            $site_id,
+            $supplier_id,
+            $startDate,
+            $endDate,
+            $phase_id,
+        );
+
+        // Create ledger data including wasta and labours
+        $ledgers = $dataService->makeData(
+            $payments,
+            $raw_materials,
+            $squareFootageBills,
+            $expenses,
+            $wastas,
+            $labours
+        )->sortByDesc(function ($d) {
+            return $d['created_at'];
+        });
 
         // Sort the data by created_at
         $ledgers = $ledgers->sortByDesc(function ($d) {

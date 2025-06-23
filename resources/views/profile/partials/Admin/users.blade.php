@@ -48,7 +48,6 @@
 
                             <th class="bg-info fw-bold text-white"> Name </th>
                             <th class="bg-info fw-bold text-white"> Username </th>
-                            {{-- <th class="bg-info fw-bold text-white"> Projects Assigned </th> --}}
                             <th class="bg-info fw-bold text-white"> Actions</th>
 
                         </tr>
@@ -61,13 +60,6 @@
                                 <td>
                                     {{ $user->username }}
                                 </td>
-
-                                {{-- <td>
-                                    <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal"
-                                        data-bs-target="#exampleModal">
-                                        View Sites
-                                    </button>
-                                </td> --}}
 
                                 <div class="modal fade" id="exampleModal" tabindex="-1"
                                     aria-labelledby="exampleModalLabel" aria-hidden="true">

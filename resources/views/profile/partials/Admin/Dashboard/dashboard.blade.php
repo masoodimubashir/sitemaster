@@ -41,7 +41,7 @@
                                         <h2 class="mb-0">{{ $completedSites }}</h2>
                                     </div>
                                     <div class="icon-shape bg-white text-danger rounded-circle p-3">
-                                        <i class="fas fa-lock fs-4"></i>
+                                        <i class="fas fa-lock"></i>
                                     </div>
                                 </div>
                             </div>
@@ -57,7 +57,7 @@
                         href="{{ route('suppliers.dashboard') }}">
                         <i class="fas fa-exchange-alt me-2"></i> Switch Suppliers
                     </a>
-                    <button class="btn btn-primary btn-sm w-100 d-flex align-items-center justify-content-center"
+                    <button class="btn  btn-success btn-sm w-100 d-flex align-items-center justify-content-center"
                         data-bs-toggle="modal" data-bs-target="#create-site-modal">
                         <i class="fas fa-plus me-2"></i> Create Site
                     </button>
@@ -82,11 +82,11 @@
                                     </div>
                                 </div>
                                 <div class="col-md-2">
-                                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                                    <button type="submit" class="btn btn-sm btn-primary w-100">Search</button>
                                 </div>
                                 <div class="col-md-2">
                                     <a href="{{ url()->current() }}"
-                                        class="btn btn-outline-secondary text-black w-100">Reset</a>
+                                        class="btn btn-sm btn-outline-secondary text-black w-100">Reset</a>
                                 </div>
                             </div>
                         </form>
@@ -268,9 +268,9 @@
 
 
                             <div class="flex items-center justify-end mt-4">
-                                <button type="button" class="btn btn-secondary me-2"
+                                <button type="button" class="btn btn-sm btn-secondary me-2"
                                     data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary" id="submitSiteBtn">
+                                <button type="submit" class="btn btn-sm btn-success" id="submitSiteBtn">
                                     Create Site
                                 </button>
                             </div>

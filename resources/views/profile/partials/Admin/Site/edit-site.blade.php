@@ -61,7 +61,7 @@
                         </div>
 
 
-                        <button class=" btn btn-info mt-3"><span>Save</span></button>
+                        <button class=" btn btn-success mt-3"><span>Save</span></button>
 
                     </form>
                 </div>

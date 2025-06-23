@@ -44,10 +44,7 @@
 
             <div class="card-body">
 
-
                 <div class="d-flex justify-content-end">
-
-
 
                     <!-- Create Site Button -->
                     <div class="col-md-2 text-end">
@@ -55,6 +52,7 @@
                             data-bs-target="#create-site-modal">
                             + Create Site
                         </button>
+                      
                     </div>
 
                 </div>
@@ -128,7 +126,7 @@
                                             {{ $site->service_charge }}
                                         </td>
 
-                                        <td class="space-x-4">
+                                        <td>
 
                                             <a href="{{ url('admin/sites/' . $site->id . '/edit') }}"
                                                 class="text-black" title="Edit Site" aria-label="Edit Site">
@@ -146,7 +144,7 @@
                                             <a href="#"
                                                 onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this supplier?')) document.getElementById('delete-form-{{ $site->id }}').submit();">
                                                 <i
-                                                    class="fa-solid fa-trash-o text-xl text-red-600 bg-white rounded-full px-2 py-1"></i>
+                                                    class="fa-solid fa-trash-o px-2 py-1"></i>
                                             </a>
 
                                             <form action="{{ url('/admin/sites/update-on-going', $site->id) }}"
@@ -157,7 +155,7 @@
                                                 @method('POST')
 
                                                 <button type="submit"
-                                                    class="badge badge-pill btn text-white {{ $site->is_on_going ? 'text-bg-success' : 'text-bg-danger' }}">
+                                                    class="badge badge-pill btn btn-sm text-white {{ $site->is_on_going ? 'text-bg-success' : 'text-bg-danger' }}">
                                                     {{ $site->is_on_going ? 'Verified' : 'Verify' }}
                                                 </button>
                                             </form>
@@ -263,9 +261,9 @@
 
 
                             <div class="flex items-center justify-end mt-4">
-                                <button type="button" class="btn btn-secondary me-2"
+                                <button type="button" class="btn btn-secondary btn-sm me-2"
                                     data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-primary" id="submitSiteBtn">
+                                <button type="submit" class="btn btn-success btn-sm" id="submitSiteBtn">
                                     Create Site
                                 </button>
                             </div>
@@ -360,7 +358,6 @@
                             }
                         }
 
-                     
                     },
                     complete: function() {
                         submitBtn.prop('disabled', false).html(originalBtnText);

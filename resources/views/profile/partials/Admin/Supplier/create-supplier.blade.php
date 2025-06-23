@@ -67,7 +67,7 @@
 
                         </div>
 
-                        <button class=" btn btn-info"><span>Save</span></button>
+                        <button class=" btn btn-success"><span>Save</span></button>
 
                     </form>
                 </div>

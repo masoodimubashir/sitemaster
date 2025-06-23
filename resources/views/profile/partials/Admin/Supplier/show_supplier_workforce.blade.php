@@ -184,13 +184,13 @@
         <div class="header-icon">
             <i class="menu-icon fa fa-building"></i>
         </div>
-        <h1 class="text-xl font-semibold">Supplier Report</h1>
+        <h2 class="text-xl font-semibold">{{ ucwords($supplier->name) }}</h2>
 
 
         <div class="ms-auto action-buttons d-flex gap-2">
             <!-- Dropdown Menu for Quick Access -->
             <div class="dropdown">
-                <button class="btn btn-outline dropdown-toggle" type="button" id="dropdownMenuButton"
+                <button class="btn btn-sm btn-outline " type="button" id="dropdownMenuButton"
                     data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-bolt me-1"></i> Quick Actions
                 </button>
@@ -202,17 +202,11 @@
                             <i class="fas fa-hand-holding-usd me-2"></i> Make Payment
                         </a>
                     </li>
-                    
+
                     <li>
                         <hr class="dropdown-divider">
                     </li>
 
-
-                    <li>
-                        <a class="dropdown-item" href="{{ url($user . '/supplier/ledger', [$data['supplier']->id]) }}">
-                            <i class="fas fa-book me-2"></i> View Ledger
-                        </a>
-                    </li>
                     <li>
                         <a class="dropdown-item"
                             href="{{ url($user . '/supplier/payments', [$data['supplier']->id]) }}">
@@ -241,26 +235,11 @@
                         </a>
                     </li>
 
-                    
+
                 </ul>
             </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
         </div>
-
-
 
     </div>
 
@@ -336,14 +315,14 @@
 
         <div class="card">
             <div class="table-responsive mt-4">
-                <table class="report-table">
-                    <thead>
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <th>DATE</th>
+                            <th>Date</th>
                             <th>Customer Name</th>
-                            <th>DETAILS</th>
-                            <th style="text-align: right;">Debit</th>
-                            <th style="text-align: right;">Credit</th>
+                            <th>Details</th>
+                            <th class="text-end">Debit</th>
+                            <th class="text-end">Credit</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -351,21 +330,23 @@
                             @foreach ($data['ledgers'] as $key => $ledger)
                                 <tr>
                                     <td>{{ \Carbon\Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
-                                    <td>{{ ucwords($ledger['supplier']) }}</td>
                                     <td>
-                                        {{ ucwords($ledger['description']) }}
-                                        <div class="text-sm text-gray-500">
-                                            {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
-                                        </div>
+                                        <strong>{{ ucwords($ledger['supplier']) }}</strong>
                                     </td>
-                                    <td style="text-align: right;" class="gave-text">
+                                    <td>
+                                        <div class="fw-bold">{{ ucwords($ledger['description']) }}</div>
+                                        <small class="text-muted">
+                                            {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
+                                        </small>
+                                    </td>
+                                    <td class="text-end text-danger fw-bold">
                                         @if ($ledger['debit'] > 0)
                                             ₹{{ number_format($ledger['debit']) }}
                                         @else
                                             ₹0
                                         @endif
                                     </td>
-                                    <td style="text-align: right;" class="got-text">
+                                    <td class="text-end text-success fw-bold">
                                         @if ($ledger['credit'] > 0)
                                             ₹{{ number_format($ledger['credit']) }}
                                         @else
@@ -376,17 +357,57 @@
                             @endforeach
                         @else
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-gray-500">No records available</td>
+                                <td colspan="5" class="text-center py-4 text-muted">No records available</td>
                             </tr>
                         @endif
                     </tbody>
                 </table>
             </div>
         </div>
+        @if ($data['ledgers']->hasPages())
+            <div class="p-3 border-top">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end mb-0">
+                        {{-- Previous Page Link --}}
+                        @if ($data['ledgers']->onFirstPage())
+                            <li class="page-item disabled">
+                                <span class="page-link">&laquo;</span>
+                            </li>
+                        @else
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $data['ledgers']->previousPageUrl() }}"
+                                    rel="prev">&laquo;</a>
+                            </li>
+                        @endif
 
-        <div class="mt-4 d-flex justify-content-center">
-            {{-- {{ $paginatedLedgers->links() }} --}}
-        </div>
+                        {{-- Pagination Elements --}}
+                        @foreach ($data['ledgers']->getUrlRange(1, $data['ledgers']->lastPage()) as $page => $url)
+                            @if ($page == $data['ledgers']->currentPage())
+                                <li class="page-item active">
+                                    <span class="page-link">{{ $page }}</span>
+                                </li>
+                            @else
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                </li>
+                            @endif
+                        @endforeach
+
+                        {{-- Next Page Link --}}
+                        @if ($data['ledgers']->hasMorePages())
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $data['ledgers']->nextPageUrl() }}"
+                                    rel="next">&raquo;</a>
+                            </li>
+                        @else
+                            <li class="page-item disabled">
+                                <span class="page-link">&raquo;</span>
+                            </li>
+                        @endif
+                    </ul>
+                </nav>
+            </div>
+        @endif
     </div>
 
 
@@ -470,9 +491,9 @@
 
                         <div class="flex items-center justify-end mt-4">
 
-                            <x-primary-button>
+                            <button class="btn btn-sm btn-success" type="submit">
                                 {{ __('Pay') }}
-                            </x-primary-button>
+                            </button>
 
                         </div>
 

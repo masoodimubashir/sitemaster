@@ -30,7 +30,7 @@
 
                     <a class="btn btn-sm btn-success" href="{{ url($user . '/clients/create') }}" class="float-right">
                         <i class="fa fa-user-plus pe-2" aria-hidden="true"></i>
-                        Create Clients
+                        Create Client
                     </a>
 
                 </div>

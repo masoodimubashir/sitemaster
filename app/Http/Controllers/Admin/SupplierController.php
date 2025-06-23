@@ -10,6 +10,7 @@ use App\Http\Requests\StoreSupplierRequest;
 use App\Http\Requests\UpdateSupplierRequest;
 use App\Services\DataService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class SupplierController extends Controller
 {
@@ -91,6 +92,16 @@ class SupplierController extends Controller
             return $d['created_at'];
         });
 
+
+        // Paginate the ledgers
+        $paginatedLedgers = new LengthAwarePaginator(
+            $ledgers->forPage($request->input('page', 1), 20),
+            $ledgers->count(),
+            20,
+            $request->input('page', 1),
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
         // Compute balances
         $totals = $this->dataService->calculateAllBalances($ledgers);
 
@@ -99,7 +110,7 @@ class SupplierController extends Controller
 
         // Prepare data
         $data = [
-            'ledgers' => $ledgers,
+            'ledgers' => $paginatedLedgers,
             'supplier' => $supplier,
             'totalDebit' => $totals['without_service_charge']['due'],
             'totalCredit' => $totals['without_service_charge']['paid'],
@@ -190,6 +201,21 @@ class SupplierController extends Controller
             ];
         }));
 
+        $perPage = 20; 
+        $currentPage = request('page', 1); 
+
+        // Create paginator for the ledger data
+        $paginatedLedgers = new LengthAwarePaginator(
+            $data->forPage($currentPage, $perPage), // Current page items
+            $data->count(), // Total items
+            $perPage, // Items per page
+            $currentPage, // Current page
+            [
+                'path' => request()->url(),
+                'query' => request()->query() 
+            ]
+        );
+
         // Calculate totals
         $totalDebit = $data->where('transaction_type', 'debit')->sum('total_price');
         $totalCredit = $supplier->payments()->sum('amount');
@@ -203,7 +229,7 @@ class SupplierController extends Controller
             ->all();
 
         $data = [
-            'data' => $data,
+            'data' => $paginatedLedgers,
             'supplier' => $supplier,
             'totalDebit' => $totalDebit,
             'totalCredit' => $totalCredit,

@@ -181,13 +181,13 @@
             <i class="menu-icon fa fa-building"></i>
         </div>
 
-        <h1 class="text-xl font-semibold">{{ $site->site_name }}</h1>
+        <h2 class="text-xl font-semibold">{{ $site->site_name }}</h2>
 
         <div class="ms-auto action-buttons d-flex gap-2">
             <!-- Settings Dropdown -->
             <div class="dropdown">
 
-                <button class="btn btn-outline dropdown-toggle" type="button" id="dropdownMenuButton"
+                <button class="btn btn-outline btn-sm" type="button" id="dropdownMenuButton"
                     data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-bolt me-1"></i> Quick Actions
                 </button>
@@ -266,17 +266,12 @@
                 <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
                 <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
                 <button type="submit" class="btn btn-outline">
-                    <i class="far fa-file-pdf"></i> Download PDF
+                    <i class="far fa-file-pdf"></i>  PDF
                 </button>
             </form>
         </div>
 
     </div>
-
-
-
-
-
 
 
 
@@ -368,59 +363,98 @@
 
 
 
-        <div class="card">
-            <div class="table-responsive mt-4">
-                <table class="report-table">
-                    <thead>
-                        <tr>
-                            <th>DATE</th>
-                            <th>Customer Name</th>
-                            <th>DETAILS</th>
-                            <th style="text-align: right;">Debit</th>
-                            <th style="text-align: right;">Credit</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (count($paginatedLedgers))
-                            @foreach ($paginatedLedgers as $key => $ledger)
-                                <tr>
-                                    <td>{{ \Carbon\Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
-                                    <td>{{ ucwords($ledger['supplier']) }}</td>
-                                    <td>
-                                        {{ ucwords($ledger['description']) }}
-                                        <div class="text-sm text-gray-500">
-                                            {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
-                                        </div>
-                                    </td>
-                                    <td style="text-align: right;" class="gave-text">
-                                        @if ($ledger['debit'] > 0)
-                                            ₹{{ number_format($ledger['debit']) }}
-                                        @else
-                                            ₹0
-                                        @endif
-                                    </td>
-                                    <td style="text-align: right;" class="got-text">
-                                        @if ($ledger['credit'] > 0)
-                                            ₹{{ number_format($ledger['credit']) }}
-                                        @else
-                                            ₹0
-                                        @endif
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @else
+     
+        <div class="table-responsive">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th class="fw-bold">DATE</th>
+                        <th class="fw-bold">Customer Name</th>
+                        <th class="fw-bold">DETAILS</th>
+                        <th class="fw-bold text-end">Debit</th>
+                        <th class="fw-bold text-end">Credit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if ($paginatedLedgers->count())
+                        @foreach ($paginatedLedgers as $ledger)
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-gray-500">No records available</td>
+                                <td>{{ \Carbon\Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
+                                <td>
+                                    <strong>{{ ucwords($ledger['supplier']) }}</strong>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ ucwords($ledger['description']) }}</div>
+                                    <small class="text-muted">
+                                        {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
+                                    </small>
+                                </td>
+                                <td class="text-end text-danger fw-bold">
+                                    @if ($ledger['debit'] > 0)
+                                        ₹{{ number_format($ledger['debit']) }}
+                                    @else
+                                        ₹0
+                                    @endif
+                                </td>
+                                <td class="text-end text-success fw-bold">
+                                    @if ($ledger['credit'] > 0)
+                                        ₹{{ number_format($ledger['credit']) }}
+                                    @else
+                                        ₹0
+                                    @endif
+                                </td>
                             </tr>
-                        @endif
-                    </tbody>
-                </table>
-            </div>
+                        @endforeach
+                    @else
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No records available</td>
+                        </tr>
+                    @endif
+                </tbody>
+            </table>
         </div>
 
-        <div class="mt-4 d-flex justify-content-center">
-            {{ $paginatedLedgers->links() }}
-        </div>
+        @if ($paginatedLedgers->hasPages())
+            <div class="p-3 border-top">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-end mb-0">
+                        @if ($paginatedLedgers->onFirstPage())
+                            <li class="page-item disabled">
+                                <span class="page-link">&laquo;</span>
+                            </li>
+                        @else
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $paginatedLedgers->previousPageUrl() }}" rel="prev">&laquo;</a>
+                            </li>
+                        @endif
+
+                        @foreach ($paginatedLedgers->getUrlRange(1, $paginatedLedgers->lastPage()) as $page => $url)
+                            @if ($page == $paginatedLedgers->currentPage())
+                                <li class="page-item active">
+                                    <span class="page-link">{{ $page }}</span>
+                                </li>
+                            @else
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
+                                </li>
+                            @endif
+                        @endforeach
+
+                        @if ($paginatedLedgers->hasMorePages())
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $paginatedLedgers->nextPageUrl() }}" rel="next">&raquo;</a>
+                            </li>
+                        @else
+                            <li class="page-item disabled">
+                                <span class="page-link">&raquo;</span>
+                            </li>
+                        @endif
+                    </ul>
+                </nav>
+            </div>
+        @endif
+ 
+          
     </div>
 
     <div id="messageContainer"></div>
@@ -454,9 +488,9 @@
                         </div>
 
                         <div class="flex items-center justify-end mt-4">
-                            <x-primary-button>
+                            <button type="submit" class="btn btn-success">
                                 Create Phase
-                            </x-primary-button>
+                            </button>
                         </div>
 
                     </form>
@@ -542,9 +576,9 @@
 
                         </div>
 
-                        <x-primary-button>
+                        <button type="submit" class="btn btn-success">
                             Create Billing
-                        </x-primary-button>
+                        </button>
 
 
                     </form>
@@ -652,9 +686,9 @@
 
 
                         <div class="mt-3">
-                            <x-primary-button>
+                            <button type="submit" class="btn btn-success">
                                 {{ __('Create Bill') }}
-                            </x-primary-button>
+                            </button>
                         </div>
 
 
@@ -666,75 +700,7 @@
         </div>
     </div>
 
-    <!-- Daily Wager Form -->
-    {{-- <div id="modal-daily-wager" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-        tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
 
-                    <form class="forms-sample material-form" id="dailyWager">
-
-                        @csrf
-
-                        <!-- Wager Name -->
-                        <div class="form-group">
-                            <input id="wager_name" type="text" name="wager_name" />
-                            <label for="wager_name" class="control-label">Wager
-                                Name</label><i class="bar"></i>
-
-                            <p class="text-danger" id="wager_name-error"></p>
-                        </div>
-
-                        <!-- Price Per day -->
-                        <div class="form-group">
-                            <input id="price_per_day" type="number" name="price_per_day" />
-                            <label for="price_per_day" class="control-label">Price Per
-                                Day</label><i class="bar"></i>
-                            <p class="text-danger" id="price_per_day-error"></p>
-
-                        </div>
-
-                        <div class="row">
-                            <!-- Select Supplier -->
-                            <div class="col-md-6 mt-3">
-                                <select class="form-select text-black form-select-sm" id="supplier_id"
-                                    name="supplier_id" style="cursor: pointer">
-                                    <option value="">Select Supplier</option>
-                                    @foreach ($workforce_suppliers as $supplier)
-                                        <option value="{{ $supplier->id }}">
-                                            {{ $supplier->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <p class="text-danger" id="supplier_id-error"></p>
-
-                            </div>
-
-                            <!-- Phases -->
-                            <div class="col-md-6 mt-3">
-                                <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
-                                    name="phase_id" style="cursor: pointer">
-                                    <option value="">Select Phase
-                                    </option>
-                                    @foreach ($phases as $phase)
-                                        <option value="{{ $phase->id }}">
-                                            {{ $phase->phase_name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <p class=" mt-1 text-danger" id="phase_id-error"></p>
-                            </div>
-                        </div>
-
-                        <x-primary-button>
-                            {{ __('Create Wager') }}
-                        </x-primary-button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div> --}}
 
     <!-- Daily Expense -->
     <div id="modal-daily-expenses" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
@@ -793,9 +759,9 @@
                         </div>
 
 
-                        <x-primary-button class="mt-3">
+                        <button type="submit" class="btn btn-success">
                             {{ __('Create Bill') }}
-                        </x-primary-button>
+                        </button>
                     </form>
                 </div>
             </div>
@@ -883,9 +849,9 @@
 
                         <div class="flex items-center justify-end mt-4">
 
-                            <x-primary-button>
+                            <button type="submit" class="btn btn-success">
                                 {{ __('Pay') }}
-                            </x-primary-button>
+                            </button>
 
                         </div>
 

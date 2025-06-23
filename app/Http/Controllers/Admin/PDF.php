@@ -231,6 +231,9 @@ class PDF extends Fpdf
 
     function phaseTableData($headers, $phases, $phaseCosting)
     {
+        $this->SetFont('', '', 11); // Set uniform font (no bold)
+        $this->SetTextColor(51, 51, 51); // Default text color
+
         if (empty($phases)) {
             $this->SetFillColor(245, 245, 245);
             $this->Cell(0, 10, 'No data available', 1, 0, 'C', true);
@@ -239,15 +242,11 @@ class PDF extends Fpdf
         }
 
         // Title Section
-        $this->SetTextColor(0, 170, 183);
-        $this->SetFont('Arial', 'B', 18);
         $this->Cell(0, 10, 'SiteMaster', 0, 1, 'C');
         $this->Ln(5);
 
         // Phase Details Section
         $this->SetFillColor(245, 245, 245);
-        $this->SetTextColor(51, 51, 51);
-        $this->SetFont('Arial', '', 12);
 
         $phase_details = [
             $headers['box1'] => $phases['phase_name'],
@@ -311,7 +310,6 @@ class PDF extends Fpdf
 
         // Subtotal Row
         $this->SetFillColor(245, 245, 245);
-        $this->SetFont('Arial', 'B', 12);
         $this->Cell($this->width * 1, $this->height, 'Sub Total', 1);
         $this->Cell($this->width * 1, $this->height, number_format($totalAmount, 2), 1, 0, 'R');
         $this->Cell($this->width * 1, $this->height, number_format($totalServiceCharge, 2), 1, 0, 'R');
@@ -322,11 +320,9 @@ class PDF extends Fpdf
         // Construction Materials Table
         if (!$phases['construction_material_billings']->isEmpty()) {
             $this->Ln(5);
-            $this->SetFont('Arial', 'B', 14);
             $this->Cell($this->width / 1, 10, 'Construction Materials', 0, 1, 'C');
 
             // Header
-            $this->SetFont('Arial', 'B', 11);
             $this->SetFillColor(0, 170, 183);
             $this->SetTextColor(255);
             $headers = ['Date', 'Item Name', 'Supplier', 'Amount', 'Service Charge', 'Total'];
@@ -336,8 +332,7 @@ class PDF extends Fpdf
             $this->Ln();
 
             // Rows
-            $this->SetFont('Arial', '', 11);
-            $this->SetTextColor(0);
+            $this->SetTextColor(51, 51, 51);
             foreach ($phases['construction_material_billings'] as $material) {
                 $amount = $material->amount;
                 $charge = $this->getServiceChargeAmount($amount, $phases['service_charge']);
@@ -353,10 +348,8 @@ class PDF extends Fpdf
         // Square Footage Bills Table
         if (!$phases['square_footage_bills']->isEmpty()) {
             $this->Ln(5);
-            $this->SetFont('Arial', 'B', 14);
             $this->Cell($this->width / 1, 10, 'Square Footage Bills', 0, 1, 'C');
 
-            $this->SetFont('Arial', 'B', 11);
             $this->SetFillColor(0, 170, 183);
             $this->SetTextColor(255);
             $headers = ['Date', 'Work Type', 'Supplier', 'Price', 'Multiplier', 'Service Charge', 'Total'];
@@ -365,8 +358,7 @@ class PDF extends Fpdf
             }
             $this->Ln();
 
-            $this->SetFont('Arial', '', 11);
-            $this->SetTextColor(0);
+            $this->SetTextColor(51, 51, 51);
             foreach ($phases['square_footage_bills'] as $sqft) {
                 $total = $sqft->price * $sqft->multiplier;
                 $charge = $this->getServiceChargeAmount($total, $phases['service_charge']);
@@ -383,10 +375,8 @@ class PDF extends Fpdf
         // Daily Expenses Table
         if (!$phases['daily_expenses']->isEmpty()) {
             $this->Ln(5);
-            $this->SetFont('Arial', 'B', 14);
             $this->Cell($this->width / 1.25, 10, 'Daily Expenses', 0, 1, 'C');
 
-            $this->SetFont('Arial', 'B', 11);
             $this->SetFillColor(0, 170, 183);
             $this->SetTextColor(255);
             $headers = ['Date', 'Item Name', 'Amount', 'Service Charge', 'Total'];
@@ -395,8 +385,7 @@ class PDF extends Fpdf
             }
             $this->Ln();
 
-            $this->SetFont('Arial', '', 11);
-            $this->SetTextColor(0);
+            $this->SetTextColor(51, 51, 51);
             foreach ($phases['daily_expenses'] as $expense) {
                 $charge = $this->getServiceChargeAmount($expense->price, $phases['service_charge']);
                 $this->Cell($this->width / 1.25, $this->height, date('Y-m-d', strtotime($expense->created_at)), 1);
@@ -410,10 +399,8 @@ class PDF extends Fpdf
         // Daily Wasta Table
         if (!empty($phases['daily_wastas'])) {
             $this->Ln(5);
-            $this->SetFont('Arial', 'B', 14);
             $this->Cell($this->width / 1.25, 10, 'Daily Wastas', 0, 1, 'C');
 
-            $this->SetFont('Arial', 'B', 11);
             $this->SetFillColor(0, 170, 183);
             $this->SetTextColor(255);
             $headers = ['Date', 'Wasta Name', 'Amount', 'Service Charge', 'Total'];
@@ -422,8 +409,7 @@ class PDF extends Fpdf
             }
             $this->Ln();
 
-            $this->SetFont('Arial', '', 11);
-            $this->SetTextColor(0);
+            $this->SetTextColor(51, 51, 51);
             foreach ($phases['daily_wastas'] as $wasta) {
                 $charge = $this->getServiceChargeAmount($wasta->price, $phases['service_charge']);
                 $this->Cell($this->width / 1.25, $this->height, date('Y-m-d', strtotime($wasta->created_at)), 1);
@@ -437,10 +423,8 @@ class PDF extends Fpdf
         // Daily Labour Table
         if (!empty($phases['daily_labours'])) {
             $this->Ln(5);
-            $this->SetFont('Arial', 'B', 14);
             $this->Cell($this->width / 1.25, 10, 'Daily Labours', 0, 1, 'C');
 
-            $this->SetFont('Arial', 'B', 11);
             $this->SetFillColor(0, 170, 183);
             $this->SetTextColor(255);
             $headers = ['Date', 'Labour Name', 'Amount', 'Service Charge', 'Total'];
@@ -449,8 +433,7 @@ class PDF extends Fpdf
             }
             $this->Ln();
 
-            $this->SetFont('Arial', '', 11);
-            $this->SetTextColor(0);
+            $this->SetTextColor(51, 51, 51);
             foreach ($phases['daily_labours'] as $labour) {
                 $charge = $this->getServiceChargeAmount($labour->price, $phases['service_charge']);
                 $this->Cell($this->width / 1.25, $this->height, date('Y-m-d', strtotime($labour->created_at)), 1);
