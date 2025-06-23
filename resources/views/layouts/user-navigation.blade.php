@@ -2,14 +2,7 @@
 
     <ul class="nav">
 
-         <li class="nav-item">
-            <a class="nav-link {{ Request::is('user/clients') ? 'active' : '' }}"
-                href="{{ url('user/clients') }}">
-                <i class="menu-icon fa fa-user"></i>
-                <span class="menu-title">Clients</span>
-            </a>
-        </li>
-
+      
         <li class="nav-item">
             <a class="nav-link" href="{{ url('user/dashboard') }}">
                 <i class="mdi mdi-grid-large menu-icon"></i>
@@ -31,12 +24,6 @@
             </a>
         </li>
 
-        <li class="nav-item">
-            <a class="nav-link {{ Request::is('user/payments') ? 'active' : '' }}" href="{{ url('user/payments') }}">
-                <i class="menu-icon fa fa-indian-rupee"></i>
-                <span class="menu-title">Ledger</span>
-            </a>
-        </li>
 
         
      

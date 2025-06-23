@@ -4,13 +4,9 @@
         $month = now()->month;
         $year = now()->year;
         $daysInMonth = \Carbon\Carbon::create($year, $month, 1)->daysInMonth;
-    @endphp
-
-    @php
+       
         $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
-    @endphp
-
-    @php
+       
         $currentDate = \Carbon\Carbon::create($year, $month, 1);
         $prevMonth = $currentDate->copy()->subMonth();
         $nextMonth = $currentDate->copy()->addMonth();
@@ -274,8 +270,11 @@
                             data-bs-target="#collapse-{{ $index }}" style="cursor:pointer;">
                             <td>
                                 <span class="employee-name">{{ $wasta->wasta_name }}</span><br>
+
+                                @if($user === 'admin')
                                 <button class="btn btn-sm btn-outline-primary mt-1 wasta-edit-btn"
                                     data-wasta='@json($wasta)'>Edit</button>
+                                @endif
                             </td>
 
                             @for ($day = 1; $day <= $daysInMonth; $day++)
@@ -308,9 +307,13 @@
                                     @foreach ($wasta->labours as $labour)
                                         <tr class="collapse-inner">
                                             <td>
-                                                <span class="employee-name">{{ $labour->labour_name }}</span><br>
+                                                 <span class="employee-name">{{ $labour->labour_name }}</span><br>
+
+                                               @if($user === 'admin'){
                                                 <button class="btn btn-sm btn-outline-primary mt-1 labour-edit-btn"
                                                     data-labour='@json($labour)'>Edit</button>
+                                               }
+                                               @endif
                                             </td>
 
                                             @for ($day = 1; $day <= $daysInMonth; $day++)

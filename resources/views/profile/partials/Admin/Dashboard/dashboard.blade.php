@@ -12,122 +12,188 @@
     </style>
 
     <div class="row">
-
         <!-- Stats Overview -->
-        <div class="row mb-4 align-items-center">
-            <!-- Statistics -->
+        <div class="row mb-4">
+            <!-- Statistics Cards -->
             <div class="col-md-8">
-                <div class="d-flex gap-3">
-                    <div class="bg-white px-4 py-3 rounded">
-                        <p class="statistics-title text-info fw-bold">Sites Open</p>
-                        <h3 class="rate-percentage text-info">{{ $ongoingSites }}</h3>
-                    </div>
-                    <div class="bg-white px-4 py-3 rounded">
-                        <p class="statistics-title text-danger fw-bold">Closed Sites</p>
-                        <h3 class="rate-percentage text-danger">{{ $completedSites }}</h3>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Button aligned right -->
-            <div class="col-md-2 text-end">
-                <a class="btn btn-primary btn-sm  w-100" href="{{ route('suppliers.dashboard') }}">
-                    <i class="menu-icon fa fa-inbox"></i> Switch Suppliers
-                </a>
-            </div>
-
-            <!-- Create Site Button -->
-            <div class="col-md-2 text-end">
-                <button class="btn btn-primary btn-sm w-100" data-bs-toggle="modal" data-bs-target="#create-site-modal">
-                    + Create Site
-                </button>
-            </div>
-
-        </div>
-
-        <!-- Summary + Charts -->
-        <div class="col-12">
-            <div class="card card-rounded mb-4">
-                <div class="card-body p-0 d-flex flex-column">
-
-                    <!-- Filters -->
-                    <form method="GET" action="{{ url()->current() }}">
-                        <div class="p-3 border-bottom d-flex gap-2">
-                            <input type="text" name="search" class="form-control w-25"
-                                placeholder="Search for customers" value="{{ request('search') }}">
-                            <button type="submit" class="btn btn-primary ">Search</button>
-                            <a href="{{ url()->current() }}" class="btn btn-secondary ">Clear</a>
-                        </div>
-                    </form>
-
-
-
-                    <!-- Customer List -->
-                    <div class="p-3  bg-white rounded shadow-sm">
-                        @foreach ($sites as $site)
-                            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
-                                <div>
-                                    <strong>
-                                        <a href="{{ url('/admin/sites/' . base64_encode($site->id)) }}">
-                                            {{ $site->site_name }}
-                                        </a>
-                                    </strong>
-                                    <br>
-                                    <small class="text-muted">
-                                        {{ $site->client->name }}
-                                    </small>
-                                    <br>
-                                    <small class="text-muted">
-                                        {{ $site->created_at->diffForHumans() }}
-                                    </small>
+                <div class="row">
+                    <div class="col-md-6 mb-3 mb-md-0">
+                        <div class="card bg-primary text-white h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title mb-1 text-white">Sites Open</h6>
+                                        <h2 class="mb-0">{{ $ongoingSites }}</h2>
+                                    </div>
+                                    <div class="icon-shape bg-white text-primary rounded-circle p-3">
+                                        <i class="fas fa-building fs-4"></i>
+                                    </div>
                                 </div>
-
-                                @php
-                                    $baseCost = 0;
-
-                                    foreach ($site->phases as $phase) {
-                                        $baseCost +=
-                                            ($phase->total_material_billing ?? 0) +
-                                            ($phase->total_square_footage ?? 0) +
-                                            ($phase->total_daily_expenses ?? 0) +
-                                            ($phase->total_labour_cost ?? 0) +
-                                            ($phase->total_wasta_cost ?? 0);
-                                    }
-
-                                    $servicePercentage = $site->service_charge ?? 0; // assuming this is stored as a number like 5 for 5%
-                                    $serviceAmount = ($baseCost * $servicePercentage) / 100;
-                                    $totalCost = $baseCost + $serviceAmount;
-
-                                    $paid = $site->total_payments ?? 0;
-                                    $balance = $totalCost - $paid;
-                                @endphp
-
-
-                                <div class="text-end">
-                                    <strong class="text-success">
-                                        {{ number_format($paid, 2) }}
-                                    </strong><br>
-                                    <small class="text-muted">Paid</small><br>
-
-                                    <strong class="text-danger">
-                                        {{ number_format($balance, 2) }}
-                                    </strong><br>
-                                    <small class="text-muted">Balance</small>
-                                </div>
-
                             </div>
-                        @endforeach
+                        </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="card bg-secondary text-white h-100">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="card-title mb-1 text-white">Closed Sites</h6>
+                                        <h2 class="mb-0">{{ $completedSites }}</h2>
+                                    </div>
+                                    <div class="icon-shape bg-white text-danger rounded-circle p-3">
+                                        <i class="fas fa-lock fs-4"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-
-
-
+            <!-- Action Buttons -->
+            <div class="col-md-4 mt-3 mt-md-0">
+                <div class="d-flex flex-column h-100 gap-2">
+                    <a class="btn btn-outline-primary btn-sm w-100 d-flex align-items-center justify-content-center"
+                        href="{{ route('suppliers.dashboard') }}">
+                        <i class="fas fa-exchange-alt me-2"></i> Switch Suppliers
+                    </a>
+                    <button class="btn btn-primary btn-sm w-100 d-flex align-items-center justify-content-center"
+                        data-bs-toggle="modal" data-bs-target="#create-site-modal">
+                        <i class="fas fa-plus me-2"></i> Create Site
+                    </button>
                 </div>
             </div>
         </div>
 
-    </div>
+        <!-- Main Content Area -->
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body p-0">
+                    <!-- Search and Filters -->
+                    <div class="p-3 ">
+                        <form method="GET" action="{{ url()->current() }}">
+                            <div class="row g-2">
+                                <div class="col-md-8">
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                                        <input type="text" name="search" class="form-control"
+                                            placeholder="Search for customers or sites..."
+                                            value="{{ request('search') }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                                </div>
+                                <div class="col-md-2">
+                                    <a href="{{ url()->current() }}"
+                                        class="btn btn-outline-secondary text-black w-100">Reset</a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
 
+                    <!-- Sites List -->
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Site Name</th>
+                                    <th>Client</th>
+                                    <th>Created</th>
+                                    <th class="text-end">Paid</th>
+                                    <th class="text-end">Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($sites as $site)
+                                    @php
+                                        $baseCost = 0;
+                                        foreach ($site->phases as $phase) {
+                                            $baseCost +=
+                                                ($phase->total_material_billing ?? 0) +
+                                                ($phase->total_square_footage ?? 0) +
+                                                ($phase->total_daily_expenses ?? 0) +
+                                                ($phase->total_labour_cost ?? 0) +
+                                                ($phase->total_wasta_cost ?? 0);
+                                        }
+
+                                        $servicePercentage = $site->service_charge ?? 0;
+                                        $serviceAmount = ($baseCost * $servicePercentage) / 100;
+                                        $totalCost = $baseCost + $serviceAmount;
+
+                                        $paid = $site->total_payments ?? 0;
+                                        $balance = $totalCost - $paid;
+                                        $status = $balance <= 0 ? 'Completed' : 'In Progress';
+                                    @endphp
+
+                                    <tr>
+                                        <td>
+                                            <a href="{{ url('/admin/sites/' . base64_encode($site->id)) }}"
+                                                class="fw-bold text-decoration-none">
+                                                {{ $site->site_name }}
+                                            </a>
+                                        </td>
+                                        <td>{{ $site->client->name }}</td>
+                                        <td>{{ $site->created_at->diffForHumans() }}</td>
+                                        <td class="text-end text-success fw-bold">{{ number_format($paid, 2) }}</td>
+                                        <td class="text-end text-danger fw-bold">{{ number_format($balance, 2) }}</td>
+
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    @if ($sites->hasPages())
+                        <div class="p-3 border-top">
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination justify-content-center mb-0">
+                                    {{-- Previous Page Link --}}
+                                    @if ($sites->onFirstPage())
+                                        <li class="page-item disabled">
+                                            <span class="page-link">&laquo;</span>
+                                        </li>
+                                    @else
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ $sites->previousPageUrl() }}"
+                                                rel="prev">&laquo;</a>
+                                        </li>
+                                    @endif
+
+                                    {{-- Pagination Elements --}}
+                                    @foreach ($sites->getUrlRange(1, $sites->lastPage()) as $page => $url)
+                                        @if ($page == $sites->currentPage())
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ $page }}</span>
+                                            </li>
+                                        @else
+                                            <li class="page-item">
+                                                <a class="page-link"
+                                                    href="{{ $url }}">{{ $page }}</a>
+                                            </li>
+                                        @endif
+                                    @endforeach
+
+                                    {{-- Next Page Link --}}
+                                    @if ($sites->hasMorePages())
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ $sites->nextPageUrl() }}"
+                                                rel="next">&raquo;</a>
+                                        </li>
+                                    @else
+                                        <li class="page-item disabled">
+                                            <span class="page-link">&raquo;</span>
+                                        </li>
+                                    @endif
+                                </ul>
+                            </nav>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 
@@ -148,6 +214,7 @@
                         <div class="form-group">
                             <input type="text" name="site_name" id="site_name" />
                             <label for="site_name" class="control-label">Site Name</label><i class="bar"></i>
+                            <div id="site_name-error" class="error-message invalid-feedback"></div>
                         </div>
 
                         <!-- Service Charge -->
@@ -156,18 +223,22 @@
                                 step="0.01" />
                             <label for="service_charge" class="control-label">Service Charge</label><i
                                 class="bar"></i>
+                            <div id="service_charge-error" class="error-message invalid-feedback"></div>
                         </div>
 
                         <!-- Service Charge -->
                         <div class="form-group">
-                            <input type="number" min="0" name="contact_no" id="contact_no" step="0.01" />
+                            <input type="number" min="0" name="contact_no" id="contact_no"
+                                step="0.01" />
                             <label for="contact_no" class="control-label">Contact No</label><i class="bar"></i>
+                            <div id="contact_no-error" class="error-message invalid-feedback"></div>
                         </div>
 
                         <!-- Location -->
                         <div class="form-group">
                             <input type="text" name="location" id="location" />
                             <label for="location" class="control-label">Location</label><i class="bar"></i>
+                            <div id="location-error" class="error-message invalid-feedback"></div>
                         </div>
 
                         <div class="row">
@@ -180,6 +251,7 @@
                                         <option value="{{ $user->id }}">{{ $user->name }}</option>
                                     @endforeach
                                 </select>
+                                <div id="user_id-error" class="error-message invalid-feedback"></div>
                             </div>
 
                             <!-- Select Client -->
@@ -191,6 +263,7 @@
                                         <option value="{{ $client->id }}">{{ $client->name }}</option>
                                     @endforeach
                                 </select>
+                                <div id="client_id-error" class="error-message invalid-feedback"></div>
                             </div>
 
 
@@ -207,6 +280,9 @@
         </div>
     </div>
 
+
+
+
     <div id="messageContainer"></div>
 
 
@@ -216,20 +292,21 @@
             const messageContainer = $('#messageContainer');
 
             $('#createSiteForm').submit(function(e) {
-
                 e.preventDefault();
 
-                // Reset previous error messages and alerts
-                $('.error-message').text('');
+                // Clear previous messages and errors
+                $('.invalid-feedback').remove();
+                $('.is-invalid').removeClass('is-invalid');
                 messageContainer.html('');
 
-                // Disable button and show spinner
+                // Button state
                 const submitBtn = $('#submitSiteBtn');
+                const originalBtnText = submitBtn.html();
                 submitBtn.prop('disabled', true).html(
                     '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...'
                 );
 
-                // Prepare form data
+                // Form data
                 const formData = new FormData(this);
 
                 // AJAX request
@@ -245,51 +322,66 @@
                     success: function(response) {
                         if (response.status) {
 
-                            $('#create-site-modal').modal('hide');
-                            $('#createSiteForm')[0].reset();
-
+                            // Show success message
                             messageContainer.html(`
-                                <div class="alert alert-success mt-3 alert-dismissible fade show" role="alert">
-                                    ${response.message}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                ${response.message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `);
+
+                            // Reset form and hide modal
+                            $('#createSiteForm')[0].reset();
+                            $('#create-site-modal').modal('hide');
+
+                            // Optional: reload after delay
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
                         }
-
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload();
-                        }, 2000);
-
                     },
                     error: function(xhr) {
-                        if (xhr.status === 422) {
+                        let errorMsg = 'An unexpected error occurred.';
 
+                        if (xhr.responseJSON) {
+                            errorMsg = xhr.responseJSON.message || errorMsg;
 
-                            messageContainer.html(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    ${xhr.responseJSON.message}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
-                        } else {
-                            messageContainer.html(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    ${xhr.responseJSON?.message || 'An unexpected error occurred.'}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
+                            // Handle validation errors (422 status)
+                            if (xhr.status === 422 && xhr.responseJSON.errors) {
+                                const errors = xhr.responseJSON.errors;
+                                $.each(errors, function(field, messages) {
+                                    const input = $(`[name="${field}"]`);
+                                    const formGroup = input.closest('.form-group');
+
+                                    if (input.length) {
+                                        input.addClass('is-invalid');
+                                        if (formGroup.length) {
+                                            formGroup.append(
+                                                `<div class="invalid-feedback">${messages.join('<br>')}</div>`
+                                            );
+                                        } else {
+                                            input.after(
+                                                `<div class="invalid-feedback">${messages.join('<br>')}</div>`
+                                            );
+                                        }
+                                    }
+                                });
+                            }
                         }
 
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload();
-                        }, 2000);
+                    
                     },
                     complete: function() {
-                        submitBtn.prop('disabled', false).text('Create Site');
+                        submitBtn.prop('disabled', false).html(originalBtnText);
                     }
                 });
+            });
+
+            // Clear validation errors when modal is hidden
+            $('#create-site-modal').on('hidden.bs.modal', function() {
+                $('.invalid-feedback').remove();
+                $('.is-invalid').removeClass('is-invalid');
+                messageContainer.html('');
             });
         });
     </script>

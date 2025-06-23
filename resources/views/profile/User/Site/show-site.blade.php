@@ -194,11 +194,7 @@
 
                 <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                     <!-- Entry Actions -->
-                    <li>
-                        <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#phase">
-                            <i class="fas fa-layer-group me-2"></i> Add Phase
-                        </a>
-                    </li>
+                   
                     <li>
                         <a class="dropdown-item" data-bs-toggle="modal" role="button"
                             href="#modal-construction-billings">
@@ -239,22 +235,16 @@
                             <i class="fas fa-calendar-check me-2"></i> View Attendance
                         </a>
                     </li>
-                    <li>
-                        <a class="dropdown-item"
-                            href="{{ url('admin/site-payment/report', ['id' => base64_encode($id)]) }}">
-                            <i class="fas fa-file-invoice-dollar me-2"></i> View Payment Report
-                        </a>
-                    </li>
-
+                  
 
                 </ul>
             </div>
 
             <form action="{{ url($user . '/ledger/report') }}" method="GET">
-                <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
+                <input type="hidden" name="site_id" value="{{ request('site_id', $id) }}">
                 <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
                 <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
-                <input type="hidden" name="wager_id" value="{{ request('wager_id', 'all') }}">
+                <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
                 <button type="submit" class="btn btn-outline">
                     <i class="far fa-file-pdf"></i> Download PDF
                 </button>
@@ -268,6 +258,7 @@
 
 
 
+    {{-- {{ dd($suppliers) }} --}}
 
 
     <form class="d-flex flex-column flex-md-row gap-2 w-100" action="{{ url()->current() }}" method="GET"
@@ -278,7 +269,7 @@
             @foreach ($suppliers as $supplier)
                 <option value="{{ $supplier['supplier_id'] }}"
                     {{ request('supplier_id') == $supplier['supplier_id'] ? 'selected' : '' }}>
-                    {{ $supplier['supplier'] }}
+                    {{ $supplier['supplier_name'] }}
                 </option>
             @endforeach
         </select>
@@ -813,7 +804,7 @@
                                 <option for="supplier_id" value="">Select Supplier</option>
                                 @foreach ($suppliers as $supplier)
                                     <option value="{{ $supplier['supplier_id'] }}">
-                                        {{ $supplier['supplier'] }}
+                                        {{ $supplier['supplier_name'] }}
                                     </option>
                                 @endforeach
                             </select>

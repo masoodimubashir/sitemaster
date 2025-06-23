@@ -131,9 +131,8 @@
                                         <td class="space-x-4">
 
                                             <a href="{{ url('admin/sites/' . $site->id . '/edit') }}"
-                                                class="text-black" title="Edit Site"
-                                                aria-label="Edit Site">
-                                                <i class="fas fa-edit me-1"></i> 
+                                                class="text-black" title="Edit Site" aria-label="Edit Site">
+                                                <i class="fas fa-edit me-1"></i>
                                             </a>
 
 
@@ -285,20 +284,21 @@
             const messageContainer = $('#messageContainer');
 
             $('#createSiteForm').submit(function(e) {
-
                 e.preventDefault();
 
-                // Reset previous error messages and alerts
-                $('.error-message').text('');
+                // Clear previous messages and errors
+                $('.invalid-feedback').remove();
+                $('.is-invalid').removeClass('is-invalid');
                 messageContainer.html('');
 
-                // Disable button and show spinner
+                // Button state
                 const submitBtn = $('#submitSiteBtn');
+                const originalBtnText = submitBtn.html();
                 submitBtn.prop('disabled', true).html(
                     '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...'
                 );
 
-                // Prepare form data
+                // Form data
                 const formData = new FormData(this);
 
                 // AJAX request
@@ -313,52 +313,66 @@
                     },
                     success: function(response) {
                         if (response.status) {
-
-                            $('#create-site-modal').modal('hide');
-                            $('#createSiteForm')[0].reset();
-
+                            // Show success message
                             messageContainer.html(`
-                                <div class="alert alert-success mt-3 alert-dismissible fade show" role="alert">
-                                    ${response.message}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                ${response.message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `);
+
+                            // Reset form and hide modal
+                            $('#createSiteForm')[0].reset();
+                            $('#create-site-modal').modal('hide');
+
+                            // Optional: reload after delay
+                            setTimeout(() => {
+                                location.reload();
+                            }, 1500);
                         }
-
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload();
-                        }, 2000);
-
                     },
                     error: function(xhr) {
-                        if (xhr.status === 422) {
+                        let errorMsg = 'An unexpected error occurred.';
 
+                        if (xhr.responseJSON) {
+                            errorMsg = xhr.responseJSON.message || errorMsg;
 
-                            messageContainer.html(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    ${xhr.responseJSON.message}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
-                        } else {
-                            messageContainer.html(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    ${xhr.responseJSON?.message || 'An unexpected error occurred.'}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
+                            // Handle validation errors (422 status)
+                            if (xhr.status === 422 && xhr.responseJSON.errors) {
+                                const errors = xhr.responseJSON.errors;
+                                $.each(errors, function(field, messages) {
+                                    const input = $(`[name="${field}"]`);
+                                    const formGroup = input.closest('.form-group');
+
+                                    if (input.length) {
+                                        input.addClass('is-invalid');
+                                        if (formGroup.length) {
+                                            formGroup.append(
+                                                `<div class="invalid-feedback">${messages.join('<br>')}</div>`
+                                                );
+                                        } else {
+                                            input.after(
+                                                `<div class="invalid-feedback">${messages.join('<br>')}</div>`
+                                                );
+                                        }
+                                    }
+                                });
+                            }
                         }
 
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload();
-                        }, 2000);
+                     
                     },
                     complete: function() {
-                        submitBtn.prop('disabled', false).text('Create Site');
+                        submitBtn.prop('disabled', false).html(originalBtnText);
                     }
                 });
+            });
+
+            // Clear validation errors when modal is hidden
+            $('#create-site-modal').on('hidden.bs.modal', function() {
+                $('.invalid-feedback').remove();
+                $('.is-invalid').removeClass('is-invalid');
+                messageContainer.html('');
             });
         });
     </script>

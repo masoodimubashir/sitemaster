@@ -56,7 +56,9 @@
                                         <th class="bg-info fw-bold text-white">Contact No</th>
                                         <th class="bg-info fw-bold text-white">Address</th>
                                         <th class="bg-info fw-bold text-white">Supplier Type</th>
-                                        <th class="bg-info fw-bold text-white">Actions</th>
+                                        @if ($user === 'admin')
+                                            <th class="bg-info fw-bold text-white">Actions</th>
+                                        @endif
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -85,23 +87,26 @@
                                                 {{ $supplier->is_workforce_provider ? 'Workforce Provider' : '' }}
                                             </td>
 
-                                            <td class="space-x-4">
-                                                <a href="{{ url($user . '/suppliers/' . $supplier->id . '/edit') }}">
-                                                    <i
-                                                        class="fa-regular fa-pen-to-square text-xl bg-white rounded-full"></i>
-                                                </a>
-                                                <form id="delete-form-{{ $supplier->id }}"
-                                                    action="{{ url($user . '/suppliers/' . $supplier->id) }}"
-                                                    method="POST" style="display: none;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                </form>
-                                                <a href="#"
-                                                    onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this supplier?')) document.getElementById('delete-form-{{ $supplier->id }}').submit();">
-                                                    <i
-                                                        class="fa-solid fa-trash-o text-xl text-red-600 bg-white rounded-full px-2 py-1"></i>
-                                                </a>
-                                            </td>
+                                            @if ($user === 'admin')
+                                                <td class="space-x-4">
+                                                    <a
+                                                        href="{{ url($user . '/suppliers/' . $supplier->id . '/edit') }}">
+                                                        <i
+                                                            class="fa-regular fa-pen-to-square text-xl bg-white rounded-full"></i>
+                                                    </a>
+                                                    <form id="delete-form-{{ $supplier->id }}"
+                                                        action="{{ url($user . '/suppliers/' . $supplier->id) }}"
+                                                        method="POST" style="display: none;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                    </form>
+                                                    <a href="#"
+                                                        onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this supplier?')) document.getElementById('delete-form-{{ $supplier->id }}').submit();">
+                                                        <i
+                                                            class="fa-solid fa-trash-o text-xl text-red-600 bg-white rounded-full px-2 py-1"></i>
+                                                    </a>
+                                                </td>
+                                            @endif
 
                                         </tr>
                                     @endforeach

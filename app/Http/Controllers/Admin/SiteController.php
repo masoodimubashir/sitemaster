@@ -68,6 +68,7 @@ class SiteController extends Controller
             'contact_no' => 'required|digits:10',
         ]);
 
+
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
@@ -102,6 +103,7 @@ class SiteController extends Controller
                 'data' => $site
             ], 201);
         } catch (\Exception $e) {
+            Log::error('Site creation failed: ' . $e->getMessage());
             return response()->json([
                 'status' => false,
                 'message' => 'Something went wrong!',

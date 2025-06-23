@@ -4,36 +4,30 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 
-use App\Charts\BalancePaidChart;
-use App\Charts\CostProfitChart;
-use App\Charts\PaymentChart;
-use App\Http\Requests\StoreSiteRequest;
 use App\Models\Client;
-use App\Models\Payment;
 use App\Models\Site;
 use App\Models\Supplier;
 use App\Models\User;
-use App\Notifications\UserSiteNotification;
-use App\Services\DataService;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function siteDashboard(Request $request)
+    public function siteDashboard()
     {
 
         // Use separate queries to avoid mutation
         $ongoingSitesCount = Site::where('is_on_going', 1)->count();
         $completedSitesCount = Site::where('is_on_going', 0)->count();
 
-        // Base query for pagination
         $search = request('search');
 
         $sitesQuery = Site::query();
 
         if ($search) {
-            $sitesQuery->whereHas('client', function ($query) use ($search) {
-                $query->where('name', 'like', '%' . $search . '%');
+            $sitesQuery->where(function ($query) use ($search) {
+                $query->where('site_name', 'like', '%' . $search . '%')
+                    ->orWhereHas('client', function ($q) use ($search) {
+                        $q->where('name', 'like', '%' . $search . '%');
+                    });
             });
         }
 

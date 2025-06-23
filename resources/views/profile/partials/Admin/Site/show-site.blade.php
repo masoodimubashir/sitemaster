@@ -264,7 +264,6 @@
                 <input type="hidden" name="site_id" value="{{ request('site_id', $id) }}">
                 <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
                 <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
-                <input type="hidden" name="wager_id" value="{{ request('wager_id', 'all') }}">
                 <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
                 <button type="submit" class="btn btn-outline">
                     <i class="far fa-file-pdf"></i> Download PDF
