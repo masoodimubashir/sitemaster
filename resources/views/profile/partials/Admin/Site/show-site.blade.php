@@ -184,9 +184,8 @@
         <h2 class="text-xl font-semibold">{{ $site->site_name }}</h2>
 
         <div class="ms-auto action-buttons d-flex gap-2">
-            <!-- Settings Dropdown -->
-            <div class="dropdown">
 
+            
                 <button class="btn btn-outline btn-sm" type="button" id="dropdownMenuButton"
                     data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="fas fa-bolt me-1"></i> Quick Actions
@@ -258,7 +257,6 @@
 
 
                 </ul>
-            </div>
 
             <form action="{{ url($user . '/ledger/report') }}" method="GET">
                 <input type="hidden" name="site_id" value="{{ request('site_id', $id) }}">
@@ -266,7 +264,7 @@
                 <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
                 <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
                 <button type="submit" class="btn btn-outline">
-                    <i class="far fa-file-pdf"></i>  PDF
+                    <i class="far fa-file-pdf"></i> PDF
                 </button>
             </form>
         </div>
@@ -363,7 +361,7 @@
 
 
 
-     
+
         <div class="table-responsive">
             <table class="table mb-0">
                 <thead>
@@ -424,7 +422,8 @@
                             </li>
                         @else
                             <li class="page-item">
-                                <a class="page-link" href="{{ $paginatedLedgers->previousPageUrl() }}" rel="prev">&laquo;</a>
+                                <a class="page-link" href="{{ $paginatedLedgers->previousPageUrl() }}"
+                                    rel="prev">&laquo;</a>
                             </li>
                         @endif
 
@@ -442,7 +441,8 @@
 
                         @if ($paginatedLedgers->hasMorePages())
                             <li class="page-item">
-                                <a class="page-link" href="{{ $paginatedLedgers->nextPageUrl() }}" rel="next">&raquo;</a>
+                                <a class="page-link" href="{{ $paginatedLedgers->nextPageUrl() }}"
+                                    rel="next">&raquo;</a>
                             </li>
                         @else
                             <li class="page-item disabled">
@@ -453,8 +453,8 @@
                 </nav>
             </div>
         @endif
- 
-          
+
+
     </div>
 
     <div id="messageContainer"></div>

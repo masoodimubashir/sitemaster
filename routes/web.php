@@ -69,7 +69,7 @@ Route::middleware(['auth:clients', 'isClient'])->prefix('client')->group(functio
     Route::get('/download-phase/report/{id}', [PDFController::class, 'showPhasePdf']);
     // Route::get('/supplier-payment/report/{id}', [PDFController::class, 'showSupplierPaymentPdf']);
     Route::get('/site-payment/report/{id}', [PDFController::class, 'showSitePaymentPdf']);
-    // Route::get('/ledger/report', [PDFController::class, 'showLedgerPdf']);
+    Route::get('/ledger/report', [PDFController::class, 'showLedgerPdf']);
 
 });
 
@@ -140,9 +140,9 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     Route::resource('/phase', PhaseController::class);
 
-    // Route::resource('/payment-bills', PaymentBillsController::class);
 
-    Route::get('/site/ledger/{id}', SitePaymentController::class)->name('sites.view-ledger');
+    // Recheck
+    // Route::get('/site/ledger/{id}', SitePaymentController::class)->name('sites.view-ledger');
 
     // View Supplier Ledger
     Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');
@@ -153,7 +153,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     //  All Controllers For Soft Deletes
     Route::get('/trashed-supplier', [TrashController::class, 'trashedSuppliers'])->name('trash.suppliers');
     Route::get('/trashed-site', [TrashController::class, 'trashedSites'])->name('trash.sites');
-    Route::get('phase/trashed-phases/abc', [TrashController::class, 'trashedPhase'])->name('trash.phases');
+    Route::get('/trashed-phases', [TrashController::class, 'trashedPhase'])->name('trash.phases');
     Route::get('/trashed-{model_name}/{id}', [TrashController::class, 'restore'])->name('trash.restore');
 
     // DownLoad PDF Controller
@@ -293,6 +293,8 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::put('/attendance/wasta/update/{id}', [AttendanceSheetController::class, 'updateWasta']);
     Route::put('/attendance/labour/update/{id}', [AttendanceSheetController::class, 'updateLabour']);
     Route::get('/attendance/site/show/{id}', [AttendanceSheetController::class, 'showAttendanceBySite']);
+
+    Route::get('/item-verification', [ItemsVerificationController::class, 'index']);
 
     
 });

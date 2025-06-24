@@ -24,7 +24,9 @@ class ViewSiteController extends Controller
      * Display the specified resource.
      */
 
-    public function __construct(public DataService $dataService) {}
+    public function __construct(public DataService $dataService)
+    {
+    }
 
 
 
@@ -46,7 +48,7 @@ class ViewSiteController extends Controller
         $site = Site::findOrFail($id);
 
         // Load processed financial data
-        [$payments, $raw_materials, $squareFootageBills, $expenses,  $wastas, $labours] = $this->dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
             $dateFilter,
             $id,
             $supplier_id,
@@ -63,7 +65,9 @@ class ViewSiteController extends Controller
             $expenses,
             $wastas,
             $labours
-        )->sortByDesc(fn($entry) => $entry['created_at']);
+        )->filter(function ($entry) {
+            return !empty($entry['phase']); // Only include entries with a phase
+        })->sortByDesc(fn($entry) => $entry['created_at']);
 
 
         $ledgersGroupedByPhase = $ledgers->groupBy('phase');
@@ -84,7 +88,7 @@ class ViewSiteController extends Controller
             $labour_total = $records->where('category', 'Labour')->sum('debit');
             $payments_total = $records->where('category', 'Payment')->sum('credit');
 
-            $subtotal = $construction_total + $square_total + $expenses_total  + $wasta_total + $labour_total;
+            $subtotal = $construction_total + $square_total + $expenses_total + $wasta_total + $labour_total;
             $withService = ($subtotal * $site->service_charge / 100) + $subtotal;
 
 
@@ -114,8 +118,8 @@ class ViewSiteController extends Controller
         return view(
             'profile.User.Site.show-site-detail',
             compact(
-              'site',
-            'phaseData'
+                'site',
+                'phaseData'
             )
         );
     }
@@ -135,7 +139,7 @@ class ViewSiteController extends Controller
         $endDate = $request->input('end_date');
 
         // Call the service to get all data including wasta and labours
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers,  $labours] = $dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $labours] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
@@ -155,7 +159,6 @@ class ViewSiteController extends Controller
         )->sortByDesc(function ($d) {
             return $d['created_at'];
         });
-
 
         // Calculate balances
         $balances = $dataService->calculateAllBalances($ledgers);
@@ -194,7 +197,7 @@ class ViewSiteController extends Controller
         ])->orderBy('name')->get();
 
         $phases = Phase::where([
-            'deleted_at' =>  null,
+            'deleted_at' => null,
             'site_id' => $site_id
         ])->latest()->get();
 
@@ -202,6 +205,7 @@ class ViewSiteController extends Controller
             'is_on_going' => 1,
             'deleted_at' => null
         ])->find($site_id);
+
 
         // dd($suppliers);
 

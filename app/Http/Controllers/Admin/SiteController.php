@@ -20,7 +20,9 @@ use Illuminate\Support\Facades\Validator;
 class SiteController extends Controller
 {
 
-    public function __construct(public DataService $dataService) {}
+    public function __construct(public DataService $dataService)
+    {
+    }
 
     /**
      * Display a listing of the resource.
@@ -133,7 +135,7 @@ class SiteController extends Controller
         $site = Site::findOrFail($site_id);
 
         // Load processed financial data
-        [$payments, $raw_materials, $squareFootageBills, $expenses,  $wastas, $labours] = $this->dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
@@ -150,7 +152,9 @@ class SiteController extends Controller
             $expenses,
             $wastas,
             $labours
-        )->sortByDesc(fn($entry) => $entry['created_at']);
+        )->filter(function ($entry) {
+            return !empty($entry['phase']); // Only include entries with a phase
+        })->sortByDesc(fn($entry) => $entry['created_at']);
 
 
         $ledgersGroupedByPhase = $ledgers->groupBy('phase');
@@ -171,7 +175,7 @@ class SiteController extends Controller
             $labour_total = $records->where('category', 'Labour')->sum('debit');
             $payments_total = $records->where('category', 'Payment')->sum('credit');
 
-            $subtotal = $construction_total + $square_total + $expenses_total  + $wasta_total + $labour_total;
+            $subtotal = $construction_total + $square_total + $expenses_total + $wasta_total + $labour_total;
             $withService = ($subtotal * $site->service_charge / 100) + $subtotal;
 
 
@@ -219,7 +223,7 @@ class SiteController extends Controller
         $endDate = $request->input('end_date');
 
         // Call the service to get all data including wasta and labours
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers,  $labours] = $dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $labours] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
@@ -227,7 +231,7 @@ class SiteController extends Controller
             $endDate,
             $phase_id
         );
-        
+
 
         $ledgers = $dataService->makeData(
             $payments,
@@ -277,7 +281,7 @@ class SiteController extends Controller
         ])->orderBy('name')->get();
 
         $phases = Phase::where([
-            'deleted_at' =>  null,
+            'deleted_at' => null,
             'site_id' => $site_id
         ])->latest()->get();
 

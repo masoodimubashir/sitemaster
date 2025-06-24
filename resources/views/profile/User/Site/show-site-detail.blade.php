@@ -67,10 +67,6 @@
     <!-- Site Financial Summary -->
     <div class="card mb-4 border-info">
 
-
-
-
-
         <!-- Phase Tabs -->
         @if (count($phaseData) > 0)
 
@@ -173,8 +169,8 @@
                 
 
                             <a href="{{ url('user/download-phase/report', ['id' => base64_encode($phase['phase_id'])]) }}"
-                                class="btn btn-info btn-sm text-white">
-                                Generate Phase PDF
+                                class="btn btn-success btn-sm text-white">
+                                Generate PDF
                             </a>
 
                         </div>

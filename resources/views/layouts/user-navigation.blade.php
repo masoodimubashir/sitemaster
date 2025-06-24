@@ -2,7 +2,7 @@
 
     <ul class="nav">
 
-      
+
         <li class="nav-item">
             <a class="nav-link" href="{{ url('user/dashboard') }}">
                 <i class="mdi mdi-grid-large menu-icon"></i>
@@ -25,8 +25,8 @@
         </li>
 
 
-        
-     
+
+
 
         <li class="nav-item">
             <a class="nav-link {{ Request::is('user/wager-attendance') ? 'active' : '' }}"
@@ -36,8 +36,16 @@
             </a>
         </li>
 
+        <li class="nav-item nav-category">Verifications</li>
 
-        
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url('user/item-verification') }}">
+                <i class="menu-icon fa fa-indian-rupee"></i>
+                <span class="menu-title">Verify Items</span>
+            </a>
+        </li>
+
+
 
     </ul>
 

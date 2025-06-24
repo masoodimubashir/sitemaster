@@ -239,33 +239,6 @@ class DataService
         });
     }
 
-    // private function transformWagers(Collection $wagers): Collection
-    // {
-    //     return $wagers->map(function ($wager) {
-
-    //         $serviceCharge = $this->calculateServiceCharge($wager->wager_total, $wager->phase->site->service_charge);
-
-    //         return [
-
-    //             'id' => $wager->id,
-    //             'verified_by_admin' => $wager->verified_by_admin,
-    //             'description' => $wager->wager_name ?? null,
-    //             'category' => 'Wager',
-    //             'credit' => 0,
-    //             'debit' => $wager->wager_total,
-    //             'transaction_type' => null,
-    //             'payment_initiator' => 'Supplier',
-    //             'total_amount_with_service_charge' => $serviceCharge + $wager->wager_total,
-    //             'site' => $wager->phase->site->site_name ?? null,
-    //             'supplier' => $wager->supplier->name ?? null,
-    //             'supplier_id' => $wager->supplier_id ?? null,
-    //             'site_id' => $wager->phase->site_id ?? null,
-    //             'phase' => $wager->phase->phase_name ?? null,
-    //             'phase_id' => $wager->phase_id ?? null,
-    //             'created_at' => $wager->created_at,
-    //         ];
-    //     });
-    // }
 
     private function transformWastas(Collection $wastas): Collection
     {
@@ -278,7 +251,7 @@ class DataService
 
                 'id' => $wasta->id,
                 'verified_by_admin' => $wasta->verified_by_admin,
-                'description' => $wasta->wasta_name ?? null,
+                'description' => $wasta->wasta_name . ' /' . $wasta->price . ':Day' ?? null,
                 'category' => 'Wasta',
                 'credit' => 0,
                 'debit' => $totalAmount,
@@ -309,7 +282,7 @@ class DataService
 
                 'id' => $labour->id,
                 'verified_by_admin' => $labour->verified_by_admin,
-                'description' => $labour->labour_name ?? null,
+                'description' => $labour->labour_name . ' /' . $labour->price . ':Day' ?? null,
                 'category' => 'Labour',
                 'credit' => 0,
                 'debit' => $totalAmount,

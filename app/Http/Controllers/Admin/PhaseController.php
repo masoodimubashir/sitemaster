@@ -3,13 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\PaymentSupplier;
+use App\Models\Payment;
 use App\Models\Phase;
 use App\Models\Site;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Phar;
 
 class PhaseController extends Controller
 {
@@ -132,7 +131,7 @@ class PhaseController extends Controller
 
         $phase = Phase::find($phase_id);
 
-        $hasPaymentRecords = PaymentSupplier::where(function ($query) use ($phase) {
+        $hasPaymentRecords = Payment::where(function ($query) use ($phase) {
             $query->where('site_id', $phase->site_id);
         })->exists();
 

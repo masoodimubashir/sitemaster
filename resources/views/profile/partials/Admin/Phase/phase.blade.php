@@ -136,7 +136,7 @@
     <div class="modal fade" id="phaseModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
+                <div class="modal-header text-black">
                     <h5 class="modal-title">
                         <i class="fas fa-plus-circle me-2"></i>
                         Create New Phase
@@ -166,7 +166,7 @@
                         
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary" id="submitPhaseBtn">
+                            <button type="submit" class="btn btn-success" id="submitPhaseBtn">
                                 <span class="submit-text">Create Phase</span>
                                 <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
                             </button>

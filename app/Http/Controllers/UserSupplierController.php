@@ -7,11 +7,14 @@ use App\Http\Requests\UpdateSupplierRequest;
 use App\Models\Supplier;
 use App\Services\DataService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class UserSupplierController extends Controller
 {
 
-    public function __construct(public DataService $dataService) {}
+    public function __construct(public DataService $dataService)
+    {
+    }
 
     /**
      * Display a listing of the resource.
@@ -56,10 +59,10 @@ class UserSupplierController extends Controller
     {
 
         $date_filter = $request->input('date_filter', 'today');
-        $site_id = $request->input('site_id', $id);
+        $site_id = $request->input('site_id', 'all');
         $supplier_id = $request->input('supplier_id', $id);
         $wager_id = $request->input('wager_id', 'all');
-        $start_date = $request->input('start_date'); 
+        $start_date = $request->input('start_date'); // for 'custom'
         $end_date = $request->input('end_date');
         $phase_id = $request->input('phase_id', 'all');
 
@@ -67,7 +70,7 @@ class UserSupplierController extends Controller
         // Load the supplier
         $supplier = Supplier::findOrFail($supplier_id);
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses,  $wastas, $labours] = $this->dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
             $date_filter,
             $site_id,
             $supplier_id,
@@ -87,25 +90,25 @@ class UserSupplierController extends Controller
             return $d['created_at'];
         });
 
+
+        // Paginate the ledgers
+        $paginatedLedgers = new LengthAwarePaginator(
+            $ledgers->forPage($request->input('page', 1), 20),
+            $ledgers->count(),
+            20,
+            $request->input('page', 1),
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
         // Compute balances
         $totals = $this->dataService->calculateAllBalances($ledgers);
 
         // Group unique sites
-        $sites = collect($ledgers)
-            ->unique('site_id')
-            ->filter(function ($item) {
-                return $item['site_id'] !== '--';
-            })
-            ->map(function ($item) {
-                return [
-                    'site_id' => $item['site_id'],
-                    'site_name' => $item['site'],
-                ];
-            })->values();
+        $sites = $this->dataService->getSuppliersWithSites(null, $supplier_id);
 
         // Prepare data
         $data = [
-            'ledgers' => $ledgers,
+            'ledgers' => $paginatedLedgers,
             'supplier' => $supplier,
             'totalDebit' => $totals['without_service_charge']['due'],
             'totalCredit' => $totals['without_service_charge']['paid'],
@@ -114,17 +117,18 @@ class UserSupplierController extends Controller
         ];
 
         if ($supplier->is_raw_material_provider == 1) {
-            return view('profile.partials.Admin.Supplier.show-supplier_raw_material', compact('data', 'sites'));
+            return view('profile.partials.Admin.Supplier.show-supplier_raw_material', compact('data', 'sites', 'supplier'));
         }
 
-        return view('profile.partials.Admin.Supplier.show_supplier_workforce', compact('data', 'sites'));
+        return view('profile.partials.Admin.Supplier.show_supplier_workforce', compact('data', 'sites', 'supplier'));
+
     }
 
 
     public function showSupplierDetail(string $id)
     {
 
-        $supplier = Supplier::with([
+       $supplier = Supplier::with([
             'constructionMaterialBilling' => function ($material) {
                 $material->where([
                     'verified_by_admin' => 1,
@@ -197,6 +201,21 @@ class UserSupplierController extends Controller
             ];
         }));
 
+        $perPage = 20; 
+        $currentPage = request('page', 1); 
+
+        // Create paginator for the ledger data
+        $paginatedLedgers = new LengthAwarePaginator(
+            $data->forPage($currentPage, $perPage), // Current page items
+            $data->count(), // Total items
+            $perPage, // Items per page
+            $currentPage, // Current page
+            [
+                'path' => request()->url(),
+                'query' => request()->query() 
+            ]
+        );
+
         // Calculate totals
         $totalDebit = $data->where('transaction_type', 'debit')->sum('total_price');
         $totalCredit = $supplier->payments()->sum('amount');
@@ -210,7 +229,7 @@ class UserSupplierController extends Controller
             ->all();
 
         $data = [
-            'data' => $data,
+            'data' => $paginatedLedgers,
             'supplier' => $supplier,
             'totalDebit' => $totalDebit,
             'totalCredit' => $totalCredit,
@@ -218,7 +237,7 @@ class UserSupplierController extends Controller
             'sites' => $sites
         ];
 
-           return view('profile.partials.Admin.Supplier.show-supplier-detail', compact('data', 'sites'));
+        return view('profile.partials.Admin.Supplier.show-supplier-detail', compact('data', 'sites'));
     }
 
     /**
@@ -269,7 +288,7 @@ class UserSupplierController extends Controller
         }
 
         if ($supplier->is_workforce_provider) {
-            $siteHasRecords =  $supplier->dailyWagers()->exists() ||
+            $siteHasRecords = $supplier->dailyWagers()->exists() ||
                 $supplier->squareFootages()->exists() ||
                 $supplier->dailyWagers()->exists() ||
                 $supplier->payments()->exists();

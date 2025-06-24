@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Attendance;
 use App\Models\ConstructionMaterialBilling;
 use App\Models\DailyExpenses;
 use App\Models\DailyWager;
@@ -109,10 +110,10 @@ class AdminVerificationController extends Controller
         try {
 
 
-            $attendance = WagerAttendance::find($id);
+            $attendance = Attendance::find($id);
 
             $attendance->update([
-                'verified_by_admin' => !$attendance->verified_by_admin
+                'is_present' => !$attendance->is_present,
             ]);
 
             return response()->json([
