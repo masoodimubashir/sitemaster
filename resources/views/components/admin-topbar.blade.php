@@ -8,11 +8,11 @@
         </div>
         <div>
             <p class="navbar-brand brand-logo" href="index.html">
-                SiteMaster
+                {{-- SiteMaster --}}
                 {{-- <img src="assets/images/logo.svg" alt="logo" /> --}}
             </p>
             <p class="navbar-brand brand-logo-mini" href="index.html">
-                SiteMaster
+                {{-- SiteMaster --}}
                 {{-- <img src="assets/images/logo-mini.svg" alt="logo" /> --}}
             </p>
         </div>

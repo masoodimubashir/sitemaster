@@ -45,11 +45,10 @@
                                 </tbody>
                             </table>
                         @else
-                            <div class="alert alert-light text-center py-5">
+                            <div class=" alert-light text-center py-5">
                                 <div class="py-4">
                                     <i class="fas fa-trash-alt fa-4x text-muted mb-4"></i>
                                     <h4 class="text-muted">No Deleted Suppliers Found</h4>
-                                    <p class="text-muted mb-4">There are no supplier records in the trash.</p>
                                 </div>
                             </div>
                         @endif

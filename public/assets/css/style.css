@@ -32841,10 +32841,13 @@ dl li {
 }
 
 .sidebar .nav .nav-item .nav-link i.menu-icon {
-    font-size: 22px;
+    font-size: 18px;
     line-height: 1;
     margin-right: 1rem;
     color: #484848;
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
 }
 
 .rtl .sidebar .nav .nav-item .nav-link i.menu-icon {

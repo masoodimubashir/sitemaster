@@ -25,13 +25,12 @@ class AttendanceSheetController extends Controller
         $year = now()->year;
     }
 
-    // Base query for Wastas with eager loading
     $wastasQuery = Wasta::with([
         'attendances' => fn($query) => $query->whereMonth('attendance_date', $month)
                                            ->whereYear('attendance_date', $year),
         'labours.attendances' => fn($query) => $query->whereMonth('attendance_date', $month)
                                                     ->whereYear('attendance_date', $year),
-        'phase.site' // Include phase and site relationship
+        'phase.site' 
     ]);
 
     // Apply site filter if provided
@@ -147,6 +146,7 @@ class AttendanceSheetController extends Controller
                 "price" => "required|numeric",
                 "contact" => "required|string|max:10",
             ]);
+
 
             if ($data->fails()) {
                 return response()->json([

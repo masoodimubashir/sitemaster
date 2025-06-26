@@ -49,7 +49,7 @@
                                 </tbody>
                             </table>
                         @else
-                            <div class="alert alert-light text-center py-5">
+                            <div class=" alert-light text-center py-5">
                                 <div class="py-4">
                                     <i class="fas fa-trash-alt fa-4x text-muted mb-4"></i>
                                     <h4 class="text-muted">No Deleted Sites Found</h4>

@@ -70,7 +70,6 @@
                                 <div class="py-4">
                                     <i class="fas fa-layer-group fa-4x text-light mb-4"></i>
                                     <h4 class="text-muted">No Deleted Phases Found</h4>
-                                    <p class="text-muted mb-4">There are no phase records in the trash bin.</p>
                                     <a href="{{ url('/admin/phase') }}" class="btn btn-primary">
                                         <i class="fas fa-arrow-left me-1"></i> Back to Phases
                                     </a>

@@ -80,10 +80,7 @@
                                 <i class="fas fa-money-bill-transfer me-2 text-primary"></i>
                                 Payment Transactions
                             </h5>
-                            <button class="btn btn-sm btn-success" data-bs-toggle="modal"
-                                data-bs-target="#createPaymentModal">
-                                <i class="fas fa-plus me-1"></i> New Payment
-                            </button>
+                          
                         </div>
                     </div>
 

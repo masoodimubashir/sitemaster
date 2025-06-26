@@ -14,7 +14,9 @@ use Illuminate\Support\Collection;
 
 class DataService
 {
-    public function __construct() {}
+    public function __construct()
+    {
+    }
 
     public function getData(
         string $dateFilter,
@@ -92,8 +94,8 @@ class DataService
         ];
 
         foreach ($ledgers as $item) {
-            $credit = (float)($item['credit']);
-            $debit = (float)($item['debit']);
+            $credit = (float) ($item['credit']);
+            $debit = (float) ($item['debit']);
 
             $totals['total_debits'] += $debit;
             $totals['total_credits'] += $credit;
@@ -334,17 +336,15 @@ class DataService
         };
     }
 
-    private function getSupplierIdFromWager($wager_id, $supplier_id)
-    {
-        if ($this->isValidWager($wager_id)) {
-            $wager = DailyWager::find($wager_id);
-            return $wager?->supplier_id ?? $supplier_id;
-        }
-        return $supplier_id;
-    }
+
 
     private function getPayments(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
     {
+        // Return empty collection if phase is selected
+        if ($this->isValidPhase($phase_id)) {
+            return collect();
+        }
+
         return Payment::query()
             ->where('verified_by_admin', 1)
             ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
