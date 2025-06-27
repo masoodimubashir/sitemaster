@@ -49,7 +49,7 @@ class PhaseController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                    'errors' => 'Some Of The Form Fields Are Missing'
+                    'errors' => $validator->errors()
                 ], 422);
             }
 
@@ -99,7 +99,6 @@ class PhaseController extends Controller
 
         $phase = Phase::find($phase_id);
 
-
         $request->validate([
             'phase_name' => [
                 'required',
@@ -112,10 +111,6 @@ class PhaseController extends Controller
                     ->ignore($phase_id)
             ],
         ]);
-
-
-
-        $phase = Phase::find($phase_id);
 
         $phase->update($request->all());
 

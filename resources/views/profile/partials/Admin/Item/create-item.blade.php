@@ -9,7 +9,7 @@
     <div class="row">
         <div class="d-flex justify-content-end">
             <div class="form-group mt-3">
-                <button type="button" id="add-item-row" class="btn btn-info btn-sm d-flex align-items-center">
+                <button type="button" id="add-item-row" class="btn btn-success btn-sm d-flex align-items-center">
                     Add Entry <i class="fa fa-plus ms-2"></i>
                 </button>
             </div>
@@ -23,43 +23,35 @@
 
                         <div id="items-container">
                             @forelse(old('items', [['item_name' => '']]) as $index => $item)
-                                <div class="form-group item-row mb-3">
-                                    <div class="d-flex align-items-center">
-                                        <input type="text" id="items-{{ $index }}-item_name"
-                                            name="items[{{ $index }}][item_name]"
-                                            value="{{ $item['item_name'] }}" class="w-100"
-                                            style="width: 100% !important" />
-                                        <label for="items-{{ $index }}-item_name" class="control-label">Item
-                                            Name</label>
-                                        <i class="bar"></i>
+                                <div class="form-group position-relative item-row mb-3">
+                                    <input type="text" id="items-{{ $index }}-item_name"
+                                        name="items[{{ $index }}][item_name]" value="{{ $item['item_name'] }}"
+                                        class="w-100" />
+                                    <label for="items-{{ $index }}-item_name" class="control-label">Item
+                                        Name</label>
+                                    <i class="bar"></i>
 
-                                        @if ($index > 0)
-                                            <div class="input-group-append ms-2">
-                                                <i class="fa-regular fa-circle-xmark remove-item-row fs-3 text-danger"
-                                                    style="cursor:pointer"></i>
-                                            </div>
-                                        @endif
-                                    </div>
-
-                                    @error('items.' . $index . '.item_name')
-                                        <div class="invalid-feedback d-block mt-2 fw-bold">
-                                            {{ $message }}
+                                    @if ($index > 0)
+                                        <div class="position-absolute top-0 end-0 me-2 mt-1">
+                                            <i class="fa-regular fa-circle-xmark remove-item-row fs-3 text-danger"
+                                                style="cursor:pointer"></i>
                                         </div>
-                                    @enderror
+                                    @endif
+
+                                    <x-input-error :messages="$errors->get('items.' . $index . '.item_name')" class="mt-2 fw-bold" />
                                 </div>
                             @empty
                                 <div class="form-group item-row mb-3">
-                                    <div class="d-flex align-items-center form-group w-100">
-                                        <input type="text" id="items-0-item_name" name="items[0][item_name]"
-                                            class="w-100" />
-                                        <label for="items-0-item_name" class="control-label">Item Name</label>
-                                        <i class="bar"></i>
-                                    </div>
+                                    <input type="text" id="items-0-item_name" name="items[0][item_name]"
+                                        class="w-100" />
+                                    <label for="items-0-item_name" class="control-label">Item Name</label>
+                                    <i class="bar"></i>
                                 </div>
                             @endforelse
+
                         </div>
 
-                        <button type="submit" class="btn btn-info mt-3">
+                        <button type="submit" class="btn btn-success mt-3">
                             <span>Save Items</span>
                         </button>
                     </form>

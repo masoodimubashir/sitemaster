@@ -315,7 +315,7 @@
 
         <div class="card">
             <div class="table-responsive mt-4">
-                <table class="table table-hover mb-0">
+                <table class="table mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Date</th>
@@ -511,64 +511,94 @@
 
     <script>
         $(document).ready(function() {
-            $('form[id="payment_form"]').on('submit', function(e) {
-                e.preventDefault();
+          
+       $('form[id="payment_form"]').on('submit', function(e) {
+    e.preventDefault();
 
-                const form = $(this);
-                const formData = new FormData(form[0]);
-                const messageContainer = $('#messageContainer');
-                messageContainer.empty();
+    const form = $(this);
+    const formData = new FormData(form[0]);
+    const messageContainer = $('#messageContainer');
+    messageContainer.empty();
 
-                $('.text-danger').remove();
+    // Clear previous errors
+    form.find('.is-invalid').removeClass('is-invalid');
+    form.find('.text-danger').remove();
+    form.find('.invalid-feedback').remove();
 
-                $.ajax({
-                    url: '{{ url($user . '/supplier/payments') }}',
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
-                        messageContainer.append(`
-                        <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                            <div class="d-flex">
-                                <div class="toast-body">
-                                    <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                </div>
-                            </div>
+    $.ajax({
+        url: '{{ url($user . '/supplier/payments') }}',
+        type: 'POST',
+        data: formData,
+        contentType: false,
+        processData: false,
+        success: function(response) {
+            messageContainer.html(`
+                <div class="alert align-items-center text-white bg-success border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
                         </div>
-                    `);
-                        form[0].reset();
-
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload();
-                        }, 2000);
-                    },
-                    error: function(response) {
-
-                        if (response.status === 422) {
-
-                            messageContainer.append(`
-                            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                ${response.responseJSON.errors}
-                            </div>`)
-
-                            location.reload();
-
-                        } else {
-                            messageContainer.append(`
-                            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                An unexpected error occurred. Please try again later.
-                            </div>
-                        `);
+                    </div>
+                </div>
+            `);
+            form[0].reset();
+            
+            setTimeout(function() {
+                messageContainer.find('.alert').alert('close');
+                location.reload();
+            }, 2000);
+        },
+        error: function(response) {
+            if (response.status === 422) {
+                const errors = response.responseJSON.errors;
+                
+                // Display field-specific errors
+                $.each(errors, function(field, messages) {
+                    const input = form.find('[name="' + field + '"]');
+                    
+                    if (input.length) {
+                        // Add invalid class to input
+                        input.addClass('is-invalid');
+                        
+                        // Create error message element
+                        const errorElement = $(`<div class="text-danger mt-1 small">${messages[0]}</div>`);
+                        
+                        // Special handling for material-design inputs
+                        if (input.parent().hasClass('form-group')) {
+                            // Insert after the <i class="bar"> element if it exists
+                            if (input.next('i.bar').length) {
+                                input.next('i.bar').after(errorElement);
+                            } else {
+                                input.after(errorElement);
+                            }
+                        } 
+                        // For select elements
+                        else if (input.is('select')) {
+                            input.parent().append(errorElement);
                         }
-
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                        }, 2000);
+                        // For radio buttons
+                        else if (input.is(':radio')) {
+                            input.closest('.row').append(errorElement);
+                        }
+                        // Default case
+                        else {
+                            input.after(errorElement);
+                        }
                     }
                 });
-            });
+            } else {
+                // General error message
+                messageContainer.html(`
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        ${response.responseJSON.message || 'An unexpected error occurred. Please try again later.'}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `);
+            }
+        }
+    });
+});
+            
 
 
         });

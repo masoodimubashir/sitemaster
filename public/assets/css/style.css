@@ -13033,8 +13033,8 @@ fieldset:disabled .btn {
 
 .btn-success {
     --bs-btn-color: #000;
-    --bs-btn-bg: #34B1AA;
-    --bs-btn-border-color: #34B1AA;
+    /* --bs-btn-bg: #34B1AA; */
+    /* --bs-btn-border-color: #34B1AA; */
     --bs-btn-hover-color: #000;
     --bs-btn-hover-bg: #52bdb7;
     --bs-btn-hover-border-color: #48b9b3;
@@ -13044,8 +13044,8 @@ fieldset:disabled .btn {
     --bs-btn-active-border-color: #48b9b3;
     --bs-btn-active-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
     --bs-btn-disabled-color: #000;
-    --bs-btn-disabled-bg: #34B1AA;
-    --bs-btn-disabled-border-color: #34B1AA;
+    /* --bs-btn-disabled-bg: #34B1AA; */
+    /* --bs-btn-disabled-border-color: #34B1AA; */
 }
 
 .btn-info {
@@ -31849,7 +31849,7 @@ dl li {
 .material-form .form-group textarea.form-file~.control-label,
 .material-form .form-group textarea.has-value~.control-label {
     font-size: 0.8rem;
-    color: rgba(17, 17, 17, 0.48);
+    color: black;
     top: -1rem;
     left: 0;
 }

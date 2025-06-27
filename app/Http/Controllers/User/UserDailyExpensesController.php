@@ -7,8 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\DailyExpenses;
 use App\Models\User;
 use App\Notifications\VerificationNotification;
-use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -37,7 +37,9 @@ class UserDailyExpensesController extends Controller
 
             // Check for validation errors
             if ($validator->fails()) {
-                return response()->json(['errors' => 'Form Fields Are Missing...'], 422);
+                return response()->json([
+                    'errors' => $validator->errors()
+                ], 422);
             }
 
             $image_path = null;

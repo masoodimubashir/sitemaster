@@ -8,11 +8,11 @@
     <style>
         #messageContainer {
             position: fixed;
-            bottom: 5%;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 999999999;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 9999;
         }
+
 
         .header-container {
             display: flex;
@@ -185,78 +185,76 @@
 
         <div class="ms-auto action-buttons d-flex gap-2">
 
-            
-                <button class="btn btn-outline btn-sm" type="button" id="dropdownMenuButton"
-                    data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="fas fa-bolt me-1"></i> Quick Actions
-                </button>
 
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <!-- Entry Actions -->
-                    <li>
-                        <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#phase">
-                            <i class="fas fa-layer-group me-2"></i> Add Phase
-                        </a>
-                    </li>
+            <button class="btn btn-outline btn-sm" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown"
+                aria-expanded="false">
+                <i class="fas fa-bolt me-1"></i> Quick Actions
+            </button>
 
-                    <li>
-                        <a class="dropdown-item" data-bs-toggle="modal" role="button"
-                            href="#modal-construction-billings">
-                            <i class="fas fa-truck-loading me-2"></i> Add Construction Billing
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" data-bs-toggle="modal" role="button"
-                            href="#modal-square-footage-bills">
-                            <i class="fas fa-ruler-combined me-2"></i> Add Contractor Billing
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#modal-daily-expenses">
-                            <i class="fas fa-receipt me-2"></i> Add Daily Expense
-                        </a>
-                    </li>
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                <!-- Entry Actions -->
+                <li>
+                    <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#phase">
+                        <i class="fas fa-layer-group me-2"></i> Add Phase
+                    </a>
+                </li>
 
-                    <li>
-                        <a class="dropdown-item" href="#payment-supplier" data-bs-toggle="modal" role="button">
-                            <i class="fas fa-money-bill me-2"></i> Pay balance
-                        </a>
-                    </li>
+                <li>
+                    <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#modal-construction-billings">
+                        <i class="fas fa-truck-loading me-2"></i> Add Construction Billing
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#modal-square-footage-bills">
+                        <i class="fas fa-ruler-combined me-2"></i> Add Contractor Billing
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#modal-daily-expenses">
+                        <i class="fas fa-receipt me-2"></i> Add Daily Expense
+                    </a>
+                </li>
 
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
+                <li>
+                    <a class="dropdown-item" href="#payment-supplier" data-bs-toggle="modal" role="button">
+                        <i class="fas fa-money-bill me-2"></i> Pay balance
+                    </a>
+                </li>
 
-                    <!-- View / Utility Actions -->
-                    <li>
-                        <a class="dropdown-item" href="{{ url('admin/sites/details/' . base64_encode($id)) }}">
-                            <i class="fas fa-info-circle me-2"></i> View Site Details
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="{{ url($user . '/attendance/site/show/' . $id) }}">
-                            <i class="fas fa-calendar-check me-2"></i> View Attendance
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item"
-                            href="{{ url('admin/site-payment/report', ['id' => base64_encode($id)]) }}">
-                            <i class="fas fa-file-invoice-dollar me-2"></i> View Payment Report
-                        </a>
-                    </li>
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
 
-                    <li>
-                        <a class="dropdown-item" href="{{ url('admin/sites/payments', [$id]) }}">
-                            <i class="fas fa-list me-2"></i>
-                            View Payments
-                        </a>
-                    </li>
+                <!-- View / Utility Actions -->
+                <li>
+                    <a class="dropdown-item" href="{{ url('admin/sites/details/' . base64_encode($id)) }}">
+                        <i class="fas fa-info-circle me-2"></i> View Site Details
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ url($user . '/attendance/site/show/' . $id) }}">
+                        <i class="fas fa-calendar-check me-2"></i> View Attendance
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item"
+                        href="{{ url('admin/site-payment/report', ['id' => base64_encode($id)]) }}">
+                        <i class="fas fa-file-invoice-dollar me-2"></i> View Payment Report
+                    </a>
+                </li>
+
+                <li>
+                    <a class="dropdown-item" href="{{ url('admin/sites/payments', [$id]) }}">
+                        <i class="fas fa-list me-2"></i>
+                        View Payments
+                    </a>
+                </li>
 
 
 
 
 
-                </ul>
+            </ul>
 
             <form action="{{ url($user . '/ledger/report') }}" method="GET">
                 <input type="hidden" name="site_id" value="{{ request('site_id', $id) }}">
@@ -366,9 +364,9 @@
             <table class="table mb-0">
                 <thead>
                     <tr>
-                        <th class="fw-bold">DATE</th>
+                        <th class="fw-bold">Date</th>
                         <th class="fw-bold">Customer Name</th>
-                        <th class="fw-bold">DETAILS</th>
+                        <th class="fw-bold">Details</th>
                         <th class="fw-bold text-end">Debit</th>
                         <th class="fw-bold text-end">Credit</th>
                     </tr>
@@ -478,7 +476,6 @@
                             <input type="text" name="phase_name" id="phase_name" />
                             <label for="phase_name" class="control-label">Phase Name</label>
                             <i class="bar"></i>
-                            <x-input-error :messages="$errors->get('phase_name')" class="mt-2" />
                         </div>
 
                         {{-- Site --}}
@@ -499,7 +496,7 @@
         </div>
     </div>
 
-    <!-- Contruction Material Form -->
+    <!-- Construction Material Form -->
     <div id="modal-construction-billings" class="modal fade" aria-hidden="true"
         aria-labelledby="exampleModalToggleLabel" tabindex="-1">
 
@@ -512,74 +509,60 @@
                     <form enctype="multipart/form-data" class="forms-sample material-form"
                         id="constructionBillingForm">
                         @csrf
+
                         <!-- Amount -->
-                        <div class="form-group">
+                        <div class="form-group mb-3">
                             <input type="number" name="amount" id="amount" />
                             <label for="amount" class="control-label">Material Price</label>
                             <i class="bar"></i>
-                            <p class=" mt-1 text-danger" id="amount-error"></p>
+                            <p class="mt-1 text-danger" id="amount-error"></p>
                         </div>
-
 
                         <div class="row">
                             <!-- Item Name -->
-                            <div class="col-md-6">
-                                <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
-                                    name="item_name" style="cursor: pointer">
-                                    <option value="">Select Item
-                                    </option>
+                            <div class="col-md-6 mb-3">
+                                <select class="form-select text-black form-select-sm" name="item_name">
+                                    <option value="">Select Item</option>
                                     @foreach ($items as $item)
-                                        <option value="{{ $item->item_name }}">
-                                            {{ $item->item_name }}
-                                        </option>
+                                        <option value="{{ $item->item_name }}">{{ $item->item_name }}</option>
                                     @endforeach
                                 </select>
-                                <p class=" mt-1 text-danger" id="item_name-error"></p>
+                                <p class="mt-1 text-danger" id="item_name-error"></p>
                             </div>
 
                             <!-- Supplier -->
-                            <div class="col-md-6">
-                                <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
-                                    name="supplier_id" style="cursor: pointer">
-                                    <option value="">Select Supplier
-                                    </option>
+                            <div class="col-md-6 mb-3">
+                                <select class="form-select text-black form-select-sm" name="supplier_id">
+                                    <option value="">Select Supplier</option>
                                     @foreach ($raw_material_providers as $supplier)
-                                        <option value="{{ $supplier->id }}">
-                                            {{ $supplier->name }}
-                                        </option>
+                                        <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
                                     @endforeach
                                 </select>
-                                <p class=" mt-1 text-danger" id="supplier_id-error"></p>
+                                <p class="mt-1 text-danger" id="supplier_id-error"></p>
                             </div>
 
-                            <!-- Phases -->
-                            <div class=" col-md-6">
-                                <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
-                                    name="phase_id" style="cursor: pointer">
-                                    <option value="">Select Phase
-                                    </option>
+                            <!-- Phase -->
+                            <div class="col-md-6 mb-3">
+                                <select class="form-select text-black form-select-sm" name="phase_id">
+                                    <option value="">Select Phase</option>
                                     @foreach ($phases as $phase)
-                                        <option value="{{ $phase->id }}">
-                                            {{ $phase->phase_name }}
-                                        </option>
+                                        <option value="{{ $phase->id }}">{{ $phase->phase_name }}</option>
                                     @endforeach
                                 </select>
-                                <p class=" mt-1 text-danger" id="phase_id-error"></p>
+                                <p class="mt-1 text-danger" id="phase_id-error"></p>
                             </div>
 
-                            <!-- Item Bill Photo -->
-                            <div class="col-md-6">
+                            <!-- Image Upload -->
+                            <div class="col-md-6 mb-3">
                                 <input class="form-control form-control-md" id="image" type="file"
                                     name="image">
-                                <p class=" mt-1 text-danger" id="image-error"></p>
+                                <p class="mt-1 text-danger" id="image-error"></p>
                             </div>
-
                         </div>
 
-                        <button type="submit" class="btn btn-success">
-                            Create Billing
-                        </button>
-
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-success">Create Billing</button>
+                        </div>
 
                     </form>
 
@@ -588,6 +571,7 @@
         </div>
 
     </div>
+
 
     {{-- Square Footage Bill Model --}}
     <div id="modal-square-footage-bills" class="modal fade" aria-hidden="true"
@@ -771,56 +755,51 @@
 
 
     {{-- Payment Modal --}}
-    <div id="payment-supplier" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-        tabindex="-1">
-
+    <div id="payment-supplier" class="modal fade" aria-hidden="true" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
-
             <div class="modal-content">
-
                 <div class="modal-body">
-
                     <form id="payment_supplierForm" class="forms-sample material-form" enctype="multipart/form-data">
-
                         @csrf
 
-                        {{-- Phase Name --}}
+                        {{-- Amount --}}
                         <div class="form-group">
                             <input type="number" min="0" name="amount" step="0.01" />
                             <label for="input" class="control-label">Amount</label><i class="bar"></i>
-                            <x-input-error :messages="$errors->get('amount')" class="mt-2" />
+                            <div class="invalid-feedback" id="amount-error"></div>
+
                         </div>
 
-                        <!-- Site -->
+                        {{-- Site (hidden) --}}
                         <input type="hidden" name="site_id" value="{{ $paginatedLedgers[0]['site_id'] ?? '' }}" />
 
+                        {{-- Select Payee --}}
+                        <div class="mb-3">
+                            <select name="payment_initiator" id="payment_initiator" style="cursor: pointer"
+                                class="form-select text-black form-select-sm" onchange="togglePayOptions()">
+                                <option value="">Select Payee</option>
+                                <option value="1">Supplier</option>
+                                <option value="0">Admin</option>
+                            </select>
+                            <div class="invalid-feedback" id="payment_initiator-error"></div>
+                        </div>
 
-                        {{-- Select Payee Dropdown --}}
-                        <select name="payment_initiator" id="payment_initiator"
-                            class="form-select text-black form-select-sm" style="cursor: pointer"
-                            onchange="togglePayOptions()">
-                            <option value="" selected>Select Payee</option>
-                            <option value="1">Supplier</option>
-                            <option value="0">Admin</option>
-                        </select>
-
-                        {{-- Supplier Options (Shown when Supplier is selected) --}}
-                        <div id="supplierOptions" style="display: none;" class="mt-3">
-                            <select name="supplier_id" id="supplier_id" class="form-select text-black form-select-sm"
+                        {{-- Supplier Options --}}
+                        <div id="supplierOptions" style="display: none;" class="mb-3">
+                            <select name="supplier_id" id="supplier_id" class="form-select text-black"
                                 style="cursor: pointer">
-                                <option for="supplier_id" value="">Select Supplier</option>
+                                <option value="">Select Supplier</option>
                                 @foreach ($suppliers as $supplier)
-                                    <option value="{{ $supplier['supplier_id'] }}">
-                                        {{ $supplier['supplier_name'] }}
+                                    <option value="{{ $supplier['supplier_id'] }}">{{ $supplier['supplier_name'] }}
                                     </option>
                                 @endforeach
                             </select>
+                            <div class="invalid-feedback" id="supplier_id-error"></div>
 
-                            {{-- File Upload for Screenshot --}}
-                            <div class="mt-3">
-                                <input class="form-control form-control-md" id="image" type="file"
-                                    name="screenshot">
-                            </div>
+                            {{-- Screenshot Upload --}}
+                            <label class="control-label mt-3">Upload Screenshot</label>
+                            <input class="form-control" id="image" type="file" name="screenshot">
+                            <div class="invalid-feedback" id="screenshot-error"></div>
                         </div>
 
                         {{-- Admin Options (Shown when Admin is selected) --}}
@@ -843,27 +822,19 @@
                             </div>
                         </div>
 
-
-                        {{-- Screenshot --}}
-
-
-                        <div class="flex items-center justify-end mt-4">
-
-                            <button type="submit" class="btn btn-success">
-                                {{ __('Pay') }}
-                            </button>
-
+                        {{-- Submit --}}
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn btn-success">Pay</button>
                         </div>
-
                     </form>
-
                 </div>
-
             </div>
-
         </div>
-
     </div>
+
+
+    <div id="messageContainer"></div>
+
 
 
 
@@ -908,28 +879,40 @@
                         }, 2000);
                     },
                     error: function(response) {
+                        const errors = response.responseJSON.errors;
 
-                        if (response.status === 422) { // Validation errors
-                            messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-                    ${response.responseJSON.errors}
+                        if (response.status === 422 && errors) {
+                            $.each(errors, function(fieldName, messages) {
+                                const field = $('[name="' + fieldName + '"]');
 
-                    </div>`)
+                                if (field.length) {
+                                    const errorMessage =
+                                        `<span class="text-danger d-block mt-1">${messages[0]}</span>`;
+
+                                    // Remove any existing error message near this field
+                                    field.closest('.form-group').find('.text-danger')
+                                        .remove();
+
+                                    // Append error message after the field
+                                    field.closest('.form-group').append(errorMessage);
+                                }
+                            });
 
                         } else {
                             messageContainer.append(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                        An unexpected error occurred. Please try again later.
-
-                    </div>
-                `);
+            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                An unexpected error occurred. Please try again later.
+            </div>
+        `);
                         }
-                        // Auto-hide error message after 5 seconds
+
+                        // Auto-hide error message
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-
-                        }, 2000);
+                        }, 5000);
                     }
+
+
                 });
             });
 
@@ -1407,26 +1390,34 @@
                     },
                     error: function(response) {
 
-                        if (response.status === 422) { // Validation errors
-                            messageContainer.append(
-                                `
+                        if (response.status === 422) {
+                            // Clear existing errors
+                            $('.invalid-feedback').text('');
 
-                            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">${response.responseJSON.errors}</div>`
-                            )
-
+                            // Display each validation error under the relevant input
+                            const errors = response.responseJSON.errors;
+                            console.log('Validation errors:', errors); // Debug log
+                            for (const field in errors) {
+                                const errorMsg = errors[field][0];
+                                const errorElement = $('#' + field.replace(/\./g, '_') +
+                                    '-error');
+                                if (errorElement.length) {
+                                    errorElement.text(errorMsg).show();
+                                }
+                            }
                         } else {
                             messageContainer.append(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    An unexpected error occurred. Please try again later.
-                                </div>
-                            `);
+            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                An unexpected error occurred. Please try again later.
+            </div>
+        `);
                         }
-                        // Auto-hide error message after 5 seconds
+
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-
-                        }, 2000);
+                        }, 5000);
                     }
+
                 });
             });
 

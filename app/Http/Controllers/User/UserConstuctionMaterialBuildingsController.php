@@ -8,9 +8,8 @@ use App\Models\User;
 use App\Models\ConstructionMaterialBilling as ModelsConstructionMaterialBilling;
 use App\Models\Supplier;
 use App\Notifications\VerificationNotification;
-use DB;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -37,7 +36,7 @@ class UserConstuctionMaterialBuildingsController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                    'errors' => 'Form Fields Are Missing'
+                    'errors' => $validator->errors()
                 ], 422);
             }
 

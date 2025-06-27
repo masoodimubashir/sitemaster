@@ -20,8 +20,8 @@
         <!-- Card Header -->
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 p-3">
             <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-calendar-check text-primary"></i>
-                <h5 class="mb-0 text-primary">Attendance Summary</h5>
+                <i class="fas fa-calendar-check text-info"></i>
+                <h5 class="mb-0">Attendance Summary</h5>
                 <span class="badge bg-light text-dark ms-2">
                     {{ \Carbon\Carbon::create($year, $month, 1)->format('F Y') }}
                 </span>

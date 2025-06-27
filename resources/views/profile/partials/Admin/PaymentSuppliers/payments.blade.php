@@ -298,9 +298,9 @@
             <table class="table mb-0">
                 <thead>
                     <tr>
-                        <th class="fw-bold">DATE</th>
+                        <th class="fw-bold">Date</th>
                         <th class="fw-bold">Customer Name</th>
-                        <th class="fw-bold">DETAILS</th>
+                        <th class="fw-bold">Details</th>
                         <th class="fw-bold text-end">Debit</th>
                         <th class="fw-bold text-end">Credit</th>
                     </tr>

@@ -64,7 +64,7 @@
                 <div class="card-header border-bottom py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-truck me-2 text-success"></i>
+                            <i class="fas fa-truck me-2 text-info"></i>
                             Suppliers
                         </h5>
                         <a class="btn btn-sm btn-success" href="{{ url($user . '/suppliers/create') }}">
@@ -94,7 +94,7 @@
                                         <tr>
                                             <td class="ps-4">
                                                 <a href="{{ url($user . '/suppliers', [$supplier]) }}"
-                                                    class="text-success fw-bold text-decoration-none">
+                                                    class="text-info fw-bold text-decoration-none">
                                                     {{ strtoupper($supplier->name) }}
                                                 </a>
                                             </td>

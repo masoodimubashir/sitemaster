@@ -7,8 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\SquareFootageBill;
 use App\Models\User;
 use App\Notifications\VerificationNotification;
-use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -22,6 +22,7 @@ class UserSquareFootageBillsController extends Controller
     {
 
         if ($request->ajax()) {
+
 
             DB::beginTransaction();
 
@@ -40,7 +41,7 @@ class UserSquareFootageBillsController extends Controller
             // Check for validation errors
             if ($validator->fails()) {
                 return response()->json([
-                    'errors' => 'Form Fields Are Missing...'
+                    'errors' => $validator->errors()
                 ], 422);
             }
 

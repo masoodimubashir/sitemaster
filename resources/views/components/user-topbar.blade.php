@@ -23,7 +23,7 @@
 
         <ul class="navbar-nav">
             <li class="nav-item fw-semibold d-none d-lg-block ms-0">
-                <h1 class="welcome-text text-info">Welcome, <span
+                <h1 class="welcome-text text-info">Welcome <span
                         class="text-info fw-bold">{{ ucfirst(auth()->user()->name) }}</span></h1>
             </li>
         </ul>

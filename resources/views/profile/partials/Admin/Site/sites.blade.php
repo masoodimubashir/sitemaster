@@ -54,7 +54,7 @@
                 <div class="card-header  py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-map-marker-alt me-2 text-success"></i>
+                            <i class="fas fa-map-marker-alt me-2 text-info"></i>
                             Sites
                         </h5>
                         <button class="btn btn-sm btn-success" data-bs-toggle="modal"
@@ -202,7 +202,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label for="user_id" class="form-label">Select User</label>
-                                <select class="form-select" id="user_id" name="user_id" required>
+                                <select class="form-select form-select-sm text-black" style="cursor: pointer" id="user_id" name="user_id" required>
                                     <option value="" selected disabled>Select User</option>
                                     @foreach ($users as $user)
                                         <option value="{{ $user->id }}">{{ $user->name }}</option>
@@ -212,7 +212,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="client_id" class="form-label">Select Client</label>
-                                <select class="form-select" id="client_id" name="client_id" required>
+                                <select class="form-select form-select-sm text-black" style="cursor: pointer" id="client_id" name="client_id" required>
                                     <option value="" selected disabled>Select Client</option>
                                     @foreach ($clients as $client)
                                         <option value="{{ $client->id }}">{{ $client->name }}</option>

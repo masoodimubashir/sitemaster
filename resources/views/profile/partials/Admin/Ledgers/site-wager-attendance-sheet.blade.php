@@ -26,7 +26,6 @@
         .attendance-card,
         .attendance-dashboard {
             border-radius: var(--border-radius);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
             border: none;
             overflow: hidden;
             font-size: 0.85rem;
@@ -136,24 +135,23 @@
         <!-- Card Header -->
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 p-3">
             <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-calendar-check text-primary"></i>
-                <h5 class="mb-0 text-primary">Attendance Summary</h5>
+                <i class="fas fa-calendar-check text-info"></i>
+                <h5 class="mb-0">Attendance Summary</h5>
                 <span class="badge bg-light text-dark ms-2">
                     {{ \Carbon\Carbon::create($year, $month, 1)->format('F Y') }}
                 </span>
             </div>
-
-            <!-- Compact Filters -->
+            <!-- Compact Filters with Auto-Submit -->
             <form method="GET" action="{{ url($user . '/attendance/site/show/' . $site->id) }}"
-                class="d-flex flex-wrap gap-2">
+                class="d-flex flex-wrap gap-2" id="attendanceFilterForm">
                 <div class="input-group input-group-sm" style="width: 150px;">
                     <input type="month" name="monthYear" class="form-control form-control-sm"
-                        value="{{ request('monthYear', $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT)) }}">
+                        value="{{ request('monthYear', $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT)) }}"
+                        id="monthYearFilter">
                 </div>
-                <button type="submit" class="btn btn-sm btn-outline-success">
-                    <i class="fas fa-filter"></i>
-                </button>
+
             </form>
+
 
         </div>
 
@@ -569,8 +567,7 @@
                         <div>${message}</div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            `;
+                </div>`;
 
                     $('#ajaxAlertContainer').append(alertHtml);
 
@@ -753,6 +750,12 @@
                                 'Failed to update labour');
                         }
                     });
+                });
+
+
+
+                document.getElementById('monthYearFilter').addEventListener('change', function() {
+                    document.getElementById('attendanceFilterForm').submit();
                 });
             });
         </script>

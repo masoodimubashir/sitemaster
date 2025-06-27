@@ -64,7 +64,7 @@
                 <div class="card-heade  py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-boxes-stacked me-2 text-success"></i>
+                            <i class="fas fa-boxes-stacked me-2 text-info"></i>
                             Items
                         </h5>
                         <a class="btn btn-sm btn-success" href="{{ url($user . '/items/create') }}">
@@ -77,7 +77,7 @@
                 <div class="card-body">
                     <div class="table-responsive rounded">
                         @if (count($items) > 0)
-                            <table class="table  align-middle">
+                            <table class="table align-middle">
                                 <thead class="bg-light">
                                     <tr>
                                         <th class="fw-bold ps-4">Item Name</th>

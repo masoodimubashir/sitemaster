@@ -54,7 +54,7 @@
                 <div class="card-header  border-bottom py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-users me-2 text-primary text-success"></i>
+                            <i class="fas fa-users me-2 text-primary text-info"></i>
                             Clients
                         </h5>
                         <a class="btn btn-sm btn-success" href="{{ url($user . '/clients/create') }}">

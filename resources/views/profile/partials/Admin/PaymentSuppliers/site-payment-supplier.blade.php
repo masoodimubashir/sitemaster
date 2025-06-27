@@ -112,13 +112,15 @@
                                     <tr>
                                         <td>{{ $payment->created_at->format('d-M-Y') }}</td>
                                         <td>
-                                            <a href="{{ asset('storage/' . $payment->screenshot) }}"
-                                                data-fancybox="gallery"
-                                                data-caption="Payment - {{ $payment->created_at->format('d M Y') }}">
-                                                <img src="{{ asset('storage/' . $payment->screenshot) }}"
-                                                    alt="Payment Receipt"
-                                                    style="width: 50px; height: 50px; object-fit: cover;">
-                                            </a>
+                                            @if ($payment->screenshot)
+                                                <a href="{{ asset('storage/' . $payment->screenshot) }}"
+                                                    data-fancybox="gallery"
+                                                    data-caption="Payment - {{ $payment->created_at->format('d M Y') }}">
+                                                    <img src="{{ asset('storage/' . $payment->screenshot) }}"
+                                                        alt="Payment Receipt"
+                                                        style="width: 50px; height: 50px; object-fit: cover;">
+                                                </a>
+                                            @endif
                                         </td>
                                         <td>{{ ucwords($payment->supplier->name ?? 'N/A') }}</td>
                                         <td class="fw-bold text-success">

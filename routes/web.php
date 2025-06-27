@@ -38,6 +38,7 @@ use App\Http\Controllers\User\UserDailyExpensesController;
 use App\Http\Controllers\User\UserDailyWagerController;
 use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\User\UserPhaseController;
+use App\Http\Controllers\User\UserSitePayments;
 use App\Http\Controllers\User\UserSquareFootageBillsController;
 use App\Http\Controllers\User\UserWagerAttendanceController;
 use App\Http\Controllers\User\ViewSiteController;
@@ -201,7 +202,6 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 //  -------------------------- User Routes --------------------------
 Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
-    // Route::get('/markread', [MarkNotificationAsReadController::class, 'markNotificationAsRead'])->name('user.markAsRead');
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
 
     //  Route For Ypdating The Site Ongoing Status
@@ -212,9 +212,6 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::get('/sites/{id}', [ViewSiteController::class, 'show']);
     Route::get('/sites/details/{id}', [ViewSiteController::class, 'showDetails']);
     Route::post('/sites/store', [ViewSiteController::class, 'store']);
-
-    // Phase Controller
-    Route::resource('/phase', UserPhaseController::class);
 
     // User Supplier Controller
     Route::resource('/suppliers', UserSupplierController::class);
@@ -252,7 +249,7 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::put('/daily-wager-attendance/{id}', [UserWagerAttendanceController::class, 'update']);
 
     // Site Payments
-    // Route::resource('site/payments', UserSitePayments::class);
+    Route::resource('site/payments', UserSitePayments::class);
 
     // View Ledger
     // Route::get('/site/ledger/{id}', UserLedgerController::class);
@@ -260,7 +257,6 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
     // Site Payments
     Route::resource('supplier/payments', PaymentSupplierController::class);
-    // Route::get('sites/payments/{id}', PaymentSiteController::class);
     Route::get('sites/payments/{id}', [PaymentSiteController::class, 'showPayment']);
 
     // View Supplier Ledger

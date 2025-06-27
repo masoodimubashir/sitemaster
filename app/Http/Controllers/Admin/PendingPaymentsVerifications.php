@@ -15,7 +15,7 @@ class PendingPaymentsVerifications extends Controller
     public function index()
     {
 
-        $payments = Payment::with('site', 'supplier')->latest()->paginate(20);
+        $payments = Payment::with('site', 'supplier')->latest()->paginate(10);
 
         return view('profile.partials.Admin.PaymentBills.show-unverified_payments', compact('payments'));
     }

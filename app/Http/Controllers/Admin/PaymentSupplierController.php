@@ -34,7 +34,6 @@ class PaymentSupplierController extends Controller
 
         if ($request->ajax()) {
 
-
             $validatedData = Validator::make($request->all(), [
                 'screenshot' => 'sometimes|mimes:png,jpg,webp, jpeg|max:1024',
                 'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99',],
@@ -46,7 +45,7 @@ class PaymentSupplierController extends Controller
 
             if ($validatedData->fails()) {
                 return response()->json([
-                    'errors' => 'Forms Fields Are Missing..'
+                    'errors' => $validatedData->errors(),
                 ], 422);
             }
 

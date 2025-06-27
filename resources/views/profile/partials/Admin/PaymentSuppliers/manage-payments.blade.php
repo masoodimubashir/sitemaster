@@ -77,7 +77,7 @@
                     <div class="py-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">
-                                <i class="fas fa-money-bill-transfer me-2 text-primary"></i>
+                                <i class="fas fa-money-bill-transfer me-2 text-info"></i>
                                 Payment Transactions
                             </h5>
                           
@@ -120,7 +120,7 @@
                                         <div>
                                             <h6 class="text-muted mb-2">Total Received</h6>
                                             <h3 class="fw-bold text-success">
-                                                {{ Number::currency($payments->where('transaction_type', 2)->sum('amount'), 'INR') }}
+                                                {{ Number::currency($payments->where('transaction_type', 0)->sum('amount'), 'INR') }}
                                             </h3>
                                         </div>
                                         <i class="fas fa-arrow-down fa-2x text-success opacity-25"></i>

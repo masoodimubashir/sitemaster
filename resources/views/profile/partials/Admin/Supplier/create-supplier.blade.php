@@ -34,10 +34,11 @@
                         </div>
 
 
-                        <div class="form-group">
-                            <textarea name="address">{{ old('address') }}</textarea>
-                            <label for="textarea" class="control-label">Address</label><i class="bar"></i>
-                            <x-input-error :messages="$errors->get('address')" class="mt-2" />
+                        <div class="form-group" style="margin-bottom: 0.1rem;">
+                            <textarea name="address" class="form-control" style="margin-top: 0.1rem; margin-bottom: 0.1rem;"></textarea>
+                            <label for="textarea" class="control-label" style="margin-bottom: 0.1rem;">Address</label>
+                            <i class="bar"></i>
+                            <x-input-error :messages="$errors->get('address')" style="margin-top: 0.1rem; font-size: 0.75rem;" />
                         </div>
 
 
@@ -45,13 +46,11 @@
 
                             <div class="form-check">
                                 <label class="form-check-label">
-                                    <input type="radio" class="form-check-input" name="provider"
+                                    <input type="radio" class="form-check-input text-success" name="provider"
                                         id="is_raw_material_provider1" value="is_raw_material_provider"
                                         {{ old('provider') == 'is_raw_material_provider' ? 'checked' : '' }}> Raw
                                     Material Provider
                                 </label>
-
-
                             </div>
 
                             <div class="form-check">
@@ -61,7 +60,6 @@
                                         {{ old('provider') == 'is_workforce_provider' ? 'checked' : '' }}> Workforce
                                     Provider
                                 </label>
-
                             </div>
                             <x-input-error :messages="$errors->get('provider')" class="mt-2" />
 

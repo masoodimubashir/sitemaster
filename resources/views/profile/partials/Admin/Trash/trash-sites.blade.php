@@ -10,7 +10,7 @@
                 <div class="card-header py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-sitemap me-2 text-primary"></i>
+                            <i class="fas fa-sitemap me-2 text-info"></i>
                             Deleted Sites
                         </h5>
                     </div>
@@ -38,7 +38,7 @@
                                             </td>
                                             <td class="text-center">
                                                 <a href="{{ route('trash.restore', ['model_name' => 'site', 'id' => $site->id]) }}"
-                                                   class="btn btn-sm btn-success"
+                                                   class="btn btn-sm btn-icon btn-success"
                                                    data-bs-toggle="tooltip"
                                                    title="Restore Site">
                                                     <i class="fas fa-history me-1"></i> Restore
@@ -53,7 +53,6 @@
                                 <div class="py-4">
                                     <i class="fas fa-trash-alt fa-4x text-muted mb-4"></i>
                                     <h4 class="text-muted">No Deleted Sites Found</h4>
-                                    <p class="text-muted mb-4">There are no site records in the trash.</p>
                                 </div>
                             </div>
                         @endif

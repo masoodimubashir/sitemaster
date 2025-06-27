@@ -58,7 +58,7 @@
 
                         </div>
 
-                        <button class=" btn btn-info mt-3"><span>Save</span></button>
+                        <button class=" btn btn-success mt-3"><span>Save</span></button>
 
                     </form>
                 </div>
@@ -66,11 +66,6 @@
         </div>
     </div>
 
-    {{-- <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Users') }}
-        </h2>
-    </x-slot> --}}
-
+ 
 
 </x-app-layout>

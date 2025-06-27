@@ -9,19 +9,19 @@
             <div class=" border-0">
                 <div class="card-header  py-3">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 text-primary">
-                            <i class="fas fa-layer-group me-2"></i>
+                        <h5 class="mb-0 text-black">
+                            <i class="fas fa-layer-group me-2 text-info"></i>
                             Deleted Phases
                         </h5>
-                        @if($phases->isNotEmpty())
-                        <div class="badge bg-light text-dark">
-                            <i class="fas fa-trash-restore me-1"></i>
-                            {{ $phases->total() }} deleted items
-                        </div>
+                        @if ($phases->isNotEmpty())
+                            <div class="badge bg-light text-dark">
+                                <i class="fas fa-trash-restore me-1"></i>
+                                {{ $phases->total() }} deleted items
+                            </div>
                         @endif
                     </div>
                 </div>
-                
+
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         @if ($phases->isNotEmpty())
@@ -45,19 +45,20 @@
                                             </td>
                                             <td class="text-end">
                                                 <div class="d-flex justify-content-end gap-2">
+                                                    {{-- Restore Button --}}
                                                     <a href="{{ route('trash.restore', ['model_name' => 'phase', 'id' => $phase->id]) }}"
-                                                       class="btn btn-sm btn-outline-success restore-btn"
-                                                       data-bs-toggle="tooltip"
-                                                       title="Restore Phase">
-                                                        <i class="fas fa-history me-1"></i> Restore
+                                                        class="btn btn-sm btn-icon" data-bs-toggle="tooltip"
+                                                        title="Restore Phase">
+                                                        <i class="fas fa-history text-success"></i>
                                                     </a>
-                                                    <button class="btn btn-sm btn-outline-danger"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#permanentDeleteModal"
-                                                            data-id="{{ $phase->id }}"
-                                                            data-name="{{ $phase->phase_name }}"
-                                                            data-type="phase">
-                                                        <i class="fas fa-trash-alt me-1"></i> Delete
+
+                                                    {{-- Delete Button --}}
+                                                    <button class="btn btn-sm btn-icon" data-bs-toggle="modal"
+                                                        data-bs-target="#permanentDeleteModal"
+                                                        data-id="{{ $phase->id }}"
+                                                        data-name="{{ $phase->phase_name }}" data-type="phase"
+                                                        title="Delete Permanently">
+                                                        <i class="fas fa-trash-alt text-danger"></i>
                                                     </button>
                                                 </div>
                                             </td>
@@ -70,15 +71,12 @@
                                 <div class="py-4">
                                     <i class="fas fa-layer-group fa-4x text-light mb-4"></i>
                                     <h4 class="text-muted">No Deleted Phases Found</h4>
-                                    <a href="{{ url('/admin/phase') }}" class="btn btn-primary">
-                                        <i class="fas fa-arrow-left me-1"></i> Back to Phases
-                                    </a>
                                 </div>
                             </div>
                         @endif
                     </div>
 
-                    @if($phases->hasPages())
+                    @if ($phases->hasPages())
                         <div class="card-footer bg-white border-top-0">
                             <div class="d-flex justify-content-center">
                                 {{ $phases->onEachSide(1)->links('pagination::bootstrap-5') }}
@@ -123,7 +121,7 @@
         $(document).ready(function() {
             // Initialize tooltips
             $('[data-bs-toggle="tooltip"]').tooltip();
-            
+
             // Auto-dismiss alerts after 5 seconds
             setTimeout(() => {
                 $('.alert').alert('close');
@@ -135,10 +133,11 @@
                 const id = button.data('id');
                 const name = button.data('name');
                 const type = button.data('type');
-                
+
                 const modal = $(this);
                 modal.find('#deleteItemName').text(name);
-                modal.find('#permanentDeleteForm').attr('action', `/admin/trash/${type}/${id}/force-delete`);
+                modal.find('#permanentDeleteForm').attr('action',
+                    `/admin/trash/${type}/${id}/force-delete`);
             });
 
             // Restore button click handler
@@ -146,8 +145,10 @@
                 e.preventDefault();
                 const button = $(this);
                 button.prop('disabled', true);
-                button.append('<span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>');
-                
+                button.append(
+                    '<span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>'
+                );
+
                 window.location.href = button.attr('href');
             });
         });

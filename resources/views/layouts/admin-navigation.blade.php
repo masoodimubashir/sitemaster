@@ -130,9 +130,3 @@
     </ul>
 </nav>
 
-<style>
-
-
-
-
-</style>

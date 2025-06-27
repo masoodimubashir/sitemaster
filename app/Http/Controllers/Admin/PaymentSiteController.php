@@ -42,7 +42,12 @@ class PaymentSiteController extends Controller
             ]);
 
             if ($validatedData->fails()) {
-                return response()->json(['errors' => 'Forms Fields Are Missing..'], 422);
+                return response()->json(
+                    [
+                        'errors' => $validatedData->errors(),
+                    ],
+                    422
+                );
             }
 
             if ($request->filled('payment_initiator') && !$request->filled('supplier_id')) {

@@ -50,7 +50,7 @@
                 <div class="card-header py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-map-marker-alt me-2 text-primary"></i>
+                            <i class="fas fa-map-marker-alt me-2 text-success"></i>
                             Site Management
                         </h5>
                         <a href="{{ url('user/sites/create') }}" class="btn btn-sm btn-success">
@@ -73,7 +73,6 @@
                                         <th class="fw-bold">Contact No</th>
                                         <th class="fw-bold">Owner</th>
                                         <th class="fw-bold">Service Charge</th>
-                                        <th class="fw-bold text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -104,19 +103,7 @@
                                             </td>
                                             <td>{{ ucfirst($site->site_owner_name) }}</td>
                                             <td>{{ $site->service_charge }}%</td>
-                                            <td class="text-center">
-                                                <form action="{{ route('sites.update-on-going', $site->id) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    @method('POST')
-                                                    <button type="submit" 
-                                                            class="btn btn-sm {{ $site->is_on_going ? 'btn-success' : 'btn-danger' }}"
-                                                            data-bs-toggle="tooltip" 
-                                                            title="{{ $site->is_on_going ? 'Mark as Closed' : 'Mark as Open' }}">
-                                                        <i class="fas {{ $site->is_on_going ? 'fa-check' : 'fa-times' }} me-1"></i>
-                                                        {{ $site->is_on_going ? 'Verified' : 'Verify' }}
-                                                    </button>
-                                                </form>
-                                            </td>
+                                           
                                         </tr>
                                     @endforeach
                                 </tbody>

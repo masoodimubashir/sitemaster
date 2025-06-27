@@ -10,7 +10,7 @@
                 <div class="card-header py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-user-tie me-2 text-primary"></i>
+                            <i class="fas fa-user-tie me-2 text-info"></i>
                             Deleted Suppliers
                         </h5>
                     </div>
@@ -34,7 +34,7 @@
                                             <td>{{ ucfirst($supplier->name) }}</td>
                                             <td class="text-center">
                                                 <a href="{{ route('trash.restore', ['model_name' => 'supplier', 'id' => $supplier->id]) }}"
-                                                   class="btn btn-sm btn-success"
+                                                   class="btn btn-sm btn-icon"
                                                    data-bs-toggle="tooltip"
                                                    title="Restore Supplier">
                                                     <i class="fas fa-history me-1"></i> Restore

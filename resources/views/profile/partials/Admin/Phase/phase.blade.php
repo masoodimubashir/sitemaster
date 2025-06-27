@@ -55,8 +55,8 @@
                 <div class="card-header  py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-layer-group me-2 text-primary"></i>
-                            Phases Management
+                            <i class="fas fa-layer-group me-2 text-info"></i>
+                            Phases 
                         </h5>
                         <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#phaseModal">
                             <i class="fas fa-plus me-1"></i>
@@ -147,7 +147,7 @@
 
                         <div class="mb-3">
                             <label for="site_id" class="form-label">Site</label>
-                            <select class="form-select" id="site_id" name="site_id" required>
+                            <select class="form-select form-select-sm text-black" style="cursor: pointer;" id="site_id" name="site_id" required>
                                 <option value="" selected disabled>Select Site</option>
                                 @foreach ($sites as $site)
                                     <option value="{{ $site->id }}">{{ ucfirst($site->site_name) }}</option>

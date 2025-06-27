@@ -10,7 +10,7 @@
                 <div class="card-header py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-clipboard-check me-2 text-primary"></i>
+                            <i class="fas fa-clipboard-check me-2 text-info"></i>
                             Item Verification
                         </h5>
 

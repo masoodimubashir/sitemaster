@@ -28,7 +28,6 @@ class ItemsVerificationController extends Controller
         $phaseName = $request->input('phase');
         $supplierName = $request->input('supplier');
         $verificationStatus = $request->input('verification_status');
-        $category = $request->input('category');
 
         // 1. Fetch attendance-based items (Wasta/Labour)
         $attendanceItems = $this->getAttendanceItems($siteId, $phaseName, $verificationStatus);
@@ -64,7 +63,7 @@ class ItemsVerificationController extends Controller
             'attendable' => function ($query) {
                 $query->with(['phase.site']);
 
-                // For Labour records, also load the Wasta relationship
+                // Only load wasta relationship if attendable is Labour
                 if ($query->getModel() instanceof Labour) {
                     $query->with('wasta');
                 }
@@ -96,15 +95,23 @@ class ItemsVerificationController extends Controller
             ->map(function ($attendance) {
                 $attendable = $attendance->attendable;
 
-                if (!$attendable)
+                if (!$attendable) {
                     return null;
+                }
 
                 $isWasta = $attendable instanceof Wasta;
                 $isLabour = $attendable instanceof Labour;
 
-                if (!$isWasta && !$isLabour)
+                if (!$isWasta && !$isLabour) {
                     return null;
+                }
 
+                // For Labour, use the wasta relationship if loaded
+                $supplierName = $isLabour
+                    ? ($attendable->relationLoaded('wasta') ? $attendable->wasta->wasta_name : 'NA')
+                    : 'NA';
+
+                $supplierId = $isLabour ? $attendable->wasta_id : null;
 
                 return [
                     'id' => $attendance->id,
@@ -113,9 +120,9 @@ class ItemsVerificationController extends Controller
                     'site' => $attendable->phase->site->site_name ?? 'NA',
                     'category' => 'Attendance',
                     'site_id' => $attendable->phase->site_id ?? null,
-                    'supplier' => $isLabour ? ($attendable->wasta->wasta_name ?? 'NA') : 'NA',
-                    'supplier_id' => $isLabour ? $attendable->wasta_id : null,
-                    'created_at' => $attendance->created_at, // Use attendance creation date
+                    'supplier' => $supplierName,
+                    'supplier_id' => $supplierId,
+                    'created_at' => $attendance->created_at,
                     'verified_by_admin' => $attendance->is_present ? 1 : 0,
                     'is_present' => $attendance->is_present
                 ];
@@ -123,7 +130,6 @@ class ItemsVerificationController extends Controller
             ->filter()
             ->values();
     }
-
     protected function getOtherItems($siteId, $phaseName, $supplierName, $verificationStatus)
     {
         $items = collect();

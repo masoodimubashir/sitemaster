@@ -23,7 +23,7 @@
 
         <ul class="navbar-nav">
             <li class="nav-item fw-semibold d-none d-lg-block ms-0">
-                <h1 class="welcome-text text-info">Welcome, <span
+                <h1 class="welcome-text text-info">Welcome <span
                         class="text-info fw-bold">{{ ucfirst(auth()->user()->name) }}</span></h1>
             </li>
         </ul>
@@ -63,8 +63,19 @@
 
 
             <li class="nav-item dropdown d-none d-lg-block user-dropdown">
-                <a class="nav-link" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-                    {{ ucfirst(auth()->user()->name) }}
+                <a class="nav-link d-flex align-items-center" id="UserDropdown" href="#" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <div class="position-relative">
+                        <!-- User avatar (replace with your actual avatar implementation) -->
+                        <div class="avatar avatar-sm rounded-circle bg-info text-white d-flex align-items-center justify-content-center"
+                            style="width: 32px; height: 32px;">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </div>
+                        <!-- Online status indicator (optional) -->
+                        <span class="position-absolute bottom-0 end-0 bg-success rounded-circle"
+                            style="width: 10px; height: 10px; border: 2px solid white;"></span>
+                    </div>
+                  
                 </a>
                 <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="UserDropdown">
                     <div class="dropdown-header text-center">
@@ -73,12 +84,12 @@
                     </div>
 
                     <a class="dropdown-item" href="{{ route('profile.edit') }}">
-                        <i class="dropdown-item-icon mdi mdi-account-outline text-primary me-2"></i>
+                        <i class="dropdown-item-icon mdi mdi-account-outline text-info me-2"></i>
                         My Profile
                     </a>
 
                     <a class="dropdown-item" href="{{ route('admin.viewAllNotifications') }}">
-                        <i class="dropdown-item-icon mdi mdi-power text-primary me-2"></i>
+                        <i class="dropdown-item-icon mdi mdi-bell-ring-outline text-info me-2"></i>
                         {{ __('View Notifications') }}
                     </a>
 
@@ -90,7 +101,7 @@
 
                         <a class="dropdown-item" href="{{ route('logout') }}"
                             onclick="event.preventDefault(); this.closest('form').submit();">
-                            <i class="dropdown-item-icon mdi mdi-power text-primary me-2"></i>
+                            <i class="dropdown-item-icon mdi mdi-power text-info me-2"></i>
                             {{ __('Log Out') }}
                         </a>
 
