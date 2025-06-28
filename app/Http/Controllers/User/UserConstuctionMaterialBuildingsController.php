@@ -74,7 +74,7 @@ class UserConstuctionMaterialBuildingsController extends Controller
                     new VerificationNotification($data)
                 );
 
-                return response()->json(['message' => 'Construction billing created successfully'], 201);
+                return response()->json(['message' => 'Construction Created...'], 201);
             } catch (\Exception $e) {
                 // Handle any unexpected errors
                 return response()->json(['error' => 'An unexpected error occurred: '], 500);

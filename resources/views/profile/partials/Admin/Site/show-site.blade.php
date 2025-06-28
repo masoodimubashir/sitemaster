@@ -771,7 +771,7 @@
                         </div>
 
                         {{-- Site (hidden) --}}
-                        <input type="hidden" name="site_id" value="{{ $paginatedLedgers[0]['site_id'] ?? '' }}" />
+                        <input type="hidden" name="site_id" value="{{ $site->id }}" />
 
                         {{-- Select Payee --}}
                         <div class="mb-3">
@@ -853,7 +853,6 @@
                 const messageContainer = $('#messageContainer');
                 messageContainer.empty();
 
-
                 $('.text-danger').remove();
 
                 $.ajax({
@@ -864,7 +863,7 @@
                     processData: false,
                     success: function(response) {
                         form[0].reset();
-                        messageContainer.append(`
+                        messageContainer.html(`
                              <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
                                  <div class="d-flex">
                                     <div class="toast-body">
@@ -872,7 +871,7 @@
                                     </div>
                                 </div>
                             </div> `);
-                        // Auto-hide success message after 3 seconds
+
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
@@ -893,13 +892,13 @@
                                     field.closest('.form-group').find('.text-danger')
                                         .remove();
 
-                                    // Append error message after the field
-                                    field.closest('.form-group').append(errorMessage);
+                                    // html error message after the field
+                                    field.closest('.form-group').html(errorMessage);
                                 }
                             });
 
                         } else {
-                            messageContainer.append(`
+                            messageContainer.html(`
             <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
                 An unexpected error occurred. Please try again later.
             </div>
@@ -924,7 +923,7 @@
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
-                const messageContainer = form.find('.message-container');
+                const messageContainer = $('#messageContainer');
                 messageContainer.empty();
 
                 // Clear previous error messages for this form
@@ -1009,7 +1008,7 @@
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
-                const messageContainer = form.find('.message-container');
+                const messageContainer = $('#messageContainer');
                 messageContainer.empty();
 
                 // Clear previous error messages for this form only
@@ -1110,8 +1109,7 @@
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
-                const messageContainer = form.find(
-                    '.message-container'); // Form-specific message container
+                const messageContainer = $('#messageContainer') // Form-specific message container
                 messageContainer.empty();
 
                 // Clear previous error messages for this form only
@@ -1215,7 +1213,7 @@
                     contentType: false,
                     processData: false,
                     success: function(response) {
-                        messageContainer.append(`
+                        messageContainer.html(`
                             <div class="alert align-items-center text-white bg-success border-0" role="alert">
                                 <div class="d-flex">
                                     <div class="toast-body">
@@ -1305,7 +1303,7 @@
                     processData: false,
                     success: function(response) {
 
-                        messageContainer.append(`
+                        messageContainer.html(`
                     <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
                         <div class="d-flex">
                             <div class="toast-body">
@@ -1327,14 +1325,14 @@
                     error: function(response) {
 
                         if (response.status === 422) {
-                            messageContainer.append(`
+                            messageContainer.html(`
                     <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
                          ${response.responseJSON.errors}
 
                     </div>`)
 
                         } else {
-                            messageContainer.append(`
+                            messageContainer.html(`
                     <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
                         An unexpected error occurred. Please try again later.
 
@@ -1370,7 +1368,7 @@
                     contentType: false,
                     processData: false,
                     success: function(response) {
-                        messageContainer.append(`
+                        messageContainer.html(`
                             <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
                                 <div class="d-flex">
                                     <div class="toast-body">
@@ -1406,7 +1404,7 @@
                                 }
                             }
                         } else {
-                            messageContainer.append(`
+                            messageContainer.html(`
             <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
                 An unexpected error occurred. Please try again later.
             </div>

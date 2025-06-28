@@ -175,7 +175,7 @@
         <div class="header-icon">
             <i class="menu-icon fa fa-building"></i>
         </div>
-        <h1 class="text-xl font-semibold">Ledger Report</h1>
+        <h2 class="text-xl font-semibold">Ledger Report</h2>
         <div class="ms-auto action-buttons d-flex gap-2">
             <!-- Dropdown Menu -->
             <form action="{{ url('client/ledger/report') }}" method="GET">
@@ -187,10 +187,6 @@
                     <i class="far fa-file-pdf"></i>  PDF
                 </button>
             </form>
-
-
-
-
 
         </div>
     </div>

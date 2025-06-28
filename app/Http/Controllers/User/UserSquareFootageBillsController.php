@@ -35,6 +35,10 @@ class UserSquareFootageBillsController extends Controller
                 'multiplier' => 'required|numeric|min:0',
                 'phase_id' => 'required|exists:phases,id',
                 'supplier_id' => 'required|exists:suppliers,id',
+            ], [
+                'wager_name.required' => 'Work type is required.',
+                'wager_name.string' => 'The work type  must be a valid string.',
+                'wager_name.max' => 'The work type may not be more than 255 characters.',
             ]);
 
 
@@ -58,7 +62,7 @@ class UserSquareFootageBillsController extends Controller
 
             try {
                 // Create the square footage bill
-                $sqft =  SquareFootageBill::create([
+                $sqft = SquareFootageBill::create([
                     'image_path' => $image_path,
                     'wager_name' => $request->wager_name,
                     'price' => $request->price,
@@ -86,7 +90,7 @@ class UserSquareFootageBillsController extends Controller
                     new VerificationNotification($data)
                 );
 
-                return response()->json(['message' => 'Square footage bill created successfully.'], 201);
+                return response()->json(['message' => 'Square footage created.'], 201);
             } catch (\Exception $e) {
                 // Handle any unexpected errors
                 return response()->json(['error' => 'An unexpected error occurred: '], 500);
@@ -129,6 +133,10 @@ class UserSquareFootageBillsController extends Controller
                 'multiplier' => 'required|numeric|min:0',
                 'phase_id' => 'required|exists:phases,id',
                 'supplier_id' => 'required|exists:suppliers,id',
+            ], [
+                'wager_name.required' => 'Work type is required.',
+                'wager_name.string' => 'The work type  must be a valid string.',
+                'wager_name.max' => 'The work type may not be more than 255 characters.',
             ]);
 
 

@@ -10,6 +10,7 @@ use App\Models\Site;
 use App\Models\Supplier;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class UserSitePayments extends Controller
@@ -38,7 +39,6 @@ class UserSitePayments extends Controller
 
         try {
 
-
             $validatedData = Validator::make($request->all(), [
                 'screenshot' => 'sometimes|mimes:png,jpg,webp, jpeg|max:1024',
                 'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99',],
@@ -59,7 +59,6 @@ class UserSitePayments extends Controller
 
             if ($request->filled('payment_initiator') && !$request->filled('supplier_id')) {
 
-
                 AdminPayment::create([
                     'amount' => $request->input('amount'),
                     'transaction_type' => $request->input('transaction_type'),
@@ -69,7 +68,6 @@ class UserSitePayments extends Controller
 
                 return response()->json(['message' => 'Payment To Admin']);
             }
-
 
             $path = null;
 
@@ -91,7 +89,10 @@ class UserSitePayments extends Controller
             $payment->save();
 
             return response()->json(['message' => 'Payment created successfully']);
+
         } catch (Exception $e) {
+
+            Log::error($e);
 
             return response()->json(['error' => 'Payment Cannot Be Made.. Try Again']);
         }

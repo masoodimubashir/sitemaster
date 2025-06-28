@@ -265,7 +265,8 @@ class ViewSiteController extends Controller
 
         // $user->notify(new UserSiteNotification());
 
-        return redirect()->route('sites.index')->with('status', 'create');
+        return redirect('/user/dashboard')->with('status', 'create');
+
     }
 
     /**

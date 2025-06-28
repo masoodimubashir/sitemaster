@@ -633,7 +633,7 @@
                         is_present: $('#is_present').is(':checked') ? 1 : 0
                     };
 
-                    $.post('{{ url('admin/labour/store') }}', formData)
+                    $.post(`/{{ auth()->user()->role_name === 'admin' ? 'admin' : 'user' }}/labour/store`, formData)
                         .done(response => {
                             showAlert('success', response.message || 'Labour created successfully');
                             $('#attendanceModal').modal('hide');

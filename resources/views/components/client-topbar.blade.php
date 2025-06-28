@@ -8,11 +8,11 @@
         </div>
         <div>
             <p class="navbar-brand brand-logo" href="index.html">
-                SiteMaster
+
                 {{-- <img src="assets/images/logo.svg" alt="logo" /> --}}
             </p>
             <p class="navbar-brand brand-logo-mini" href="index.html">
-                SiteMaster
+
                 {{-- <img src="assets/images/logo-mini.svg" alt="logo" /> --}}
             </p>
         </div>
@@ -31,42 +31,20 @@
         <ul class="navbar-nav ms-auto">
 
 
-            {{-- <li class="nav-item dropdown">
-                <a class="nav-link count-indicator {{ $notifications ? 'text-danger' : 'text-black' }}"
-                    id="notificationDropdown" href="#" data-bs-toggle="dropdown">
-                    <i class="icon-bell"> </i>
-
-                    @if ($notifications)
-                        <span>
-                            {{ $notifications->count() }}
-                        </span>
-                    @endif
-
-                </a>
-                <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list pb-0"
-                    aria-labelledby="notificationDropdown">
-
-                    @foreach ($notifications as $key => $notification)
-                        <a class="dropdown-item preview-item py-3">
-
-                            <div class="preview-item-content">
-
-                                <h6 class="preview-subject fw-normal text-dark mb-1">
-                                    {{ $notification->data['message'] }}
-                                </h6>
-
-                            </div>
-
-                        </a>
-                    @endforeach
-
-                </div>
-            </li> --}}
-
-
             <li class="nav-item dropdown d-none d-lg-block user-dropdown">
-                <a class="nav-link" id="UserDropdown" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-                    {{ ucfirst(auth()->user()->name) }}
+                <a class="nav-link d-flex align-items-center" id="UserDropdown" href="#" data-bs-toggle="dropdown"
+                    aria-expanded="false">
+                    <div class="position-relative">
+                        <!-- User avatar (replace with your actual avatar implementation) -->
+                        <div class="avatar avatar-sm rounded-circle bg-info text-white d-flex align-items-center justify-content-center"
+                            style="width: 32px; height: 32px;">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </div>
+                        <!-- Online status indicator (optional) -->
+                        <span class="position-absolute bottom-0 end-0 bg-success rounded-circle"
+                            style="width: 10px; height: 10px; border: 2px solid white;"></span>
+                    </div>
+
                 </a>
                 <div class="dropdown-menu dropdown-menu-right navbar-dropdown" aria-labelledby="UserDropdown">
                     <div class="dropdown-header text-center">

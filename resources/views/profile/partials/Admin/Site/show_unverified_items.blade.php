@@ -24,7 +24,7 @@
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label for="site_id" class="form-label">Site</label>
-                                    <select class="form-select text-black auto-submit" name="site_id" id="site_id">
+                                    <select class="form-select bg-white text-black auto-submit" name="site_id" id="site_id">
                                         <option value="all" {{ request('site_id') === 'all' ? 'selected' : '' }}>
                                             All Sites
                                         </option>
@@ -39,7 +39,7 @@
 
                                 <div class="col-md-4">
                                     <label for="phase" class="form-label">Phase</label>
-                                    <select class="form-select text-black auto-submit" name="phase" id="phase">
+                                    <select class="form-select bg-white text-black auto-submit" name="phase" id="phase">
                                         <option value="all" {{ request('phase') === 'all' ? 'selected' : '' }}>
                                             All Phases
                                         </option>
@@ -55,7 +55,7 @@
                                 <div class="col-md-4">
                                     <label for="supplier" class="form-label">Supplier</label>
                                     <div class="input-group">
-                                        <select class="form-select text-black auto-submit" name="supplier"
+                                        <select class="form-select bg-white text-black auto-submit" name="supplier"
                                             id="supplier">
                                             <option value="all"
                                                 {{ request('supplier') === 'all' ? 'selected' : '' }}>
@@ -68,7 +68,7 @@
                                                 </option>
                                             @endforeach
                                         </select>
-                                        <button type="button" class="btn btn-outline-secondary" id="resetFilters">
+                                        <button type="button" class="btn btn-info" id="resetFilters">
                                             <i class="fas fa-sync-alt"></i>
                                         </button>
                                     </div>
@@ -107,27 +107,27 @@
                                             <td>{{ ucwords($data['description']) }}</td>
                                             <td>
                                                 @if ($data['verified_by_admin'] === 1)
-                                                    <span class="badge bg-success">Verified</span>
+                                                    <span class="text-success">Verified</span>
                                                 @else
-                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                    <span class="text-warning ">Pending</span>
                                                 @endif
                                             </td>
                                             @if (auth()->user()->role_name === 'admin')
                                                 <td class="text-center">
                                                     @if ($data['verified_by_admin'] === 0)
-                                                        <a href="#" class="verify-link btn btn-sm btn-danger"
+                                                        <a href="#" class="verify-link "
                                                             data-id="{{ $data['id'] }}"
                                                             data-category="{{ $data['category'] }}" data-verified="1"
                                                             data-bs-toggle="tooltip" title="Verify Item">
-                                                            <i class="fas fa-check-circle"></i> Verify
+                                                            <i class="fas fa-check-circle fs-5 text-info"></i> 
                                                         </a>
                                                     @else
                                                         <a href="#"
-                                                            class="verify-link btn btn-sm btn-outline-danger"
+                                                            class="verify-link  "
                                                             data-id="{{ $data['id'] }}"
                                                             data-category="{{ $data['category'] }}" data-verified="0"
                                                             data-bs-toggle="tooltip" title="Mark as Unverified">
-                                                            <i class="fas fa-times-circle"></i> Unverify
+                                                            <i class="fas fa-times-circle fs-5 text-danger"></i> 
                                                         </a>
                                                     @endif
                                                 </td>
@@ -147,10 +147,87 @@
                         @endif
                     </div>
 
+                   
+
+                    <!-- Style 2: Compact with Ellipsis -->
                     @if ($paginatedData->hasPages())
-                        <div class="d-flex justify-content-end mt-4">
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div class="text-muted small">
+                                Page {{ $paginatedData->currentPage() }} of {{ $paginatedData->lastPage() }}
+                                ({{ $paginatedData->total() }} total results)
+                            </div>
+
                             <nav aria-label="Page navigation">
-                                {{ $paginatedData->onEachSide(1)->links('pagination::bootstrap-5') }}
+                                <ul class="pagination pagination-compact mb-0">
+                                    {{-- First Page --}}
+                                    @if ($paginatedData->currentPage() > 3)
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ $paginatedData->url(1) }}">1</a>
+                                        </li>
+                                        @if ($paginatedData->currentPage() > 4)
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        @endif
+                                    @endif
+
+                                    {{-- Previous Page --}}
+                                    @if ($paginatedData->onFirstPage())
+                                        <li class="page-item disabled">
+                                            <span class="page-link">
+                                                <i class="fas fa-angle-left"></i>
+                                            </span>
+                                        </li>
+                                    @else
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ $paginatedData->previousPageUrl() }}">
+                                                <i class="fas fa-angle-left"></i>
+                                            </a>
+                                        </li>
+                                    @endif
+
+                                    {{-- Current Page Range --}}
+                                    @for ($i = max(1, $paginatedData->currentPage() - 1); $i <= min($paginatedData->lastPage(), $paginatedData->currentPage() + 1); $i++)
+                                        @if ($i == $paginatedData->currentPage())
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ $i }}</span>
+                                            </li>
+                                        @else
+                                            <li class="page-item">
+                                                <a class="page-link"
+                                                    href="{{ $paginatedData->url($i) }}">{{ $i }}</a>
+                                            </li>
+                                        @endif
+                                    @endfor
+
+                                    {{-- Next Page --}}
+                                    @if ($paginatedData->hasMorePages())
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ $paginatedData->nextPageUrl() }}">
+                                                <i class="fas fa-angle-right"></i>
+                                            </a>
+                                        </li>
+                                    @else
+                                        <li class="page-item disabled">
+                                            <span class="page-link">
+                                                <i class="fas fa-angle-right"></i>
+                                            </span>
+                                        </li>
+                                    @endif
+
+                                    {{-- Last Page --}}
+                                    @if ($paginatedData->currentPage() < $paginatedData->lastPage() - 2)
+                                        @if ($paginatedData->currentPage() < $paginatedData->lastPage() - 3)
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        @endif
+                                        <li class="page-item">
+                                            <a class="page-link"
+                                                href="{{ $paginatedData->url($paginatedData->lastPage()) }}">{{ $paginatedData->lastPage() }}</a>
+                                        </li>
+                                    @endif
+                                </ul>
                             </nav>
                         </div>
                     @endif

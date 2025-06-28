@@ -4,11 +4,9 @@
     @endphp
 
     @if ($user === 'admin')
-        <x-breadcrumb :names="['Dashboard', 'View ' . $supplier->name, 'View ' . $supplier->name . ' Payments']" 
-                     :urls="['admin/dashboard', 'admin/suppliers/' . $supplier->id, 'admin/supplier/payments/' . $supplier->id]" />
+        <x-breadcrumb :names="['Dashboard', 'View ' . $supplier->name, 'View ' . $supplier->name . ' Payments']" :urls="['admin/dashboard', 'admin/suppliers/' . $supplier->id, 'admin/supplier/payments/' . $supplier->id]" />
     @else
-        <x-breadcrumb :names="['supplier', $supplier->name, 'View ' . $supplier->name . ' Payments']" 
-                     :urls="['user/dashboard', 'user/suppliers/' . $supplier->id, 'user/supplier/payments/' . $supplier->id]" />
+        <x-breadcrumb :names="['supplier', $supplier->name, 'View ' . $supplier->name . ' Payments']" :urls="['user/dashboard', 'user/suppliers/' . $supplier->id, 'user/supplier/payments/' . $supplier->id]" />
     @endif
 
     <div class="row g-4 mb-4">
@@ -75,7 +73,7 @@
         <div class="col-lg-12 grid-margin stretch-card">
             <div class="card">
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover mb-0">
+                    <table class="table table-bordered  mb-0">
                         <thead>
                             <tr>
                                 <th class="fw-bold bg-info text-white">Date</th>
@@ -91,14 +89,17 @@
                                     <tr>
                                         <td>{{ $payment->created_at->format('d-M-Y') }}</td>
                                         <td>
-                                            <a href="{{ asset('storage/' . $payment->screenshot) }}" 
-                                               data-fancybox="gallery"
-                                               data-caption="Payment - {{ $payment->created_at->format('d M Y') }}">
-                                                <img src="{{ asset('storage/' . $payment->screenshot) }}"
-                                                    alt="Payment Receipt"
-                                                    class="img-thumbnail"
-                                                    style="width: 50px; height: 50px; object-fit: cover;">
-                                            </a>
+                                            @if ($payment->screenshot)
+                                                <a href="{{ asset('storage/' . $payment->screenshot) }}"
+                                                    data-fancybox="gallery"
+                                                    data-caption="Payment - {{ $payment->created_at->format('d M Y') }}">
+                                                    <img src="{{ asset('storage/' . $payment->screenshot) }}"
+                                                        alt="Payment Receipt" class="img-thumbnail"
+                                                        style="width: 50px; height: 50px; object-fit: cover;">
+                                                </a>
+                                            @else
+                                            <span class="">No Screenshot</span>
+                                            @endif
                                         </td>
                                         <td>{{ ucwords($payment->site->site_name ?? 'N/A') }}</td>
                                         <td>{{ ucwords($payment->site->site_owner_name ?? 'N/A') }}</td>
@@ -129,7 +130,8 @@
                                     </li>
                                 @else
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ $payments->previousPageUrl() }}" rel="prev">&laquo;</a>
+                                        <a class="page-link" href="{{ $payments->previousPageUrl() }}"
+                                            rel="prev">&laquo;</a>
                                     </li>
                                 @endif
 
@@ -147,7 +149,8 @@
 
                                 @if ($payments->hasMorePages())
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ $payments->nextPageUrl() }}" rel="next">&raquo;</a>
+                                        <a class="page-link" href="{{ $payments->nextPageUrl() }}"
+                                            rel="next">&raquo;</a>
                                     </li>
                                 @else
                                     <li class="page-item disabled">

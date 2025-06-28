@@ -18,6 +18,7 @@ class AdminPaymentController extends Controller
     {
 
         $payments = AdminPayment::with('entity')
+            ->orderBy('created_at', 'desc')
             ->paginate(10);
 
         $total_amount = AdminPayment::sum('amount');

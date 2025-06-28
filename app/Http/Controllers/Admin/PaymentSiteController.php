@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AdminPayment;
 use App\Models\Payment;
 use App\Models\Site;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -84,7 +85,7 @@ class PaymentSiteController extends Controller
             $payment->save();
 
             return response()->json(['message' => 'Payment created successfully']);
-        } catch (Throwable $th) {
+        } catch (Exception $th) {
 
             return response()->json(['error' => 'Payment Cannot Be Made.. Try Again']);
         }

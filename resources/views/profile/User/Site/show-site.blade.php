@@ -6,7 +6,6 @@
     @endphp
 
     <style>
-
         #messageContainer {
             position: fixed;
             bottom: 2rem;
@@ -663,6 +662,11 @@
                             <p class="text-danger" id="description-error"></p>
                         </div>
 
+                        <!-- sites -->
+                        <div class="form-group">
+                            <input id="site_id" type="hidden" name="site_id" value="{{ $site->id }}" />
+                        </div>
+
                         <!-- Phases -->
                         <div class=" col-12">
                             <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
@@ -689,7 +693,7 @@
 
 
                         <button class="btn btn-success " type="submit">
-                            {{ __('Create Bill') }}
+                            Create Expense
                         </button>
                     </form>
                 </div>
@@ -699,9 +703,7 @@
     </div>
 
 
-
-
-    {{-- Payment Modal --}}
+     {{-- Payment Modal --}}
     <div id="payment-supplier" class="modal fade" aria-hidden="true" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -714,10 +716,12 @@
                             <input type="number" min="0" name="amount" step="0.01" />
                             <label for="input" class="control-label">Amount</label><i class="bar"></i>
                             <div class="invalid-feedback" id="amount-error"></div>
+
                         </div>
 
                         {{-- Site (hidden) --}}
-                        <input type="hidden" name="site_id" value="{{ $paginatedLedgers[0]['site_id'] ?? '' }}" />
+                        <input type="hidden" name="site_id" value="{{ $site->id }}" />
+
 
                         {{-- Select Payee --}}
                         <div class="mb-3">
@@ -779,6 +783,9 @@
     </div>
 
 
+
+
+
     <div id="messageContainer"></div>
 
 
@@ -797,8 +804,10 @@
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
-                const messageContainer = form.find('.message-container');
+                const messageContainer = $('#messageContainer');
                 messageContainer.empty();
+
+
 
                 // Clear previous error messages for this form
                 form.find('.text-danger').text('');
@@ -811,17 +820,14 @@
                     processData: false,
                     success: function(response) {
 
-                        messageContainer.html(`
-                            <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                    </div>
-                                </div>
-                            </div>
-                        `);
-
                         form[0].reset();
+
+                        messageContainer.html(`
+                                <div class="alert alert-success mt-3 alert-dismissible fade show" role="alert">
+                                   ${response.message}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                </div>
+                            `);
 
                         // Auto-hide success message after 2 seconds
                         setTimeout(function() {
@@ -848,6 +854,8 @@
                                     form.find(`#${field}-error`).text(errorMsg);
                                 }
                             }
+
+
                         } else {
                             messageContainer.html(`
                                 <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
@@ -874,7 +882,7 @@
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
-                const messageContainer = form.find('.message-container');
+                const messageContainer = $('#messageContainer');
                 messageContainer.empty();
 
                 // Clear previous error messages for this form only
@@ -966,8 +974,7 @@
 
                 const form = $(this);
                 const formData = new FormData(form[0]);
-                const messageContainer = form.find(
-                    '.message-container'); // Form-specific message container
+                const messageContainer = $('#messageContainer');
                 messageContainer.empty();
 
                 // Clear previous error messages for this form only
@@ -1065,15 +1072,17 @@
                     contentType: false,
                     processData: false,
                     success: function(response) {
+                        console.log(response);
+                        
                         messageContainer.html(`
-                <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                        </div>
-                    </div>
-                </div>
-            `);
+                            <div class="alert align-items-center text-white bg-success border-0" role="alert">
+                                <div class="d-flex">
+                                    <div class="toast-body">
+                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                    </div>
+                                </div>
+                            </div>
+                        `);
                         form[0].reset();
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
@@ -1107,6 +1116,7 @@
                                     errorContainer.text(messages[0]).show();
                                 }
                             });
+
                         } else {
                             messageContainer.html(`
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">

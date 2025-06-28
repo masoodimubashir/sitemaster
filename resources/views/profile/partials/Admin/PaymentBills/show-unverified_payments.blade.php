@@ -39,7 +39,7 @@
                                             <td>{{ $pay->amount }}</td>
                                             <td>{{ $pay->supplier->name ?? '--' }}</td>
                                             <td>{{ $pay->site->site_name ?? '--' }}</td>
-                                            <td>{{ $pay->site->site_owner_name }}</td>
+                                            <td>{{ $pay->site->site_owner_name?? '--' }}</td>
                                             <td class="text-center">
                                                 @if ($pay->verified_by_admin)
                                                     <a href="#" class="verify-link text-success" data-name="pay"

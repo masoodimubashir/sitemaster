@@ -35,8 +35,7 @@ class ItemsVerificationController extends Controller
         // 2. Fetch other items (raw materials, bills, expenses)
         $otherItems = $this->getOtherItems($siteId, $phaseName, $supplierName, $verificationStatus);
 
-        // Merge all data
-        $data = $otherItems->merge($attendanceItems);
+        $data = $otherItems->merge($attendanceItems)->sortByDesc('created_at');
 
         // Get filter options
         $filterOptions = $this->getFilterOptions();

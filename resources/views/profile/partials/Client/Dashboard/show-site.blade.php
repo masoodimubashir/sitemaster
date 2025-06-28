@@ -148,17 +148,7 @@
                             </div>
                         </div>
 
-                        <!-- Phase Action Buttons -->
-                        <div class="d-flex justify-content-end gap-2 mb-3">
-
-                
-
-                            <a href="{{ url('admin/download-phase/report', ['id' => base64_encode($phase['phase_id'])]) }}"
-                                class="btn btn-success btn-sm text-white">
-                                Generate PDF
-                            </a>
-
-                        </div>
+               
 
                         <!-- Phase Data Tables -->
                         @php

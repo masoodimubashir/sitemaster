@@ -1,21 +1,7 @@
 <x-app-layout>
     <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['admin/sites', 'admin/sites/' . base64_encode($site->id)]" />
 
-    <!-- Action Buttons -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex flex-wrap gap-2">
-              
-               
-                <a class="btn btn-info"
-                    href="{{ url('admin/download-site/report', ['id' => base64_encode($site->id)]) }}">
-                    <i class="fas fa-file-pdf me-2"></i>
-                    Download PDF
-                </a>
-              
-            </div>
-        </div>
-    </div>
+  
 
     <!-- Site Info Cards -->
     <div class="row g-4 mb-4">

@@ -25,7 +25,7 @@ class SquareFootageBillsController extends Controller
      */
     public function index()
     {
-        $square_footage_bills =  SquareFootageBill::latest()->paginate(10);
+        $square_footage_bills = SquareFootageBill::latest()->paginate(10);
 
         return view('profile.partials.Admin.SquareFootageBills.square-footage-bills', compact('square_footage_bills'));
     }
@@ -62,6 +62,10 @@ class SquareFootageBillsController extends Controller
                 'multiplier' => 'required|numeric|min:0',
                 'phase_id' => 'required|exists:phases,id',
                 'supplier_id' => 'required|exists:suppliers,id',
+            ], [
+                'wager_name.required' => 'Work type is required.',
+                'wager_name.string' => 'The work type  must be a valid string.',
+                'wager_name.max' => 'The work type may not be more than 255 characters.',
             ]);
 
             if ($validator->fails()) {
@@ -156,6 +160,10 @@ class SquareFootageBillsController extends Controller
                 'multiplier' => 'required|numeric|min:0',
                 'phase_id' => 'required|exists:phases,id',
                 'supplier_id' => 'required|exists:suppliers,id',
+            ], [
+                'wager_name.required' => 'Work type is required.',
+                'wager_name.string' => 'The work type  must be a valid string.',
+                'wager_name.max' => 'The work type may not be more than 255 characters.',
             ]);
 
             $square_footage_bill = SquareFootageBill::find($square_footage_bill_id);

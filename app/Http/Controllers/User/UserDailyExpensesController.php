@@ -26,12 +26,14 @@ class UserDailyExpensesController extends Controller
 
             DB::beginTransaction();
 
+
             // Validation rules
             $validator = Validator::make($request->all(), [
                 'item_name' => 'required|string|max:255',
                 'price' => 'required|numeric|max:9999999999',
                 'bill_photo' => 'required|image|mimes:jpg,jpeg,webp|max:1024',
                 'phase_id' => 'required|exists:phases,id',
+                'site_id' => 'required|exists:sites,id',
             ]);
 
 
@@ -58,6 +60,7 @@ class UserDailyExpensesController extends Controller
                     'phase_id' => $request->phase_id,
                     'user_id' => auth()->user()->id,
                     'verified_by_admin' => 0,
+                    'site_id' => $request->site_id,
                 ]);
 
                 if ($expense) {
@@ -78,7 +81,7 @@ class UserDailyExpensesController extends Controller
                     new VerificationNotification($data)
                 );
 
-                return response()->json(['message' => 'Expenses detail created successfully.'], 201);
+                return response()->json(['message' => 'Expenses created.'], 201);
             } catch (\Exception $e) {
                 // Handle any unexpected errors
                 return response()->json(['error' => 'An unexpected error occurred: ' . $e->getMessage()], 500);

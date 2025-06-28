@@ -32,6 +32,8 @@ class PaymentSupplierController extends Controller
     public function store(Request $request)
     {
 
+
+
         if ($request->ajax()) {
 
             $validatedData = Validator::make($request->all(), [
@@ -76,7 +78,7 @@ class PaymentSupplierController extends Controller
                 $payment->amount = $request->input('amount');
                 $payment->site_id = $request->input('site_id');
                 $payment->supplier_id = $request->input('supplier_id');
-                $payment->verified_by_admin = 1;
+                $payment->verified_by_admin = auth()->user()->role_name === 'site_engineer' ? 0 : 1;
                 $payment->payment_initiator = $request->filled('supplier_id') || $request->filled('site_id') ? 1 : 0;
                 $payment->screenshot = $image_path;
                 $payment->save();
@@ -99,9 +101,12 @@ class PaymentSupplierController extends Controller
     public function show(string $id)
     {
 
-        $supplier = Supplier::find($id);
+        $supplier = Supplier::with('payments')->find($id);
 
-        $payments = $supplier->payments()->where('verified_by_admin', 1)->paginate(10);
+        $payments = $supplier->payments()
+            ->where('verified_by_admin', 1)
+            ->with('site')
+            ->paginate(10);
 
         return view('profile.partials.Admin.PaymentSuppliers.supplier-payment', compact('payments', 'supplier'));
     }
