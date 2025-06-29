@@ -4,7 +4,7 @@
         $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
     @endphp
 
-    <x-breadcrumb :names="['Suppliers', 'Create Supplier']" :urls="['admin/suppliers', 'admin/suppliers/create']" />
+    <x-breadcrumb :names="['Suppliers', 'Create Supplier']" :urls="[$user .'/suppliers', $user .'/suppliers/create']" />
 
 
     <div class="row">

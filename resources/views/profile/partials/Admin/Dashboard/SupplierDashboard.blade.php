@@ -53,7 +53,7 @@
                                                 $totalOwed += max(0, $supplierTotalCost - $supplierPaid);
                                             }
                                         @endphp
-                                        <h2 class="mb-0">₹{{ number_format($totalOwed, 2) }}</h2>
+                                        <h2 class="mb-0">₹{{ $totalOwed }}</h2>
                                     </div>
                                     <div class="icon-shape bg-white text-danger rounded-circle p-3">
                                         <i class="fa-solid fa-indian-rupee-sign"></i>
@@ -68,7 +68,7 @@
             <!-- Action Buttons -->
             <div class="col-md-4 mt-3 mt-md-0">
                 <div class="d-flex flex-column h-100 gap-2">
-                    <a class="btn btn-outline-primary btn-sm w-100 d-flex align-items-center justify-content-center"
+                    <a class="btn btn-outline-info btn-sm w-100 d-flex align-items-center justify-content-center"
                         href="{{ url('/admin/dashboard') }}">
                         <i class="fas fa-inbox me-2"></i> Switch Sites
                     </a>
@@ -125,30 +125,24 @@
                                         $supplierBaseAmount = 
                                             ($supplier->total_material_billing ?? 0) +
                                             ($supplier->total_site_expenses_from_payments ?? 0) +
-                                            ($supplier->total_square_footage ?? 0) +
-                                            ($supplier->total_daily_wagers ?? 0);
-                                        
-                                        $supplierServicePercentage = $supplier->service_charge ?? 0;
-                                        $supplierServiceAmount = ($supplierBaseAmount * $supplierServicePercentage) / 100;
-                                        $supplierTotalCost = $supplierBaseAmount + $supplierServiceAmount;
+                                            ($supplier->total_square_footage ?? 0) ;                                        
                                         
                                         $supplierPaid = $supplier->total_income_payments ?? 0;
-                                        $supplierBalance = $supplierTotalCost - $supplierPaid;
+                                        $supplierBalance = $supplierBaseAmount - $supplierPaid;
                                     @endphp
 
                                     <tr>
                                         <td>
                                             <a href="{{ url('/admin/suppliers/' . $supplier->id) }}"
-                                                class="fw-bold text-decoration-none">
+                                                class="fw-bold text-decoration-none text-info">
                                                 {{ $supplier->name }}
                                             </a>
                                         </td>
                                         <td>{{ $supplier->contact_no }}</td>
                                         <td>{{ $supplier->created_at->diffForHumans() }}</td>
-                                        <td class="text-end text-success fw-bold">₹{{ number_format($supplierPaid, 2) }}</td>
+                                        <td class="text-end text-success fw-bold">₹{{ $supplierPaid }}</td>
                                         <td class="text-end {{ $supplierBalance >= 0 ? 'text-danger' : 'text-success' }} fw-bold">
-                                            ₹{{ number_format(abs($supplierBalance), 2) }}
-                                            <small class="d-block text-muted">{{ $supplierBalance >= 0 ? 'Due' : 'Advance' }}</small>
+                                            ₹{{ ($supplierBalance),  }}
                                         </td>
                                     </tr>
                                 @endforeach

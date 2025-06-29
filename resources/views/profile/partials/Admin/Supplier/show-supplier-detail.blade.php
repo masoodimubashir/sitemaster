@@ -65,8 +65,6 @@
     </style>
 
 
-    <x-breadcrumb :names="['Suppliers', $data['supplier']->name]" :urls="[$user . '/suppliers', $user . '/suppliers/' . $data['supplier']->id]" />
-
 
     <div class="row g-4">
 
@@ -143,7 +141,7 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-body p-0">
-                      
+
                         <div class="table-responsive">
                             <table class="table table-bordered mb-0">
                                 <thead>

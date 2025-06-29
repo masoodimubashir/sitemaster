@@ -8,6 +8,7 @@ use App\Models\Client;
 use App\Models\Site;
 use App\Models\Supplier;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -85,7 +86,6 @@ class DashboardController extends Controller
 
     public function supplierDashboard()
     {
-
         $search = request('search');
 
         $suppliersQuery = Supplier::query();
@@ -96,24 +96,38 @@ class DashboardController extends Controller
 
         $suppliers = $suppliersQuery
             ->withSum([
-                'payments as total_site_expenses_from_payments' => fn($q) => $q
+                'payments as total_paid' => fn($q) => $q
                     ->where('verified_by_admin', 1)
-                    ->where('transaction_type', 1)
             ], 'amount')
             ->withSum([
                 'constructionMaterialBilling as total_material_billing' => fn($q) => $q
                     ->where('verified_by_admin', 1)
             ], 'amount')
             ->withSum([
-                'squareFootages as total_square_footage' => fn($q) => $q
+                'squareFootages as total_square_footage_calc' => fn($q) => $q
                     ->where('verified_by_admin', 1)
-            ], 'price')
+                    ->select(DB::raw('SUM(price * multiplier)'))
+            ], 'price') // This is a dummy field since we're using raw calculation
             ->withSum([
                 'payments as total_income_payments' => fn($q) => $q
                     ->where('verified_by_admin', 1)
-                    ->where('transaction_type', 0)
             ], 'amount')
-            ->paginate(10);
+            ->paginate(10)
+            ->through(function ($supplier) {
+                // Calculate total due (material billing + square footage) - total paid
+                $totalMaterial = $supplier->total_material_billing ?? 0;
+                $totalSquareFootage = $supplier->total_square_footage_calc ?? 0;
+                $totalPaid = $supplier->total_paid ?? 0;
+
+                $totalDue = ($totalMaterial + $totalSquareFootage) - $totalPaid;
+
+                // Add the calculated fields to the supplier object
+                $supplier->total_due = max($totalDue, 0); // Ensure due is not negative
+                $supplier->total_paid = $totalPaid;
+                $supplier->total_square_footage = $totalSquareFootage;
+
+                return $supplier;
+            });
 
         $users = User::where('role_name', 'site_engineer')->get();
         $clients = Client::orderBy('name')->get();

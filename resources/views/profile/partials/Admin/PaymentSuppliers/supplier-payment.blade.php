@@ -4,9 +4,14 @@
     @endphp
 
     @if ($user === 'admin')
-        <x-breadcrumb :names="['Dashboard', 'View ' . $supplier->name, 'View ' . $supplier->name . ' Payments']" :urls="['admin/dashboard', 'admin/suppliers/' . $supplier->id, 'admin/supplier/payments/' . $supplier->id]" />
+        <x-breadcrumb 
+        :names="['Dashboard', 'View ' . $supplier->name,  ' Back']" 
+        :urls="['admin/dashboard', 'admin/suppliers/' . $supplier->id,  'admin/suppliers/' . ($supplier->id)]" 
+        />
     @else
-        <x-breadcrumb :names="['supplier', $supplier->name, 'View ' . $supplier->name . ' Payments']" :urls="['user/dashboard', 'user/suppliers/' . $supplier->id, 'user/supplier/payments/' . $supplier->id]" />
+        <x-breadcrumb 
+        :names="['supplier', $supplier->name,  ' Back']" 
+        :urls="['user/dashboard', 'user/suppliers/' . $supplier->id,  'user/suppliers/' . ($supplier->id)]" />
     @endif
 
     <div class="row g-4 mb-4">

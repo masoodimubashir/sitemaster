@@ -53,7 +53,7 @@
             <!-- Action Buttons -->
             <div class="col-md-4 mt-3 mt-md-0">
                 <div class="d-flex flex-column h-100 gap-2">
-                    <a class="btn btn-outline-primary btn-sm w-100 d-flex align-items-center justify-content-center"
+                    <a class="btn btn-outline-info btn-sm w-100 d-flex align-items-center justify-content-center"
                         href="{{ route('suppliers.dashboard') }}">
                         <i class="fas fa-exchange-alt me-2"></i> Switch Suppliers
                     </a>

@@ -172,7 +172,7 @@
     </style>
 
 
-
+    <x-breadcrumb :names="['Sites',  $site->site_name]" :urls="[$user . '/sites',]" />
 
     <div class="header-container">
 

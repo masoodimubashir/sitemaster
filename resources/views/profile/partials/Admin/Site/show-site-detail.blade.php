@@ -1,21 +1,6 @@
 <x-app-layout>
-    <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['admin/sites', 'admin/sites/' . base64_encode($site->id)]" />
 
-    <!-- Action Buttons -->
-    {{-- <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex flex-wrap gap-2">
-              
-               
-                <a class="btn btn-info"
-                    href="{{ url('admin/download-site/report', ['id' => base64_encode($site->id)]) }}">
-                    <i class="fas fa-file-pdf me-2"></i>
-                    Download PDF
-                </a>
-              
-            </div>
-        </div>
-    </div> --}}
+    <x-breadcrumb :names="['Sites', $site->site_name, ' Back']" :urls="[  '/admin/sites',  '/admin/sites/' . base64_encode($site->id), '/admin/sites/' . base64_encode($site->id)]" />
 
     <!-- Site Info Cards -->
     <div class="row g-4 mb-4">
@@ -166,7 +151,7 @@
                         <!-- Phase Action Buttons -->
                         <div class="d-flex justify-content-end gap-2 mb-3">
 
-                
+
 
                             <a href="{{ url('admin/download-phase/report', ['id' => base64_encode($phase['phase_id'])]) }}"
                                 class="btn btn-success btn-sm text-white">
@@ -227,22 +212,21 @@
 
                                                             @switch($entry['category'])
                                                                 @case('Material')
-                                                                    <a href="{{ route('construction-material-billings.edit', [base64_encode($entry['id'])]) }}"
-                                                                        >
+                                                                    <a
+                                                                        href="{{ route('construction-material-billings.edit', [base64_encode($entry['id'])]) }}">
                                                                         <i class="fa-regular fa-pen-to-square"></i>
                                                                     </a>
                                                                 @break;
                                                                 @case('SQFT')
-                                                                    <a href="{{ route('square-footage-bills.edit', [base64_encode($entry['id'])]) }}"
-                                                                      >
+                                                                    <a
+                                                                        href="{{ route('square-footage-bills.edit', [base64_encode($entry['id'])]) }}">
                                                                         <i class="fa-regular fa-pen-to-square"></i>
                                                                     </a>
                                                                 @break;
                                                                 @case('Expense')
                                                                     <a
                                                                         href="{{ route('daily-expenses.edit', [base64_encode($entry['id'])]) }}">
-                                                                        <i
-                                                                            class="fa-regular fa-pen-to-square"></i>
+                                                                        <i class="fa-regular fa-pen-to-square"></i>
                                                                     </a>
                                                                 @break
 

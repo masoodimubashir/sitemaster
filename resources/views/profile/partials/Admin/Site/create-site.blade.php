@@ -1,7 +1,7 @@
 <x-app-layout>
 
 
-    <x-breadcrumb :names="['Sites', 'Create Site']" :urls="['admin/sites', 'admin/sites/create']" />
+    <x-breadcrumb :names="['Sites', 'Create Site']" :urls="['user/dashboard', 'user/sites/create']" />
 
 
     <div class="row">

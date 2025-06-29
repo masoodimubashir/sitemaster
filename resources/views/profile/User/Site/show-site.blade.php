@@ -171,6 +171,9 @@
     </style>
 
 
+    <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['/user/dashboard', '/user/sites/' . base64_encode($site->id)]" />
+
+
 
     <div class="header-container">
 
@@ -703,7 +706,7 @@
     </div>
 
 
-     {{-- Payment Modal --}}
+    {{-- Payment Modal --}}
     <div id="payment-supplier" class="modal fade" aria-hidden="true" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -1073,7 +1076,7 @@
                     processData: false,
                     success: function(response) {
                         console.log(response);
-                        
+
                         messageContainer.html(`
                             <div class="alert align-items-center text-white bg-success border-0" role="alert">
                                 <div class="d-flex">

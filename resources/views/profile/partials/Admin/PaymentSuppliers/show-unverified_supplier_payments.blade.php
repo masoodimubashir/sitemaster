@@ -4,8 +4,8 @@
         $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
     @endphp
 
-    <x-breadcrumb :names="['View ' . $supplier->name , 'View ' . $supplier->name . ' Unverified Payments']"
-        :urls="[$user . '/suppliers/' . $supplier->id, $user . '/unverified-supplier-payments/' . $supplier->id]" />
+    <x-breadcrumb :names="['Suppliers' ,  $supplier->name, ' Back']"
+        :urls="[$user . '/suppliers/' . $supplier->id, $user . '/suppliers/' . $supplier->id, $user . '/suppliers/' . $supplier->id]" />
 
     <div class="row">
 
@@ -30,7 +30,7 @@
                                 <td>{{ $pay->created_at }}</td>
                                 <td>{{ $pay->amount }}</td>
                                 <td>{{ $pay->supplier->name }}</td>
-                                <td>{{ $pay->site->site_owner_name }}</td>
+                                <td>{{ $pay->site->site_owner_name ?? '--' }}</td>
                                 <td>
 
                                     @if ($pay->verified_by_admin)

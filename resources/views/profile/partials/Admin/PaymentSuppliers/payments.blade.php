@@ -172,6 +172,8 @@
     </style>
 
 
+    <x-breadcrumb :names="['Ledger']" :urls="[$user . '/payments']" />
+
 
 
     <div class="header-container">

@@ -16,6 +16,12 @@
         $nextMonth = $currentDate->copy()->addMonth();
     @endphp
 
+
+    <x-breadcrumb 
+        :names="['Attendance']" 
+        :urls="[$user . '/wager-attendance',]" 
+    />
+
     <div class="attendance-dashboard border-0">
         <!-- Card Header -->
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 p-3">

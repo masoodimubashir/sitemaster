@@ -7,6 +7,7 @@ use App\Models\AdminPayment;
 use App\Models\Payment;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class PaymentSupplierController extends Controller
@@ -88,7 +89,7 @@ class PaymentSupplierController extends Controller
                 ]);
 
             } catch (\Exception $e) {
-
+                Log::error('Error creating supplier payment: ' . $e->getMessage());
                 return response()->json(['error' => 'An unexpected error occurred: ']);
 
             }

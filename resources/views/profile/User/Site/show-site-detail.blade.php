@@ -1,7 +1,10 @@
 <x-app-layout>
-    <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['admin/sites', 'admin/sites/' . base64_encode($site->id)]" />
 
-  
+
+    <x-breadcrumb :names="['Sites', $site->site_name, ' Back']" 
+        :urls="['user/sites', 'user/sites/' . base64_encode($site->id),  'user/sites/' . base64_encode($site->id)]" />
+
+
 
     <!-- Site Info Cards -->
     <div class="row g-4 mb-4">
@@ -152,7 +155,7 @@
                         <!-- Phase Action Buttons -->
                         <div class="d-flex justify-content-end gap-2 mb-3">
 
-                
+
 
                             <a href="{{ url('user/download-phase/report', ['id' => base64_encode($phase['phase_id'])]) }}"
                                 class="btn btn-success btn-sm text-white">

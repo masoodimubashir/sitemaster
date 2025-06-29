@@ -11,11 +11,9 @@ class UserDashboardController extends Controller
 
         $user = auth()->user();
 
-        $sites = $user->sites()->paginate(10);
+        $sites = $user->sites()->orderByDesc('created_at')->paginate(10);
 
         return view('profile.User.Site.site', compact('sites'));
     }
-
-
 
 }

@@ -50,7 +50,7 @@
                 <div class="card-header py-3">
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
-                            <i class="fas fa-map-marker-alt me-2 text-success"></i>
+                            <i class="fas fa-map-marker-alt me-2 text-info"></i>
                             Site Management
                         </h5>
                         <a href="{{ url('user/sites/create') }}" class="btn btn-sm btn-success">

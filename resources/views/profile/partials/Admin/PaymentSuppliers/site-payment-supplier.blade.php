@@ -7,7 +7,12 @@
     @endphp
 
     @if ($user === 'admin')
-        <x-breadcrumb :names="['Dashboard', 'View' . $site->site_name, 'View ' . $site->name . ' Payments']" :urls="['admin/dashboard', 'admin/sites/' . base64_encode($site->id), 'admin/sites/payments/' . $site->id]" />
+        <x-breadcrumb :names="['Dashboard', $site->site_name, ' Back']"
+        :urls="[
+            'admin/dashboard',
+            'admin/sites/' . base64_encode($site->id),
+            'admin/sites/' . base64_encode($site->id),
+        ]" />
     @else
         <x-breadcrumb :names="['Sites', 'View ' . $site->site_name, 'View ' . $site->site_name . ' Payments']" :urls="['user/dashboard', 'user/sites/' . base64_encode($site->id), 'user/sites/payments/' . $site->id]" />
     @endif

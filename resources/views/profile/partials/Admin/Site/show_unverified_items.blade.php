@@ -81,7 +81,7 @@
 
                     <div class="table-responsive rounded">
                         @if (count($paginatedData))
-                            <table class="table table-hover align-middle">
+                            <table class="table  align-middle">
                                 <thead class="bg-light">
                                     <tr>
                                         <th class="fw-bold">Date | Time</th>

@@ -45,7 +45,7 @@
                 <div class="dropdown-menu dropdown-menu-right navbar-dropdown preview-list pb-0"
                     aria-labelledby="notificationDropdown">
 
-                    @foreach ($notifications as $key => $notification)
+                    @foreach ($notifications->take(5) as $key => $notification)
                         <a class="dropdown-item preview-item py-3">
 
                             <div class="preview-item-content">
