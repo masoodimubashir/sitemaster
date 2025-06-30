@@ -187,7 +187,7 @@ class ItemsVerificationController extends Controller
                     return [
                         'id' => $item->id,
                         'supplier' => $item->supplier->name ?? 'NA',
-                        'description' => $item->item_name ?? 'NA',
+                        'description' => $item->wager_name ?? 'NA',
                         'category' => 'Square Footage Bill',
                         'phase' => $item->phase->phase_name ?? 'NA',
                         'site' => $item->phase->site->site_name ?? 'NA',

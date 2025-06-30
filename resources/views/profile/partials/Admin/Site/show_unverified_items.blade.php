@@ -24,7 +24,8 @@
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label for="site_id" class="form-label">Site</label>
-                                    <select class="form-select bg-white text-black auto-submit" name="site_id" id="site_id">
+                                    <select class="form-select bg-white text-black auto-submit" name="site_id"
+                                        id="site_id">
                                         <option value="all" {{ request('site_id') === 'all' ? 'selected' : '' }}>
                                             All Sites
                                         </option>
@@ -39,7 +40,8 @@
 
                                 <div class="col-md-4">
                                     <label for="phase" class="form-label">Phase</label>
-                                    <select class="form-select bg-white text-black auto-submit" name="phase" id="phase">
+                                    <select class="form-select bg-white text-black auto-submit" name="phase"
+                                        id="phase">
                                         <option value="all" {{ request('phase') === 'all' ? 'selected' : '' }}>
                                             All Phases
                                         </option>
@@ -87,11 +89,9 @@
                                     <tr>
                                         <th class="fw-bold">Date</th>
                                         <th class="fw-bold">Supplier Name</th>
-                                        <th class="fw-bold">Phase</th>
                                         <th class="fw-bold">Site Name</th>
                                         <th class="fw-bold">Type</th>
                                         <th class="fw-bold">Price</th>
-                                        <th class="fw-bold">Status</th>
                                         @if (auth()->user()->role_name === 'admin')
                                             <th class="fw-bold text-center">Actions</th>
                                         @endif
@@ -99,23 +99,25 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($paginatedData as $data)
-
-                                    {{-- {{ dd($data) }} --}}
-
                                         <tr>
                                             <td>{{ $data['created_at']->format('d-M-y') }}</td>
                                             <td>{{ ucwords($data['supplier']) }}</td>
-                                            <td>{{ ucwords($data['phase']) }}</td>
+
                                             <td>{{ ucwords($data['site']) }}</td>
-                                            <td>{{ $data['category'] }} | {{ ucwords($data['description']) }}</td>
-                                            <td>{{ $data['price'] }}</td>
-                                            <td>
-                                                @if ($data['verified_by_admin'] === 1)
-                                                    <span class="text-success">Verified</span>
-                                                @else
-                                                    <span class="text-warning ">Pending</span>
-                                                @endif
+                                            <td class="py-3 align-middle">
+                                                <div class="d-flex flex-column">
+                                                    <span class="fw-medium text-dark">{{ $data['category'] }}</span>
+                                                    <div class="text-muted mt-1 small">
+                                                        <span
+                                                            class="d-inline-block">{{ ucwords($data['description']) }}</span>
+                                                        <span class="mx-1">|</span>
+                                                        <span
+                                                            class="d-inline-block">{{ ucwords($data['phase']) }}</span>
+                                                    </div>
+                                                </div>
                                             </td>
+                                            <td>{{ $data['price'] }}</td>
+
                                             @if (auth()->user()->role_name === 'admin')
                                                 <td class="text-center">
                                                     @if ($data['verified_by_admin'] === 0)
@@ -123,15 +125,14 @@
                                                             data-id="{{ $data['id'] }}"
                                                             data-category="{{ $data['category'] }}" data-verified="1"
                                                             data-bs-toggle="tooltip" title="Verify Item">
-                                                            <i class="fas fa-check-circle fs-5 text-info"></i> 
+                                                            <i class="fas fa-check-circle fs-5 text-info"></i>
                                                         </a>
                                                     @else
-                                                        <a href="#"
-                                                            class="verify-link  "
+                                                        <a href="#" class="verify-link  "
                                                             data-id="{{ $data['id'] }}"
                                                             data-category="{{ $data['category'] }}" data-verified="0"
                                                             data-bs-toggle="tooltip" title="Mark as Unverified">
-                                                            <i class="fas fa-times-circle fs-5 text-danger"></i> 
+                                                            <i class="fas fa-times-circle fs-5 text-danger"></i>
                                                         </a>
                                                     @endif
                                                 </td>
@@ -151,7 +152,7 @@
                         @endif
                     </div>
 
-                   
+
 
                     <!-- Style 2: Compact with Ellipsis -->
                     @if ($paginatedData->hasPages())
