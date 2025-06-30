@@ -123,7 +123,8 @@ class ItemsVerificationController extends Controller
                     'supplier_id' => $supplierId,
                     'created_at' => $attendance->created_at,
                     'verified_by_admin' => $attendance->is_present ? 1 : 0,
-                    'is_present' => $attendance->is_present
+                    'is_present' => $attendance->is_present,
+                    'price' => $attendable->price ?? 0,     
                 ];
             })
             ->filter()
@@ -160,7 +161,8 @@ class ItemsVerificationController extends Controller
                         'site_id' => $item->phase->site_id ?? null,
                         'supplier_id' => $item->supplier_id ?? null,
                         'created_at' => $item->created_at,
-                        'verified_by_admin' => $item->verified_by_admin
+                        'verified_by_admin' => $item->verified_by_admin,
+                        'price' => $item->amount ?? null,
                     ];
                 })
         );
@@ -192,7 +194,9 @@ class ItemsVerificationController extends Controller
                         'site_id' => $item->phase->site_id ?? null,
                         'supplier_id' => $item->supplier_id ?? null,
                         'created_at' => $item->created_at,
-                        'verified_by_admin' => $item->verified_by_admin
+                        'verified_by_admin' => $item->verified_by_admin,
+                        'price' => $item->price * $item->multiplier ?? null,
+
                     ];
                 })
         );
@@ -223,7 +227,8 @@ class ItemsVerificationController extends Controller
                         'site_id' => $item->phase->site_id ?? null,
                         'supplier_id' => $item->supplier_id ?? null,
                         'created_at' => $item->created_at,
-                        'verified_by_admin' => $item->verified_by_admin
+                        'verified_by_admin' => $item->verified_by_admin,
+                        'price' => $item->price ?? null,
                     ];
                 })
         );

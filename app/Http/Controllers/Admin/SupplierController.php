@@ -15,7 +15,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class SupplierController extends Controller
 {
 
-    public function __construct(public DataService $dataService) {}
+    public function __construct(public DataService $dataService)
+    {
+    }
 
     /**
      * Display a listing of the resource.
@@ -50,7 +52,7 @@ class SupplierController extends Controller
             'is_workforce_provider' => $request->provider === 'is_workforce_provider' ? 1 : 0,
         ]);
 
-        return redirect()->back()->with('status', 'create');
+        return redirect('/admin/suppliers')->with('status', 'create');
     }
 
     /**
@@ -72,7 +74,7 @@ class SupplierController extends Controller
         // Load the supplier
         $supplier = Supplier::findOrFail($supplier_id);
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses,  $wastas, $labours] = $this->dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
             $date_filter,
             $site_id,
             $supplier_id,
@@ -133,18 +135,22 @@ class SupplierController extends Controller
                 $material->where([
                     'verified_by_admin' => 1,
                     'deleted_at' => null,
-                ])->with(['phase' => function ($phase) {
-                    $phase->with(['site' => fn($site) => ($site->whereNull('deleted_at'))])->whereNull('deleted_at');
-                }])->latest();
+                ])->with([
+                            'phase' => function ($phase) {
+                                $phase->with(['site' => fn($site) => ($site->whereNull('deleted_at'))])->whereNull('deleted_at');
+                            }
+                        ])->latest();
             },
             'dailyWagers' => fn($daily_wager) => ($daily_wager->whereNull('deleted_at'))->latest(),
             'squareFootages' => function ($square_footage) {
                 $square_footage->where([
                     'verified_by_admin' => 1,
                     'deleted_at' => null,
-                ])->with(['phase' => function ($phase) {
-                    $phase->with(['site' => fn($site) => ($site->whereNull('deleted_at'))])->whereNull('deleted_at');
-                }])->latest();
+                ])->with([
+                            'phase' => function ($phase) {
+                                $phase->with(['site' => fn($site) => ($site->whereNull('deleted_at'))])->whereNull('deleted_at');
+                            }
+                        ])->latest();
             },
             'payments' => function ($payment) {
                 $payment->where('verified_by_admin', 1);
@@ -201,8 +207,8 @@ class SupplierController extends Controller
             ];
         }));
 
-        $perPage = 20; 
-        $currentPage = request('page', 1); 
+        $perPage = 20;
+        $currentPage = request('page', 1);
 
         // Create paginator for the ledger data
         $paginatedLedgers = new LengthAwarePaginator(
@@ -212,7 +218,7 @@ class SupplierController extends Controller
             $currentPage, // Current page
             [
                 'path' => request()->url(),
-                'query' => request()->query() 
+                'query' => request()->query()
             ]
         );
 
@@ -268,7 +274,7 @@ class SupplierController extends Controller
             'is_workforce_provider' => $request->provider === 'is_workforce_provider' ? 1 : 0,
         ]);
 
-        return redirect()->to('admin/suppliers')->with('status', 'update');
+        return redirect('/admin/suppliers')->with('status', 'update');
     }
 
     /**

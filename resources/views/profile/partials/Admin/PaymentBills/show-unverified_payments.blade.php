@@ -45,14 +45,14 @@
                                                     <a href="#" class="verify-link text-success" data-name="pay"
                                                         data-id="{{ $pay->id }}" data-verified="0"
                                                         data-bs-toggle="tooltip" data-bs-placement="top"
-                                                        title="Payment Verified - Click to mark as unverified">
+                                                        title="Payment Verified - Click to unverify">
                                                         <i class="fas fa-check-circle fs-5"></i>
                                                     </a>
                                                 @else
                                                     <a href="#" class="verify-link text-warning" data-name="pay"
                                                         data-id="{{ $pay->id }}" data-verified="1"
                                                         data-bs-toggle="tooltip" data-bs-placement="top"
-                                                        title="Payment Pending Verification - Click to verify">
+                                                        title="Payment Pending  - Click to verify">
                                                         <i class="fas fa-question-circle fs-5"></i>
                                                     </a>
                                                 @endif

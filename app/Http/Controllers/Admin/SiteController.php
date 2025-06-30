@@ -266,7 +266,6 @@ class SiteController extends Controller
         // Get unique suppliers
         $suppliers = $dataService->getSuppliersWithSites($site_id);
 
-
         // Get additional data for the view
         $items = Item::orderBy('item_name')->get();
 

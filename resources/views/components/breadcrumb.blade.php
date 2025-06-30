@@ -8,9 +8,7 @@
                             {{ request()->is(ltrim($breadcrumb['url'], '/')) || request()->fullUrl() === url($breadcrumb['url']) || $loop->last ? 'active-2' : '' }}"
                             href="{{ url($breadcrumb['url']) }}">
                             <span class="{{ $loop->last ? '' : 'mr-md-3 mr-2' }}">
-                                @if ($index === 0)
-                                    <i class="fa fa-home mr-1"></i>
-                                @endif
+                              
                                 {{ $breadcrumb['name'] }}
                             </span>
                         </a>

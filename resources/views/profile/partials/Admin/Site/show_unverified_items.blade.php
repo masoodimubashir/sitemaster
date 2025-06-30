@@ -79,17 +79,18 @@
 
                     </div>
 
+
                     <div class="table-responsive rounded">
                         @if (count($paginatedData))
                             <table class="table  align-middle">
                                 <thead class="bg-light">
                                     <tr>
-                                        <th class="fw-bold">Date | Time</th>
+                                        <th class="fw-bold">Date</th>
                                         <th class="fw-bold">Supplier Name</th>
                                         <th class="fw-bold">Phase</th>
                                         <th class="fw-bold">Site Name</th>
                                         <th class="fw-bold">Type</th>
-                                        <th class="fw-bold">Information</th>
+                                        <th class="fw-bold">Price</th>
                                         <th class="fw-bold">Status</th>
                                         @if (auth()->user()->role_name === 'admin')
                                             <th class="fw-bold text-center">Actions</th>
@@ -98,13 +99,16 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($paginatedData as $data)
+
+                                    {{-- {{ dd($data) }} --}}
+
                                         <tr>
                                             <td>{{ $data['created_at']->format('d-M-y') }}</td>
                                             <td>{{ ucwords($data['supplier']) }}</td>
                                             <td>{{ ucwords($data['phase']) }}</td>
                                             <td>{{ ucwords($data['site']) }}</td>
-                                            <td>{{ $data['category'] }}</td>
-                                            <td>{{ ucwords($data['description']) }}</td>
+                                            <td>{{ $data['category'] }} | {{ ucwords($data['description']) }}</td>
+                                            <td>{{ $data['price'] }}</td>
                                             <td>
                                                 @if ($data['verified_by_admin'] === 1)
                                                     <span class="text-success">Verified</span>

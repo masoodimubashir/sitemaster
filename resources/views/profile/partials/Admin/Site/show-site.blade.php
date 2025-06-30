@@ -172,7 +172,7 @@
     </style>
 
 
-    <x-breadcrumb :names="['Sites',  $site->site_name]" :urls="[$user . '/sites',]" />
+    <x-breadcrumb :names="['Sites', $site->site_name]" :urls="[$user . '/sites', $user . '/sites/' . base64_encode($site->id)]" />
 
     <div class="header-container">
 
@@ -961,14 +961,6 @@
 
                             const errors = response.responseJSON.errors;
 
-                            // Display general error message
-                            messageContainer.html(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    Please fix the errors below
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
-
                             // Display specific error for each field
                             for (const field in errors) {
 
@@ -1041,15 +1033,6 @@
                     error: function(response) {
                         if (response.status === 422) { // Validation errors
                             const errors = response.responseJSON.errors;
-                            console.log('Validation errors:', errors); // Debug log
-
-                            // Display general error message
-                            messageContainer.html(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                        Please fix the errors below
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `);
 
                             // Loop through each error field
                             for (const field in errors) {
@@ -1142,16 +1125,9 @@
                     },
                     error: function(response) {
 
-                        if (response.status === 422) { // Validation errors
+                        if (response.status === 422) { 
+                        
                             const errors = response.responseJSON.errors;
-
-                            // Display general error message
-                            messageContainer.html(`
-                              <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                  Please fix the errors below
-                                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                             </div>
-                            `);
 
                             // Loop through each error field
                             for (const field in errors) {

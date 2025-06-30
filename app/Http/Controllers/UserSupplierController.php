@@ -259,7 +259,6 @@ class UserSupplierController extends Controller
     {
         $request->validated();
 
-
         $supplier->update([
             'name' => $request->name,
             'contact_no' => $request->contact_no,
@@ -268,7 +267,7 @@ class UserSupplierController extends Controller
             'is_workforce_provider' => $request->provider === 'is_workforce_provider' ? 1 : 0,
         ]);
 
-        return redirect()->to('user/suppliers')->with('status', 'update');
+        return redirect('/user/suppliers')->with('status', 'update');
     }
 
     /**
