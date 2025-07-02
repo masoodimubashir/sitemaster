@@ -115,7 +115,7 @@
                                         </tr>
 
                                         <!-- Sites Modal for each user -->
-                                        <div class="modal fade" id="sitesModal-{{ $user->id }}" tabindex="-1"
+                                        <div class="modal fade" id="sitesModal-{{ $user->id }}" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
                                             aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered">
                                                 <div class="modal-content">

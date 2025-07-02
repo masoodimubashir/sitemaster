@@ -237,9 +237,6 @@
             </ul>
 
 
-
-
-
             <form action="{{ url($user . '/ledger/report') }}" method="GET">
                 <input type="hidden" name="site_id" value="{{ request('site_id', $id) }}">
                 <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
@@ -453,7 +450,7 @@
 
     <!-- Contruction Material Form -->
     <div id="modal-construction-billings" class="modal fade" aria-hidden="true"
-        aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+        aria-labelledby="exampleModalToggleLabel" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 
         <div class="modal-dialog modal-dialog-centered">
 
@@ -515,7 +512,8 @@
                             </div>
                         </div>
 
-                        <div class="text-end mt-4">
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-success">Create Billing</button>
                         </div>
 
@@ -529,7 +527,7 @@
 
     {{-- Square Footage Bill Model --}}
     <div id="modal-square-footage-bills" class="modal fade" aria-hidden="true"
-        aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+        aria-labelledby="exampleModalToggleLabel" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
 
         <div class="modal-dialog modal-dialog-centered">
 
@@ -623,7 +621,8 @@
                         </div>
 
 
-                        <div class="mt-3">
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-success">
                                 {{ __('Create Bill') }}
                             </button>
@@ -640,7 +639,7 @@
 
     <!-- Daily Expense -->
     <div id="modal-daily-expenses" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-        tabindex="-1">
+        data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
 
         {{-- Daily Expenses  --}}
         <div class="modal-dialog modal-dialog-centered">
@@ -695,9 +694,12 @@
                         </div>
 
 
-                        <button class="btn btn-success " type="submit">
-                            Create Expense
-                        </button>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-success " type="submit">
+                                Create Expense
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -707,7 +709,8 @@
 
 
     {{-- Payment Modal --}}
-    <div id="payment-supplier" class="modal fade" aria-hidden="true" tabindex="-1">
+    <div id="payment-supplier" class="modal fade" aria-hidden="true" tabindex="-1" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
@@ -716,7 +719,7 @@
 
                         {{-- Amount --}}
                         <div class="form-group">
-                            <input type="number" min="0" name="amount" step="0.01" />
+                            <input type="number" min="0" name="amount" />
                             <label for="input" class="control-label">Amount</label><i class="bar"></i>
                             <div class="invalid-feedback" id="amount-error"></div>
 
@@ -776,7 +779,8 @@
                         </div>
 
                         {{-- Submit --}}
-                        <div class="text-end mt-4">
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-success">Pay</button>
                         </div>
                     </form>

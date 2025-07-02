@@ -25,25 +25,24 @@ use App\Http\Controllers\Admin\TrashController;
 use App\Http\Controllers\Admin\UnverifiedSupplierPayments;
 use App\Http\Controllers\Admin\UpdateOnGoingController;
 use App\Http\Controllers\Admin\WagerAttendanceController;
-use App\Http\Controllers\AttendanceSheetController;
 use App\Http\Controllers\Client\ClientDashboardController;
 use App\Http\Controllers\Client\ClientLedgerController;
 use App\Http\Controllers\Client\ClientLogoutController;
 use App\Http\Controllers\Client\GenerateReportController;
-use App\Http\Controllers\ClientAuthController;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\User\MarkNotificationAsReadController;
 use App\Http\Controllers\User\UserConstuctionMaterialBuildingsController;
 use App\Http\Controllers\User\UserDailyExpensesController;
 use App\Http\Controllers\User\UserDailyWagerController;
 use App\Http\Controllers\User\UserDashboardController;
-use App\Http\Controllers\User\UserPhaseController;
 use App\Http\Controllers\User\UserSitePayments;
 use App\Http\Controllers\User\UserSquareFootageBillsController;
 use App\Http\Controllers\User\UserWagerAttendanceController;
 use App\Http\Controllers\User\ViewSiteController;
 use App\Http\Controllers\UserSupplierController;
 use App\Http\Controllers\WastaController;
+use App\Http\Controllers\AttendanceSheetController;
+use App\Http\Controllers\ClientAuthController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -107,22 +106,18 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::resource('/suppliers', SupplierController::class);
     Route::get('/supplier/detail/{id}', [SupplierController::class, 'showSupplierDetail']);
 
-
     // Items Controller
     Route::resource('/items', ItemController::class);
-
 
     // Sites Controller
     Route::resource('/sites', SiteController::class);
     Route::get('/sites/details/{id}', [SiteController::class, 'showSiteDetails']);
-
 
     //  This Route Is Used To Make Payment In Supplier View
     Route::resource('/supplier/payments', PaymentSupplierController::class);
 
     Route::get('sites/payments/{id}', [PaymentSiteController::class, 'showPayment']);
     Route::post('sites/payments', [PaymentSiteController::class, 'makePayment']);
-
 
     //  On Going Site Updated With This Route
     Route::post('sites/update-on-going/{id}', UpdateOnGoingController::class)->name('sites.update-on-going');

@@ -190,8 +190,8 @@
         <div class="ms-auto action-buttons d-flex gap-2">
             <!-- Dropdown Menu for Quick Access -->
             <div class="dropdown">
-                <button class="btn btn-sm btn-outline" type="button" id="dropdownMenuButton"
-                    data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-sm btn-outline" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown"
+                    aria-expanded="false">
                     <i class="fas fa-bolt me-1"></i> Quick Actions
                 </button>
 
@@ -416,7 +416,7 @@
 
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
+        data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
 
@@ -427,7 +427,7 @@
 
                         {{-- Phase Name --}}
                         <div class="form-group">
-                            <input type="number" min="0" name="amount" step="0.01" />
+                            <input type="number" min="1" name="amount"/>
                             <label for="input" class="control-label">Amount</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('amount')" class="mt-2" />
                         </div>
@@ -439,16 +439,19 @@
                         </div>
 
                         {{-- Select Payee Dropdown --}}
-                        <select name="payment_initiator" id="payment_initiator"
-                            class="form-select text-black form-select-sm" style="cursor: pointer"
-                            onchange="togglePayOptions()">
-                            <option value="" selected>Select Payee</option>
-                            <option value="1">Supplier</option>
-                            <option value="0">Admin</option>
-                        </select>
+                        <div class="mb-2">
+                            <select name="payment_initiator" id="payment_initiator"
+                                class="form-select text-black form-select-sm" style="cursor: pointer"
+                                onchange="togglePayOptions()">
+                                <option value="" selected>Select Payee</option>
+                                <option value="1">Supplier</option>
+                                <option value="0">Admin</option>
+                            </select>
+                        </div>
+
 
                         {{-- Supplier Options (Shown when Supplier is selected) --}}
-                        <div id="supplierOptions" style="display: none;" class="mt-3">
+                        <div id="supplierOptions" style="display: none;" class="mt-2">
                             <select name="site_id" id="site_id" class="form-select text-black form-select-sm"
                                 style="cursor: pointer">
                                 <option for="site_id" value="">Select Site</option>
@@ -467,7 +470,7 @@
                         </div>
 
                         {{-- Admin Options (Shown when Admin is selected) --}}
-                        <div id="adminOptions" style="display: none;" class="mt-4">
+                        <div id="adminOptions" style="display: none;" class="mt-2">
                             <div class="row g-3">
                                 {{-- Sent Radio Option --}}
                                 <div class="col-auto">
@@ -489,11 +492,8 @@
                         </div>
 
 
-                        {{-- Screenshot --}}
-
-
-                        <div class="flex items-center justify-end mt-4">
-
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <x-primary-button>
                                 {{ __('Pay') }}
                             </x-primary-button>
@@ -547,28 +547,44 @@
                             location.reload();
                         }, 2000);
                     },
-                    error: function(response) {
+                    error: function(xhr) {
+                        const messageContainer = $('#messageContainer');
+                        messageContainer.empty();
 
-                        if (response.status === 422) {
+                        if (xhr.status === 422 && xhr.responseJSON.errors) {
+                            const errors = xhr.responseJSON.errors;
 
-                            messageContainer.append(`
-                            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                ${response.responseJSON.errors}
-                            </div>`)
+                            // Loop through errors and display them next to inputs
+                            $.each(errors, function(field, messages) {
+                                const input = $(`[name="${field}"]`);
+                                const formGroup = input.closest('.form-group');
 
-                            location.reload();
+                                input.addClass('is-invalid');
+
+                                // Append Bootstrap validation error message
+                                if (formGroup.length) {
+                                    formGroup.append(
+                                        `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
+                                    );
+                                } else {
+                                    input.after(
+                                        `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
+                                    );
+                                }
+                            });
+
 
                         } else {
                             messageContainer.append(`
-                            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                An unexpected error occurred. Please try again later.
-                            </div>
-                        `);
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    An unexpected error occurred. Please try again later.
+                                </div>
+                            `);
                         }
 
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-                        }, 2000);
+                        }, 4000);
                     }
                 });
             });

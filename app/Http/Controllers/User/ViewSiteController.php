@@ -206,9 +206,6 @@ class ViewSiteController extends Controller
             'deleted_at' => null
         ])->find($site_id);
 
-
-        // dd($suppliers);
-
         return view(
             'profile.User.Site.show-site',
             compact(

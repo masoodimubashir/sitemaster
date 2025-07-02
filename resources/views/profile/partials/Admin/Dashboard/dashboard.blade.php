@@ -199,7 +199,7 @@
 
     <!-- Create Site Modal -->
     <div id="create-site-modal" class="modal fade" aria-hidden="true" aria-labelledby="createSiteModalLabel"
-        tabindex="-1">
+        data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -281,14 +281,11 @@
     </div>
 
 
-
-
     <div id="messageContainer"></div>
-
-
 
     <script>
         $(document).ready(function() {
+
             const messageContainer = $('#messageContainer');
 
             $('#createSiteForm').submit(function(e) {
@@ -368,8 +365,6 @@
                                 });
                             }
                         }
-
-                    
                     },
                     complete: function() {
                         submitBtn.prop('disabled', false).html(originalBtnText);
@@ -383,6 +378,7 @@
                 $('.is-invalid').removeClass('is-invalid');
                 messageContainer.html('');
             });
+
         });
     </script>
 

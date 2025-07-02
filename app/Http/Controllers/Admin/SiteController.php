@@ -254,6 +254,7 @@ class SiteController extends Controller
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
 
+
         // Paginate the ledgers
         $paginatedLedgers = new LengthAwarePaginator(
             $ledgers->forPage($request->input('page', 1), 20),

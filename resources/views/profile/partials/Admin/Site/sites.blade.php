@@ -157,7 +157,7 @@
     </div>
 
     <!-- Create Site Modal -->
-    <div id="create-site-modal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div id="create-site-modal" class="modal fade" tabindex="-1" aria-hidden="true"   data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header text-black">

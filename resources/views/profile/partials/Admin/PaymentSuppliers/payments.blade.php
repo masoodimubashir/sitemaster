@@ -273,22 +273,22 @@
         <div class="summary-cards">
 
             <div class="summary-card gave">
-                <div class="summary-amount gave-text">₹{{ number_format($total_balance) }}</div>
+                <div class="summary-amount gave-text">₹{{ $total_balance }}</div>
                 <div class="summary-label gave-text">Total Balance</div>
             </div>
 
             <div class="summary-card gave">
-                <div class="summary-amount gave-text">₹{{ number_format($total_due) }}</div>
+                <div class="summary-amount gave-text">₹{{ $total_due }}</div>
                 <div class="summary-label gave-text">Total Due</div>
             </div>
 
             <div class="summary-card balance">
-                <div class="summary-amount balance-text">₹{{ number_format($effective_balance) }}</div>
+                <div class="summary-amount balance-text">₹{{ $effective_balance }}</div>
                 <div class="summary-label balance-text">Effective Balance</div>
             </div>
 
             <div class="summary-card got">
-                <div class="summary-amount got-text">₹{{ number_format($total_paid) }}</div>
+                <div class="summary-amount got-text">₹{{ $total_paid }}</div>
                 <div class="summary-label got-text">Total Paid</div>
             </div>
         </div>

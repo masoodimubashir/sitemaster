@@ -11,7 +11,7 @@ class PDF extends Fpdf
 
     private int $height = 6;
 
-    private int  $width = 47;
+    private int $width = 47;
 
     private int $font_size = 7;
 
@@ -69,10 +69,6 @@ class PDF extends Fpdf
         $this->Cell(47 * 2, 10, 'Developed By Py.Sync PVT LTD ', 0, 0, 'L');
         $this->Cell(47 * 2, 10, 'Page ' . $this->PageNo() . '/{nb}', 0, 0, 'R');
     }
-
-
-
-
 
     public function infoTable(array $headers, array $data)
     {
@@ -139,90 +135,36 @@ class PDF extends Fpdf
 
     public function siteTableData($ledgersGroupedByPhase)
     {
+       
+        // Check if data is empty
         if (empty($ledgersGroupedByPhase)) {
             $this->Cell(0, 10, 'No data available', 1, 0, 'C');
             $this->Ln();
+            $this->Output('site_financial_report.pdf', 'I');
             return;
         }
 
-        foreach ($ledgersGroupedByPhase as $phaseName => $records) {
-
+        // Process each phase
+        foreach ($ledgersGroupedByPhase as $phaseData) {
+            // Phase Header
             $this->SetFillColor(0, 170, 183);
             $this->SetTextColor(255, 255, 255);
-            $this->Cell(0, 10, strtoupper($records['phase']) . ' PHASE', 1, 1, 'C', true);
+            $this->SetFont('', 'B', 12);
+            $this->Cell(0, 10, strtoupper($phaseData['phase']) . ' PHASE', 1, 1, 'C', true);
+            $this->SetFont('', '', 10);
 
-            // Flatten all collections into one
-            $allRecords = collect()
-                ->merge($records['construction_material_billings'] ?? [])
-                ->merge($records['square_footage_bills'] ?? [])
-                ->merge($records['daily_expenses'] ?? [])
-                ->merge($records['daily_wagers'] ?? [])
-                ->merge($records['daily_wastas'] ?? [])
-                ->merge($records['daily_labours'] ?? []);
+            // Summary Table
+            $this->renderSummaryTable( $phaseData);
 
-            $materials = $allRecords->where('category', 'Material')->values();
-            $sqft = $allRecords->where('category', 'SQFT')->values();
-            $wasta = $allRecords->where('category', 'Wasta')->values();
-            $labour = $allRecords->where('category', 'Labour')->values();
-            $expenses = $allRecords->where('category', 'Expense')->values();
+            // Detailed Tables
+            $this->renderMaterialTable( $phaseData['construction_material_billings'] ?? []);
+            $this->renderSqftTable( $phaseData['square_footage_bills'] ?? []);
+            $this->renderExpenseTable( $phaseData['daily_expenses'] ?? [], 'Daily Expenses', ['Date', 'Item Name', 'Price']);
+            $this->renderWastaLabourTable( $phaseData['daily_wastas'] ?? [], 'Daily Wastas');
+            $this->renderWastaLabourTable( $phaseData['daily_labours'] ?? [], 'Daily Labours');
 
-            // Totals
-            $totals = [
-                'Raw Material' => $materials->sum('debit'),
-                'Square Footage' => $sqft->sum('debit'),
-                'Daily Expenses' => $expenses->sum('debit'),
-                'Daily Wastas' => $wasta->sum('debit'),
-                'Daily Labours' => $labour->sum('debit'),
-            ];
-
-            // Print summary
-            $this->SetFillColor(0, 170, 183);
-            $this->SetTextColor(255, 255, 255);
-            $this->Cell($this->width, $this->height, 'Description', 1);
-            $this->Cell($this->width, $this->height, 'Amount', 1);
-            $this->Cell($this->width, $this->height, 'Service Charge', 1);
-            $this->Cell($this->width, $this->height, 'Total', 1);
-            $this->Ln();
-
-            $this->SetFillColor(255, 255, 255);
-            $this->SetTextColor(51, 51, 51);
-
-            $phaseSubtotal = 0;
-
-
-            $siteServiceCharge = $records['site_service_charge'] ?? 0;
-
-            foreach ($totals as $label => $amount) {
-                $serviceCharge = $this->getServiceChargeAmount($amount, $siteServiceCharge);
-                $total = $amount + $serviceCharge;
-                $phaseSubtotal += $total;
-
-                $this->Cell($this->width, $this->height, $label, 1);
-                $this->Cell($this->width, $this->height, number_format($amount, 2), 1, 0, 'R');
-                $this->Cell($this->width, $this->height, number_format($serviceCharge, 2), 1, 0, 'R');
-                $this->Cell($this->width, $this->height, number_format($total, 2), 1, 0, 'R');
-                $this->Ln();
-            }
-
-            $this->SetFillColor(245, 245, 245);
-            $this->SetTextColor(0, 0, 0);
-            $this->Cell($this->width, $this->height, 'Phase Total', 1);
-            $this->Cell($this->width * 3, $this->height, number_format($phaseSubtotal, 2), 1, 0, 'R');
-            $this->Ln();
-
-            // Render individual category tables
-            $this->renderMaterialTable($materials->toArray());
-            $this->renderSqftTable($sqft->toArray());
-            $this->renderExpenseTable($expenses->toArray(), 'Daily Expenses', ['Date', 'Item Name', 'Price']);
-            $this->renderWastaLabourTable($wasta->toArray(), 'Daily Wastas');
-            $this->renderWastaLabourTable($labour->toArray(), 'Daily Labours');
-
-
-
-            // Add page after each phase, except last
-            $phaseKeys = array_keys($ledgersGroupedByPhase);
-
-            if ($phaseName !== end($phaseKeys)) {
+            // Add page break if not last phase
+            if ($phaseData !== end($ledgersGroupedByPhase)) {
                 $this->AddPage();
             }
         }
@@ -282,11 +224,11 @@ class PDF extends Fpdf
         // Calculate service charge amounts
         $getCharge = fn($amount) => $this->getServiceChargeAmount($amount, $phases['service_charge']);
         $rows = [
-            'Raw Material'    => $phaseCosting['construction_total_amount'],
-            'Square Footage'  => $phaseCosting['square_footage_total_amount'],
-            'Daily Expenses'  => $phaseCosting['daily_expenses_total_amount'],
-            'Wasta'           => $phaseCosting['daily_wastas_total_amount'] ?? 0,
-            'Labour'          => $phaseCosting['daily_labours_total_amount'] ?? 0,
+            'Raw Material' => $phaseCosting['construction_total_amount'],
+            'Square Footage' => $phaseCosting['square_footage_total_amount'],
+            'Daily Expenses' => $phaseCosting['daily_expenses_total_amount'],
+            'Wasta' => $phaseCosting['daily_wastas_total_amount'] ?? 0,
+            'Labour' => $phaseCosting['daily_labours_total_amount'] ?? 0,
         ];
 
         $totalAmount = 0;
@@ -686,16 +628,65 @@ class PDF extends Fpdf
         return $serviceChargeAmount;
     }
 
-    private function renderMaterialTable($items)
+
+    private function renderSummaryTable( $phaseData)
     {
-        if (empty($items)) return;
+        // Calculate totals
+        $totals = [
+            'Raw Material' => $phaseData['construction_total_amount'] ?? 0,
+            'Square Footage' => $phaseData['square_footage_total_amount'] ?? 0,
+            'Daily Expenses' => $phaseData['daily_expenses_total_amount'] ?? 0,
+            'Daily Wastas' => $phaseData['daily_wastas_total_amount'] ?? 0,
+            'Daily Labours' => $phaseData['daily_labours_total_amount'] ?? 0,
+        ];
+
+        // Table header
+        $this->SetFillColor(0, 170, 183);
+        $this->SetTextColor(255, 255, 255);
+        $this->Cell($this->width, $this->height, 'Description', 1, 0, 'C', true);
+        $this->Cell($this->width, $this->height, 'Amount', 1, 0, 'C', true);
+        $this->Cell($this->width, $this->height, 'Service Charge', 1, 0, 'C', true);
+        $this->Cell($this->width, $this->height, 'Total', 1, 0, 'C', true);
+        $this->Ln();
+
+        $this->SetFillColor(255, 255, 255);
+        $this->SetTextColor(51, 51, 51);
+
+        $phaseSubtotal = 0;
+
+        foreach ($totals as $label => $amount) {
+            $serviceCharge = $this->getServiceChargeAmount($amount, 10); // Assuming 10% service charge
+            $total = $amount + $serviceCharge;
+            $phaseSubtotal += $total;
+
+            $this->Cell($this->width, $this->height, $label, 1);
+            $this->Cell($this->width, $this->height, number_format($amount, 2), 1, 0, 'R');
+            $this->Cell($this->width, $this->height, number_format($serviceCharge, 2), 1, 0, 'R');
+            $this->Cell($this->width, $this->height, number_format($total, 2), 1, 0, 'R');
+            $this->Ln();
+        }
+
+        // Phase Total
+        $this->SetFillColor(245, 245, 245);
+        $this->SetTextColor(0, 0, 0);
+        $this->Cell($this->width, $this->height, 'Phase Total', 1);
+        $this->Cell($this->width * 3, $this->height, number_format($phaseSubtotal, 2), 1, 0, 'R');
+        $this->Ln();
+    }
+
+    private function renderMaterialTable( $items)
+    {
+        if (empty($items))
+            return;
+
         $this->Ln(5);
         $this->SetTextColor(0, 170, 183);
-        $this->Cell(47 * 4, 10, 'Construction Materials Phase', 0, 1, 'C');
+        $this->Cell(0, 10, 'Construction Materials', 0, 1, 'C');
 
         $headers = ['Date', 'Item Name', 'Supplier', 'Price'];
         $this->SetFillColor(0, 170, 183);
         $this->SetTextColor(255, 255, 255);
+
         foreach ($headers as $header) {
             $this->Cell($this->width, $this->height, $header, 1, 0, 'C', true);
         }
@@ -707,7 +698,7 @@ class PDF extends Fpdf
         foreach ($items as $item) {
             $this->Cell($this->width, $this->height, $item['created_at']->format('D-M-y'), 1);
             $this->Cell($this->width, $this->height, $item['description'], 1);
-            $this->Cell($this->width, $this->height, $item['supplier'], 1);
+            $this->Cell($this->width, $this->height, $item['supplier'] ?? 'N/A', 1);
             $this->Cell($this->width, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'R');
             $this->Ln();
         }
@@ -715,14 +706,17 @@ class PDF extends Fpdf
 
     private function renderSqftTable($items)
     {
-        if (empty($items)) return;
+        if (empty($items))
+            return;
+
         $this->Ln(5);
         $this->SetTextColor(0, 170, 183);
-        $this->Cell(47 * 4, 10, 'Square Footage Bills', 0, 1, 'C');
+        $this->Cell(0, 10, 'Square Footage Bills', 0, 1, 'C');
 
         $headers = ['Date', 'Work Type', 'Supplier', 'Price', 'Multiplier', 'Total Price'];
         $this->SetFillColor(0, 170, 183);
         $this->SetTextColor(255, 255, 255);
+
         foreach ($headers as $header) {
             $this->Cell(31.3, $this->height, $header, 1, 0, 'C', true);
         }
@@ -734,26 +728,26 @@ class PDF extends Fpdf
         foreach ($items as $item) {
             $this->Cell(31.3, $this->height, $item['created_at']->format('D-M-y'), 1);
             $this->Cell(31.3, $this->height, $item['description'], 1);
-            $this->Cell(31.3, $this->height, $item['supplier'], 1);
+            $this->Cell(31.3, $this->height, $item['supplier'] ?? 'N/A', 1);
             $this->Cell(31.3, $this->height, number_format($item['debit'], 2), 1, 0, 'R');
-            $this->Cell(31.3, $this->height, '1', 1, 0, 'R');
+            $this->Cell(31.3, $this->height, '1', 1, 0, 'R'); // Assuming multiplier is always 1
             $this->Cell(31.3, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'R');
             $this->Ln();
         }
     }
 
-    private function renderExpenseTable($items, $title, $columns)
+    private function renderExpenseTable( $items, $title, $columns)
     {
+        if (empty($items))
+            return;
 
-
-
-        if (empty($items)) return;
         $this->Ln(5);
         $this->SetTextColor(0, 170, 183);
-        $this->Cell(47 * 4, 10, $title, 0, 1, 'C');
+        $this->Cell(0, 10, $title, 0, 1, 'C');
 
         $this->SetFillColor(0, 170, 183);
         $this->SetTextColor(255, 255, 255);
+
         foreach ($columns as $header) {
             $this->Cell($this->width * 1.33, $this->height, $header, 1, 0, 'C', true);
         }
@@ -772,14 +766,17 @@ class PDF extends Fpdf
 
     private function renderWastaLabourTable($items, $title)
     {
-        if (empty($items)) return;
+        if (empty($items))
+            return;
+
         $this->Ln(5);
         $this->SetTextColor(0, 170, 183);
-        $this->Cell(47 * 4, 10, $title, 0, 1, 'C');
+        $this->Cell(0, 10, $title, 0, 1, 'C');
 
         $headers = ['Date', 'Name', 'Amount', 'With Service Charge'];
         $this->SetFillColor(0, 170, 183);
         $this->SetTextColor(255, 255, 255);
+
         foreach ($headers as $header) {
             $this->Cell($this->width, $this->height, $header, 1, 0, 'C', true);
         }
@@ -790,10 +787,16 @@ class PDF extends Fpdf
 
         foreach ($items as $item) {
             $this->Cell($this->width, $this->height, $item['created_at']->format('D-M-y'), 1);
-            $this->Cell($this->width, $this->height, $item['description'], 1);
+
+            // Extract name from description (e.g., "mubashir wasta /700:Day" -> "mubashir wasta")
+            $name = explode('/', $item['description'])[0] ?? $item['description'];
+            $this->Cell($this->width, $this->height, trim($name), 1);
+
             $this->Cell($this->width, $this->height, number_format($item['debit'], 2), 1, 0, 'R');
             $this->Cell($this->width, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'R');
             $this->Ln();
         }
     }
+
+
 }

@@ -337,22 +337,22 @@
         <div class="summary-cards">
 
             <div class="summary-card gave">
-                <div class="summary-amount gave-text">₹{{ number_format($total_balance) }}</div>
+                <div class="summary-amount gave-text">₹{{ $total_balance }}</div>
                 <div class="summary-label gave-text">Total Balance</div>
             </div>
 
             <div class="summary-card gave">
-                <div class="summary-amount gave-text">₹{{ number_format($total_due) }}</div>
+                <div class="summary-amount gave-text">₹{{ $total_due }}</div>
                 <div class="summary-label gave-text">Total Due</div>
             </div>
 
             <div class="summary-card balance">
-                <div class="summary-amount balance-text">₹{{ number_format($effective_balance) }}</div>
+                <div class="summary-amount balance-text">₹{{ $effective_balance }}</div>
                 <div class="summary-label balance-text">Effective Balance</div>
             </div>
 
             <div class="summary-card got">
-                <div class="summary-amount got-text">₹{{ number_format($total_paid) }}</div>
+                <div class="summary-amount got-text">₹{{ $total_paid }}</div>
                 <div class="summary-label got-text">Total Paid</div>
             </div>
         </div>
@@ -464,7 +464,7 @@
     {{-- Phase Form --}}
 
     <div id="phase" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-        tabindex="-1">
+        data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
@@ -484,7 +484,8 @@
                             <x-input-error :messages="$errors->get('site_id')" class="mt-2" />
                         </div>
 
-                        <div class="flex items-center justify-end mt-4">
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-success">
                                 Create Phase
                             </button>
@@ -497,8 +498,8 @@
     </div>
 
     <!-- Construction Material Form -->
-    <div id="modal-construction-billings" class="modal fade" aria-hidden="true"
-        aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+    <div id="modal-construction-billings" class="modal fade" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
 
         <div class="modal-dialog modal-dialog-centered">
 
@@ -560,7 +561,8 @@
                             </div>
                         </div>
 
-                        <div class="text-end mt-4">
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-success">Create Billing</button>
                         </div>
 
@@ -574,8 +576,8 @@
 
 
     {{-- Square Footage Bill Model --}}
-    <div id="modal-square-footage-bills" class="modal fade" aria-hidden="true"
-        aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+    <div id="modal-square-footage-bills" class="modal fade" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
 
         <div class="modal-dialog modal-dialog-centered">
 
@@ -669,7 +671,8 @@
                         </div>
 
 
-                        <div class="mt-3">
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-success">
                                 {{ __('Create Bill') }}
                             </button>
@@ -688,7 +691,7 @@
 
     <!-- Daily Expense -->
     <div id="modal-daily-expenses" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-        tabindex="-1">
+        data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
 
         {{-- Daily Expenses  --}}
         <div class="modal-dialog modal-dialog-centered">
@@ -743,9 +746,12 @@
                         </div>
 
 
-                        <button type="submit" class="btn btn-success">
-                            {{ __('Create Bill') }}
-                        </button>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-success">
+                                {{ __('Create Bill') }}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -755,7 +761,8 @@
 
 
     {{-- Payment Modal --}}
-    <div id="payment-supplier" class="modal fade" aria-hidden="true" tabindex="-1">
+    <div id="payment-supplier" class="modal fade" aria-hidden="true" tabindex="-1" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
@@ -764,11 +771,12 @@
 
                         {{-- Amount --}}
                         <div class="form-group">
-                            <input type="number" min="0" name="amount" step="0.01" />
-                            <label for="input" class="control-label">Amount</label><i class="bar"></i>
+                            <input type="text" name="amount" class="form-control" />
+                            <label class="control-label">Amount</label>
+                            <i class="bar"></i>
                             <div class="invalid-feedback" id="amount-error"></div>
-
                         </div>
+
 
                         {{-- Site (hidden) --}}
                         <input type="hidden" name="site_id" value="{{ $site->id }}" />
@@ -782,6 +790,7 @@
                                 <option value="0">Admin</option>
                             </select>
                             <div class="invalid-feedback" id="payment_initiator-error"></div>
+
                         </div>
 
                         {{-- Supplier Options --}}
@@ -793,8 +802,9 @@
                                     <option value="{{ $supplier['supplier_id'] }}">{{ $supplier['supplier_name'] }}
                                     </option>
                                 @endforeach
+                                <div class="invalid-feedback" id="supplier_id-error"></div>
+
                             </select>
-                            <div class="invalid-feedback" id="supplier_id-error"></div>
 
                             {{-- Screenshot Upload --}}
                             <label class="control-label mt-3">Upload Screenshot</label>
@@ -822,8 +832,8 @@
                             </div>
                         </div>
 
-                        {{-- Submit --}}
-                        <div class="text-end mt-4">
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-success">Pay</button>
                         </div>
                     </form>
@@ -877,39 +887,46 @@
                             location.reload();
                         }, 2000);
                     },
-                    error: function(response) {
-                        const errors = response.responseJSON.errors;
+                    error: function(xhr) {
+                        const messageContainer = $('#messageContainer');
+                        messageContainer.empty();
 
-                        if (response.status === 422 && errors) {
-                            $.each(errors, function(fieldName, messages) {
-                                const field = $('[name="' + fieldName + '"]');
+                        if (xhr.status === 422 && xhr.responseJSON.errors) {
+                            const errors = xhr.responseJSON.errors;
 
-                                if (field.length) {
-                                    const errorMessage =
-                                        `<span class="text-danger d-block mt-1">${messages[0]}</span>`;
+                            // Loop through errors and display them next to inputs
+                            $.each(errors, function(field, messages) {
+                                const input = $(`[name="${field}"]`);
+                                const formGroup = input.closest('.form-group');
 
-                                    // Remove any existing error message near this field
-                                    field.closest('.form-group').find('.text-danger')
-                                        .remove();
+                                input.addClass('is-invalid');
 
-                                    // html error message after the field
-                                    field.closest('.form-group').html(errorMessage);
+                                // Append Bootstrap validation error message
+                                if (formGroup.length) {
+                                    formGroup.append(
+                                        `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
+                                    );
+                                } else {
+                                    input.after(
+                                        `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
+                                    );
                                 }
                             });
 
+
                         } else {
-                            messageContainer.html(`
-            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                An unexpected error occurred. Please try again later.
-            </div>
-        `);
+                            messageContainer.append(`
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    An unexpected error occurred. Please try again later.
+                                </div>
+                            `);
                         }
 
-                        // Auto-hide error message
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-                        }, 5000);
+                        }, 4000);
                     }
+
 
 
                 });
@@ -1125,8 +1142,8 @@
                     },
                     error: function(response) {
 
-                        if (response.status === 422) { 
-                        
+                        if (response.status === 422) {
+
                             const errors = response.responseJSON.errors;
 
                             // Loop through each error field
@@ -1362,34 +1379,44 @@
 
                         }, 2000);
                     },
-                    error: function(response) {
+                    error: function(xhr) {
+                        const messageContainer = $('#messageContainer');
+                        messageContainer.empty();
 
-                        if (response.status === 422) {
-                            // Clear existing errors
-                            $('.invalid-feedback').text('');
+                        if (xhr.status === 422 && xhr.responseJSON.errors) {
+                            const errors = xhr.responseJSON.errors;
 
-                            // Display each validation error under the relevant input
-                            const errors = response.responseJSON.errors;
-                            console.log('Validation errors:', errors); // Debug log
-                            for (const field in errors) {
-                                const errorMsg = errors[field][0];
-                                const errorElement = $('#' + field.replace(/\./g, '_') +
-                                    '-error');
-                                if (errorElement.length) {
-                                    errorElement.text(errorMsg).show();
+                            // Loop through errors and display them next to inputs
+                            $.each(errors, function(field, messages) {
+                                const input = $(`[name="${field}"]`);
+                                const formGroup = input.closest('.form-group');
+
+                                input.addClass('is-invalid');
+
+                                // Append Bootstrap validation error message
+                                if (formGroup.length) {
+                                    formGroup.append(
+                                        `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
+                                    );
+                                } else {
+                                    input.after(
+                                        `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
+                                    );
                                 }
-                            }
+                            });
+
+
                         } else {
-                            messageContainer.html(`
-            <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                An unexpected error occurred. Please try again later.
-            </div>
-        `);
+                            messageContainer.append(`
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    An unexpected error occurred. Please try again later.
+                                </div>
+                            `);
                         }
 
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
-                        }, 5000);
+                        }, 4000);
                     }
 
                 });

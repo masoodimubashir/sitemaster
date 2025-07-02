@@ -190,8 +190,8 @@
         <div class="ms-auto action-buttons d-flex gap-2">
             <!-- Dropdown Menu for Quick Access -->
             <div class="dropdown">
-                <button class="btn btn-sm btn-outline " type="button" id="dropdownMenuButton"
-                    data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-sm btn-outline " type="button" id="dropdownMenuButton" data-bs-toggle="dropdown"
+                    aria-expanded="false">
                     <i class="fas fa-bolt me-1"></i> Quick Actions
                 </button>
 
@@ -413,7 +413,7 @@
 
     <!-- Modal -->
     <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
+        data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
 
@@ -424,7 +424,7 @@
 
                         {{-- Phase Name --}}
                         <div class="form-group">
-                            <input type="number" min="0" name="amount" step="0.01" />
+                            <input type="number" min="1" name="amount" />
                             <label for="input" class="control-label">Amount</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('amount')" class="mt-2" />
                         </div>
@@ -436,16 +436,19 @@
                         </div>
 
                         {{-- Select Payee Dropdown --}}
-                        <select name="payment_initiator" id="payment_initiator"
-                            class="form-select text-black form-select-sm" style="cursor: pointer"
-                            onchange="togglePayOptions()">
-                            <option value="" selected>Select Payee</option>
-                            <option value="1">Supplier</option>
-                            <option value="0">Admin</option>
-                        </select>
+                        <div class="mb-2">
+                            <select name="payment_initiator" id="payment_initiator"
+                                class="form-select text-black form-select-sm" style="cursor: pointer"
+                                onchange="togglePayOptions()">
+                                <option value="" selected>Select Payee</option>
+                                <option value="1">Supplier</option>
+                                <option value="0">Admin</option>
+                            </select>
+                        </div>
+
 
                         {{-- Supplier Options (Shown when Supplier is selected) --}}
-                        <div id="supplierOptions" style="display: none;" class="mt-3">
+                        <div id="supplierOptions" style="display: none;" class="mt-2">
                             <select name="site_id" id="site_id" class="form-select text-black form-select-sm"
                                 style="cursor: pointer">
                                 <option for="site_id" value="">Select Site</option>
@@ -464,7 +467,7 @@
                         </div>
 
                         {{-- Admin Options (Shown when Admin is selected) --}}
-                        <div id="adminOptions" style="display: none;" class="mt-4">
+                        <div id="adminOptions" style="display: none;" class="mt-2">
                             <div class="row g-3">
                                 {{-- Sent Radio Option --}}
                                 <div class="col-auto">
@@ -486,14 +489,11 @@
                         </div>
 
 
-                        {{-- Screenshot --}}
-
-
-                        <div class="flex items-center justify-end mt-4">
-
-                            <button class="btn btn-sm btn-success" type="submit">
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <x-primary-button>
                                 {{ __('Pay') }}
-                            </button>
+                            </x-primary-button>
 
                         </div>
 
@@ -511,94 +511,82 @@
 
     <script>
         $(document).ready(function() {
-          
-       $('form[id="payment_form"]').on('submit', function(e) {
-    e.preventDefault();
 
-    const form = $(this);
-    const formData = new FormData(form[0]);
-    const messageContainer = $('#messageContainer');
-    messageContainer.empty();
+            $('form[id="payment_form"]').on('submit', function(e) {
+                e.preventDefault();
 
-    // Clear previous errors
-    form.find('.is-invalid').removeClass('is-invalid');
-    form.find('.text-danger').remove();
-    form.find('.invalid-feedback').remove();
+                const form = $(this);
+                const formData = new FormData(form[0]);
+                const messageContainer = $('#messageContainer');
+                messageContainer.empty();
 
-    $.ajax({
-        url: '{{ url($user . '/supplier/payments') }}',
-        type: 'POST',
-        data: formData,
-        contentType: false,
-        processData: false,
-        success: function(response) {
-            messageContainer.html(`
-                <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                $('.text-danger').remove();
+
+                $.ajax({
+                    url: '{{ url($user . '/supplier/payments') }}',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        messageContainer.append(`
+                        <div class="alert align-items-center text-white bg-success border-0" role="alert">
+                            <div class="d-flex">
+                                <div class="toast-body">
+                                    <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            `);
-            form[0].reset();
-            
-            setTimeout(function() {
-                messageContainer.find('.alert').alert('close');
-                location.reload();
-            }, 2000);
-        },
-        error: function(response) {
-            if (response.status === 422) {
-                const errors = response.responseJSON.errors;
-                
-                // Display field-specific errors
-                $.each(errors, function(field, messages) {
-                    const input = form.find('[name="' + field + '"]');
-                    
-                    if (input.length) {
-                        // Add invalid class to input
-                        input.addClass('is-invalid');
-                        
-                        // Create error message element
-                        const errorElement = $(`<div class="text-danger mt-1 small">${messages[0]}</div>`);
-                        
-                        // Special handling for material-design inputs
-                        if (input.parent().hasClass('form-group')) {
-                            // Insert after the <i class="bar"> element if it exists
-                            if (input.next('i.bar').length) {
-                                input.next('i.bar').after(errorElement);
-                            } else {
-                                input.after(errorElement);
-                            }
-                        } 
-                        // For select elements
-                        else if (input.is('select')) {
-                            input.parent().append(errorElement);
+                    `);
+                        form[0].reset();
+
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                            location.reload();
+                        }, 2000);
+                    },
+                    error: function(xhr) {
+                        const messageContainer = $('#messageContainer');
+                        messageContainer.empty();
+
+                        if (xhr.status === 422 && xhr.responseJSON.errors) {
+                            const errors = xhr.responseJSON.errors;
+
+                            // Loop through errors and display them next to inputs
+                            $.each(errors, function(field, messages) {
+                                const input = $(`[name="${field}"]`);
+                                const formGroup = input.closest('.form-group');
+
+                                input.addClass('is-invalid');
+
+                                // Append Bootstrap validation error message
+                                if (formGroup.length) {
+                                    formGroup.append(
+                                        `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
+                                    );
+                                } else {
+                                    input.after(
+                                        `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
+                                    );
+                                }
+                            });
+
+
+                        } else {
+                            messageContainer.append(`
+                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                                    An unexpected error occurred. Please try again later.
+                                </div>
+                            `);
                         }
-                        // For radio buttons
-                        else if (input.is(':radio')) {
-                            input.closest('.row').append(errorElement);
-                        }
-                        // Default case
-                        else {
-                            input.after(errorElement);
-                        }
+
+                        setTimeout(function() {
+                            messageContainer.find('.alert').alert('close');
+                        }, 4000);
                     }
                 });
-            } else {
-                // General error message
-                messageContainer.html(`
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        ${response.responseJSON.message || 'An unexpected error occurred. Please try again later.'}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `);
-            }
-        }
-    });
-});
-            
+            });
+
 
 
         });

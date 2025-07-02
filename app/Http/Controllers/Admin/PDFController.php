@@ -14,19 +14,147 @@ class PDFController extends Controller
 
 
 
-    public function __construct(private DataService $dataService) {}
+    public function __construct(private DataService $dataService)
+    {
+    }
+
+    public function showSitePdf(string $id)
+    {
+
+        $site_id = base64_decode($id);
+
+        // Default filter options — or pull from request if needed
+        $dateFilter = 'lifetime';
+        $supplier_id = 'all';
+        $startDate = 'start_date';
+        $endDate = 'end_date';
+        $phase_id = 'all';
+
+        // Load site (for service charge, name, etc.)
+        $site = Site::findOrFail($site_id);
+
+        // Load processed financial data
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
+            $dateFilter,
+            $site_id,
+            $supplier_id,
+            $startDate,
+            $endDate,
+            $phase_id
+        );
+
+        // Combine and group all entries by phase
+        $ledgers = $this->dataService->makeData(
+            $payments,
+            $raw_materials,
+            $squareFootageBills,
+            $expenses,
+            $wastas,
+            $labours
+        )->sortByDesc(fn($entry) => $entry['created_at']);
+
+        $ledgersGroupedByPhase = $ledgers->filter(function ($entry) {
+            return !empty($entry['phase']); 
+        })->groupBy('phase');
+
+        $balances = $this->dataService->calculateAllBalances($ledgers);
+
+        $withoutServiceCharge = $balances['without_service_charge'];
+        $withServiceCharge = $balances['with_service_charge'];
+        $effective_balance = $withoutServiceCharge['due'];
+        $total_paid = $withServiceCharge['paid'];
+        $total_due = $withServiceCharge['due'];
+        $total_balance = $withServiceCharge['balance'];
+
+        // dd($balances);
+
+        // Per-phase breakdown
+        $phaseData = [];
+
+        foreach ($ledgersGroupedByPhase as $phaseName => $records) {
+
+            $construction_total = $records->where('category', 'Material')->sum('debit');
+            $square_total = $records->where('category', 'SQFT')->sum('debit');
+            $expenses_total = $records->where('category', 'Expense')->sum('debit');
+            $wasta_total = $records->where('category', 'Wasta')->sum('debit');
+            $labour_total = $records->where('category', 'Labour')->sum('debit');
+            $payments_total = $records->where('category', 'Payment')->sum('credit');
+
+            $subtotal = $construction_total + $square_total + $expenses_total + $wasta_total + $labour_total;
+            $withService = ($subtotal * $site->service_charge / 100) + $subtotal;
+
+
+            $phaseData[] = [
+                'phase' => $phaseName,
+                'phase_id' => $records->first()['phase_id'],
+                'construction_total_amount' => $construction_total,
+                'square_footage_total_amount' => $square_total,
+                'daily_expenses_total_amount' => $expenses_total,
+                'daily_wastas_total_amount' => $wasta_total,
+                'daily_labours_total_amount' => $labour_total,
+                'total_payment_amount' => $payments_total,
+                'phase_total' => $subtotal,
+                'phase_total_with_service_charge' => $withService,
+                'total_balance' => $withServiceCharge['balance'],
+                'total_due' => $withServiceCharge['due'],
+                'effective_balance' => $withoutServiceCharge['due'],
+                'total_paid' => $withServiceCharge['paid'],
+                'construction_material_billings' => $records->where('category', 'Material'),
+                'square_footage_bills' => $records->where('category', 'SQFT'),
+                'daily_expenses' => $records->where('category', 'Expense'),
+                'daily_wastas' => $records->where('category', 'Wasta'),
+                'daily_labours' => $records->where('category', 'Labour'),
+            ];
+        }
+
+        $data = [
+            'site_name' => $site->site_name,
+            'contact_no' => $site->contact_no,
+            'service_charge' => $site->service_charge,
+            'site_owner_name' => $site->site_owner_name,
+            'location' => $site->location,
+            'total_balance' => $total_balance,
+            'total_due' => $total_due,
+            'effective_balance' => $effective_balance,
+            'total_paid' => $total_paid,
+        ];
+
+        $headers = [
+            'box1' => 'Site Name',
+            'box2' => 'Contact No',
+            'box3' => 'Service Charge',
+            'box4' => 'Balance',
+            'box5' => 'Site Owner',
+            'box6' => 'Location',
+            'box7' => 'Debit',
+            'box8' => 'Credit',
+        ];
+
+        // ✅ Generate the PDF with data
+        $pdf = new PDF();
+        $pdf->AliasNbPages();
+        $pdf->AddPage();
+        $pdf->SetFont('Times', '', 12);
+        $pdf->SetTitle('Site Info');
+        $pdf->infoTable($headers, $data);
+        $pdf->siteTableData($phaseData); // Render each phase block
+        $pdf->Output();
+        exit;
+    }
+
 
     // public function showSitePdf(string $id)
     // {
-    //     $site_id = base64_decode($id);
 
+    //     $site_id = base64_decode($id);
     //     $dateFilter = 'lifetime';
     //     $supplier_id = 'all';
     //     $wager_id = 'all';
     //     $startDate = 'start_date';
     //     $endDate = 'end_date';
 
-    //     [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $this->dataService->getData(
+    //     // Get filtered collections from your data service
+    //     [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
     //         $dateFilter,
     //         $site_id,
     //         $supplier_id,
@@ -35,24 +163,32 @@ class PDFController extends Controller
     //         $endDate
     //     );
 
+    //     dd($payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours);
+
+    //     // Merge and sort all financial data
     //     $ledgers = $this->dataService->makeData(
     //         $payments,
     //         $raw_materials,
     //         $squareFootageBills,
     //         $expenses,
-    //         $wagers,
     //         $wastas,
     //         $labours
+
     //     )->sortByDesc(fn($entry) => $entry['created_at']);
 
-    //     // ✅ Correct grouping by phase name
-    //     $ledgersGroupedByPhase = $ledgers->groupBy(fn($item) => $item['phase'] ?? '--');
+    //     dd($ledgers);
 
+    //     // Group ledgers by phase
+    //     $ledgersGroupedByPhase = $ledgers->groupBy('phase');
+
+    //     // Fetch site info for the PDF header
     //     $site = Site::findOrFail($site_id);
 
     //     $phaseData = [];
 
     //     foreach ($ledgersGroupedByPhase as $phaseName => $records) {
+
+    //         // Sum totals by category (using debit for costs)
     //         $construction_total = $records->where('category', 'Material')->sum('debit');
     //         $square_total = $records->where('category', 'SQFT')->sum('debit');
     //         $expenses_total = $records->where('category', 'Expense')->sum('debit');
@@ -76,24 +212,26 @@ class PDFController extends Controller
     //             'total_payment_amount' => $payments_total,
     //             'phase_total' => $subtotal,
     //             'phase_total_with_service_charge' => $withService,
-
-    //             // ✅ Data grouped by phase for each category
-    //             'construction_material_billings' => $records->where('category', 'Material')->values(),
-    //             'square_footage_bills' => $records->where('category', 'SQFT')->values(),
-    //             'daily_expenses' => $records->where('category', 'Expense')->values(),
-    //             'daily_wagers' => $records->where('category', 'Wager')->values(),
-    //             'daily_wastas' => $records->where('category', 'Wasta')->values(),
-    //             'daily_labours' => $records->where('category', 'Labour')->values(),
+    //             'construction_material_billings' => $records->where('category', 'Material'),
+    //             'square_footage_bills' => $records->where('category', 'SQFT'),
+    //             'daily_expenses' => $records->where('category', 'Expense'),
+    //             'daily_wagers' => $records->where('category', 'Wager'),
+    //             'daily_wastas' => $records->where('category', 'Wasta'),
+    //             'daily_labours' => $records->where('category', 'Labour'),
     //         ];
     //     }
 
+    //     // Calculate grand totals
     //     $grandTotal = collect($phaseData)->sum('phase_total_with_service_charge');
     //     $totalSupplierPaymentAmount = $ledgers->sum(fn($p) => floatval($p['credit'] ?? 0));
 
     //     $balances = $this->dataService->calculateAllBalances($ledgers);
+
+
     //     $withoutServiceCharge = $balances['without_service_charge'];
     //     $withServiceCharge = $balances['with_service_charge'];
 
+    //     // Prepare header data for PDF
     //     $data = [
     //         'site_name' => $site->site_name,
     //         'contact_no' => $site->contact_no,
@@ -118,143 +256,17 @@ class PDFController extends Controller
     //         'box8' => 'Credit',
     //     ];
 
-    //     // ✅ Generate the PDF with data
+    //     // Generate PDF
     //     $pdf = new PDF();
     //     $pdf->AliasNbPages();
     //     $pdf->AddPage();
     //     $pdf->SetFont('Times', '', 12);
     //     $pdf->SetTitle('Site Info');
     //     $pdf->infoTable($headers, $data);
-    //     $pdf->siteTableData($phaseData); // Render each phase block
+    //     $pdf->siteTableData($phaseData);
     //     $pdf->Output();
     //     exit;
     // }
-
-
-    public function showSitePdf(string $id)
-    {
-        $site_id = base64_decode($id);
-
-        $dateFilter = 'lifetime';
-        $supplier_id = 'all';
-        $wager_id = 'all';
-        $startDate = 'start_date';
-        $endDate = 'end_date';
-
-        // Get filtered collections from your data service
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
-            $dateFilter,
-            $site_id,
-            $supplier_id,
-            $wager_id,
-            $startDate,
-            $endDate
-        );
-
-        // Merge and sort all financial data
-        $ledgers = $this->dataService->makeData(
-            $payments,
-            $raw_materials,
-            $squareFootageBills,
-            $expenses,
-            $wastas,
-            $labours
-
-        )->sortByDesc(fn($entry) => $entry['created_at']);
-
-        // Group ledgers by phase
-        $ledgersGroupedByPhase = $ledgers->groupBy('phase');
-
-
-        // Fetch site info for the PDF header
-        $site = Site::findOrFail($site_id);
-
-        $phaseData = [];
-
-        foreach ($ledgersGroupedByPhase as $phaseName => $records) {
-
-            // Sum totals by category (using debit for costs)
-            $construction_total = $records->where('category', 'Material')->sum('debit');
-            $square_total = $records->where('category', 'SQFT')->sum('debit');
-            $expenses_total = $records->where('category', 'Expense')->sum('debit');
-            $wager_total = $records->where('category', 'Wager')->sum('debit');
-            $wasta_total = $records->where('category', 'Wasta')->sum('debit');
-            $labour_total = $records->where('category', 'Labour')->sum('debit');
-            $payments_total = $records->where('category', 'Payment')->sum('credit');
-
-
-            $subtotal = $construction_total + $square_total + $expenses_total + $wager_total + $wasta_total + $labour_total;
-            $withService = ($subtotal * $site->service_charge / 100) + $subtotal;
-
-            $phaseData[] = [
-                'phase' => $phaseName,
-                'site_service_charge' => $site->service_charge,
-                'construction_total_amount' => $construction_total,
-                'square_footage_total_amount' => $square_total,
-                'daily_expenses_total_amount' => $expenses_total,
-                'daily_wagers_total_amount' => $wager_total,
-                'daily_wastas_total_amount' => $wasta_total,
-                'daily_labours_total_amount' => $labour_total,
-                'total_payment_amount' => $payments_total,
-                'phase_total' => $subtotal,
-                'phase_total_with_service_charge' => $withService,
-                'construction_material_billings' => $records->where('category', 'Material'),
-                'square_footage_bills' => $records->where('category', 'SQFT'),
-                'daily_expenses' => $records->where('category', 'Expense'),
-                'daily_wagers' => $records->where('category', 'Wager'),
-                'daily_wastas' => $records->where('category', 'Wasta'),
-                'daily_labours' => $records->where('category', 'Labour'),
-            ];
-        }
-
-        // Calculate grand totals
-        $grandTotal = collect($phaseData)->sum('phase_total_with_service_charge');
-        $totalSupplierPaymentAmount = $ledgers->sum(fn($p) => floatval($p['credit'] ?? 0));
-
-        $balances = $this->dataService->calculateAllBalances($ledgers);
-
-
-        $withoutServiceCharge = $balances['without_service_charge'];
-        $withServiceCharge = $balances['with_service_charge'];
-
-        // Prepare header data for PDF
-        $data = [
-            'site_name' => $site->site_name,
-            'contact_no' => $site->contact_no,
-            'service_charge' => $site->service_charge,
-            'balance' => $grandTotal - $totalSupplierPaymentAmount,
-            'site_owner_name' => $site->site_owner_name,
-            'location' => $site->location,
-            'total_balance' => $withServiceCharge['balance'],
-            'total_due' => $withServiceCharge['due'],
-            'effective_balance' => $withoutServiceCharge['due'],
-            'total_paid' => $withServiceCharge['paid'],
-        ];
-
-
-        $headers = [
-            'box1' => 'Site Name',
-            'box2' => 'Contact No',
-            'box3' => 'Service Charge',
-            'box4' => 'Balance',
-            'box5' => 'Site Owner',
-            'box6' => 'Location',
-            'box7' => 'Debit',
-            'box8' => 'Credit',
-        ];
-
-
-        // Generate PDF
-        $pdf = new PDF();
-        $pdf->AliasNbPages();
-        $pdf->AddPage();
-        $pdf->SetFont('Times', '', 12);
-        $pdf->SetTitle('Site Info');
-        $pdf->infoTable($headers, $data);
-        $pdf->siteTableData($phaseData);
-        $pdf->Output();
-        exit;
-    }
 
 
     // public function showSitePdf(string $id)
@@ -552,7 +564,7 @@ class PDFController extends Controller
             'wasta_attendance_count' => $wasta_attendance_count,
             'labour_attendance_count' => $labour_attendance_count,
             'total_amount' =>
-            $phase->constructionMaterialBillings->sum('amount') +
+                $phase->constructionMaterialBillings->sum('amount') +
                 $phase->dailyExpenses->sum('price') +
                 $daily_wastas_total_amount +
                 $daily_labours_total_amount +
@@ -585,9 +597,11 @@ class PDFController extends Controller
     {
 
 
-        $supplier = Supplier::with(['payments' => function ($q) {
-            $q->with(['site', 'supplier'])->where('verified_by_admin', 1);
-        }])->latest()->find(base64_decode($id));
+        $supplier = Supplier::with([
+            'payments' => function ($q) {
+                $q->with(['site', 'supplier'])->where('verified_by_admin', 1);
+            }
+        ])->latest()->find(base64_decode($id));
 
         $pdf = new PDF();
         $pdf->AliasNbPages();
@@ -636,7 +650,7 @@ class PDFController extends Controller
         $phase_id = $request->input('phase_id', 'all');
 
         // Call the service to get all data including wasta and labours
-        [$payments, $raw_materials, $squareFootageBills, $expenses,  $wastas, $labours] = $dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
@@ -653,7 +667,7 @@ class PDFController extends Controller
             $expenses,
             $wastas,
             $labours
-            
+
         )->sortByDesc(function ($d) {
             return $d['created_at'];
         });

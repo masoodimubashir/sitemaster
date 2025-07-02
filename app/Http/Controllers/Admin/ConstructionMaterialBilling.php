@@ -237,7 +237,8 @@ class ConstructionMaterialBilling extends Controller
                     'message' => 'Item Deleted Successfully'
                 ], 200);
             });
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        }  catch (\Exception $e) {
+            Log::error($e->getMessage());
             return response()->json(['error' => 'Something Went Wrong Try Again'], 500);
         }
     }
