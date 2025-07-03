@@ -15,57 +15,81 @@ class AttendanceSheetController extends Controller
 {
 
 
- public function index(Request $request)
-{
-    // Get month/year from request or use current
-    if ($request->filled('monthYear')) {
-        [$year, $month] = explode('-', $request->input('monthYear'));
-    } else {
-        $month = now()->month;
-        $year = now()->year;
-    }
+    public function index(Request $request)
+    {
+        if ($request->filled('monthYear')) {
+            [$year, $month] = explode('-', $request->input('monthYear'));
+        } else {
+            $month = now()->month;
+            $year = now()->year;
+        }
 
-    $wastasQuery = Wasta::with([
-        'attendances' => fn($query) => $query->whereMonth('attendance_date', $month)
-                                           ->whereYear('attendance_date', $year),
-        'labours.attendances' => fn($query) => $query->whereMonth('attendance_date', $month)
-                                                    ->whereYear('attendance_date', $year),
-        'phase.site' 
-    ]);
+        // Load Wastas with Attendance + Labours
+        $wastasQuery = Wasta::with([
+            'attendances' => function ($query) use ($month, $year) {
+                $query->whereMonth('attendance_date', $month)
+                    ->whereYear('attendance_date', $year);
+            },
+            'labours.attendances' => function ($query) use ($month, $year) {
+                $query->whereMonth('attendance_date', $month)
+                    ->whereYear('attendance_date', $year);
+            },
+            'phase.site'
+        ]);
 
-    // Apply site filter if provided
-    if ($request->filled('site_id')) {
-        $wastasQuery->whereHas('phase', function($query) use ($request) {
-            $query->where('site_id', $request->input('site_id'));
+        // Filter by site if selected
+        if ($request->filled('site_id')) {
+            $wastasQuery->whereHas('phase.site', function ($query) use ($request) {
+                $query->where('id', $request->input('site_id'));
+            });
+        }
+
+        // Final fetch and calculation
+        $wastas = $wastasQuery->get()->map(function ($wasta) {
+            $wasta->present_days = $wasta->attendances->where('is_present', true)->count();
+            $wasta->total_amount = $wasta->present_days * $wasta->price;
+
+            $wasta->labours->each(function ($labour) {
+                $labour->present_days = $labour->attendances->where('is_present', true)->count();
+                $labour->total_amount = $labour->present_days * $labour->price;
+            });
+
+            $wasta->labours_total_amount = $wasta->labours->sum('total_amount');
+            $wasta->combined_total = $wasta->total_amount + $wasta->labours_total_amount;
+
+            return $wasta;
         });
+
+        $daysInMonth = \Carbon\Carbon::create($year, $month)->daysInMonth;
+        $phases = Phase::with('site')->latest()->get();
+        $sites = Site::where('is_on_going', 1)->get();
+
+         // Calculate site totals
+        $siteTotal = [
+            'wasta_amount' => $wastas->sum('total_amount'),
+            'labour_amount' => $wastas->sum('labours_total_amount'),
+            'combined_total' => $wastas->sum('combined_total')
+        ];
+
+        return view('profile.partials.Admin.Ledgers.wager-attendance-sheet', [
+            'wastas' => $wastas,
+            'month' => $month,
+            'year' => $year,
+            'daysInMonth' => $daysInMonth,
+            'phases' => $phases,
+            'sites' => $sites,
+            'selectedSiteId' => $request->input('site_id'),
+            'siteTotal' => $siteTotal
+        ]);
     }
 
-    // Get filtered wastas
-    $wastas = $wastasQuery->get();
-
-    // Get phases and sites for filters
-    $phases = Phase::with('site')->latest()->get();
-    $sites = Site::where('is_on_going', 1)->get();
-
-    $daysInMonth = \Carbon\Carbon::create($year, $month)->daysInMonth;
-
-    return view('profile.partials.Admin.Ledgers.wager-attendance-sheet', [
-        'wastas' => $wastas,
-        'month' => $month,
-        'year' => $year,
-        'daysInMonth' => $daysInMonth,
-        'phases' => $phases,
-        'sites' => $sites,
-        'selectedSiteId' => $request->input('site_id') // Pass selected site ID to view
-    ]);
-}
 
     public function storeWastaAttendance(Request $request)
     {
 
         try {
 
-            $data = Validator::make($request->only('wasta_id',  'is_present', 'date'), [
+            $data = Validator::make($request->only('wasta_id', 'is_present', 'date'), [
                 'wasta_id' => 'required|exists:wastas,id',
                 'is_present' => 'required|boolean',
                 'date' => 'required|date'
@@ -83,7 +107,7 @@ class AttendanceSheetController extends Controller
                 'attendable_type' => 'App\Models\Wasta',
                 'attendable_id' => $wasta->id,
                 'is_present' => $data->validated()['is_present'],
-                'attendance_date' =>  now(),
+                'attendance_date' => now(),
             ]);
 
             return response()->json([
@@ -102,7 +126,7 @@ class AttendanceSheetController extends Controller
 
         try {
 
-            $data = Validator::make($request->only('labour_id',  'is_present', 'date'), [
+            $data = Validator::make($request->only('labour_id', 'is_present', 'date'), [
                 'labour_id' => 'required|exists:labours,id',
                 'is_present' => 'required|boolean',
                 'date' => 'required|date'
@@ -120,7 +144,7 @@ class AttendanceSheetController extends Controller
                 'attendable_type' => 'App\Models\Wasta',
                 'attendable_id' => $labour->id,
                 'is_present' => $data->validated()['is_present'],
-                'attendance_date' =>  now(),
+                'attendance_date' => now(),
             ]);
 
             return response()->json([
@@ -243,7 +267,6 @@ class AttendanceSheetController extends Controller
 
     public function showAttendanceBySite(Request $request, string $id)
     {
-
         $site = Site::find($id);
 
         if ($request->filled('monthYear')) {
@@ -261,16 +284,44 @@ class AttendanceSheetController extends Controller
             'labours.attendances' => function ($query) use ($month, $year) {
                 $query->whereMonth('attendance_date', $month)
                     ->whereYear('attendance_date', $year);
-            }
+            },
+            'phase'
         ])
             ->whereHas('phase.site', function ($query) use ($site) {
                 $query->where('id', $site->id);
             })
-            ->get();
+            ->get()
+            ->map(function ($wasta) use ($month, $year) {
+                // Calculate present days for wasta
+                $wasta->present_days = $wasta->attendances->where('is_present', true)->count();
+                $wasta->total_amount = $wasta->present_days * $wasta->price;
+
+                // Calculate for each labour
+                $wasta->labours->each(function ($labour) use ($month, $year) {
+                    $labour->present_days = $labour->attendances->where('is_present', true)->count();
+                    $labour->total_amount = $labour->present_days * $labour->price;
+                });
+
+                $wasta->labours_total_amount = $wasta->labours->sum('total_amount');
+                $wasta->combined_total = $wasta->total_amount + $wasta->labours_total_amount;
+
+                return $wasta;
+            });
+
+
 
         $daysInMonth = \Carbon\Carbon::create($year, $month)->daysInMonth;
-
         $phases = Phase::where('site_id', $site->id)->orderBy('phase_name')->get();
+
+
+
+        // Calculate site totals
+        $siteTotal = [
+            'wasta_amount' => $wastas->sum('total_amount'),
+            'labour_amount' => $wastas->sum('labours_total_amount'),
+            'combined_total' => $wastas->sum('combined_total')
+        ];
+
 
         return view('profile.partials.Admin.Ledgers.site-wager-attendance-sheet', compact(
             'wastas',
@@ -278,7 +329,8 @@ class AttendanceSheetController extends Controller
             'year',
             'daysInMonth',
             'site',
-            'phases'
+            'phases',
+            'siteTotal'
         ));
     }
 }

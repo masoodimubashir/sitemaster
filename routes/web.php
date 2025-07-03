@@ -29,6 +29,7 @@ use App\Http\Controllers\Client\ClientDashboardController;
 use App\Http\Controllers\Client\ClientLedgerController;
 use App\Http\Controllers\Client\ClientLogoutController;
 use App\Http\Controllers\Client\GenerateReportController;
+use App\Http\Controllers\QueryController;
 use App\Http\Controllers\User\MarkNotificationAsReadController;
 use App\Http\Controllers\User\UserConstuctionMaterialBuildingsController;
 use App\Http\Controllers\User\UserDailyExpensesController;
@@ -51,7 +52,7 @@ Route::get('/', function () {
 });
 
 
-Route::middleware(['auth'])->group(function () {});
+Route::middleware(['auth'])->group(function () { });
 
 Route::get('/client-login', [ClientAuthController::class, 'login'])->name('client.login');
 Route::post('/client-login', [ClientAuthController::class, 'store'])->name('client.store');
@@ -118,6 +119,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     Route::get('sites/payments/{id}', [PaymentSiteController::class, 'showPayment']);
     Route::post('sites/payments', [PaymentSiteController::class, 'makePayment']);
+    Route::put('/sites/payments/{id}', [PaymentSiteController::class, 'updatePayment']);
 
     //  On Going Site Updated With This Route
     Route::post('sites/update-on-going/{id}', UpdateOnGoingController::class)->name('sites.update-on-going');
@@ -169,7 +171,10 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     // Verify Controllers For Pending Payments
     Route::get('/pay-verification', [PendingPaymentsVerifications::class, 'index']);
     Route::put('/verify-payments', [PendingPaymentsVerifications::class, 'verifyPayment']);
-    Route::get('/unverified-supplier-payments/{id}', UnverifiedSupplierPayments::class);
+    Route::get('/pay-verification/{id}/edit', [PendingPaymentsVerifications::class, 'edit']); // New route
+    Route::put('/pay-verification/{id}', [PendingPaymentsVerifications::class, 'update']); // New route
+    Route::delete('/pay-verification/{id}', [PendingPaymentsVerifications::class, 'destroy']); // New route
+
 
     // Verification Controller For Items
     Route::get('/item-verification', [ItemsVerificationController::class, 'index']);
@@ -225,12 +230,12 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
     // Square Footage Routes
     Route::post('/square-footage-bills', [UserSquareFootageBillsController::class, 'store']);
-    Route::get('/square-footage-bills/{id}/edit', [UserSquareFootageBillsController::class, 'edit']);
+    Route::get('/square-footage-bills/{id}', [UserSquareFootageBillsController::class, 'edit']);
     Route::put('/square-footage-bills/{id}', [UserSquareFootageBillsController::class, 'update']);
 
     // Expenses Routes
     Route::post('/daily-expenses', [UserDailyExpensesController::class, 'store']);
-    Route::get('/daily-expenses/{id}/edit', [UserDailyExpensesController::class, 'edit']);
+    Route::get('/daily-expenses/{id}', [UserDailyExpensesController::class, 'edit']);
     Route::put('/daily-expenses/{id}', [UserDailyExpensesController::class, 'update']);
 
     // Daily Wager Routes
@@ -260,6 +265,7 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     // User Payments Controllers
     Route::resource('/payments', PaymentsController::class);
 
+
     // Notification Routes
     Route::get('/markAllAsRead', [MarkNotificationAsReadController::class, 'markAllNotificationAsRead'])
         ->name('user.markAllAsRead');
@@ -287,12 +293,20 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
     Route::get('/item-verification', [ItemsVerificationController::class, 'index']);
 
-    
+
+    Route::get('/pay-verification', [PendingPaymentsVerifications::class, 'index']);
+    Route::post('/pay-verification/upload-screenshot', [PendingPaymentsVerifications::class, 'uploadScreenshot'])
+        ->name('payments.upload-screenshot');
+
+
+    Route::post('/site/query', [QueryController::class, 'storeSiteQuery']);
+
+
 });
 
 
 // Routes accessible to both admin and site engineers
-Route::middleware(['isAdmin', 'isUser'])->group(function () {});
+Route::middleware(['isAdmin', 'isUser'])->group(function () { });
 
 
 require __DIR__ . '/auth.php';

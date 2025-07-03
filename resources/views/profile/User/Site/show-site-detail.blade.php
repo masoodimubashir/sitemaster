@@ -439,17 +439,35 @@
                                     <thead class="bg-light">
                                         <tr>
                                             <th>Date</th>
+                                            <th>Bill Proof</th>
                                             <th>Description</th>
                                             <th>Supplier</th>
                                             <th class="text-end">Amount</th>
                                             <th class="text-end">Total (with SC)</th>
-                                            <th>Action</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @forelse ($table['data'] as $entry)
                                             <tr>
                                                 <td>{{ \Carbon\Carbon::parse($entry['created_at'])->format('d-M-Y') }}
+                                                </td>
+                                                  <td>
+                                                    @if ($entry['image'])
+                                                        <div class="position-relative d-inline-block">
+                                                            <img src="{{ asset('storage/' . $entry['image']) }}"
+                                                                alt=""
+                                                                style="max-width: 100px; max-height: 100px;">
+
+                                                            <a href="{{ asset('storage/' . $entry['image']) }}"
+                                                                download
+                                                                class="position-absolute start-0 end-0 bottom-0 text-center text-white bg-dark bg-opacity-70 p-1 text-decoration-none opacity-0 hover-opacity-100 transition-all">
+                                                                <i class="fas fa-download"></i>
+                                                            </a>
+                                                        </div>
+                                                    @else
+                                                        Bill Not Available
+                                                    @endif
                                                 </td>
                                                 <td>{{ $entry['description'] ?? '-' }}</td>
                                                 <td>{{ $entry['supplier'] ?? '-' }}</td>
@@ -460,45 +478,27 @@
                                                 <td class="text-nowrap">
                                                     @switch($entry['category'])
                                                         @case('Material')
-                                                            <a href="{{ route('construction-material-billings.edit', [base64_encode($entry['id'])]) }}"
+                                                            <a href="{{ url('/user/construction-material-billings/'. base64_encode($entry['id'])) }}"
                                                                 class="text-primary me-2" title="Edit">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
-                                                            <a href="#" class="text-danger delete-btn"
-                                                                data-id="{{ base64_encode($entry['id']) }}"
-                                                                data-type="Materials"
-                                                                data-url="{{ route('construction-material-billings.destroy', [$entry['id']]) }}"
-                                                                title="Delete">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </a>
+                                                           
                                                         @break
 
                                                         @case('SQFT')
-                                                            <a href="{{ route('square-footage-bills.edit', [base64_encode($entry['id'])]) }}"
-                                                                class="text-success me-2" title="Edit">
+                                                            <a href="{{ url('/user/square-footage-bills/' . base64_encode($entry['id'])) }}"
+                                                                class="text-primary me-2" title="Edit">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
-                                                            <a href="#" class="text-danger delete-btn"
-                                                                data-id="{{ base64_encode($entry['id']) }}"
-                                                                data-type="Contractor"
-                                                                data-url="{{ route('square-footage-bills.destroy', [$entry['id']]) }}"
-                                                                title="Delete">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </a>
+                                                           
                                                         @break
 
                                                         @case('Expense')
-                                                            <a href="{{ route('daily-expenses.edit', [base64_encode($entry['id'])]) }}"
-                                                                class="text-warning me-2" title="Edit">
+                                                            <a href="{{ url('/user/daily-expenses/' . base64_encode($entry['id'])) }}"
+                                                                class="text-primary me-2" title="Edit">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
-                                                            <a href="#" class="text-danger delete-btn"
-                                                                data-id="{{ base64_encode($entry['id']) }}"
-                                                                data-type="Expenses"
-                                                                data-url="{{ route('daily-expenses.destroy', [$entry['id']]) }}"
-                                                                title="Delete">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </a>
+                                                           
                                                         @break
                                                     @endswitch
                                                 </td>
@@ -518,12 +518,11 @@
                     @endforeach
                 </div>
             @endforeach
-
-    @else
-        <div class="minimal-card p-5 text-center">
-            <i class="fas fa-info-circle" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
-            <h4 style="color: #6b7280; font-weight: 500;">No phase data available for this site.</h4>
-        </div>
+        @else
+            <div class="minimal-card p-5 text-center">
+                <i class="fas fa-info-circle" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+                <h4 style="color: #6b7280; font-weight: 500;">No phase data available for this site.</h4>
+            </div>
         @endif
 
 

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('square_footage_bills', function (Blueprint $table) {
             $table->id();
-            $table->string('image_path');
+            $table->string('image_path')->nullable();
             $table->string('wager_name');
             $table->decimal('price');
             $table->enum('type', ['per_sqr_ft', 'per_unit', 'full_contract']);

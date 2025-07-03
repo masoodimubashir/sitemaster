@@ -146,6 +146,7 @@ class DataService
                 'phase' => $pay->phase->phase_name ?? null,
                 'phase_id' => $pay->phase_id ?? null,
                 'created_at' => $pay->created_at,
+                'image' => $pay->screenshot ?? null,
             ];
         });
     }
@@ -175,6 +176,8 @@ class DataService
                 'phase_id' => $material->phase_id ?? null,
                 'created_at' => $material->created_at,
                 'service_charge_amount' => $serviceCharge,
+                'image' => $material->item_image_path ?? null,
+
 
             ];
         });
@@ -206,6 +209,7 @@ class DataService
                 'phase_id' => $bill->phase_id ?? null,
                 'created_at' => $bill->created_at,
                 'service_charge_amount' => $serviceCharge,
+                'image' => $bill->image_path ?? null,
 
             ];
         });
@@ -236,6 +240,7 @@ class DataService
                 'phase_id' => $expense->phase_id ?? null,
                 'created_at' => $expense->created_at,
                 'service_charge_amount' => $serviceCharge,
+                'image' => $expense->bill_photo ?? null,
 
             ];
         });
@@ -269,6 +274,7 @@ class DataService
                 'total_amount_with_service_charge' => $totalAmount + $serviceCharge,
                 'service_charge_amount' => $serviceCharge,
                 'service_charge_percentage' => $wasta->site->service_charge ?? 0,
+                'image' => null,
             ];
         });
     }
@@ -299,6 +305,8 @@ class DataService
                 'created_at' => $labour->created_at,
                 'total_amount_with_service_charge' => $totalAmount + $serviceCharge,
                 'service_charge_amount' => $serviceCharge,
+                'image' =>  null,
+
             ];
         });
     }

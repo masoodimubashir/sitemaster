@@ -53,10 +53,6 @@
                             <i class="fas fa-map-marker-alt me-2 text-info"></i>
                             Site Management
                         </h5>
-                        <a href="{{ url('user/sites/create') }}" class="btn btn-sm btn-success">
-                            <i class="fas fa-plus me-1"></i>
-                            Create Site
-                        </a>
                     </div>
                 </div>
                 

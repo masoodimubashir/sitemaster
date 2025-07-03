@@ -45,5 +45,13 @@
                 <span class="menu-title">Verify Items</span>
             </a>
         </li>
+
+          <!-- Verify Payments -->
+        <li class="nav-item">
+            <a class="nav-link {{ request()->is('user/pay-verification*') ? 'active' : '' }}" href="{{ url('user/pay-verification') }}">
+                <i class="fas fa-file-invoice-dollar menu-icon"></i>
+                <span class="menu-title">Verify Payments</span>
+            </a>
+        </li>
     </ul>
 </nav>

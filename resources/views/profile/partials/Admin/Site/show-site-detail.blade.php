@@ -3,12 +3,15 @@
     <x-breadcrumb :names="['Sites', $site->site_name, ' Back']" :urls="['/admin/sites', '/admin/sites/' . base64_encode($site->id), '/admin/sites/' . base64_encode($site->id)]" />
 
     <style>
-        body {
-            background-color: #f8fafc;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            color: #374151;
-            line-height: 1.6;
+        .hover-opacity-100:hover {
+            opacity: 1 !important;
         }
+
+        .transition-all {
+            transition: all 0.3s ease;
+        }
+
+      
 
         .minimal-card {
             background: white;
@@ -439,6 +442,7 @@
                                     <thead class="bg-light">
                                         <tr>
                                             <th>Date</th>
+                                            <th>Bill Proof</th>
                                             <th>Description</th>
                                             <th>Supplier</th>
                                             <th class="text-end">Amount</th>
@@ -449,8 +453,28 @@
                                     <tbody>
                                         @forelse ($table['data'] as $entry)
                                             <tr>
-                                                <td>{{ \Carbon\Carbon::parse($entry['created_at'])->format('d-M-Y') }}
+                                                <td>
+                                                    {{ \Carbon\Carbon::parse($entry['created_at'])->format('d-M-Y') }}
                                                 </td>
+                                                <td>
+                                                    @if ($entry['image'])
+                                                        <div class="position-relative d-inline-block">
+                                                            <img src="{{ asset('storage/' . $entry['image']) }}"
+                                                                alt=""
+                                                                style="max-width: 100px; max-height: 100px;">
+
+                                                            <a href="{{ asset('storage/' . $entry['image']) }}"
+                                                                download
+                                                                class="position-absolute start-0 end-0 bottom-0 text-center text-white bg-dark bg-opacity-70 p-1 text-decoration-none opacity-0 hover-opacity-100 transition-all">
+                                                                <i class="fas fa-download"></i>
+                                                            </a>
+                                                        </div>
+                                                    @else
+                                                        Bill Not Available
+                                                    @endif
+                                                </td>
+
+
                                                 <td>{{ $entry['description'] ?? '-' }}</td>
                                                 <td>{{ $entry['supplier'] ?? '-' }}</td>
                                                 <td class="text-end">₹{{ number_format($entry['debit'], 2) }}</td>
@@ -475,7 +499,7 @@
 
                                                         @case('SQFT')
                                                             <a href="{{ route('square-footage-bills.edit', [base64_encode($entry['id'])]) }}"
-                                                                class="text-success me-2" title="Edit">
+                                                                class="text-primary me-2" title="Edit">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
                                                             <a href="#" class="text-danger delete-btn"
@@ -489,7 +513,7 @@
 
                                                         @case('Expense')
                                                             <a href="{{ route('daily-expenses.edit', [base64_encode($entry['id'])]) }}"
-                                                                class="text-warning me-2" title="Edit">
+                                                                class="text-primary me-2" title="Edit">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
                                                             <a href="#" class="text-danger delete-btn"
@@ -518,12 +542,11 @@
                     @endforeach
                 </div>
             @endforeach
-
-    @else
-        <div class="minimal-card p-5 text-center">
-            <i class="fas fa-info-circle" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
-            <h4 style="color: #6b7280; font-weight: 500;">No phase data available for this site.</h4>
-        </div>
+        @else
+            <div class="minimal-card p-5 text-center">
+                <i class="fas fa-info-circle" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+                <h4 style="color: #6b7280; font-weight: 500;">No phase data available for this site.</h4>
+            </div>
         @endif
 
 

@@ -11,7 +11,7 @@ class ConstructionMaterialBilling extends Model
 {
 
     protected $fillable = [
-        'image',
+        'item_image_path',
         'amount',
         'item_name',
         'verified_by_admin',

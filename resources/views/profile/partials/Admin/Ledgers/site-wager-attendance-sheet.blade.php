@@ -4,13 +4,7 @@
         $month = now()->month;
         $year = now()->year;
         $daysInMonth = \Carbon\Carbon::create($year, $month, 1)->daysInMonth;
-    @endphp
-
-    @php
         $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
-    @endphp
-
-    @php
         $currentDate = \Carbon\Carbon::create($year, $month, 1);
         $prevMonth = $currentDate->copy()->subMonth();
         $nextMonth = $currentDate->copy()->addMonth();
@@ -133,249 +127,193 @@
 
 
 
-    <div class="attendance-dashboard border-0">
-
-
-        <!-- Card Header -->
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 p-3">
-            <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-calendar-check text-info"></i>
-                <h5 class="mb-0">Attendance Summary</h5>
-                <span class="badge bg-light text-dark ms-2">
+    <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+            <div>
+                <h4 class="mb-1"><i class="fas fa-calendar-check text-info me-2"></i>Attendance Summary</h4>
+                <span class="badge bg-light text-dark">
                     {{ \Carbon\Carbon::create($year, $month, 1)->format('F Y') }}
                 </span>
             </div>
-            <!-- Compact Filters with Auto-Submit -->
+
             <form method="GET" action="{{ url($user . '/attendance/site/show/' . $site->id) }}"
-                class="d-flex flex-wrap gap-2" id="attendanceFilterForm">
-                <div class="input-group input-group-sm" style="width: 150px;">
+                class="mt-3 mt-md-0 d-flex align-items-center gap-2" id="siteAttendanceFilterForm">
+                <div class="input-group" style="width: 200px;">
                     <input type="month" name="monthYear" class="form-control form-control-sm"
                         value="{{ request('monthYear', $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT)) }}"
-                        id="monthYearFilter">
+                        onchange="this.form.submit()">
                 </div>
-
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetSiteFilters()">
+                    <i class="fas fa-undo"></i>
+                </button>
             </form>
-
-
         </div>
 
-        <!-- Summary Stats -->
-        <div>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="card  border-0 h-100">
-                        <div class="card-body py-2">
-                            <h6 class="text-muted mb-1">Total Wastas</h6>
-                            <h4 class="mb-0">{{ $wastas->count() }}</h4>
+
+
+        <!-- Summary Cards -->
+        <div class="row g-3">
+            @php
+                $totalLabours = $wastas->sum(fn($w) => $w->labours->count());
+            @endphp
+
+            <div class="row g-3 mb-4">
+                <!-- Total Wastas -->
+                <div class="col-6 col-md-3">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body d-flex align-items-center gap-3 py-3">
+                            <i class="fas fa-users text-primary fs-3"></i>
+                            <div>
+                                <div class="text-muted small">Total Wastas</div>
+                                <h5 class="mb-0">{{ $wastas->count() }}</h5>
+                                <small class="text-muted">₹{{ number_format($siteTotal['wasta_amount'], 2) }}</small>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card  border-0 h-100">
-                        <div class="card-body py-2">
-                            <h6 class="text-muted mb-1">Total Labours</h6>
-                            <h4 class="mb-0">{{ $wastas->sum(function ($wasta) {return $wasta->labours->count();}) }}
-                            </h4>
+
+                <!-- Total Labours -->
+                <div class="col-6 col-md-3">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body d-flex align-items-center gap-3 py-3">
+                            <i class="fas fa-hard-hat text-info fs-3"></i>
+                            <div>
+                                <div class="text-muted small">Total Labours</div>
+                                <h5 class="mb-0">
+                                    {{ $wastas->sum(function ($wasta) {return $wasta->labours->count();}) }}
+                                </h5>
+                                <small class="text-muted">₹{{ number_format($siteTotal['labour_amount'], 2) }}</small>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3">
-                    <div class="card  border-0 h-100">
-                        <div class="card-body py-2">
-                            <h6 class="text-muted mb-1">Present Today</h6>
-                            <h4 class="mb-0">
-                                @php
-                                    $today = now()->format('Y-m-d');
-                                    $presentCount = 0;
-                                    foreach ($wastas as $wasta) {
-                                        $presentCount += $wasta->attendances
-                                            ->where('attendance_date', $today)
-                                            ->where('is_present', true)
-                                            ->count();
-                                        foreach ($wasta->labours as $labour) {
-                                            $presentCount += $labour->attendances
-                                                ->where('attendance_date', $today)
-                                                ->where('is_present', true)
-                                                ->count();
-                                        }
-                                    }
-                                    echo $presentCount;
-                                @endphp
-                            </h4>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="border-0 h-100">
-                        <div class="card-body py-2">
-                            <h6 class="text-muted mb-3">Actions</h6>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-success" data-bs-toggle="modal"
-                                    data-bs-target="#modal-create-wasta">
-                                    <i class="fas fa-plus"></i> Wasta
-                                </button>
-                                <button class="btn btn-success" data-bs-toggle="modal"
-                                    data-bs-target="#attendanceModal">
-                                    <i class="fas fa-plus"></i> Labour
-                                </button>
+
+
+
+                <!-- Monthly Total -->
+                <div class="col-6 col-md-3">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body d-flex align-items-center gap-3 py-3">
+                            <i class="fas fa-wallet text-dark fs-3"></i>
+                            <div>
+                                <div class="text-muted small">Monthly Total</div>
+                                <h5 class="mb-0">₹{{ number_format($siteTotal['combined_total'], 2) }}</h5>
+                                <small class="text-muted">Combined</small>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
 
-        <!-- Compact Calendar View -->
-        <div class="card-body pt-3">
-            <div class="table-responsive">
-                <table class="table table-sm mb-0">
-                    <thead class="table-light sticky-top">
-                        <tr>
-                            <th class="sticky-start bg-white" style="min-width: 180px; z-index: 3;">Days</th>
-                            @for ($day = 1; $day <= $daysInMonth; $day++)
-                                @php
-                                    $date = \Carbon\Carbon::create($year, $month, $day);
-                                    $isWeekend = $date->isWeekend();
-                                    $isToday = $date->isToday();
-                                    $classes = [];
-                                    if ($isToday) {
-                                        $classes[] = 'today-column';
-                                    }
-                                    if ($isWeekend) {
-                                        $classes[] = 'weekend-column';
-                                    }
-                                    if ($day > 20) {
-                                        $classes[] = 'text-truncate';
-                                    }
-                                @endphp
-                                <th class="{{ implode(' ', $classes) }}" style="min-width: 30px; max-width: 30px;">
-                                    <div class="d-flex flex-column align-items-center">
-                                        <small class="fw-normal mb-2">{{ $date->format('D')[0] }}</small>
-                                        <span>{{ $day }}</span>
-                                    </div>
-                                </th>
-                            @endfor
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($wastas as $index => $wasta)
-                            <!-- Wasta Row -->
-                            <tr class="" data-bs-toggle="collapse" data-bs-target="#collapse-{{ $index }}"
-                                style="cursor: pointer;">
-                                <td class="sticky-start ps-3">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <strong>{{ $wasta->wasta_name }}</strong>
-                                            <div class="small text-muted">{{ $wasta->labours->count() }} labours</div>
-                                        </div>
-                                        @if ($user === 'admin')
-                                            <button class="btn btn-xs btn-outline-success wasta-edit-btn"
-                                                data-wasta='@json($wasta)'>
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                        @endif
-                                    </div>
-                                </td>
-                                @for ($day = 1; $day <= $daysInMonth; $day++)
-                                    @php
-                                        $date = \Carbon\Carbon::create($year, $month, $day);
-                                        $dateFormatted = $date->format('Y-m-d');
-                                        $attendance = $wasta->attendances->firstWhere(
-                                            'attendance_date',
-                                            $dateFormatted,
-                                        );
-                                        $isToday = $date->isToday();
-                                        $isPast = $date->lt(\Carbon\Carbon::today());
-                                    @endphp
-                                    <td
-                                        class="{{ $date->isWeekend() ? 'weekend-column' : '' }} {{ $isToday ? 'today-column' : '' }}">
-                                        @if ($attendance && $attendance->is_present)
-                                            <i class="fas fa-check text-success"></i>
-                                        @elseif ($isToday)
-                                            <input type="checkbox" class="form-check-input wasta-attendance-checkbox"
-                                                data-wasta-id="{{ $wasta->id }}" data-date="{{ $dateFormatted }}">
-                                        @elseif ($isPast)
-                                            <i class="fas fa-times text-danger"></i>
-                                        @else
-                                            <span class="text-muted">-</span>
-                                        @endif
-                                    </td>
-                                @endfor
-                            </tr>
-
-                            <!-- Labour Rows (Collapsed) -->
-                            @foreach ($wasta->labours as $labour)
-                                <tr class="collapse" id="collapse-{{ $index }}">
-                                    <td class="sticky-start ps-4 bg-white">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <strong>{{ $labour->labour_name }}</strong>
-                                                <div class="small text-muted">{{ $labour->position }}</div>
-                                                @if ($labour->site)
-                                                    <span
-                                                        class="badge bg-info bg-opacity-10 text-info">{{ $labour->site->site_name }}</span>
-                                                @endif
-                                            </div>
-                                            @if ($user === 'admin')
-                                                <button class="btn btn-xs btn-outline-success labour-edit-btn"
-                                                    data-labour='@json($labour)'>
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    @for ($day = 1; $day <= $daysInMonth; $day++)
-                                        @php
-                                            $date = \Carbon\Carbon::create($year, $month, $day);
-                                            $dateFormatted = $date->format('Y-m-d');
-                                            $attendance = $labour->attendances->firstWhere(
-                                                'attendance_date',
-                                                $dateFormatted,
-                                            );
-                                            $isToday = $date->isToday();
-                                            $isPast = $date->lt(\Carbon\Carbon::today());
-                                        @endphp
-                                        <td
-                                            class="{{ $date->isWeekend() ? 'weekend-column' : '' }} {{ $isToday ? 'today-column' : '' }}">
-                                            @if ($attendance && $attendance->is_present)
-                                                <i class="fas fa-check text-success"></i>
-                                            @elseif ($isToday)
-                                                <input type="checkbox"
-                                                    class="form-check-input labour-attendance-checkbox"
-                                                    data-labour-id="{{ $labour->id }}"
-                                                    data-date="{{ $dateFormatted }}">
-                                            @elseif ($isPast)
-                                                <i class="fas fa-times text-danger"></i>
-                                            @else
-                                                <span class="text-muted">-</span>
-                                            @endif
-                                        </td>
-                                    @endfor
-                                </tr>
-                            @endforeach
-                        @endforeach
-                    </tbody>
-                </table>
+        <!-- Actions -->
+        <div class="d-flex justify-content-between align-items-center my-4">
+            <div class="btn-group">
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modal-create-wasta">
+                    <i class="fas fa-plus me-1"></i> Add Wasta
+                </button>
+                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#attendanceModal">
+                    <i class="fas fa-plus me-1"></i> Add Labour
+                </button>
             </div>
         </div>
 
-        <!-- Pagination and Date Navigation -->
-        <div class="card-footer bg-white d-flex justify-content-between align-items-center p-3">
-            <small class="text-muted">
-                Showing {{ $wastas->count() }} wastas with
-                {{ $wastas->sum(function ($wasta) {return $wasta->labours->count();}) }} labours
-            </small>
-            <div class="btn-group">
-                <a href="?monthYear={{ $prevMonth->format('Y-m') }}" class="btn btn-sm btn-outline-secondary">
-                    <i class="fas fa-chevron-left"></i> Prev
-                </a>
+        <!-- Tabs: Summary View | Calendar View -->
+        <ul class="nav nav-tabs mb-3" id="attendanceTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#summaryTab">Summary View</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#calendarTab">Calendar View</button>
+            </li>
+        </ul>
 
-                <a href="?monthYear={{ $nextMonth->format('Y-m') }}" class="btn btn-sm btn-outline-secondary">
-                    Next <i class="fas fa-chevron-right"></i>
-                </a>
+        <div class="tab-content">
+            <!-- Summary Tab -->
+            <div class="tab-pane fade show active" id="summaryTab">
+                <div class="table-responsive border rounded">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th style="min-width: 220px;">Name</th>
+                                <th>Type</th>
+                                <th>Phase</th>
+                                <th>Days Present</th>
+                                <th>Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($wastas as $wasta)
+                                <tr>
+                                    <td><strong>{{ $wasta->wasta_name }}</strong></td>
+                                    <td><span class="badge bg-primary">Wasta</span></td>
+                                    <td>{{ $wasta->phase->phase_name ?? '—' }}</td>
+                                    <td>{{ $wasta->present_days }}/{{ $daysInMonth }}</td>
+                                    <td>₹{{ number_format($wasta->total_amount, 2) }}</td>
+                                </tr>
+                                @foreach ($wasta->labours as $labour)
+                                    <tr>
+                                        <td class="ps-4">{{ $labour->labour_name }}</td>
+                                        <td><span class="badge bg-info">Labour</span></td>
+                                        <td>—</td>
+                                        <td>{{ $labour->present_days }}/{{ $daysInMonth }}</td>
+                                        <td>₹{{ number_format($labour->total_amount, 2) }}</td>
+                                    </tr>
+                                @endforeach
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Calendar Tab -->
+            <div class="tab-pane fade" id="calendarTab">
+                <div class="table-responsive border rounded mt-3">
+                    <table class="table table-bordered text-center table-sm">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th style="min-width: 200px;">Name</th>
+                                @for ($d = 1; $d <= $daysInMonth; $d++)
+                                    <th style="width: 28px;">{{ $d }}</th>
+                                @endfor
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($wastas as $wasta)
+                                <tr>
+                                    <td class="text-start fw-bold">{{ $wasta->wasta_name }}</td>
+                                    @for ($day = 1; $day <= $daysInMonth; $day++)
+                                        @php
+                                            $date = \Carbon\Carbon::create($year, $month, $day)->format('Y-m-d');
+                                            $present = $wasta->attendances->firstWhere('attendance_date', $date)
+                                                ?->is_present;
+                                        @endphp
+                                        <td>{!! $present ? '<i class="fas fa-check text-success"></i>' : '—' !!}</td>
+                                    @endfor
+                                </tr>
+                                @foreach ($wasta->labours as $labour)
+                                    <tr>
+                                        <td class="ps-4">{{ $labour->labour_name }}</td>
+                                        @for ($day = 1; $day <= $daysInMonth; $day++)
+                                            @php
+                                                $date = \Carbon\Carbon::create($year, $month, $day)->format('Y-m-d');
+                                                $present = $labour->attendances->firstWhere('attendance_date', $date)
+                                                    ?->is_present;
+                                            @endphp
+                                            <td>{!! $present ? '<i class="fas fa-check text-success"></i>' : '—' !!}</td>
+                                        @endfor
+                                    </tr>
+                                @endforeach
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
+
 
 
 
@@ -762,6 +700,17 @@
                     document.getElementById('attendanceFilterForm').submit();
                 });
             });
+        </script>
+
+        <script>
+            function resetSiteFilters() {
+                const form = document.getElementById('siteAttendanceFilterForm');
+                const now = new Date();
+                const currentMonth = now.getMonth() + 1;
+                const monthStr = currentMonth < 10 ? '0' + currentMonth : currentMonth;
+                form.querySelector('input[name="monthYear"]').value = `${now.getFullYear()}-${monthStr}`;
+                form.submit();
+            }
         </script>
     @endpush
 

@@ -233,6 +233,21 @@
                     </a>
                 </li>
 
+                <li>
+                    <a class="dropdown-item" href="{{ url('user/sites/payments', [$id]) }}">
+                        <i class="fas fa-list me-2"></i>
+                        View Payments
+                    </a>
+                </li>
+
+
+                <li>
+                    <a class="dropdown-item" href="#query" data-bs-toggle="modal" role="button">
+                        <i class="fas fa-list me-2"></i>
+                        Add Query
+                    </a>
+                </li>
+
 
             </ul>
 
@@ -445,6 +460,35 @@
 
 
     {{-- ------------------------------------------------------- All The Models Are Here ----------------------------------------------------------- --}}
+
+    <div id="query" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
+        tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Send Query</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form enctype="multipart/form-data" class="forms-sample query-form" id="queryForm">
+                        @csrf
+                        <input type="hidden" name="site_id" value="{{ $site->id }}">
+
+                        <div class="form-group mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" name="message" id="message" required></textarea>
+                            <div class="invalid-feedback message-error"></div>
+                        </div>
+
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="submitQuery">Send Query</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 
@@ -746,7 +790,8 @@
                                 style="cursor: pointer">
                                 <option value="">Select Supplier</option>
                                 @foreach ($suppliers as $supplier)
-                                    <option value="{{ $supplier['supplier_id'] }}">{{ $supplier['supplier_name'] }}
+                                    <option value="{{ $supplier['supplier_id'] }}">
+                                        {{ $supplier['supplier_name'] }}
                                     </option>
                                 @endforeach
                             </select>
@@ -802,6 +847,83 @@
         $(document).ready(function() {
 
 
+            $('#submitQuery').on('click', function(e) {
+                e.preventDefault();
+                const form = $('#queryForm');
+                const formData = new FormData(form[0]);
+                const submitBtn = $(this);
+                const messageContainer = $('#messageContainer');
+
+                // Reset error messages
+                form.find('.is-invalid').removeClass('is-invalid');
+                form.find('.invalid-feedback').text('');
+                messageContainer.empty();
+
+                // Add loading state
+                submitBtn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sending...'
+                );
+
+                $.ajax({
+                    url: '/user/site/query',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        // Show success message
+                        messageContainer.html(`
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <div>${response.message}</div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `);
+
+                        // Reset form and close modal
+                        form[0].reset();
+                        $('#query').modal('hide');
+
+                        location.reload();
+                    },
+                    error: function(xhr) {
+                        if (xhr.status === 422) {
+                            // Validation errors
+                            const errors = xhr.responseJSON.errors;
+                            for (const field in errors) {
+                                const input = form.find(`[name="${field}"]`);
+                                const errorContainer = form.find(`.${field}-error`);
+
+                                input.addClass('is-invalid');
+                                errorContainer.text(errors[field][0]);
+                            }
+                        } else {
+                            // Other errors
+                            let errorMsg = 'Failed to send query';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+                            }
+                            messageContainer.html(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                <div>${errorMsg}</div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `);
+                        }
+                    },
+                    complete: function() {
+                        submitBtn.prop('disabled', false).text('Send Query');
+                    }
+                });
+            });
 
 
             //  Script For Construction Form

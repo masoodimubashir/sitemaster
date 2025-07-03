@@ -246,7 +246,7 @@
                             <div class="col-md-6">
                                 <select name="user_id" id="user_id" class="form-select text-black form-select-sm"
                                     style="cursor: pointer">
-                                    <option value="" selected>Select User</option>
+                                    <option value="" selected>Select Engineer</option>
                                     @foreach ($users as $user)
                                         <option value="{{ $user->id }}">{{ $user->name }}</option>
                                     @endforeach

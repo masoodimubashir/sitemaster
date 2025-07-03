@@ -223,13 +223,14 @@
                                 <i class="fas fa-exclamation-circle me-2"></i> Unverified Payments
                             </a>
                         </li>
+                        <li>
+                            <a class="dropdown-item"
+                                href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}">
+                                <i class="fas fa-file-invoice me-2"></i> Payment Report
+                            </a>
+                        </li>
                     @endif
-                    <li>
-                        <a class="dropdown-item"
-                            href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}">
-                            <i class="fas fa-file-invoice me-2"></i> Payment Report
-                        </a>
-                    </li>
+
                     <li>
                         <a class="dropdown-item"
                             href="{{ url($user . '/supplier/detail', ['id' => $data['supplier']->id]) }}">
@@ -427,7 +428,7 @@
 
                         {{-- Phase Name --}}
                         <div class="form-group">
-                            <input type="number" min="1" name="amount"/>
+                            <input type="number" min="1" name="amount" />
                             <label for="input" class="control-label">Amount</label><i class="bar"></i>
                             <x-input-error :messages="$errors->get('amount')" class="mt-2" />
                         </div>

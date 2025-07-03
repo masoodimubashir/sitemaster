@@ -221,13 +221,14 @@
                                 <i class="fas fa-exclamation-circle me-2"></i> Unverified Payments
                             </a>
                         </li>
-                    @endif
-                    <li>
+                         <li>
                         <a class="dropdown-item"
                             href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}">
                             <i class="fas fa-file-invoice me-2"></i> Payment Report
                         </a>
                     </li>
+                    @endif
+
                     <li>
                         <a class="dropdown-item"
                             href="{{ url($user . '/supplier/detail', ['id' => $data['supplier']->id]) }}">

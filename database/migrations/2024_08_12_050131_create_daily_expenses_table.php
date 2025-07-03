@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('item_name');
             $table->decimal('price');
-            $table->string('bill_photo');
+            $table->string('bill_photo')->nullable();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('phase_id')->constrained()->cascadeOnDelete();
             $table->foreignId('site_id')->constrained()->cascadeOnDelete();

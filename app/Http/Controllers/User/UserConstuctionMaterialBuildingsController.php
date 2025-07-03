@@ -8,8 +8,10 @@ use App\Models\User;
 use App\Models\ConstructionMaterialBilling as ModelsConstructionMaterialBilling;
 use App\Models\Supplier;
 use App\Notifications\VerificationNotification;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -27,7 +29,7 @@ class UserConstuctionMaterialBuildingsController extends Controller
             DB::beginTransaction();
 
             $validator = Validator::make($request->all(), [
-                'image' => 'required|mimes:png,jpg,webp|max:1024',
+                'image' => 'nullable|mimes:png,jpg,webp|max:1024',
                 'amount' => 'required|numeric|max:1000000',
                 'item_name' => 'required|string',
                 'supplier_id' => 'required|exists:suppliers,id',
@@ -75,7 +77,7 @@ class UserConstuctionMaterialBuildingsController extends Controller
                 );
 
                 return response()->json(['message' => 'Construction Created...'], 201);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Handle any unexpected errors
                 return response()->json(['error' => 'An unexpected error occurred: '], 500);
             }
@@ -91,7 +93,7 @@ class UserConstuctionMaterialBuildingsController extends Controller
 
         $construction_id = base64_decode($id);
 
-        $construction_material_billing =  ModelsConstructionMaterialBilling::with('phase.site')->find($construction_id);
+        $construction_material_billing = ModelsConstructionMaterialBilling::with('phase.site')->find($construction_id);
 
         $suppliers = Supplier::where('is_raw_material_provider', 1)->orderBy('id', 'desc')->get();
 
@@ -104,61 +106,57 @@ class UserConstuctionMaterialBuildingsController extends Controller
     public function update(Request $request, string $id)
     {
 
-       
+
         return DB::transaction(function () use ($request, $id) {
-            $validatedData = $request->validate([
-                'image' => 'sometimes|mimes:png,jpg,webp|max:1024',
-                'amount' => 'required|numeric|max:9999999999',
-                'item_name' => 'required',
-                'supplier_id' => 'required|exists:suppliers,id',
-                'phase_id' => 'required|exists:phases,id'
-            ]);
+            try {
+                $validatedData = $request->validate([
+                    'image' => 'nullable|mimes:png,jpg,webp|max:1024',
+                    'amount' => 'required|numeric|max:9999999999',
+                    'item_name' => 'required',
+                    'supplier_id' => 'required|exists:suppliers,id',
+                    'phase_id' => 'required|exists:phases,id'
+                ]);
 
-            $construction_material_billing = ModelsConstructionMaterialBilling::find($id);
 
-            $amount = $construction_material_billing->amount;
+                $construction_material_billing = ModelsConstructionMaterialBilling::findOrFail($id);
+                $previousAmount = $construction_material_billing->amount;
+                $image_path = $construction_material_billing->item_image_path;
 
-            $image_path = null;
+                // Handle image upload/update
+                if ($request->hasFile('image')) {
+                    // Delete old image if exists
+                    if (
+                        $construction_material_billing->item_image_path &&
+                        Storage::disk('public')->exists($construction_material_billing->item_image_path)
+                    ) {
+                        Storage::disk('public')->delete($construction_material_billing->item_image_path);
+                    }
 
-            if ($request->hasFile('image')) {
-
-                if (Storage::disk('public')->exists($construction_material_billing->item_image_path)) {
-
-                    Storage::disk('public')->delete($construction_material_billing->item_image_path);
+                    $image_path = $request->file('image')->store('ConstructionBillingImage', 'public');
                 }
 
-                $image_path = $request->file('image')->store('ConstructionBillingImage', 'public');
-            } else {
+                // Update billing record
+                $construction_material_billing->update([
+                    'amount' => $validatedData['amount'],
+                    'item_image_path' => $image_path,
+                    'item_name' => $validatedData['item_name'],
+                    'supplier_id' => $validatedData['supplier_id'],
+                    'user_id' => auth()->id(),
+                    'phase_id' => $validatedData['phase_id']
+                ]);
 
-                $image_path = $construction_material_billing->item_image_path;
+                // Update financial balances
+                $new_amount = $this->adjustBalance($validatedData['amount'], $previousAmount);
+                $this->updateSiteTotalAmount($validatedData['phase_id'], $new_amount);
+
+                return redirect('/user/sites/details/' . ($construction_material_billing->phase->site->id))
+                    ->with('status', 'update');
+            } catch (Exception $exception) {
+                Log::error($exception);
+                return redirect('/user/sites/details/' . ($construction_material_billing->phase->site->id))
+                    ->with('error', 'An error occurred while updating the billing record.');
             }
-
-            $construction_material_billing->amount = $validatedData['amount'];
-            $construction_material_billing->item_image_path = $image_path;
-            $construction_material_billing->item_name = $validatedData['item_name'];
-            $construction_material_billing->supplier_id = $validatedData['supplier_id'];
-            $construction_material_billing->user_id = auth()->user()->id;
-            $construction_material_billing->phase_id = $validatedData['phase_id'];
-            $construction_material_billing->save();
-
-            if ($construction_material_billing) {
-
-                $new_amount = $this->adjustBalance($request->amount, $amount);
-
-                $this->updateSiteTotalAmount($request->phase_id, $new_amount);
-            }
-
-            return redirect()->route(
-                'sites.show',
-                [base64_encode($construction_material_billing->phase->site->id)]
-            )
-                ->with('status', 'update');
         });
-
-        // return redirect()->route('user.sites.show', [base64_encode($construction_material_billing->phase->site->id)])
-        //     ->with('status', 'update');
-
-
 
     }
 }

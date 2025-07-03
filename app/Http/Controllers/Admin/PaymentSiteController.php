@@ -90,4 +90,9 @@ class PaymentSiteController extends Controller
             return response()->json(['error' => 'Payment Cannot Be Made.. Try Again']);
         }
     }
+
+
+    public function updatePayment(Request $request, $id){
+
+    }
 }

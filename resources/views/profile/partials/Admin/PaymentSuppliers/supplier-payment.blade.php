@@ -4,14 +4,9 @@
     @endphp
 
     @if ($user === 'admin')
-        <x-breadcrumb 
-        :names="['Dashboard', 'View ' . $supplier->name,  ' Back']" 
-        :urls="['admin/dashboard', 'admin/suppliers/' . $supplier->id,  'admin/suppliers/' . ($supplier->id)]" 
-        />
+        <x-breadcrumb :names="['Dashboard', 'View ' . $supplier->name, ' Back']" :urls="['admin/dashboard', 'admin/suppliers/' . $supplier->id, 'admin/suppliers/' . $supplier->id]" />
     @else
-        <x-breadcrumb 
-        :names="['supplier', $supplier->name,  ' Back']" 
-        :urls="['user/dashboard', 'user/suppliers/' . $supplier->id,  'user/suppliers/' . ($supplier->id)]" />
+        <x-breadcrumb :names="['supplier', $supplier->name, ' Back']" :urls="['user/dashboard', 'user/suppliers/' . $supplier->id, 'user/suppliers/' . $supplier->id]" />
     @endif
 
     <div class="row g-4 mb-4">
@@ -103,7 +98,7 @@
                                                         style="width: 50px; height: 50px; object-fit: cover;">
                                                 </a>
                                             @else
-                                            <span class="">No Screenshot</span>
+                                                <span class="">No Screenshot</span>
                                             @endif
                                         </td>
                                         <td>{{ ucwords($payment->site->site_name ?? 'N/A') }}</td>

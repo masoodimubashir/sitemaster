@@ -7,11 +7,15 @@ use App\Http\Controllers\Controller;
 use App\Models\DailyExpenses;
 use App\Models\User;
 use App\Notifications\VerificationNotification;
+use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class UserDailyExpensesController extends Controller
 {
@@ -29,7 +33,7 @@ class UserDailyExpensesController extends Controller
 
             // Validation rules
             $validator = Validator::make($request->all(), [
-                'item_name' => 'required|string|max:255',
+                'item_name' => 'nullable|string|max:255',
                 'price' => 'required|numeric|max:9999999999',
                 'bill_photo' => 'required|image|mimes:jpg,jpeg,webp|max:1024',
                 'phase_id' => 'required|exists:phases,id',
@@ -82,7 +86,7 @@ class UserDailyExpensesController extends Controller
                 );
 
                 return response()->json(['message' => 'Expenses created.'], 201);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 // Handle any unexpected errors
                 return response()->json(['error' => 'An unexpected error occurred: ' . $e->getMessage()], 500);
             }
@@ -111,51 +115,51 @@ class UserDailyExpensesController extends Controller
     {
 
         return DB::transaction(function () use ($request, $id) {
+            try {
+                $validatedData = $request->validate([
+                    'item_name' => 'required|string|max:255',
+                    'price' => 'required|numeric|max:9999999999',
+                    'bill_photo' => 'nullable|image|mimes:jpg,jpeg,webp,png|max:1024',
+                    'phase_id' => 'required|exists:phases,id',
+                ]);
 
-            $request->validate([
-                'item_name' => 'required|string|max:255',
-                'price' => 'required|numeric|max:9999999999',
-                'bill_photo' => 'sometimes|mimes:jpg,jpeg,webp|max:1024',
-                'phase_id' => 'required|exists:phases,id',
-            ]);
+                $daily_expense = DailyExpenses::findOrFail($id);
+                $old_amount = $daily_expense->price;
+                $image_path = $daily_expense->bill_photo;
 
-            $daily_expense = DailyExpenses::findorFail($id);
-
-            $image_path = null;
-            $old_amount = $daily_expense->price;
-
-
-            if ($request->hasFile('bill_photo')) {
-
-                if (Storage::disk('public')->exists($daily_expense->bill_photo)) {
-
-                    Storage::disk('public')->delete($daily_expense->bill_photo);
+                // Handle file upload
+                if ($request->hasFile('bill_photo')) {
+                    // Delete old image if exists
+                    if ($image_path && Storage::disk('public')->exists($image_path)) {
+                        Storage::disk('public')->delete($image_path);
+                    }
+                    $image_path = $request->file('bill_photo')->store('Expenses', 'public');
                 }
 
-                $image_path = $request->file('bill_photo')->store('Expenses', 'public');
-            } else {
+                // Update record
+                $daily_expense->update([
+                    'item_name' => $validatedData['item_name'],
+                    'bill_photo' => $image_path,
+                    'price' => $validatedData['price'],
+                    'phase_id' => $validatedData['phase_id'],
+                    'user_id' => auth()->id()
+                ]);
 
-                $image_path = $daily_expense->bill_photo;
+                // Update balances
+                $new_amount = $this->adjustBalance($validatedData['price'], $old_amount);
+                $this->updateSiteTotalAmount($validatedData['phase_id'], $new_amount);
+
+                return redirect('/user/sites/details/' . base64_encode($daily_expense->phase->site->id))
+                    ->with('status', 'update');
+
+            } catch (ModelNotFoundException $e) {
+                return back()->with('error', 'Expense record not found');
+            } catch (ValidationException $e) {
+                return back()->withErrors($e->validator)->withInput();
+            } catch (Exception $e) {
+                Log::error('Daily expense update error: ' . $e->getMessage());
+                return back()->with('error', 'An error occurred while updating the expense: ' . $e->getMessage());
             }
-
-            if ($daily_expense) {
-
-                $new_amount = $this->adjustBalance($request->price, $old_amount);
-
-
-                $this->updateSiteTotalAmount($request->phase_id, $new_amount);
-            }
-
-            $daily_expense->update([
-                'item_name' => $request->item_name,
-                'bill_photo' => $image_path,
-                'price' => $request->price,
-                'phase_id' => $request->phase_id,
-                'user_id' => auth()->user()->id
-            ]);
-
-            return redirect()->url('/user/sites/' . [base64_encode($daily_expense->phase->site->id)])
-                ->with('status', 'update');
         });
     }
 }

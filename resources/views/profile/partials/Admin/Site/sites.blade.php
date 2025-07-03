@@ -201,17 +201,16 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label for="user_id" class="form-label">Select User</label>
+                                
                                 <select class="form-select form-select-sm text-black" style="cursor: pointer" id="user_id" name="user_id" required>
-                                    <option value="" selected disabled>Select User</option>
+                                    <option value="" selected disabled>Select Engineer</option>
                                     @foreach ($users as $user)
                                         <option value="{{ $user->id }}">{{ $user->name }}</option>
                                     @endforeach
                                 </select>
-                                <div class="invalid-feedback">Please select a user.</div>
+                                <div class="invalid-feedback">Please select an engineer.</div>
                             </div>
                             <div class="col-md-6">
-                                <label for="client_id" class="form-label">Select Client</label>
                                 <select class="form-select form-select-sm text-black" style="cursor: pointer" id="client_id" name="client_id" required>
                                     <option value="" selected disabled>Select Client</option>
                                     @foreach ($clients as $client)

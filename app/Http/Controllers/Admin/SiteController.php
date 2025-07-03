@@ -68,6 +68,9 @@ class SiteController extends Controller
             'user_id' => 'required|exists:users,id',
             'client_id' => 'required|exists:clients,id',
             'contact_no' => 'required|digits:10',
+        ], [
+            'user_id.required' => 'The Site Engineer is required.',
+            'user_id.exists' => 'The selected Site Engineer is invalid.',
         ]);
 
 

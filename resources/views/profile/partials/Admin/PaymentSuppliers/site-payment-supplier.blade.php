@@ -7,8 +7,7 @@
     @endphp
 
     @if ($user === 'admin')
-        <x-breadcrumb :names="['Dashboard', $site->site_name, ' Back']"
-        :urls="[
+        <x-breadcrumb :names="['Dashboard', $site->site_name, ' Back']" :urls="[
             'admin/dashboard',
             'admin/sites/' . base64_encode($site->id),
             'admin/sites/' . base64_encode($site->id),
@@ -125,12 +124,15 @@
                                                         alt="Payment Receipt"
                                                         style="width: 50px; height: 50px; object-fit: cover;">
                                                 </a>
+                                            @else
+                                                <span class="text-danger">Bill Not Awailable</span>
                                             @endif
                                         </td>
                                         <td>{{ ucwords($payment->supplier->name ?? 'N/A') }}</td>
                                         <td class="fw-bold text-success">
                                             {{ Number::currency($payment->amount, 'INR') }}
                                         </td>
+                                       
                                     </tr>
                                 @endforeach
                             @else

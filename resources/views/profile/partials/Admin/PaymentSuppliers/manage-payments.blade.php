@@ -224,11 +224,6 @@
                                     <div class="py-4">
                                         <i class="fas fa-money-bill-wave fa-4x text-muted mb-4"></i>
                                         <h4 class="text-muted">No Payment Transactions Found</h4>
-                                        </p>
-                                        <button class="btn btn-primary" data-bs-toggle="modal"
-                                            data-bs-target="#createPaymentModal">
-                                            <i class="fas fa-plus me-1"></i> Create New Payment
-                                        </button>
                                     </div>
                                 </div>
                             @endif
