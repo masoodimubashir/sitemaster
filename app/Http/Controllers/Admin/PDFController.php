@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Phase;
 use App\Models\Site;
 use App\Models\Supplier;
+use App\Models\Wasta;
 use App\Services\DataService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class PDFController extends Controller
@@ -54,7 +56,7 @@ class PDFController extends Controller
         )->sortByDesc(fn($entry) => $entry['created_at']);
 
         $ledgersGroupedByPhase = $ledgers->filter(function ($entry) {
-            return !empty($entry['phase']); 
+            return !empty($entry['phase']);
         })->groupBy('phase');
 
         $balances = $this->dataService->calculateAllBalances($ledgers);
@@ -141,371 +143,6 @@ class PDFController extends Controller
         $pdf->Output();
         exit;
     }
-
-
-    // public function showSitePdf(string $id)
-    // {
-
-    //     $site_id = base64_decode($id);
-    //     $dateFilter = 'lifetime';
-    //     $supplier_id = 'all';
-    //     $wager_id = 'all';
-    //     $startDate = 'start_date';
-    //     $endDate = 'end_date';
-
-    //     // Get filtered collections from your data service
-    //     [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
-    //         $dateFilter,
-    //         $site_id,
-    //         $supplier_id,
-    //         $wager_id,
-    //         $startDate,
-    //         $endDate
-    //     );
-
-    //     dd($payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours);
-
-    //     // Merge and sort all financial data
-    //     $ledgers = $this->dataService->makeData(
-    //         $payments,
-    //         $raw_materials,
-    //         $squareFootageBills,
-    //         $expenses,
-    //         $wastas,
-    //         $labours
-
-    //     )->sortByDesc(fn($entry) => $entry['created_at']);
-
-    //     dd($ledgers);
-
-    //     // Group ledgers by phase
-    //     $ledgersGroupedByPhase = $ledgers->groupBy('phase');
-
-    //     // Fetch site info for the PDF header
-    //     $site = Site::findOrFail($site_id);
-
-    //     $phaseData = [];
-
-    //     foreach ($ledgersGroupedByPhase as $phaseName => $records) {
-
-    //         // Sum totals by category (using debit for costs)
-    //         $construction_total = $records->where('category', 'Material')->sum('debit');
-    //         $square_total = $records->where('category', 'SQFT')->sum('debit');
-    //         $expenses_total = $records->where('category', 'Expense')->sum('debit');
-    //         $wager_total = $records->where('category', 'Wager')->sum('debit');
-    //         $wasta_total = $records->where('category', 'Wasta')->sum('debit');
-    //         $labour_total = $records->where('category', 'Labour')->sum('debit');
-    //         $payments_total = $records->where('category', 'Payment')->sum('credit');
-
-    //         $subtotal = $construction_total + $square_total + $expenses_total + $wager_total + $wasta_total + $labour_total;
-    //         $withService = ($subtotal * $site->service_charge / 100) + $subtotal;
-
-    //         $phaseData[] = [
-    //             'phase' => $phaseName,
-    //             'site_service_charge' => $site->service_charge,
-    //             'construction_total_amount' => $construction_total,
-    //             'square_footage_total_amount' => $square_total,
-    //             'daily_expenses_total_amount' => $expenses_total,
-    //             'daily_wagers_total_amount' => $wager_total,
-    //             'daily_wastas_total_amount' => $wasta_total,
-    //             'daily_labours_total_amount' => $labour_total,
-    //             'total_payment_amount' => $payments_total,
-    //             'phase_total' => $subtotal,
-    //             'phase_total_with_service_charge' => $withService,
-    //             'construction_material_billings' => $records->where('category', 'Material'),
-    //             'square_footage_bills' => $records->where('category', 'SQFT'),
-    //             'daily_expenses' => $records->where('category', 'Expense'),
-    //             'daily_wagers' => $records->where('category', 'Wager'),
-    //             'daily_wastas' => $records->where('category', 'Wasta'),
-    //             'daily_labours' => $records->where('category', 'Labour'),
-    //         ];
-    //     }
-
-    //     // Calculate grand totals
-    //     $grandTotal = collect($phaseData)->sum('phase_total_with_service_charge');
-    //     $totalSupplierPaymentAmount = $ledgers->sum(fn($p) => floatval($p['credit'] ?? 0));
-
-    //     $balances = $this->dataService->calculateAllBalances($ledgers);
-
-
-    //     $withoutServiceCharge = $balances['without_service_charge'];
-    //     $withServiceCharge = $balances['with_service_charge'];
-
-    //     // Prepare header data for PDF
-    //     $data = [
-    //         'site_name' => $site->site_name,
-    //         'contact_no' => $site->contact_no,
-    //         'service_charge' => $site->service_charge,
-    //         'balance' => $grandTotal - $totalSupplierPaymentAmount,
-    //         'site_owner_name' => $site->site_owner_name,
-    //         'location' => $site->location,
-    //         'total_balance' => $withServiceCharge['balance'],
-    //         'total_due' => $withServiceCharge['due'],
-    //         'effective_balance' => $withoutServiceCharge['due'],
-    //         'total_paid' => $withServiceCharge['paid'],
-    //     ];
-
-    //     $headers = [
-    //         'box1' => 'Site Name',
-    //         'box2' => 'Contact No',
-    //         'box3' => 'Service Charge',
-    //         'box4' => 'Balance',
-    //         'box5' => 'Site Owner',
-    //         'box6' => 'Location',
-    //         'box7' => 'Debit',
-    //         'box8' => 'Credit',
-    //     ];
-
-    //     // Generate PDF
-    //     $pdf = new PDF();
-    //     $pdf->AliasNbPages();
-    //     $pdf->AddPage();
-    //     $pdf->SetFont('Times', '', 12);
-    //     $pdf->SetTitle('Site Info');
-    //     $pdf->infoTable($headers, $data);
-    //     $pdf->siteTableData($phaseData);
-    //     $pdf->Output();
-    //     exit;
-    // }
-
-
-    // public function showSitePdf(string $id)
-    // {
-
-    //     $site_id = base64_decode($id);
-
-    //     $site = Site::with([
-    //         'phases' => function ($query) {
-    //             $query->whereNull('deleted_at');
-    //         },
-    //         'phases.constructionMaterialBillings' => function ($query) {
-    //             $query->with('supplier')
-    //                 ->where('verified_by_admin', 1)
-    //                 ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-    //                 ->whereNull('deleted_at')
-    //                 ->latest();
-    //         },
-    //         'phases.squareFootageBills' => function ($query) {
-    //             $query->with('supplier')
-    //                 ->where('verified_by_admin', 1)
-    //                 ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-    //                 ->whereNull('deleted_at')
-    //                 ->latest();
-    //         },
-    //         'phases.dailyWagers' => function ($query) {
-    //             $query->with(['wagerAttendances', 'supplier'])
-    //                 ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-    //                 ->whereNull('deleted_at')
-    //                 ->latest();
-    //         },
-    //         'phases.dailyExpenses' => function ($query) {
-    //             $query->whereNull('deleted_at');
-    //         },
-    //         'phases.wagerAttendances' => function ($query) {
-    //             $query->with('dailyWager.supplier')
-    //                 ->whereHas('dailyWager.supplier', fn($q) => $q->whereNull('deleted_at'))
-    //                 ->whereNull('deleted_at')
-    //                 ->latest();
-    //         },
-    //         'payments' => function ($query) {
-    //             $query->where('verified_by_admin', 1);
-    //         },
-    //     ])
-    //     ->find($site_id);
-
-    //     $totalSupplierPaymentAmount = $site->payments()
-    //     ->where('verified_by_admin', 1)
-    //     ->sum('amount');
-
-    //     $siteData = [
-    //         'site' => $site,
-    //         'phases' => []
-    //     ];
-
-    //     foreach ($site->phases as $phase) {
-
-    //         // Calculate totals for each phase
-    //         $construction_total = $phase->constructionMaterialBillings->sum('amount');
-    //         $daily_expenses_total = $phase->dailyExpenses->sum('price');
-
-    //         foreach ($phase->dailyWagers as $wager) {
-    //             $phase->daily_wagers_total_amount += $wager->wager_total;
-    //         }
-
-    //         $square_footage_total = $phase->squareFootageBills->reduce(function ($carry, $bill) {
-    //             return $carry + ($bill->price * $bill->multiplier);
-    //         }, 0);
-
-    //         $daily_wagers_total = $phase->daily_wagers_total_amount;
-
-    //         $phase_total = $construction_total + $daily_expenses_total + $daily_wagers_total + $square_footage_total;
-    //         $total_with_service_charge = ($phase_total * $site->service_charge / 100) + $phase_total;
-
-    //         $siteData['phases'][] = [
-    //             'phase' => $phase->phase_name,
-    //             'site_service_charge' => $site->service_charge,
-    //             'construction_total_amount' => $construction_total,
-    //             'daily_expenses_total_amount' => $daily_expenses_total,
-    //             'daily_wagers_total_amount' => $daily_wagers_total,
-    //             'square_footage_total_amount' => $square_footage_total,
-    //             'phase_total' => $phase_total,
-    //             'phase_total_with_service_charge' => $total_with_service_charge,
-    //             'construction_material_billings' => $phase->constructionMaterialBillings,
-    //             'daily_expenses' => $phase->dailyExpenses,
-    //             'daily_wagers' => $phase->dailyWagers,
-    //             'square_footage_bills' => $phase->squareFootageBills,
-    //             'wager_attendances' => $phase->wagerAttendances,
-    //         ];
-    //     }
-
-    //     // Optionally calculate the grand total for the site
-    //     $siteData['grand_total_amount'] = array_reduce($siteData['phases'], function ($carry, $phase): mixed {
-    //         return $carry + $phase['phase_total_with_service_charge'];
-    //     }, 0);
-
-
-    //     $data = [
-    //         'site_name' => $site->site_name,
-    //         'contact_no' => $site->contact_no,
-    //         'service_charge' => $site->service_charge,
-    //         'balance' => $siteData['grand_total_amount'] - $totalSupplierPaymentAmount,
-    //         'site_owner_name' => $site->site_owner_name,
-    //         'location' => $site->location,
-    //         'debit' =>  $siteData['grand_total_amount'],
-    //         'credit' => $totalSupplierPaymentAmount,
-    //     ];
-
-    //     $headers = [
-    //         'box1' => 'Site Name',
-    //         'box2' => 'Conatct No',
-    //         'box3' => 'Service Charge',
-    //         'box4' => 'Balance',
-    //         'box5' => 'Site Owner',
-    //         'box6' => 'Location',
-    //         'box7' => 'Debit',
-    //         'box8' => 'Credit',
-    //     ];
-
-    //     $pdf = new PDF();
-    //     $pdf->AliasNbPages();
-    //     $pdf->AddPage();
-    //     $pdf->SetFont('Times', '', 12);
-    //     $pdf->SetTitle('Site Info');
-    //     $pdf->infoTable($headers, $data);
-    //     $pdf->siteTableData($siteData['phases']);
-    //     $pdf->Output();
-    //     exit;
-    // }
-
-
-    // public function showPhasePdf(string $id)
-    // {
-    //     // Decode the phase ID
-    //     $phase_id = base64_decode($id);
-    //     $phase = Phase::with('site')->findOrFail($phase_id);
-    //     $site = $phase->site;
-
-    //     // Define filter parameters (you can modify these to accept from request if needed)
-    //     $dateFilter = 'today';
-    //     $supplier_id = 'all';
-    //     $wager_id = 'all';
-    //     $startDate = 'start_date';
-    //     $endDate = 'end_date';
-
-    //     // Get filtered collections from data service
-    //     [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $wastas, $labours] = $this->dataService->getData(
-    //         $dateFilter,
-    //         $site->id,
-    //         $supplier_id,
-    //         $wager_id,
-    //         $startDate,
-    //         $endDate
-    //     );
-
-    //     // Combine all entries into one collection
-    //     $ledgers = $this->dataService->makeData(
-    //         $payments,
-    //         $raw_materials,
-    //         $squareFootageBills,
-    //         $expenses,
-    //         $wagers,
-    //         $wastas,
-    //         $labours
-    //     )->filter(fn($entry) => $entry['phase_id'] == $phase_id)
-    //         ->sortByDesc(fn($entry) => $entry['created_at']);
-
-    //     // Group all ledger entries under this single phase
-    //     $records = $ledgers;
-
-    //     $construction_total = $records->where('category', 'Material')->sum('debit');
-    //     $square_total = $records->where('category', 'SQFT')->sum('debit');
-    //     $expenses_total = $records->where('category', 'Expense')->sum('debit');
-    //     $wager_total = $records->where('category', 'Wager')->sum('debit');
-    //     $wasta_total = $records->where('category', 'Wasta')->sum('debit');
-    //     $labour_total = $records->where('category', 'Labour')->sum('debit');
-    //     $payments_total = $records->where('category', 'Payment')->sum('credit');
-
-    //     $subtotal = $construction_total + $square_total + $expenses_total + $wager_total + $wasta_total + $labour_total;
-    //     $withService = ($subtotal * $site->service_charge / 100) + $subtotal;
-
-    //     $phaseData = [[
-    //         'phase' => $phase->phase_name,
-    //         'site_service_charge' => $site->service_charge,
-    //         'construction_total_amount' => $construction_total,
-    //         'square_footage_total_amount' => $square_total,
-    //         'daily_expenses_total_amount' => $expenses_total,
-    //         'daily_wagers_total_amount' => $wager_total,
-    //         'daily_wastas_total_amount' => $wasta_total,
-    //         'daily_labours_total_amount' => $labour_total,
-    //         'total_payment_amount' => $payments_total,
-    //         'phase_total' => $subtotal,
-    //         'phase_total_with_service_charge' => $withService,
-    //         'construction_material_billings' => $records->where('category', 'Material'),
-    //         'square_footage_bills' => $records->where('category', 'SQFT'),
-    //         'daily_expenses' => $records->where('category', 'Expense'),
-    //         'daily_wagers' => $records->where('category', 'Wager'),
-    //         'daily_wastas' => $records->where('category', 'Wasta'),
-    //         'daily_labours' => $records->where('category', 'Labour'),
-    //     ]];
-
-    //     // Header info for this one phase
-    //     $data = [
-    //         'phase_name' => $phase->phase_name,
-    //         'site_name' => $site->site_name,
-    //         'contact_no' => $site->contact_no,
-    //         'service_charge' => $site->service_charge,
-    //         'balance' => $withService - $payments_total,
-    //         'site_owner_name' => $site->site_owner_name,
-    //         'location' => $site->location,
-    //         'total_balance' => $withService,
-    //         'total_due' => $withService - $payments_total,
-    //         'effective_balance' => $subtotal - $payments_total,
-    //         'total_paid' => $payments_total,
-    //     ];
-
-    //     $headers = [
-    //         'box1' => 'Phase Name',
-    //         'box2' => 'Site Name',
-    //         'box3' => 'Contact No',
-    //         'box4' => 'Service Charge',
-    //         'box5' => 'Balance',
-    //         'box6' => 'Site Owner',
-    //         'box7' => 'Location',
-    //         'box8' => '',
-    //     ];
-
-    //     // Generate PDF
-    //     $pdf = new PDF();
-    //     $pdf->AliasNbPages();
-    //     $pdf->AddPage();
-    //     $pdf->SetFont('Times', '', 12);
-    //     $pdf->SetTitle('Phase Info');
-    //     $pdf->infoTable($headers, $data);
-    //     $pdf->siteTableData($phaseData); // Use same method for consistency
-    //     $pdf->Output();
-    //     exit;
-    // }
-
 
     public function showPhasePdf(string $id)
     {
@@ -695,5 +332,193 @@ class PDFController extends Controller
         $pdf->ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance, $service_charge_amount);
         $pdf->Output();
         exit;
+    }
+
+    public function generateAttendancePdf(Request $request)
+    {
+        // Parse month and year
+        if ($request->filled('monthYear')) {
+            [$year, $month] = explode('-', $request->input('monthYear'));
+        } else {
+            $month = now()->month;
+            $year = now()->year;
+        }
+
+        // Load Wastas with their labours, phase, and site data
+        $wastasQuery = Wasta::with([
+            'phase.site',
+            'labours.attendances' => function ($query) use ($month, $year) {
+                $query->whereMonth('attendance_date', $month)
+                    ->whereYear('attendance_date', $year);
+            },
+            'attendances' => function ($query) use ($month, $year) {
+                $query->whereMonth('attendance_date', $month)
+                    ->whereYear('attendance_date', $year);
+            }
+        ]);
+
+        // Filter by site if selected
+        $site = null;
+        if ($request->filled('site_id')) {
+            $wastasQuery->whereHas('phase.site', function ($query) use ($request) {
+                $query->where('id', $request->input('site_id'));
+            });
+            $site = Site::find($request->input('site_id'));
+        }
+
+        $wastas = $wastasQuery->get();
+
+        // Group wastas by phase
+        $phases = $wastas->groupBy('phase_id');
+
+        // Get date range for the month
+        $startDate = Carbon::create($year, $month, 1);
+        $endDate = Carbon::create($year, $month, $startDate->daysInMonth);
+        $dates = $this->getDatesInRange($startDate, $endDate);
+
+        // Generate PDF
+        $pdf = new PDF();
+        $pdf->SetTitle('Phase-wise Labour Attendance Report');
+
+        foreach ($phases as $phaseId => $phaseWastas) {
+            $phase = $phaseWastas->first()->phase;
+
+            // Prepare title with all relevant information
+            $title = ($site ? strtoupper($site->site_name) : 'ALL SITES') . ' LABOUR ATTENDANCE SHEET';
+            $subtitle = 'Phase: ' . ($phase->phase_name ?? 'All Phases') .
+                ' | Month: ' . $startDate->format('F Y');
+
+            // Get all workers (wastas + their labours) for this phase
+            $workers = [];
+            foreach ($phaseWastas as $wasta) {
+                $workers[] = [
+                    'name' => $wasta->wasta_name,
+                    'type' => 'wasta',
+                    'price' => $wasta->price,
+                    'contact' => $wasta->contact_no
+                ];
+                foreach ($wasta->labours as $labour) {
+                    $workers[] = [
+                        'name' => $labour->labour_name,
+                        'type' => 'labour',
+                        'price' => $labour->price,
+                        'contact' => $labour->contact_no
+                    ];
+                }
+            }
+
+            // Prepare attendance data for each date
+            $attendanceData = $this->prepareAttendanceData($phaseWastas, $startDate, $endDate);
+
+            // Calculate totals for this phase
+            $totals = $this->calculateTotals($phaseWastas);
+
+            // Prepare phase info
+            $info = [
+                'site_name' => $site->site_name ?? 'All Sites',
+                'phase_name' => $phase->phase_name ?? 'All Phases',
+                'month_year' => $startDate->format('F Y')
+            ];
+
+            // Add a new page for each phase
+            $pdf->phaseWiseAttendanceReport(
+                $title,
+                $subtitle,
+                $dates,
+                $workers,
+                $attendanceData,
+                $totals,
+                $info
+            );
+        }
+
+        $filename = 'Phasewise_Attendance_' .
+            ($site ? $site->site_name . '_' : '') .
+            $month . '_' . $year . '.pdf';
+        $pdf->Output();
+        exit;
+    }
+
+    protected function prepareAttendanceData($wastas, $startDate, $endDate)
+    {
+        $attendanceData = [];
+        $current = clone $startDate;
+
+        // Initialize attendance data structure with all workers
+        foreach ($wastas as $wasta) {
+            $attendanceData[$wasta->wasta_name] = [];
+            foreach ($wasta->labours as $labour) {
+                $attendanceData[$labour->labour_name] = [];
+            }
+        }
+
+        // Populate attendance data for each date
+        while ($current <= $endDate) {
+            $dateStr = $current->format('Y-m-d');
+
+            foreach ($wastas as $wasta) {
+                // Wasta attendance
+                $attendanceData[$wasta->wasta_name][$dateStr] = $wasta->attendances
+                    ->where('attendance_date', $dateStr)
+                    ->where('is_present', true)
+                    ->count() > 0 ? 1 : 0;
+
+                // Labour attendance
+                foreach ($wasta->labours as $labour) {
+                    $attendanceData[$labour->labour_name][$dateStr] = $labour->attendances
+                        ->where('attendance_date', $dateStr)
+                        ->where('is_present', true)
+                        ->count() > 0 ? 1 : 0;
+                }
+            }
+
+            $current->addDay();
+        }
+
+        return $attendanceData;
+    }
+
+    protected function calculateTotals($wastas)
+    {
+        $totals = [
+            'wastas' => [],
+            'labours' => [],
+            'grand_total' => 0
+        ];
+
+        foreach ($wastas as $wasta) {
+            // Wasta totals
+            $presentDays = $wasta->attendances->where('is_present', true)->count();
+            $totals['wastas'][$wasta->wasta_name] = [
+                'present_days' => $presentDays,
+                'total_amount' => $presentDays * $wasta->price
+            ];
+            $totals['grand_total'] += $presentDays * $wasta->price;
+
+            // Labour totals
+            foreach ($wasta->labours as $labour) {
+                $presentDays = $labour->attendances->where('is_present', true)->count();
+                $totals['labours'][$labour->labour_name] = [
+                    'present_days' => $presentDays,
+                    'total_amount' => $presentDays * $labour->price
+                ];
+                $totals['grand_total'] += $presentDays * $labour->price;
+            }
+        }
+
+        return $totals;
+    }
+
+    protected function getDatesInRange($startDate, $endDate)
+    {
+        $dates = [];
+        $current = clone $startDate;
+
+        while ($current <= $endDate) {
+            $dates[] = $current->format('Y-m-d');
+            $current->addDay();
+        }
+
+        return $dates;
     }
 }

@@ -190,6 +190,8 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::put('/attendance/wasta/update/{id}', [AttendanceSheetController::class, 'updateWasta']);
     Route::put('/attendance/labour/update/{id}', [AttendanceSheetController::class, 'updateLabour']);
     Route::get('/attendance/site/show/{id}', [AttendanceSheetController::class, 'showAttendanceBySite']);
+    Route::get('attendance/pdf', [PDFController::class, 'generateAttendancePdf'])->name('generateAttendancePdf');
+
 
 
     // Route For Managing Payments By Admin
@@ -290,6 +292,7 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::put('/attendance/wasta/update/{id}', [AttendanceSheetController::class, 'updateWasta']);
     Route::put('/attendance/labour/update/{id}', [AttendanceSheetController::class, 'updateLabour']);
     Route::get('/attendance/site/show/{id}', [AttendanceSheetController::class, 'showAttendanceBySite']);
+
 
     Route::get('/item-verification', [ItemsVerificationController::class, 'index']);
 

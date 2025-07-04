@@ -64,7 +64,7 @@ class AttendanceSheetController extends Controller
         $phases = Phase::with('site')->latest()->get();
         $sites = Site::where('is_on_going', 1)->get();
 
-         // Calculate site totals
+        // Calculate site totals
         $siteTotal = [
             'wasta_amount' => $wastas->sum('total_amount'),
             'labour_amount' => $wastas->sum('labours_total_amount'),
@@ -333,4 +333,8 @@ class AttendanceSheetController extends Controller
             'siteTotal'
         ));
     }
+
+
+   
+
 }

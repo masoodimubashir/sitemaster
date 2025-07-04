@@ -3,6 +3,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use Carbon\Carbon;
 use Fpdf\Fpdf;
 use Illuminate\Support\Number;
 
@@ -135,7 +136,7 @@ class PDF extends Fpdf
 
     public function siteTableData($ledgersGroupedByPhase)
     {
-       
+
         // Check if data is empty
         if (empty($ledgersGroupedByPhase)) {
             $this->Cell(0, 10, 'No data available', 1, 0, 'C');
@@ -154,14 +155,14 @@ class PDF extends Fpdf
             $this->SetFont('', '', 10);
 
             // Summary Table
-            $this->renderSummaryTable( $phaseData);
+            $this->renderSummaryTable($phaseData);
 
             // Detailed Tables
-            $this->renderMaterialTable( $phaseData['construction_material_billings'] ?? []);
-            $this->renderSqftTable( $phaseData['square_footage_bills'] ?? []);
-            $this->renderExpenseTable( $phaseData['daily_expenses'] ?? [], 'Daily Expenses', ['Date', 'Item Name', 'Price']);
-            $this->renderWastaLabourTable( $phaseData['daily_wastas'] ?? [], 'Daily Wastas');
-            $this->renderWastaLabourTable( $phaseData['daily_labours'] ?? [], 'Daily Labours');
+            $this->renderMaterialTable($phaseData['construction_material_billings'] ?? []);
+            $this->renderSqftTable($phaseData['square_footage_bills'] ?? []);
+            $this->renderExpenseTable($phaseData['daily_expenses'] ?? [], 'Daily Expenses', ['Date', 'Item Name', 'Price']);
+            $this->renderWastaLabourTable($phaseData['daily_wastas'] ?? [], 'Daily Wastas');
+            $this->renderWastaLabourTable($phaseData['daily_labours'] ?? [], 'Daily Labours');
 
             // Add page break if not last phase
             if ($phaseData !== end($ledgersGroupedByPhase)) {
@@ -629,7 +630,7 @@ class PDF extends Fpdf
     }
 
 
-    private function renderSummaryTable( $phaseData)
+    private function renderSummaryTable($phaseData)
     {
         // Calculate totals
         $totals = [
@@ -674,7 +675,7 @@ class PDF extends Fpdf
         $this->Ln();
     }
 
-    private function renderMaterialTable( $items)
+    private function renderMaterialTable($items)
     {
         if (empty($items))
             return;
@@ -736,7 +737,7 @@ class PDF extends Fpdf
         }
     }
 
-    private function renderExpenseTable( $items, $title, $columns)
+    private function renderExpenseTable($items, $title, $columns)
     {
         if (empty($items))
             return;
@@ -796,6 +797,96 @@ class PDF extends Fpdf
             $this->Cell($this->width, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'R');
             $this->Ln();
         }
+    }
+
+
+    // Add this method to your PDF class
+    public function phaseWiseAttendanceReport($title, $subtitle, $dates, $workers, $attendanceData, $totals, $info)
+    {
+
+
+        $this->AddPage('L');
+        $this->SetFont('helvetica', 'B', 14);
+        $this->Cell(0, 10, $title, 0, 1, 'C');
+        $this->SetFont('helvetica', '', 12);
+        $this->Cell(0, 8, $subtitle, 0, 1, 'C');
+
+        // Display site and phase info
+        $this->Ln(5);
+        $this->SetFont('helvetica', '', 10);
+        $this->Cell(0, 8, 'Site: ' . $info['site_name'], 0, 1);
+        $this->Cell(0, 8, 'Phase: ' . $info['phase_name'], 0, 1);
+        $this->Cell(0, 8, 'Period: ' . $info['month_year'], 0, 1);
+        $this->Ln(10);
+
+        // Calculate column widths (use full page width)
+        $pageWidth = $this->GetPageWidth() - 20; // Leave 10mm margins on each side
+        $nameColWidth = 22; // Fixed width for worker names
+        $dateColWidth = ($pageWidth - $nameColWidth) / count($dates); // Removed remarks column
+
+        // Table header
+        $this->SetFillColor(220, 220, 220);
+        $this->SetTextColor(0);
+        $this->SetDrawColor(0, 0, 0);
+        $this->SetLineWidth(0.3);
+
+        // Name column
+        $this->Cell($nameColWidth, 8, 'NAME', 1, 0, 'C', true);
+
+        // Date columns
+        foreach ($dates as $date) {
+            $dateFormatted = Carbon::parse($date)->format('d');
+            $this->Cell($dateColWidth, 8, $dateFormatted, 1, 0, 'C', true);
+        }
+        $this->Ln();
+
+        // Table data
+        $this->SetFillColor(255, 255, 255);
+        $this->SetTextColor(0);
+        $this->SetFont('helvetica', '', 8);
+
+        foreach ($workers as $worker) {
+            $this->Cell($nameColWidth, 6, $worker['name'], 'LR', 0, 'L');
+
+            foreach ($dates as $date) {
+                $this->Cell($dateColWidth, 6, $attendanceData[$date][$worker['name']] ?? 0, 'LR', 0, 'C');
+            }
+            $this->Ln();
+        }
+
+        // Close the table
+        $this->Cell($nameColWidth + (count($dates) * $dateColWidth), 0, '', 'T');
+        $this->Ln(10);
+
+        // Totals section
+        $this->SetFont('helvetica', 'B', 10);
+        $this->Cell(0, 8, 'TOTALS FOR ' . strtoupper($info['phase_name']), 0, 1);   
+
+        // Wasta totals
+        foreach ($totals['wastas'] as $name => $data) {
+            $this->Cell(40, 6, $name . ' (Wasta):', 0, 0);
+            $this->Cell(20, 6, $data['present_days'] . ' days', 0, 0);
+            $this->Cell(30, 6, number_format($data['total_amount']), 0, 1);
+        }
+
+        // Labour totals
+        foreach ($totals['labours'] as $name => $data) {
+            $this->Cell(40, 6, $name . ' (Labour):', 0, 0);
+            $this->Cell(20, 6, $data['present_days'] . ' days', 0, 0);
+            $this->Cell(30, 6, number_format($data['total_amount']), 0, 1);
+        }
+
+        // Grand total
+        $this->Ln(5);
+        $this->SetFont('helvetica', 'B', 12);
+        $this->Cell(40, 8, 'PHASE TOTAL:', 0, 0);
+        $this->Cell(30, 8, number_format($totals['grand_total']), 0, 1);
+
+        // Footer
+        $this->Ln(10);
+        $this->SetFont('helvetica', '', 8);
+        $this->Cell(0, 8, 'Generated on: ' . Carbon::now()->format('d-M-Y h:i A'), 0, 1);
+        $this->Ln(5);
     }
 
 
