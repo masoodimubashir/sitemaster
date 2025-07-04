@@ -4,7 +4,15 @@
         $month = now()->month;
         $year = now()->year;
         $daysInMonth = \Carbon\Carbon::create($year, $month, 1)->daysInMonth;
-        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+
+        if (auth()->user()->role_name === 'admin') {
+            $user = 'admin';
+        } elseif (auth()->user()->role_name === 'site_engineer') {
+            $user = 'user';
+        } else {
+            $user = 'client';
+        }
+
         $currentDate = \Carbon\Carbon::create($year, $month, 1);
         $prevMonth = $currentDate->copy()->subMonth();
         $nextMonth = $currentDate->copy()->addMonth();
@@ -116,15 +124,24 @@
         }
     </style>
 
-    <x-breadcrumb :names="['Sites', $site->site_name, ' Back']" :urls="[
-        $user . '/sites',
-        $user . '/sites/' . base64_encode($site->id),
-        $user . '/sites/' . base64_encode($site->id),
-    ]" />
+    @if ($user === 'admin' || $user === 'user')
+        <x-breadcrumb :names="['Sites', $site->site_name, ' Back']" :urls="[
+            $user . '/sites',
+            $user . '/sites/' . base64_encode($site->id),
+            $user . '/sites/' . base64_encode($site->id),
+        ]" />
+    @elseif ($user === 'client' )
+        <x-breadcrumb :names="['Sites', $site->site_name, ' Back']" :urls="[
+            $user . '/dashboard',
+            $user . '/dashboard/' . base64_encode($site->id),
+            $user . '/dashboard/' . base64_encode($site->id),
+        ]" />
+    @endif
+
+
 
 
     <div id="ajaxAlertContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; width: 300px;"></div>
-
 
 
     <div class="container-fluid">
@@ -137,17 +154,54 @@
                 </span>
             </div>
 
-            <form method="GET" action="{{ url($user . '/attendance/site/show/' . $site->id) }}"
-                class="mt-3 mt-md-0 d-flex align-items-center gap-2" id="siteAttendanceFilterForm">
-                <div class="input-group" style="width: 200px;">
-                    <input type="month" name="monthYear" class="form-control form-control-sm"
-                        value="{{ request('monthYear', $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT)) }}"
-                        onchange="this.form.submit()">
+
+
+            <div class="d-flex flex-wrap align-items-center">
+                <!-- In your blade template -->
+                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3">
+
+                    @if ($user === 'admin' || $user === 'user')
+                        <!-- PDF Download Button -->
+                        <form action="{{ route('generateAttendancePdf') }}" method="GET" class="me-2">
+                            <!-- Include all filter parameters -->
+                            <input type="hidden" name="site_id" value="{{ request('site_id', $site->id ?? '') }}">
+                            <input type="hidden" name="phase_id" value="{{ request('phase_id', '') }}">
+                            <input type="hidden" name="monthYear"
+                                value="{{ request('monthYear', $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT)) }}">
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="far fa-file-pdf me-1"></i> PDF
+                            </button>
+                        </form>
+                    @endif
+
+
+                    <form method="GET" action="{{ url($user . '/attendance/site/show/' . $site->id) }}"
+                        class="mt-3 mt-md-0 d-flex align-items-center gap-2" id="siteAttendanceFilterForm">
+                        <div class="input-group input-group-sm" style="width: 200px;">
+                            <select name="phase_id" class="form-select form-select-sm bg-white text-black"
+                                onchange="this.form.submit()">
+                                <option value="">All Phases</option>
+                                @foreach ($phases as $phase)
+                                    <option value="{{ $phase->id }}"
+                                        {{ request('phase_id') == $phase->id ? 'selected' : '' }}>
+                                        {{ $phase->phase_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="input-group" style="width: 200px;">
+                            <input type="month" name="monthYear" class="form-control form-control-sm"
+                                value="{{ request('monthYear', $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT)) }}"
+                                onchange="this.form.submit()">
+                        </div>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="resetSiteFilters()">
+                            Reset
+                        </button>
+                    </form>
                 </div>
-                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="resetSiteFilters()">
-                    <i class="fas fa-undo"></i>
-                </button>
-            </form>
+
+
+            </div>
         </div>
 
 
@@ -208,17 +262,19 @@
 
         </div>
 
-        <!-- Actions -->
-        <div class="d-flex justify-content-between align-items-center my-4">
-            <div class="btn-group">
-                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modal-create-wasta">
-                    <i class="fas fa-plus me-1"></i> Add Wasta
-                </button>
-                <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#attendanceModal">
-                    <i class="fas fa-plus me-1"></i> Add Labour
-                </button>
+        @if ($user === 'admin' || $user === 'user')
+            <!-- Actions -->
+            <div class="d-flex justify-content-between align-items-center my-4">
+                <div class="btn-group">
+                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modal-create-wasta">
+                        <i class="fas fa-plus me-1"></i> Add Wasta
+                    </button>
+                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#attendanceModal">
+                        <i class="fas fa-plus me-1"></i> Add Labour
+                    </button>
+                </div>
             </div>
-        </div>
+        @endif
 
         <!-- Tabs: Summary View | Calendar View -->
         <ul class="nav nav-tabs mb-3" id="attendanceTabs" role="tablist">
@@ -276,7 +332,8 @@
                         <table class="table table-sm mb-0" style="width: auto; min-width: 100%;">
                             <thead class="table-light sticky-top">
                                 <tr>
-                                    <th class="sticky-start bg-white" style="min-width: 200px; z-index: 3;">Wasta/Labour
+                                    <th class="sticky-start bg-white" style="min-width: 200px; z-index: 3;">
+                                        Wasta/Labour
                                     </th>
                                     @for ($day = 1; $day <= $daysInMonth; $day++)
                                         @php
@@ -300,7 +357,7 @@
                                             </div>
                                         </th>
                                     @endfor
-                                  
+
                                 </tr>
                             </thead>
                             <tbody>
@@ -346,10 +403,12 @@
                                                 @if ($attendance && $attendance->is_present)
                                                     <i class="fas fa-check text-success"></i>
                                                 @elseif ($isToday)
-                                                    <input type="checkbox"
-                                                        class="form-check-input wasta-attendance-checkbox"
-                                                        data-wasta-id="{{ $wasta->id }}"
-                                                        data-date="{{ $dateFormatted }}">
+                                                    @if ($user === 'admin' || $user === 'user')
+                                                        <input type="checkbox"
+                                                            class="form-check-input wasta-attendance-checkbox"
+                                                            data-wasta-id="{{ $wasta->id }}"
+                                                            data-date="{{ $dateFormatted }}">
+                                                    @endif
                                                 @elseif ($isPast)
                                                     <i class="fas fa-times text-danger"></i>
                                                 @else
@@ -357,7 +416,7 @@
                                                 @endif
                                             </td>
                                         @endfor
-                                  
+
                                     </tr>
 
                                     <!-- Labour Rows (Collapsed) -->
@@ -394,10 +453,12 @@
                                                     @if ($attendance && $attendance->is_present)
                                                         <i class="fas fa-check text-success"></i>
                                                     @elseif ($isToday)
-                                                        <input type="checkbox"
-                                                            class="form-check-input labour-attendance-checkbox"
-                                                            data-labour-id="{{ $labour->id }}"
-                                                            data-date="{{ $dateFormatted }}">
+                                                        @if ($user === 'admin' || $user === 'user')
+                                                            <input type="checkbox"
+                                                                class="form-check-input labour-attendance-checkbox"
+                                                                data-labour-id="{{ $labour->id }}"
+                                                                data-date="{{ $dateFormatted }}">
+                                                        @endif
                                                     @elseif ($isPast)
                                                         <i class="fas fa-times text-danger"></i>
                                                     @else
@@ -405,13 +466,12 @@
                                                     @endif
                                                 </td>
                                             @endfor
-                                         
+
                                         </tr>
                                     @endforeach
-
                                 @endforeach
 
-                              
+
                             </tbody>
                         </table>
                     </div>
@@ -427,7 +487,8 @@
 
 
     <!-- Create Wasta Modal -->
-    <div id="modal-create-wasta" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div id="modal-create-wasta" class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
@@ -476,7 +537,7 @@
 
     <!-- Labour Attendance Modal -->
     <div class="modal fade" id="attendanceModal" tabindex="-1" aria-labelledby="attendanceModalLabel"
-        aria-hidden="true">
+        data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
@@ -542,7 +603,8 @@
     </div>
 
     <!-- Wasta Modal -->
-    <div class="modal fade" id="modal-edit-wasta" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modal-edit-wasta" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -564,7 +626,8 @@
     </div>
 
     <!-- Labour Modal -->
-    <div class="modal fade" id="modal-edit-labour" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modal-edit-labour" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -813,12 +876,9 @@
 
         <script>
             function resetSiteFilters() {
-                const form = document.getElementById('siteAttendanceFilterForm');
-                const now = new Date();
-                const currentMonth = now.getMonth() + 1;
-                const monthStr = currentMonth < 10 ? '0' + currentMonth : currentMonth;
-                form.querySelector('input[name="monthYear"]').value = `${now.getFullYear()}-${monthStr}`;
-                form.submit();
+                // Reset the form and submit
+                document.getElementById('siteAttendanceFilterForm').reset();
+                document.getElementById('siteAttendanceFilterForm').submit();
             }
         </script>
     @endpush

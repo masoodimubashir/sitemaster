@@ -6,6 +6,7 @@ use App\Models\Labour;
 use App\Models\Phase;
 use App\Models\Site;
 use App\Models\Wasta;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -42,6 +43,19 @@ class AttendanceSheetController extends Controller
             $wastasQuery->whereHas('phase.site', function ($query) use ($request) {
                 $query->where('id', $request->input('site_id'));
             });
+        }
+
+         // Get month/year from request or use current
+        if ($request->filled('monthYear')) {
+            [$year, $month] = explode('-', $request->input('monthYear'));
+        } else {
+            $month = now()->month;
+            $year = now()->year;
+        }
+
+        // Filter by phase if selected
+        if ($request->filled('phase_id')) {
+            $wastasQuery->where('phase_id', $request->phase_id);
         }
 
         // Final fetch and calculation
@@ -267,8 +281,10 @@ class AttendanceSheetController extends Controller
 
     public function showAttendanceBySite(Request $request, string $id)
     {
-        $site = Site::find($id);
 
+        $site = Site::findOrFail($id);
+
+        // Get month/year from request or use current
         if ($request->filled('monthYear')) {
             [$year, $month] = explode('-', $request->input('monthYear'));
         } else {
@@ -276,7 +292,8 @@ class AttendanceSheetController extends Controller
             $year = now()->year;
         }
 
-        $wastas = Wasta::with([
+        // Base query for wastas
+        $wastasQuery = Wasta::with([
             'attendances' => function ($query) use ($month, $year) {
                 $query->whereMonth('attendance_date', $month)
                     ->whereYear('attendance_date', $year);
@@ -286,34 +303,34 @@ class AttendanceSheetController extends Controller
                     ->whereYear('attendance_date', $year);
             },
             'phase'
-        ])
-            ->whereHas('phase.site', function ($query) use ($site) {
-                $query->where('id', $site->id);
-            })
-            ->get()
-            ->map(function ($wasta) use ($month, $year) {
-                // Calculate present days for wasta
-                $wasta->present_days = $wasta->attendances->where('is_present', true)->count();
-                $wasta->total_amount = $wasta->present_days * $wasta->price;
+        ])->whereHas('phase.site', function ($query) use ($site) {
+            $query->where('id', $site->id);
+        });
 
-                // Calculate for each labour
-                $wasta->labours->each(function ($labour) use ($month, $year) {
-                    $labour->present_days = $labour->attendances->where('is_present', true)->count();
-                    $labour->total_amount = $labour->present_days * $labour->price;
-                });
+        // Filter by phase if selected
+        if ($request->filled('phase_id')) {
+            $wastasQuery->where('phase_id', $request->phase_id);
+        }
 
-                $wasta->labours_total_amount = $wasta->labours->sum('total_amount');
-                $wasta->combined_total = $wasta->total_amount + $wasta->labours_total_amount;
+        $wastas = $wastasQuery->get()->map(function ($wasta) use ($month, $year) {
+            // Calculate present days for wasta
+            $wasta->present_days = $wasta->attendances->where('is_present', true)->count();
+            $wasta->total_amount = $wasta->present_days * $wasta->price;
 
-                return $wasta;
+            // Calculate for each labour
+            $wasta->labours->each(function ($labour) use ($month, $year) {
+                $labour->present_days = $labour->attendances->where('is_present', true)->count();
+                $labour->total_amount = $labour->present_days * $labour->price;
             });
 
+            $wasta->labours_total_amount = $wasta->labours->sum('total_amount');
+            $wasta->combined_total = $wasta->total_amount + $wasta->labours_total_amount;
 
+            return $wasta;
+        });
 
-        $daysInMonth = \Carbon\Carbon::create($year, $month)->daysInMonth;
+        $daysInMonth = Carbon::create($year, $month)->daysInMonth;
         $phases = Phase::where('site_id', $site->id)->orderBy('phase_name')->get();
-
-
 
         // Calculate site totals
         $siteTotal = [
@@ -321,7 +338,6 @@ class AttendanceSheetController extends Controller
             'labour_amount' => $wastas->sum('labours_total_amount'),
             'combined_total' => $wastas->sum('combined_total')
         ];
-
 
         return view('profile.partials.Admin.Ledgers.site-wager-attendance-sheet', compact(
             'wastas',
@@ -335,6 +351,6 @@ class AttendanceSheetController extends Controller
     }
 
 
-   
+
 
 }

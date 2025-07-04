@@ -44,7 +44,7 @@
                 </form>
 
                 <!-- Filter Form -->
-                <form method="GET" action="{{ url('admin/wager-attendance') }}"
+                <form method="GET" action="{{ url($user . '/wager-attendance') }}"
                     class="d-flex flex-wrap align-items-center gap-2" id="attendanceFilterForm">
                     <!-- Site Filter -->
                     <div class="input-group input-group-sm" style="width: 150px;">
@@ -75,14 +75,7 @@
             </div>
         </div>
 
-        <script>
-            function resetFilters() {
-                // Reset form values
-                document.getElementById('attendanceFilterForm').reset();
-                // Submit the form to reload with default values
-                document.getElementById('attendanceFilterForm').submit();
-            }
-        </script>
+       
         <!-- Summary Cards -->
         <div class="row g-3">
             @php
@@ -404,7 +397,8 @@
     </style>
 
     <!-- Create Wasta Modal -->
-    <div id="modal-create-wasta" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div id="modal-create-wasta" class="modal fade" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-body">
@@ -452,7 +446,8 @@
     </div>
 
     <!-- Labour Attendance Modal -->
-    <div class="modal fade" id="attendanceModal" tabindex="-1" aria-labelledby="attendanceModalLabel"
+    <div class="modal fade" id="attendanceModal" tabindex="-1" aria-labelledby="attendanceModalLabel" data-bs-backdrop="static"
+        data-bs-keyboard="false"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -520,7 +515,8 @@
     </div>
 
     <!-- Wasta Modal -->
-    <div class="modal fade" id="modal-edit-wasta" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modal-edit-wasta" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -543,7 +539,8 @@
     </div>
 
     <!-- Labour Modal -->
-    <div class="modal fade" id="modal-edit-labour" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="modal-edit-labour" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -801,6 +798,15 @@
 
                 // Submit the form
                 form.submit();
+            }
+        </script>
+
+         <script>
+            function resetFilters() {
+                // Reset form values
+                document.getElementById('attendanceFilterForm').reset();
+                // Submit the form to reload with default values
+                document.getElementById('attendanceFilterForm').submit();
             }
         </script>
     @endpush

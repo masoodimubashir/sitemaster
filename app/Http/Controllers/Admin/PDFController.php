@@ -366,9 +366,14 @@ class PDFController extends Controller
             $site = Site::find($request->input('site_id'));
         }
 
+        // Filter by phase if selected
+        if ($request->filled('phase_id')) {
+            $wastasQuery->where('phase_id', $request->input('phase_id'));
+        }
+
         $wastas = $wastasQuery->get();
 
-        // Group wastas by phase
+        // Group wastas by phase (even if filtered by single phase)
         $phases = $wastas->groupBy('phase_id');
 
         // Get date range for the month
@@ -438,7 +443,6 @@ class PDFController extends Controller
         $pdf->Output();
         exit;
     }
-
     protected function prepareAttendanceData($wastas, $startDate, $endDate)
     {
         $attendanceData = [];

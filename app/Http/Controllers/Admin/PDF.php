@@ -845,12 +845,21 @@ class PDF extends Fpdf
         $this->SetTextColor(0);
         $this->SetFont('helvetica', '', 8);
 
+
         foreach ($workers as $worker) {
             $this->Cell($nameColWidth, 6, $worker['name'], 'LR', 0, 'L');
 
             foreach ($dates as $date) {
-                $this->Cell($dateColWidth, 6, $attendanceData[$date][$worker['name']] ?? 0, 'LR', 0, 'C');
+
+
+                $attendance = 0;
+                if ($attendanceData[$worker['name']][$date]) {
+                    $attendance = $attendanceData[$worker['name']][$date] === 1 ? 'P' : 'A';
+                }
+                $this->Cell($dateColWidth, 6, $attendance, 'LR', 0, 'C');
             }
+
+            $this->Cell(30, 6, '', 'LR', 0, 'L');
             $this->Ln();
         }
 
@@ -860,7 +869,7 @@ class PDF extends Fpdf
 
         // Totals section
         $this->SetFont('helvetica', 'B', 10);
-        $this->Cell(0, 8, 'TOTALS FOR ' . strtoupper($info['phase_name']), 0, 1);   
+        $this->Cell(0, 8, 'TOTALS FOR ' . strtoupper($info['phase_name']), 0, 1);
 
         // Wasta totals
         foreach ($totals['wastas'] as $name => $data) {

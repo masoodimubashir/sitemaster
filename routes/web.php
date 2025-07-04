@@ -72,6 +72,9 @@ Route::middleware(['auth:clients', 'isClient'])->prefix('client')->group(functio
     Route::get('/site-payment/report/{id}', [PDFController::class, 'showSitePaymentPdf']);
     Route::get('/ledger/report', [PDFController::class, 'showLedgerPdf']);
 
+    Route::get('/attendance/site/show/{id}', [AttendanceSheetController::class, 'showAttendanceBySite']);
+
+
 });
 
 
@@ -292,6 +295,8 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::put('/attendance/wasta/update/{id}', [AttendanceSheetController::class, 'updateWasta']);
     Route::put('/attendance/labour/update/{id}', [AttendanceSheetController::class, 'updateLabour']);
     Route::get('/attendance/site/show/{id}', [AttendanceSheetController::class, 'showAttendanceBySite']);
+    Route::get('attendance/pdf', [PDFController::class, 'generateAttendancePdf'])->name('generateAttendancePdf');
+
 
 
     Route::get('/item-verification', [ItemsVerificationController::class, 'index']);
