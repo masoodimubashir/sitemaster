@@ -219,12 +219,6 @@
                     @if ($user === 'admin')
                         <li>
                             <a class="dropdown-item"
-                                href="{{ url($user . '/unverified-supplier-payments/' . $data['supplier']->id) }}">
-                                <i class="fas fa-exclamation-circle me-2"></i> Unverified Payments
-                            </a>
-                        </li>
-                        <li>
-                            <a class="dropdown-item"
                                 href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}">
                                 <i class="fas fa-file-invoice me-2"></i> Payment Report
                             </a>
@@ -445,7 +439,7 @@
                                 class="form-select text-black form-select-sm" style="cursor: pointer"
                                 onchange="togglePayOptions()">
                                 <option value="" selected>Select Payee</option>
-                                <option value="1">Supplier</option>
+                                <option value="1">Site</option>
                                 <option value="0">Admin</option>
                             </select>
                         </div>

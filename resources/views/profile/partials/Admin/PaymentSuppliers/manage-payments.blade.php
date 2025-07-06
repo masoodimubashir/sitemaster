@@ -169,19 +169,39 @@
                                                         {{ $payment['entity_type'] === Site::class ? 'Site' : 'Supplier' }}
                                                     </span>
                                                 </td>
+
                                                 <td>
                                                     <span>
                                                         {{ ucfirst($payment['entity_type'] === Site::class ? $payment['entity']->site_name : $payment['entity']->name) }}
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <span
-                                                        class="fw-bold text-{{ $payment['transaction_type'] === 1 ? 'warning' : 'success' }}">
-                                                        <i
-                                                            class="fas fa-{{ $payment['transaction_type'] === 1 ? 'arrow-up' : 'arrow-down' }} me-1">
-                                                        </i>
-                                                        {{ $payment['transaction_type'] === 1 ? 'Sent' : 'Received' }}
-                                                    </span>
+                                                    @php
+                                                        $type = $payment['transaction_type'];
+                                                    @endphp
+
+                                                    @if ($type === 1)
+                                                        <span class="fw-bold text-warning">
+                                                            <i class="fas fa-arrow-up me-1"></i>
+                                                            Sent
+                                                        </span>
+                                                    @elseif ($type === 0)
+                                                        <span class="fw-bold text-success">
+                                                            <i class="fas fa-arrow-down me-1"></i>
+                                                            Received
+                                                        </span>
+                                                    @elseif (is_null($type))
+                                                        <span class="fw-bold text-secondary">
+                                                            <i class="fas fa-question-circle me-1"></i>
+                                                            NA
+                                                        </span>
+                                                    @else
+                                                        <span class="fw-bold text-muted">
+                                                            <i class="fas fa-ban me-1"></i>
+                                                            N/A
+                                                        </span>
+                                                    @endif
+
                                                 </td>
                                                 <td class="text-end">
                                                     <span

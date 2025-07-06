@@ -442,7 +442,7 @@
                                 class="form-select text-black form-select-sm" style="cursor: pointer"
                                 onchange="togglePayOptions()">
                                 <option value="" selected>Select Payee</option>
-                                <option value="1">Supplier</option>
+                                <option value="1">Site</option>
                                 <option value="0">Admin</option>
                             </select>
                         </div>

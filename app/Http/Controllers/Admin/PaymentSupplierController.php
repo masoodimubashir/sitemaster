@@ -46,11 +46,22 @@ class PaymentSupplierController extends Controller
                 'payment_initiator' => 'required|in:0,1',
             ]);
 
+
+
             if ($validatedData->fails()) {
                 return response()->json([
                     'errors' => $validatedData->errors(),
                 ], 422);
             }
+
+
+            if (auth()->user()->role_name === 'site_engineer') {
+                $this->sendpaymentToAdmin($request);
+                return response()->json([
+                    'message' => 'Payment To Admin'
+                ]);
+            }
+
 
             if ($request->filled('payment_initiator') && !$request->filled('site_id')) {
 
@@ -142,5 +153,20 @@ class PaymentSupplierController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+
+    private function sendpaymentToAdmin($request)
+    {
+
+        AdminPayment::create([
+            'amount' => $request->input('amount'),
+            'transaction_type' => $request->input('transaction_type'),
+            'site_id' => $request->input('site_id'),
+            'supplier_id' => $request->input('supplier_id'),
+            'entity_id' => $request->input('supplier_id'),
+            'entity_type' => Supplier::class,
+        ]);
+
     }
 }

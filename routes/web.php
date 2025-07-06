@@ -68,7 +68,6 @@ Route::middleware(['auth:clients', 'isClient'])->prefix('client')->group(functio
     Route::get('/generate-report/{id}', GenerateReportController::class)->name('generate-report');
     Route::get('/download-site/report/{id}', [PDFController::class, 'showSitePdf']);
     Route::get('/download-phase/report/{id}', [PDFController::class, 'showPhasePdf']);
-    // Route::get('/supplier-payment/report/{id}', [PDFController::class, 'showSupplierPaymentPdf']);
     Route::get('/site-payment/report/{id}', [PDFController::class, 'showSitePaymentPdf']);
     Route::get('/ledger/report', [PDFController::class, 'showLedgerPdf']);
 

@@ -124,7 +124,7 @@ class PaymentsController extends Controller
 
             $validatedData = Validator::make($request->all(), [
                 'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
-                'transaction_type' => 'required|in:0,1',
+                'transaction_type' => 'nullable|in:0,1',
                 'entity_type' => 'required|in:site,supplier',
                 'entity_id' => 'required|integer',
                 'payment_id' => 'required|integer',
@@ -138,6 +138,7 @@ class PaymentsController extends Controller
             }
 
             $adminPayment = AdminPayment::find($request->input('payment_id'));
+
             if (!$adminPayment) {
                 return response()->json([
                     'error' => 'Admin payment entry not found.',
@@ -150,16 +151,48 @@ class PaymentsController extends Controller
                 ], 422);
             }
 
+            $transactionType = $request->input('transaction_type');
+            $entityType = $request->input('entity_type');
+            $entityId = $request->input('entity_id');
+
+            // Determine site_id and supplier_id based on logic
+            $siteId = null;
+            $supplierId = null;
+
+            if (is_null($transactionType)) {
+                // Internal/system transfer must involve both site and supplier
+                if ($entityType === 'site') {
+                    $siteId = $entityId;
+                    $supplierId = $adminPayment->supplier_id;
+                } elseif ($entityType === 'supplier') {
+                    $supplierId = $entityId;
+                    $siteId = $adminPayment->site_id;
+                }
+
+
+                if (!$siteId || !$supplierId) {
+                    return response()->json([
+                        'error' => 'Both site and supplier must be specified for internal transfers.',
+                    ], 422);
+                }
+
+            } else {
+                // For normal sent/received transactions
+                if ($entityType === 'site') {
+                    $siteId = $entityId;
+                } elseif ($entityType === 'supplier') {
+                    $supplierId = $entityId;
+                }
+            }
 
             $payment = Payment::create([
                 'amount' => $request->input('amount'),
-                'transaction_type' => $request->input('transaction_type'),
-                'site_id' => $request->input('entity_type') === 'site' ? $request->input('entity_id') : null,
-                'supplier_id' => $request->input('entity_type') === 'supplier' ? $request->input('entity_id') : null,
+                'transaction_type' => $transactionType,
+                'site_id' => $siteId,
+                'supplier_id' => $supplierId,
                 'verified_by_admin' => 1,
-                'payment_initiator' => $request->filled('supplier_id') || $request->filled('site_id') ? 1 : 0,
+                'payment_initiator' => 1, // Always admin for now
             ]);
-
 
             if (!$payment) {
                 DB::rollBack();
@@ -168,7 +201,7 @@ class PaymentsController extends Controller
                 ], 500);
             }
 
-            if ($adminPayment->amount === $request->input('amount')) {
+            if ($adminPayment->amount == $request->input('amount')) {
                 $adminPayment->delete();
             } else {
                 $adminPayment->update([
@@ -176,12 +209,11 @@ class PaymentsController extends Controller
                 ]);
             }
 
-
             DB::commit();
 
             return response()->json([
                 'message' => 'Payment created successfully.',
-            ], 201); // Return 201 Created
+            ], 201);
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -192,6 +224,7 @@ class PaymentsController extends Controller
                 'error' => 'Payment cannot be made. Please try again later.',
             ], 500);
         }
+
     }
 
     /**
@@ -275,5 +308,5 @@ class PaymentsController extends Controller
         //
     }
 
-    
+
 }

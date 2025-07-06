@@ -137,11 +137,11 @@ class PDFController extends Controller
         $pdf->AliasNbPages();
         $pdf->AddPage();
         $pdf->SetFont('Times', '', 12);
-        $pdf->SetTitle('Site Info');
+        $pdf->SetTitle('Site PDF');
         $pdf->infoTable($headers, $data);
-        $pdf->siteTableData($phaseData); // Render each phase block
-        $pdf->Output();
-        exit;
+        $pdf->siteTableData($phaseData); 
+        $file_name = 'Site PDF_' .  $data['site_name'] . '_' . Carbon::now()->format('Y-m-d') . '.pdf';
+        return $pdf->Output($file_name, 'D');
     }
 
     public function showPhasePdf(string $id)
@@ -223,10 +223,11 @@ class PDFController extends Controller
         $pdf->AliasNbPages();
         $pdf->AddPage();
         $pdf->SetFont('Times', '', 12);
-        $pdf->SetTitle('Site Phase Info');
+        $pdf->SetTitle('Site Phase Report');
         $pdf->phaseTableData($headers, $phases, $phaseCosting);
-        $pdf->Output();
-        exit;
+        $file_name = 'Site_' . $phase->phase_name . "_" . "Phase" . '_' . Carbon::now()->format('Y-m-d')  . '.pdf';
+        return $pdf->Output($file_name, 'D');
+    
     }
 
 
@@ -246,8 +247,8 @@ class PDFController extends Controller
         $pdf->SetFont('Times', '', 12);
         $pdf->SetTitle('Supplier Payment History');
         $pdf->supplierPaymentTable($supplier);
-        $pdf->Output();
-        exit;
+        $file_name = 'Payments_' . $supplier->name . '_' . Carbon::now()->format('Y-m-d') . '.pdf';
+        return $pdf->Output($file_name, 'D');
     }
 
     public function showSitePaymentPdf(string $id)
@@ -269,10 +270,10 @@ class PDFController extends Controller
         $pdf->AliasNbPages();
         $pdf->AddPage();
         $pdf->SetFont('Times', '', 12);
-        $pdf->SetTitle('Supplier Payment History');
+        $pdf->SetTitle('Site Payment');
         $pdf->sitePaymentTable($site);
-        $pdf->Output();
-        exit;
+        $file_name = 'Payments_' . $site->site_name . '_' . Carbon::now()->format('Y-m-d') . '.pdf';
+        return $pdf->Output($file_name, 'D');
     }
 
     public function showLedgerPdf(Request $request, DataService $dataService)
@@ -328,10 +329,11 @@ class PDFController extends Controller
         $pdf->AliasNbPages();
         $pdf->AddPage();
         $pdf->SetFont('Times', '', 10);
-        $pdf->SetTitle('Supplier Payment History');
+        $pdf->SetTitle('Ledger');
         $pdf->ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance, $service_charge_amount);
-        $pdf->Output();
-        exit;
+        $file_name = 'Ledger_' . Carbon::now()->format('Y-m-d') . '.pdf';
+        return $pdf->Output($file_name, 'D');
+
     }
 
     public function generateAttendancePdf(Request $request)
@@ -437,11 +439,10 @@ class PDFController extends Controller
             );
         }
 
-        $filename = 'Phasewise_Attendance_' .
+        $filename = 'Attendance_' .
             ($site ? $site->site_name . '_' : '') .
             $month . '_' . $year . '.pdf';
-        $pdf->Output();
-        exit;
+        return $pdf->Output($filename, 'D');
     }
     protected function prepareAttendanceData($wastas, $startDate, $endDate)
     {

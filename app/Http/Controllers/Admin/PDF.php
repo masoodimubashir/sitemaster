@@ -5,7 +5,8 @@ namespace App\Http\Controllers\Admin;
 
 use Carbon\Carbon;
 use Fpdf\Fpdf;
-use Illuminate\Support\Number;
+use Illuminate\Support\Str;
+
 
 class PDF extends Fpdf
 {
@@ -57,7 +58,7 @@ class PDF extends Fpdf
         $this->SetFont('Arial', 'I', 10);
         $this->SetTextColor(81, 177, 225);
         $this->cell(47 * 2, 10, 'Address:' . ' Model Town A, Sopore', 0, 0, 'L');
-        $this->cell(47 * 2, 10, 'Contact No: ' . +919797230468, 0, 0, 'R');
+        $this->cell(47 * 2, 10, 'Contact No: ' . +919797230468, 0, 0, 'L');
         $this->Ln(20);
     }
 
@@ -68,23 +69,21 @@ class PDF extends Fpdf
         $this->SetFont('Arial', 'I', 10);
         $this->SetTextColor(81, 177, 225);
         $this->Cell(47 * 2, 10, 'Developed By Py.Sync PVT LTD ', 0, 0, 'L');
-        $this->Cell(47 * 2, 10, 'Page ' . $this->PageNo() . '/{nb}', 0, 0, 'R');
+        $this->Cell(47 * 2, 10, 'Page ' . $this->PageNo() . '/{nb}', 0, 0, 'L');
     }
 
     public function infoTable(array $headers, array $data)
     {
+
+
         if (empty($data)) {
             $this->Cell(0, 10, 'No site data available', 1);
             $this->Ln();
             return;
         }
 
-        $this->Ln();
-        $this->Ln();
-
         // Set title styling
         $this->SetTextColor(0, 170, 183);
-        $this->Text(188 / 2, 40, 'SiteMaster');
 
         // Set general styling
         $this->SetFontSize($this->font_size);
@@ -141,7 +140,6 @@ class PDF extends Fpdf
         if (empty($ledgersGroupedByPhase)) {
             $this->Cell(0, 10, 'No data available', 1, 0, 'C');
             $this->Ln();
-            $this->Output('site_financial_report.pdf', 'I');
             return;
         }
 
@@ -151,7 +149,7 @@ class PDF extends Fpdf
             $this->SetFillColor(0, 170, 183);
             $this->SetTextColor(255, 255, 255);
             $this->SetFont('', 'B', 12);
-            $this->Cell(0, 10, strtoupper($phaseData['phase']) . ' PHASE', 1, 1, 'C', true);
+            $this->Cell($this->width * 4, 10, strtoupper($phaseData['phase']), 1, 1, 'C', true);
             $this->SetFont('', '', 10);
 
             // Summary Table
@@ -173,8 +171,10 @@ class PDF extends Fpdf
 
 
     function phaseTableData($headers, $phases, $phaseCosting)
+
     {
-        $this->SetFont('', '', 11); // Set uniform font (no bold)
+
+        $this->SetFont('', '', 8); // Set uniform font (no bold)
         $this->SetTextColor(51, 51, 51); // Default text color
 
         if (empty($phases)) {
@@ -183,10 +183,6 @@ class PDF extends Fpdf
             $this->Ln();
             return;
         }
-
-        // Title Section
-        $this->Cell(0, 10, 'SiteMaster', 0, 1, 'C');
-        $this->Ln(5);
 
         // Phase Details Section
         $this->SetFillColor(245, 245, 245);
@@ -243,9 +239,9 @@ class PDF extends Fpdf
             $this->SetTextColor(51, 51, 51);
 
             $this->Cell($this->width * 1, $this->height, $label, 1);
-            $this->Cell($this->width * 1, $this->height, number_format($amount, 2), 1, 0, 'R');
-            $this->Cell($this->width * 1, $this->height, number_format($serviceCharge, 2), 1, 0, 'R');
-            $this->Cell($this->width * 1, $this->height, number_format($total, 2), 1, 1, 'R');
+            $this->Cell($this->width * 1, $this->height, number_format($amount, 2), 1, 0, 'L');
+            $this->Cell($this->width * 1, $this->height, number_format($serviceCharge, 2), 1, 0, 'L');
+            $this->Cell($this->width * 1, $this->height, number_format($total, 2), 1, 1, 'L');
 
             $totalAmount += $amount;
             $totalServiceCharge += $serviceCharge;
@@ -254,23 +250,23 @@ class PDF extends Fpdf
         // Subtotal Row
         $this->SetFillColor(245, 245, 245);
         $this->Cell($this->width * 1, $this->height, 'Sub Total', 1);
-        $this->Cell($this->width * 1, $this->height, number_format($totalAmount, 2), 1, 0, 'R');
-        $this->Cell($this->width * 1, $this->height, number_format($totalServiceCharge, 2), 1, 0, 'R');
-        $this->Cell($this->width * 1, $this->height, number_format($totalAmount + $totalServiceCharge, 2), 1, 1, 'R');
+        $this->Cell($this->width * 1, $this->height, number_format($totalAmount, 2), 1, 0, 'L');
+        $this->Cell($this->width * 1, $this->height, number_format($totalServiceCharge, 2), 1, 0, 'L');
+        $this->Cell($this->width * 1, $this->height, number_format($totalAmount + $totalServiceCharge, 2), 1, 1, 'L');
 
         $this->AddPage();
 
         // Construction Materials Table
-        if (!$phases['construction_material_billings']->isEmpty()) {
+        if ($phases['construction_material_billings']->isNotEmpty()) {
             $this->Ln(5);
-            $this->Cell($this->width / 1, 10, 'Construction Materials', 0, 1, 'C');
+            $this->Cell($this->width / 1, 10, 'Construction Materials', 0, 1, 'L');
 
             // Header
             $this->SetFillColor(0, 170, 183);
             $this->SetTextColor(255);
             $headers = ['Date', 'Item Name', 'Supplier', 'Amount', 'Service Charge', 'Total'];
             foreach ($headers as $header) {
-                $this->Cell($this->width / 1.5, $this->height, $header, 1, 0, 'C', true);
+                $this->Cell($this->width / 1.5, $this->height, $header, 1, 0, 'L', true);
             }
             $this->Ln();
 
@@ -282,22 +278,22 @@ class PDF extends Fpdf
                 $this->Cell($this->width / 1.5, $this->height, date('Y-m-d', strtotime($material->created_at)), 1);
                 $this->Cell($this->width / 1.5, $this->height, $material->item_name, 1);
                 $this->Cell($this->width / 1.5, $this->height, $material->supplier->name ?? '-', 1);
-                $this->Cell($this->width / 1.5, $this->height, number_format($amount, 2), 1, 0, 'R');
-                $this->Cell($this->width / 1.5, $this->height, number_format($charge, 2), 1, 0, 'R');
-                $this->Cell($this->width / 1.5, $this->height, number_format($amount + $charge, 2), 1, 1, 'R');
+                $this->Cell($this->width / 1.5, $this->height, number_format($amount, 2), 1, 0, 'L');
+                $this->Cell($this->width / 1.5, $this->height, number_format($charge, 2), 1, 0, 'L');
+                $this->Cell($this->width / 1.5, $this->height, number_format($amount + $charge, 2), 1, 1, 'L');
             }
         }
 
         // Square Footage Bills Table
-        if (!$phases['square_footage_bills']->isEmpty()) {
+        if ($phases['square_footage_bills']->isNotEmpty()) {
             $this->Ln(5);
-            $this->Cell($this->width / 1, 10, 'Square Footage Bills', 0, 1, 'C');
+            $this->Cell($this->width / 1, 10, 'Square Footage Bills', 0, 1, 'L');
 
             $this->SetFillColor(0, 170, 183);
             $this->SetTextColor(255);
             $headers = ['Date', 'Work Type', 'Supplier', 'Price', 'Multiplier', 'Service Charge', 'Total'];
             foreach ($headers as $header) {
-                $this->Cell($this->width / 1.75, $this->height, $header, 1, 0, 'C', true);
+                $this->Cell($this->width / 1.75, $this->height, $header, 1, 0, 'L', true);
             }
             $this->Ln();
 
@@ -307,24 +303,24 @@ class PDF extends Fpdf
                 $charge = $this->getServiceChargeAmount($total, $phases['service_charge']);
                 $this->Cell($this->width / 1.75, $this->height, date('Y-m-d', strtotime($sqft->created_at)), 1);
                 $this->Cell($this->width / 1.75, $this->height, $sqft->wager_name, 1);
-                $this->Cell($this->width / 1.75, $this->height, $sqft->supplier->name ?? '-', 1);
-                $this->Cell($this->width / 1.75, $this->height, number_format($sqft->price, 2), 1, 0, 'R');
-                $this->Cell($this->width / 1.75, $this->height, $sqft->multiplier, 1, 0, 'R');
-                $this->Cell($this->width / 1.75, $this->height, number_format($charge, 2), 1, 0, 'R');
-                $this->Cell($this->width / 1.75, $this->height, number_format($total + $charge, 2), 1, 1, 'R');
+                $this->Cell($this->width / 1.75,$this->height,Str::words($sqft->supplier->name ?? '-', 2, ''),1);
+                $this->Cell($this->width / 1.75, $this->height, number_format($sqft->price, 2), 1, 0, 'L');
+                $this->Cell($this->width / 1.75, $this->height, $sqft->multiplier, 1, 0, 'L');
+                $this->Cell($this->width / 1.75, $this->height, number_format($charge, 2), 1, 0, 'L');
+                $this->Cell($this->width / 1.75, $this->height, number_format($total + $charge, 2), 1, 1, 'L');
             }
         }
 
         // Daily Expenses Table
-        if (!$phases['daily_expenses']->isEmpty()) {
+        if ($phases['daily_expenses']->isNotEmpty()) {
             $this->Ln(5);
-            $this->Cell($this->width / 1.25, 10, 'Daily Expenses', 0, 1, 'C');
+            $this->Cell($this->width / 1.25, 10, 'Daily Expenses', 0, 1, 'L');
 
             $this->SetFillColor(0, 170, 183);
             $this->SetTextColor(255);
             $headers = ['Date', 'Item Name', 'Amount', 'Service Charge', 'Total'];
             foreach ($headers as $header) {
-                $this->Cell($this->width / 1.25, $this->height, $header, 1, 0, 'C', true);
+                $this->Cell($this->width / 1.25, $this->height, $header, 1, 0, 'L', true);
             }
             $this->Ln();
 
@@ -333,22 +329,22 @@ class PDF extends Fpdf
                 $charge = $this->getServiceChargeAmount($expense->price, $phases['service_charge']);
                 $this->Cell($this->width / 1.25, $this->height, date('Y-m-d', strtotime($expense->created_at)), 1);
                 $this->Cell($this->width / 1.25, $this->height, $expense->item_name, 1);
-                $this->Cell($this->width / 1.25, $this->height, number_format($expense->price, 2), 1, 0, 'R');
-                $this->Cell($this->width / 1.25, $this->height, number_format($charge, 2), 1, 0, 'R');
-                $this->Cell($this->width / 1.25, $this->height, number_format($expense->price + $charge, 2), 1, 1, 'R');
+                $this->Cell($this->width / 1.25, $this->height, number_format($expense->price, 2), 1, 0, 'L');
+                $this->Cell($this->width / 1.25, $this->height, number_format($charge, 2), 1, 0, 'L');
+                $this->Cell($this->width / 1.25, $this->height, number_format($expense->price + $charge, 2), 1, 1, 'L');
             }
         }
 
         // Daily Wasta Table
-        if (!empty($phases['daily_wastas'])) {
+        if ($phases['daily_wastas']->isNotEmpty()) {
             $this->Ln(5);
-            $this->Cell($this->width / 1.25, 10, 'Daily Wastas', 0, 1, 'C');
+            $this->Cell($this->width / 1.25, 10, 'Daily Wastas', 0, 1, 'L');
 
             $this->SetFillColor(0, 170, 183);
             $this->SetTextColor(255);
             $headers = ['Date', 'Wasta Name', 'Amount', 'Service Charge', 'Total'];
             foreach ($headers as $header) {
-                $this->Cell($this->width / 1.25, $this->height, $header, 1, 0, 'C', true);
+                $this->Cell($this->width / 1.25, $this->height, $header, 1, 0, 'L', true);
             }
             $this->Ln();
 
@@ -357,22 +353,24 @@ class PDF extends Fpdf
                 $charge = $this->getServiceChargeAmount($wasta->price, $phases['service_charge']);
                 $this->Cell($this->width / 1.25, $this->height, date('Y-m-d', strtotime($wasta->created_at)), 1);
                 $this->Cell($this->width / 1.25, $this->height, $wasta->wasta_name, 1);
-                $this->Cell($this->width / 1.25, $this->height, number_format($wasta->price, 2), 1, 0, 'R');
-                $this->Cell($this->width / 1.25, $this->height, number_format($charge, 2), 1, 0, 'R');
-                $this->Cell($this->width / 1.25, $this->height, number_format($wasta->price + $charge, 2), 1, 1, 'R');
+                $this->Cell($this->width / 1.25, $this->height, number_format($wasta->price, 2), 1, 0, 'L');
+                $this->Cell($this->width / 1.25, $this->height, number_format($charge, 2), 1, 0, 'L');
+                $this->Cell($this->width / 1.25, $this->height, number_format($wasta->price + $charge, 2), 1, 1, 'L');
             }
         }
 
+
+
         // Daily Labour Table
-        if (!empty($phases['daily_labours'])) {
+        if ($phases['daily_labours']->isNotEmpty()) {
             $this->Ln(5);
-            $this->Cell($this->width / 1.25, 10, 'Daily Labours', 0, 1, 'C');
+            $this->Cell($this->width / 1.25, 10, 'Daily Labours', 0, 1, 'L');
 
             $this->SetFillColor(0, 170, 183);
             $this->SetTextColor(255);
             $headers = ['Date', 'Labour Name', 'Amount', 'Service Charge', 'Total'];
             foreach ($headers as $header) {
-                $this->Cell($this->width / 1.25, $this->height, $header, 1, 0, 'C', true);
+                $this->Cell($this->width / 1.25, $this->height, $header, 1, 0, 'L', true);
             }
             $this->Ln();
 
@@ -381,9 +379,9 @@ class PDF extends Fpdf
                 $charge = $this->getServiceChargeAmount($labour->price, $phases['service_charge']);
                 $this->Cell($this->width / 1.25, $this->height, date('Y-m-d', strtotime($labour->created_at)), 1);
                 $this->Cell($this->width / 1.25, $this->height, $labour->labour_name, 1);
-                $this->Cell($this->width / 1.25, $this->height, number_format($labour->price, 2), 1, 0, 'R');
-                $this->Cell($this->width / 1.25, $this->height, number_format($charge, 2), 1, 0, 'R');
-                $this->Cell($this->width / 1.25, $this->height, number_format($labour->price + $charge, 2), 1, 1, 'R');
+                $this->Cell($this->width / 1.25, $this->height, number_format($labour->price, 2), 1, 0, 'L');
+                $this->Cell($this->width / 1.25, $this->height, number_format($charge, 2), 1, 0, 'L');
+                $this->Cell($this->width / 1.25, $this->height, number_format($labour->price + $charge, 2), 1, 1, 'L');
             }
         }
     }
@@ -391,46 +389,82 @@ class PDF extends Fpdf
 
     function supplierPaymentTable($supplier)
     {
-
         $this->setMargins($this->m_left, $this->m_top, $this->m_right);
 
+        $this->SetFont('Arial', 'B', 12);
+        $this->SetTextColor(0, 170, 183);
+        $this->Cell(0, 10, '', 0, 1, 'L');
+        $this->Cell(0, 10, 'Supplier Details', 0, 1, 'L');
+
+
+        // Table style setup
+        $this->SetFont('Arial', '', 10);
+        $this->SetTextColor(51, 51, 51);
+        $this->SetFillColor(255, 255, 255);
+
+        // Define full width and column widths
+        $pageWidth = $this->GetPageWidth() - $this->m_left - $this->m_right;
+        $labelWidth = $pageWidth * 0.39;
+        $valueWidth = $pageWidth * 0.6;
+
+        // Helper function to add a row
+        $addSupplierRow = function ($label, $value) use ($labelWidth, $valueWidth) {
+            $this->SetFont('Arial', 'B', 10);
+            $this->Cell($labelWidth, 8, $label, 1, 0, 'L', true);
+            $this->SetFont('Arial', '', 10);
+            $this->Cell($valueWidth, 8, $value, 1, 1, 'L', true);
+        };
+
+        // Add rows
+        $addSupplierRow('Name:', $supplier->name ?? '--');
+        $addSupplierRow('Contact No:', $supplier->contact_no ?? '--');
+        $addSupplierRow('Address:', $supplier->address ?? '--');
+
+        $this->Ln(10); // space before next section
+
+        // === No Payments ===
         if ($supplier->payments->isEmpty()) {
             $this->SetFillColor(245, 245, 245);
-            $this->Cell(0, 10, 'No Data Available', 1, 0, 'C', true);
+            $this->Cell(0, 10, 'No Payment History Available', 1, 0, 'C', true);
             $this->Ln();
             return;
         }
 
-        // Title Section
+        // === Payment History Table ===
+        $this->SetFont('Arial', 'B', 12);
         $this->SetTextColor(0, 170, 183);
-        $this->Cell($this->width * 4, $this->height, 'Payment History', 0, 0, 'C');
-        $this->Ln(10);
+        $this->Cell(0, 10, 'Payment History', 0, 1, 'L');
 
-        // Table Headers
+        // Headers
         $this->SetFillColor(0, 170, 183);
         $this->SetTextColor(255, 255, 255);
+        $this->SetFont('Arial', 'B', 10);
 
-        $headers = ['Date', 'Site Name', 'Site Owner', 'Supplier', 'Amount'];
+        $headers = ['Date', 'Site Name', 'Site Owner', 'Amount'];
         foreach ($headers as $header) {
-            $this->Cell($this->width / 1.15, $this->height, $header, 1, 0, 'C', true);
+            $this->Cell($this->width / 0.92, $this->height, $header, 1, 0, 'C', true);
         }
         $this->Ln();
 
-        // Table Content
+        // Rows
         $this->SetFillColor(255, 255, 255);
         $this->SetTextColor(51, 51, 51);
+        $this->SetFont('Arial', '', 10);
 
         foreach ($supplier->payments as $payment) {
-            $this->Cell($this->width / 1.15, $this->height, $payment->created_at->format('D-M'), 1, 0, 'C', true);
-            $this->Cell($this->width / 1.15, $this->height, $payment->site->site_name ?? '--', 1, 0, 'L', true);
-            $this->Cell($this->width / 1.15, $this->height, ucwords($payment->site->site_owner_name ?? '--'), 1, 0, 'L', true);
-            $this->Cell($this->width / 1.15, $this->height, ucwords($payment->supplier->name), 1, 0, 'L', true);
-            $this->Cell($this->width / 1.15, $this->height, number_format($payment->amount, 2), 1, 1, 'R', true);
+            $this->Cell($this->width / 0.92, $this->height, $payment->created_at->format('D-M-Y'), 1, 0, 'C', true);
+            $this->Cell($this->width / 0.92, $this->height, $payment->site->site_name ?? '--', 1, 0, 'L', true);
+            $this->Cell($this->width / 0.92, $this->height, ucwords($payment->site->site_owner_name ?? '--'), 1, 0, 'L', true);
+            $this->Cell($this->width / 0.92, $this->height, number_format($payment->amount, 2), 1, 1, 'L', true);
         }
     }
 
+
     function sitePaymentTable($site)
     {
+
+        $this->setMargins($this->m_left, $this->m_top, $this->m_right);
+
 
         if (!$site) {
             $this->SetFillColor(245, 245, 245);
@@ -468,7 +502,7 @@ class PDF extends Fpdf
 
             $this->SetFillColor(245, 245, 245);
             $this->SetTextColor(51, 51, 51);
-            $this->Cell($this->width * 2, $this->height, $label, 1, 0, 'L', true);
+            $this->Cell($this->width * 2.4, $this->height, $label, 1, 0, 'L', true);
 
             $this->Cell($this->width * 2, $this->height, ucwords($value), 1, 0, 'L', true);
 
@@ -485,7 +519,7 @@ class PDF extends Fpdf
         // Table Headers with teal background
         $headers = ['Date', 'Supplier', 'Amount'];
         foreach ($headers as $header) {
-            $this->Cell($this->width * 1.34, $this->height, $header, 1, 0, 'C', true);
+            $this->Cell($this->width * 1.465, $this->height, $header, 1, 0, 'C', true);
         }
         $this->Ln();
 
@@ -494,9 +528,9 @@ class PDF extends Fpdf
         $this->SetTextColor(51, 51, 51);
 
         foreach ($site->payments as $site_payment) {
-            $this->Cell($this->width * 1.34, $this->height, $site_payment->created_at->format('d-m-y'), 1, 0, 'C', true);
-            $this->Cell($this->width * 1.34, $this->height, ucwords($site_payment->supplier->name ?? '-'), 1, 0, 'L', true);
-            $this->Cell($this->width * 1.34, $this->height, number_format($site_payment->amount, 2), 1, 1, 'R', true);
+            $this->Cell($this->width * 1.465, $this->height, $site_payment->created_at->format('d-m-y'), 1, 0, 'C', true);
+            $this->Cell($this->width * 1.465, $this->height, ucwords($site_payment->supplier->name ?? '-'), 1, 0, 'L', true);
+            $this->Cell($this->width * 1.465, $this->height, number_format($site_payment->amount, 2), 1, 1, 'L', true);
         }
     }
 
@@ -510,22 +544,20 @@ class PDF extends Fpdf
         $this->SetTextColor(0, 170, 183);
         $this->SetFontSize(16);
         $this->SetXY(10, 20); // Adjust position
-        $this->Cell(0, 10, 'SiteMaster', 0, 1, 'C');
-
         $this->Ln(10); // Add space before table
 
         $this->SetFontSize($this->font_size);
 
         // Column widths (transaction_type removed)
         $columns = [
-            'date' => $this->width / 2.9,
-            'supplier' => $this->width / 1.55,
+            'date' => $this->width / 3,
+            'supplier' => $this->width / 1.3,
             'site' => $this->width / 1.4,
             'phase' => $this->width / 1.9,
             'category' => $this->width / 2,
             'description' => $this->width / 1.4,
-            'debit' => $this->width / 2.2,
-            'credit' => $this->width / 2.2,
+            'debit' => $this->width / 2.5,
+            'credit' => $this->width / 2.5,
         ];
 
         // Table header (transaction_type removed)
@@ -545,7 +577,7 @@ class PDF extends Fpdf
             $y = $this->GetY();
             $cellHeight = 6;
 
-            $supplierText = ucwords($ledger['supplier']);
+            $supplierText = ucwords($ledger['supplier'] ?? 'NA');
             $descriptionText = ucwords($ledger['description']);
 
             $supplierHeight = ceil($this->GetStringWidth($supplierText) / $columns['supplier']) * $cellHeight;
@@ -569,7 +601,7 @@ class PDF extends Fpdf
 
             // Phase
             $this->SetXY($x, $y);
-            $this->Cell($columns['phase'], $maxHeight, ucwords($ledger['phase']), 1);
+            $this->Cell($columns['phase'], $maxHeight, ucwords($ledger['phase'] ?? 'NA'), 1);
             $x += $columns['phase'];
 
             // Category
@@ -661,9 +693,9 @@ class PDF extends Fpdf
             $phaseSubtotal += $total;
 
             $this->Cell($this->width, $this->height, $label, 1);
-            $this->Cell($this->width, $this->height, number_format($amount, 2), 1, 0, 'R');
-            $this->Cell($this->width, $this->height, number_format($serviceCharge, 2), 1, 0, 'R');
-            $this->Cell($this->width, $this->height, number_format($total, 2), 1, 0, 'R');
+            $this->Cell($this->width, $this->height, number_format($amount, 2), 1, 0, 'L');
+            $this->Cell($this->width, $this->height, number_format($serviceCharge, 2), 1, 0, 'L');
+            $this->Cell($this->width, $this->height, number_format($total, 2), 1, 0, 'L');
             $this->Ln();
         }
 
@@ -671,7 +703,7 @@ class PDF extends Fpdf
         $this->SetFillColor(245, 245, 245);
         $this->SetTextColor(0, 0, 0);
         $this->Cell($this->width, $this->height, 'Phase Total', 1);
-        $this->Cell($this->width * 3, $this->height, number_format($phaseSubtotal, 2), 1, 0, 'R');
+        $this->Cell($this->width * 3, $this->height, number_format($phaseSubtotal, 2), 1, 0, 'L');
         $this->Ln();
     }
 
@@ -700,7 +732,7 @@ class PDF extends Fpdf
             $this->Cell($this->width, $this->height, $item['created_at']->format('D-M-y'), 1);
             $this->Cell($this->width, $this->height, $item['description'], 1);
             $this->Cell($this->width, $this->height, $item['supplier'] ?? 'N/A', 1);
-            $this->Cell($this->width, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'R');
+            $this->Cell($this->width, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'L');
             $this->Ln();
         }
     }
@@ -730,9 +762,9 @@ class PDF extends Fpdf
             $this->Cell(31.3, $this->height, $item['created_at']->format('D-M-y'), 1);
             $this->Cell(31.3, $this->height, $item['description'], 1);
             $this->Cell(31.3, $this->height, $item['supplier'] ?? 'N/A', 1);
-            $this->Cell(31.3, $this->height, number_format($item['debit'], 2), 1, 0, 'R');
-            $this->Cell(31.3, $this->height, '1', 1, 0, 'R'); // Assuming multiplier is always 1
-            $this->Cell(31.3, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'R');
+            $this->Cell(31.3, $this->height, number_format($item['debit'], 2), 1, 0, 'L');
+            $this->Cell(31.3, $this->height, '1', 1, 0, 'L'); // Assuming multiplier is always 1
+            $this->Cell(31.3, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'L');
             $this->Ln();
         }
     }
@@ -760,7 +792,7 @@ class PDF extends Fpdf
         foreach ($items as $item) {
             $this->Cell($this->width * 1.33, $this->height, $item['created_at']->format('D-M-y'), 1);
             $this->Cell($this->width * 1.33, $this->height, $item['description'], 1);
-            $this->Cell($this->width * 1.33, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'R');
+            $this->Cell($this->width * 1.33, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'L');
             $this->Ln();
         }
     }
@@ -793,8 +825,8 @@ class PDF extends Fpdf
             $name = explode('/', $item['description'])[0] ?? $item['description'];
             $this->Cell($this->width, $this->height, trim($name), 1);
 
-            $this->Cell($this->width, $this->height, number_format($item['debit'], 2), 1, 0, 'R');
-            $this->Cell($this->width, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'R');
+            $this->Cell($this->width, $this->height, number_format($item['debit'], 2), 1, 0, 'L');
+            $this->Cell($this->width, $this->height, number_format($item['total_amount_with_service_charge'], 2), 1, 0, 'L');
             $this->Ln();
         }
     }

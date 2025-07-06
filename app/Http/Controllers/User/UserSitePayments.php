@@ -48,6 +48,8 @@ class UserSitePayments extends Controller
                 'payment_initiator' => 'required|in:0,1',
             ]);
 
+
+
             if ($validatedData->fails()) {
                 return response()->json(
                     [
@@ -57,42 +59,22 @@ class UserSitePayments extends Controller
                 );
             }
 
-            if ($request->filled('payment_initiator') && !$request->filled('supplier_id')) {
+            AdminPayment::create([
+                'amount' => $request->input('amount'),
+                'transaction_type' => $request->input('transaction_type'),
+                'site_id' => $request->input('site_id'),
+                'supplier_id' => $request->input('supplier_id'),
+                'entity_id' => $request->input('site_id'),
+                'entity_type' => Site::class,
+            ]);
 
-                AdminPayment::create([
-                    'amount' => $request->input('amount'),
-                    'transaction_type' => $request->input('transaction_type'),
-                    'entity_id' => $request->input('site_id'),
-                    'entity_type' => Site::class,
-                ]);
+            return response()->json(['message' => 'Payment done...']);
 
-                return response()->json(['message' => 'Payment To Admin']);
-            }
 
-            $path = null;
-
-            if ($request->hasFile('screenshot')) {
-
-                $image = $request->file('screenshot');
-                $imageName = time() . '.' . $image->getClientOriginalExtension();
-                $path = $request->file('screenshot')->storeAs('Payment', $imageName, 'public');
-            }
-
-            $payment = new Payment();
-            $payment->amount = $request->input('amount');
-            $payment->site_id = $request->input('site_id');
-            $payment->supplier_id = $request->input('supplier_id');
-            $payment->transaction_type = $request->input('transaction_type');
-            $payment->verified_by_admin = 0;
-            $payment->payment_initiator = $request->filled('supplier_id') ? 1 : 0;
-            $payment->screenshot = $path;
-            $payment->save();
-
-            return response()->json(['message' => 'Payment created successfully']);
 
         } catch (Exception $e) {
 
-            Log::error($e);
+            Log::error($e->getMessage());
 
             return response()->json(['error' => 'Payment Cannot Be Made.. Try Again']);
         }

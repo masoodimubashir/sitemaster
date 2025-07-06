@@ -18,6 +18,12 @@
         $nextMonth = $currentDate->copy()->addMonth();
     @endphp
 
+    @php
+        $totalLabours = $wastas->sum(fn($w) => $w->labours->count());
+    @endphp
+
+
+
     <style>
         :root {
             --primary: #4361ee;
@@ -130,7 +136,7 @@
             $user . '/sites/' . base64_encode($site->id),
             $user . '/sites/' . base64_encode($site->id),
         ]" />
-    @elseif ($user === 'client' )
+    @elseif ($user === 'client')
         <x-breadcrumb :names="['Sites', $site->site_name, ' Back']" :urls="[
             $user . '/dashboard',
             $user . '/dashboard/' . base64_encode($site->id),
@@ -146,121 +152,101 @@
 
     <div class="container-fluid">
         <!-- Page Header -->
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
-            <div>
-                <h4 class="mb-1"><i class="fas fa-calendar-check text-info me-2"></i>Attendance Summary</h4>
-                <span class="badge bg-light text-dark">
-                    {{ \Carbon\Carbon::create($year, $month, 1)->format('F Y') }}
-                </span>
-            </div>
 
 
-
-            <div class="d-flex flex-wrap align-items-center">
-                <!-- In your blade template -->
-                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3">
-
-                    @if ($user === 'admin' || $user === 'user')
-                        <!-- PDF Download Button -->
-                        <form action="{{ route('generateAttendancePdf') }}" method="GET" class="me-2">
-                            <!-- Include all filter parameters -->
-                            <input type="hidden" name="site_id" value="{{ request('site_id', $site->id ?? '') }}">
-                            <input type="hidden" name="phase_id" value="{{ request('phase_id', '') }}">
-                            <input type="hidden" name="monthYear"
-                                value="{{ request('monthYear', $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT)) }}">
-                            <button type="submit" class="btn btn-sm btn-success">
-                                <i class="far fa-file-pdf me-1"></i> PDF
-                            </button>
-                        </form>
-                    @endif
-
-
-                    <form method="GET" action="{{ url($user . '/attendance/site/show/' . $site->id) }}"
-                        class="mt-3 mt-md-0 d-flex align-items-center gap-2" id="siteAttendanceFilterForm">
-                        <div class="input-group input-group-sm" style="width: 200px;">
-                            <select name="phase_id" class="form-select form-select-sm bg-white text-black"
-                                onchange="this.form.submit()">
-                                <option value="">All Phases</option>
-                                @foreach ($phases as $phase)
-                                    <option value="{{ $phase->id }}"
-                                        {{ request('phase_id') == $phase->id ? 'selected' : '' }}>
-                                        {{ $phase->phase_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="input-group" style="width: 200px;">
-                            <input type="month" name="monthYear" class="form-control form-control-sm"
-                                value="{{ request('monthYear', $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT)) }}"
-                                onchange="this.form.submit()">
-                        </div>
-                        <button type="button" class="btn btn-sm btn-secondary" onclick="resetSiteFilters()">
-                            Reset
-                        </button>
-                    </form>
-                </div>
-
-
-            </div>
+        <div>
+            <h4 class="mb-1">
+                <i class="fas fa-calendar-check text-info me-2"></i> Attendance Summary
+            </h4>
+         
         </div>
 
+        <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3 gap-2">
+            {{-- PDF Download --}}
+            <form action="{{ url($user . '/attendance/pdf') }}" method="GET" class="d-flex align-items-center">
+                <input type="hidden" name="site_id" value="{{ request('site_id', $id ?? '') }}">
+                <input type="hidden" name="monthYear"
+                    value="{{ request('monthYear', $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT)) }}">
+                <button type="submit" class="btn btn-sm btn-success">
+                    <i class="far fa-file-pdf"></i>
+                </button>
+            </form>
 
 
-        <!-- Summary Cards -->
+            <form method="GET" action="{{ url($user . '/attendance/site/show/' . $site->id) }}"
+                class="mt-3 mt-md-0 d-flex align-items-center gap-2" id="siteAttendanceFilterForm">
+                <div class="input-group input-group-sm" style="width: 200px;">
+                    <select name="phase_id" class="form-select form-select-sm bg-white text-black"
+                        onchange="this.form.submit()">
+                        <option value="">All Phases</option>
+                        @foreach ($phases as $phase)
+                            <option value="{{ $phase->id }}"
+                                {{ request('phase_id') == $phase->id ? 'selected' : '' }}>
+                                {{ $phase->phase_name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="input-group" style="width: 200px;">
+                    <input type="month" name="monthYear" class="form-control form-control-sm"
+                        value="{{ request('monthYear', $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT)) }}"
+                        onchange="this.form.submit()">
+                </div>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="resetSiteFilters()">
+                    Reset
+                </button>
+            </form>
+        </div>
+
+        {{-- Summary Cards --}}
         <div class="row g-3">
-            @php
-                $totalLabours = $wastas->sum(fn($w) => $w->labours->count());
-            @endphp
-
-            <div class="row g-3 mb-4">
-                <!-- Total Wastas -->
-                <div class="col-6 col-md-3">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-body d-flex align-items-center gap-3 py-3">
-                            <i class="fas fa-users text-primary fs-3"></i>
-                            <div>
-                                <div class="text-muted small">Total Wastas</div>
-                                <h5 class="mb-0">{{ $wastas->count() }}</h5>
-                                <small class="text-muted">₹{{ number_format($siteTotal['wasta_amount'], 2) }}</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Total Labours -->
-                <div class="col-6 col-md-3">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-body d-flex align-items-center gap-3 py-3">
-                            <i class="fas fa-hard-hat text-info fs-3"></i>
-                            <div>
-                                <div class="text-muted small">Total Labours</div>
-                                <h5 class="mb-0">
-                                    {{ $wastas->sum(function ($wasta) {return $wasta->labours->count();}) }}
-                                </h5>
-                                <small class="text-muted">₹{{ number_format($siteTotal['labour_amount'], 2) }}</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-
-                <!-- Monthly Total -->
-                <div class="col-6 col-md-3">
-                    <div class="card shadow-sm border-0 h-100">
-                        <div class="card-body d-flex align-items-center gap-3 py-3">
-                            <i class="fas fa-wallet text-dark fs-3"></i>
-                            <div>
-                                <div class="text-muted small">Monthly Total</div>
-                                <h5 class="mb-0">₹{{ number_format($siteTotal['combined_total'], 2) }}</h5>
-                                <small class="text-muted">Combined</small>
-                            </div>
+            {{-- Total Wastas --}}
+            <div class="col-12 col-md-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center gap-3 py-3">
+                        <i class="fas fa-users text-primary fs-3"></i>
+                        <div>
+                            <div class="text-muted small">Total Wastas</div>
+                            <h5 class="mb-0">{{ $wastas->count() }}</h5>
+                            <small class="text-muted">₹{{ number_format($siteTotal['wasta_amount'], 2) }}</small>
                         </div>
                     </div>
                 </div>
             </div>
 
+            {{-- Total Labours --}}
+            <div class="col-12 col-md-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center gap-3 py-3">
+                        <i class="fas fa-hard-hat text-info fs-3"></i>
+                        <div>
+                            <div class="text-muted small">Total Labours</div>
+                            <h5 class="mb-0">
+                                {{ $totalLabours }}
+                            </h5>
+                            <small class="text-muted">₹{{ number_format($siteTotal['labour_amount'], 2) }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Monthly Total --}}
+            <div class="col-12 col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-body d-flex align-items-center gap-3 py-3">
+                        <i class="fas fa-wallet text-dark fs-3"></i>
+                        <div>
+                            <div class="text-muted small">Monthly Total</div>
+                            <h5 class="mb-0">₹{{ number_format($siteTotal['combined_total'], 2) }}</h5>
+                            <small class="text-muted">Combined</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+
+
 
         @if ($user === 'admin' || $user === 'user')
             <!-- Actions -->
@@ -279,7 +265,8 @@
         <!-- Tabs: Summary View | Calendar View -->
         <ul class="nav nav-tabs mb-3" id="attendanceTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#summaryTab">Summary View</button>
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#summaryTab">Summary
+                    View</button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#calendarTab">Calendar View</button>
@@ -481,6 +468,88 @@
             </div>
 
         </div>
+
+        @if ($wastas->hasPages())
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <div class="text-muted small">
+                    Page {{ $wastas->currentPage() }} of {{ $wastas->lastPage() }}
+                    ({{ $wastas->total() }} total results)
+                </div>
+
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-compact mb-0">
+                        {{-- First Page --}}
+                        @if ($wastas->currentPage() > 3)
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $wastas->url(1) }}">1</a>
+                            </li>
+                            @if ($wastas->currentPage() > 4)
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            @endif
+                        @endif
+
+                        {{-- Previous Page --}}
+                        @if ($wastas->onFirstPage())
+                            <li class="page-item disabled">
+                                <span class="page-link">
+                                    <i class="fas fa-angle-left"></i>
+                                </span>
+                            </li>
+                        @else
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $wastas->previousPageUrl() }}">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        @endif
+
+                        {{-- Current Page Range --}}
+                        @for ($i = max(1, $wastas->currentPage() - 1); $i <= min($wastas->lastPage(), $wastas->currentPage() + 1); $i++)
+                            @if ($i == $wastas->currentPage())
+                                <li class="page-item active">
+                                    <span class="page-link">{{ $i }}</span>
+                                </li>
+                            @else
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ $wastas->url($i) }}">{{ $i }}</a>
+                                </li>
+                            @endif
+                        @endfor
+
+                        {{-- Next Page --}}
+                        @if ($wastas->hasMorePages())
+                            <li class="page-item">
+                                <a class="page-link" href="{{ $wastas->nextPageUrl() }}">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                        @else
+                            <li class="page-item disabled">
+                                <span class="page-link">
+                                    <i class="fas fa-angle-right"></i>
+                                </span>
+                            </li>
+                        @endif
+
+                        {{-- Last Page --}}
+                        @if ($wastas->currentPage() < $wastas->lastPage() - 2)
+                            @if ($wastas->currentPage() < $wastas->lastPage() - 3)
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            @endif
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="{{ $wastas->url($wastas->lastPage()) }}">{{ $wastas->lastPage() }}</a>
+                            </li>
+                        @endif
+                    </ul>
+                </nav>
+            </div>
+        @endif
+
     </div>
 
 

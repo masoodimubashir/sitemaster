@@ -12,7 +12,9 @@ class AdminPayment extends Model
         'amount',
         'entity_type',
         'entity_id',
-        'transaction_type'
+        'transaction_type',
+        'site_id',
+        'supplier_id',
     ];
 
     public function entity(): MorphTo
