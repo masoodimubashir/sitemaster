@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('admin_payments', function (Blueprint $table) {
             $table->id();
+            $table->string('screenshot')->nullable();
             $table->morphs('entity');
             $table->foreignId('site_id')->nullable()->constrained('sites')->cascadeOnDelete();
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->cascadeOnDelete();

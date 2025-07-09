@@ -46,14 +46,11 @@ class PaymentSupplierController extends Controller
                 'payment_initiator' => 'required|in:0,1',
             ]);
 
-
-
             if ($validatedData->fails()) {
                 return response()->json([
                     'errors' => $validatedData->errors(),
                 ], 422);
             }
-
 
             if (auth()->user()->role_name === 'site_engineer') {
                 $this->sendpaymentToAdmin($request);
@@ -62,11 +59,17 @@ class PaymentSupplierController extends Controller
                 ]);
             }
 
+            $image_path = null;
+
+            if ($request->hasFile('screenshot')) {
+                $image_path = $request->file('screenshot')->store('Payment', 'public');
+            }
 
             if ($request->filled('payment_initiator') && !$request->filled('site_id')) {
 
 
                 AdminPayment::create([
+                    'screenshot' => $image_path,
                     'amount' => $request->input('amount'),
                     'transaction_type' => $request->input('transaction_type'),
                     'entity_id' => $request->input('supplier_id'),
@@ -79,10 +82,7 @@ class PaymentSupplierController extends Controller
 
             }
 
-            $image_path = null;
-            if ($request->hasFile('screenshot')) {
-                $image_path = $request->file('screenshot')->store('Payment', 'public');
-            }
+
 
             try {
 

@@ -34,13 +34,15 @@ class PaymentSiteController extends Controller
 
 
             $validatedData = Validator::make($request->all(), [
-                'screenshot' => 'sometimes|mimes:png,jpg,webp, jpeg|max:1024',
+                'screenshot' => 'nullable|mimes:png,jpg,webp, jpeg|max:1024',
                 'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99',],
                 'transaction_type' => 'nullable|in:0,1',
                 'site_id' => 'nullable|exists:sites,id',
                 'supplier_id' => 'nullable|exists:suppliers,id',
                 'payment_initiator' => 'required|in:0,1',
             ]);
+
+
 
             if ($validatedData->fails()) {
                 return response()->json(
@@ -51,10 +53,19 @@ class PaymentSiteController extends Controller
                 );
             }
 
+            $path = null;
+
+            if ($request->hasFile('screenshot')) {
+
+                $image = $request->file('screenshot');
+                $imageName = time() . '.' . $image->getClientOriginalExtension();
+                $path = $request->file('screenshot')->storeAs('Payment', $imageName, 'public');
+            }
+
             if ($request->filled('payment_initiator') && !$request->filled('supplier_id')) {
 
-
                 AdminPayment::create([
+                    'screenshot' => $path,
                     'amount' => $request->input('amount'),
                     'transaction_type' => $request->input('transaction_type'),
                     'entity_id' => $request->input('site_id'),
@@ -65,14 +76,6 @@ class PaymentSiteController extends Controller
             }
 
 
-            $path = null;
-
-            if ($request->hasFile('screenshot')) {
-
-                $image = $request->file('screenshot');
-                $imageName = time() . '.' . $image->getClientOriginalExtension();
-                $path = $request->file('screenshot')->storeAs('Payment', $imageName, 'public');
-            }
 
             $payment = new Payment();
             $payment->amount = $request->input('amount');
@@ -92,7 +95,8 @@ class PaymentSiteController extends Controller
     }
 
 
-    public function updatePayment(Request $request, $id){
+    public function updatePayment(Request $request, $id)
+    {
 
     }
 }

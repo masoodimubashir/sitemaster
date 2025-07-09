@@ -47,30 +47,39 @@ class PDF extends Fpdf
 
 
 
-    function LoadData($data)
-    {
-        dd($data);
-        return $data;
-    }
+
 
     function Header()
     {
         $this->SetFont('Arial', 'I', 10);
         $this->SetTextColor(81, 177, 225);
-        $this->cell(47 * 2, 10, 'Address:' . ' Model Town A, Sopore', 0, 0, 'L');
-        $this->cell(47 * 2, 10, 'Contact No: ' . +919797230468, 0, 0, 'L');
+
+        $pageWidth = $this->GetPageWidth() - $this->lMargin - $this->rMargin;
+
+        // Left cell
+        $this->Cell($pageWidth / 2, 10, 'Address: DownTown Sopore, Baramulla', 0, 0, 'L');
+
+        // Right cell
+        $this->Cell($pageWidth / 2, 10, 'Contact No: +91 9797230468', 0, 0, 'R');
+
         $this->Ln(20);
     }
 
-    // Page footer
     function Footer()
     {
         $this->SetY(-15);
         $this->SetFont('Arial', 'I', 10);
         $this->SetTextColor(81, 177, 225);
-        $this->Cell(47 * 2, 10, 'Developed By Py.Sync PVT LTD ', 0, 0, 'L');
-        $this->Cell(47 * 2, 10, 'Page ' . $this->PageNo() . '/{nb}', 0, 0, 'L');
+
+        $pageWidth = $this->GetPageWidth() - $this->lMargin - $this->rMargin;
+
+        // Left cell
+        $this->Cell($pageWidth / 2, 10, 'Structor Designs', 0, 0, 'L');
+
+        // Right cell
+        $this->Cell($pageWidth / 2, 10, 'Page ' . $this->PageNo() . '/{nb}', 0, 0, 'R');
     }
+
 
     public function infoTable(array $headers, array $data)
     {
@@ -171,7 +180,6 @@ class PDF extends Fpdf
 
 
     function phaseTableData($headers, $phases, $phaseCosting)
-
     {
 
         $this->SetFont('', '', 8); // Set uniform font (no bold)
@@ -303,7 +311,7 @@ class PDF extends Fpdf
                 $charge = $this->getServiceChargeAmount($total, $phases['service_charge']);
                 $this->Cell($this->width / 1.75, $this->height, date('Y-m-d', strtotime($sqft->created_at)), 1);
                 $this->Cell($this->width / 1.75, $this->height, $sqft->wager_name, 1);
-                $this->Cell($this->width / 1.75,$this->height,Str::words($sqft->supplier->name ?? '-', 2, ''),1);
+                $this->Cell($this->width / 1.75, $this->height, Str::words($sqft->supplier->name ?? '-', 2, ''), 1);
                 $this->Cell($this->width / 1.75, $this->height, number_format($sqft->price, 2), 1, 0, 'L');
                 $this->Cell($this->width / 1.75, $this->height, $sqft->multiplier, 1, 0, 'L');
                 $this->Cell($this->width / 1.75, $this->height, number_format($charge, 2), 1, 0, 'L');

@@ -388,16 +388,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Generate PDF Button -->
-                <div class="d-flex justify-content-end mt-4 mb-4">
-                    <a href="{{ url('admin/download-phase/report', ['id' => base64_encode($phase['phase_id'])]) }}"
-                        class="btn-minimal">
-                        <i class="fas fa-file-pdf"></i>
-                        Generate PDF
-                    </a>
-                </div>
-                <!-- Data Tables -->
                 @php
                     $tables = [
                         'construction_material_billings' => [
@@ -456,7 +446,6 @@
                                             <th>Supplier</th>
                                             <th class="text-end">Amount</th>
                                             <th class="text-end">Total (with SC)</th>
-                                            <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -490,51 +479,7 @@
                                                 <td class="text-end fw-medium">
                                                     ₹{{ number_format($entry['total_amount_with_service_charge'], 2) }}
                                                 </td>
-                                                <td class="text-nowrap">
-                                                    @switch($entry['category'])
-                                                        @case('Material')
-                                                            <a href="{{ route('construction-material-billings.edit', [base64_encode($entry['id'])]) }}"
-                                                                class="text-primary me-2" title="Edit">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
-                                                            <a href="#" class="text-danger delete-btn"
-                                                                data-id="{{ base64_encode($entry['id']) }}"
-                                                                data-type="Materials"
-                                                                data-url="{{ route('construction-material-billings.destroy', [$entry['id']]) }}"
-                                                                title="Delete">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </a>
-                                                        @break
-
-                                                        @case('SQFT')
-                                                            <a href="{{ route('square-footage-bills.edit', [base64_encode($entry['id'])]) }}"
-                                                                class="text-primary me-2" title="Edit">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
-                                                            <a href="#" class="text-danger delete-btn"
-                                                                data-id="{{ base64_encode($entry['id']) }}"
-                                                                data-type="Contractor"
-                                                                data-url="{{ route('square-footage-bills.destroy', [$entry['id']]) }}"
-                                                                title="Delete">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </a>
-                                                        @break
-
-                                                        @case('Expense')
-                                                            <a href="{{ route('daily-expenses.edit', [base64_encode($entry['id'])]) }}"
-                                                                class="text-primary me-2" title="Edit">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
-                                                            <a href="#" class="text-danger delete-btn"
-                                                                data-id="{{ base64_encode($entry['id']) }}"
-                                                                data-type="Expenses"
-                                                                data-url="{{ route('daily-expenses.destroy', [$entry['id']]) }}"
-                                                                title="Delete">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </a>
-                                                        @break
-                                                    @endswitch
-                                                </td>
+                                               
                                             </tr>
                                             @empty
                                                 <tr>
@@ -559,6 +504,27 @@
         @endif
 
 
+        @push('scripts')
+            <script>
+                function showPhase(phaseIndex) {
+                    // Hide all phase contents
+                    document.querySelectorAll('.phase-content').forEach(content => {
+                        content.classList.add('d-none');
+                    });
+
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.tab-minimal').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+
+                    // Show selected phase content
+                    document.getElementById('phase-' + phaseIndex).classList.remove('d-none');
+
+                    // Add active class to selected tab
+                    document.getElementById('tab-' + phaseIndex).classList.add('active');
+                }
+            </script>
+        @endpush
 
 
     </x-app-layout>

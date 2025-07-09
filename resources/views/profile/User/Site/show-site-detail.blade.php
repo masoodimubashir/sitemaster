@@ -271,7 +271,7 @@
 
     <!-- Download Report Button -->
     <div class="mb-4">
-        <a href="{{ url('admin/download-site/report/' . base64_encode($site->id)) }}" class="btn-minimal">
+        <a href="{{ url('user/download-site/report/' . base64_encode($site->id)) }}" class="btn-minimal">
             <i class="fas fa-download"></i>
             Download Site Report
         </a>
@@ -379,7 +379,7 @@
 
                 <!-- Generate PDF Button -->
                 <div class="d-flex justify-content-end mt-4 mb-4">
-                    <a href="{{ url('admin/download-phase/report', ['id' => base64_encode($phase['phase_id'])]) }}"
+                    <a href="{{ url('user/download-phase/report', ['id' => base64_encode($phase['phase_id'])]) }}"
                         class="btn-minimal">
                         <i class="fas fa-file-pdf"></i>
                         Generate PDF

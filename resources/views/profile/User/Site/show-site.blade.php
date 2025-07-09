@@ -797,10 +797,7 @@
                             </select>
                             <div class="invalid-feedback" id="supplier_id-error"></div>
 
-                            {{-- Screenshot Upload --}}
-                            <label class="control-label mt-3">Upload Screenshot</label>
-                            <input class="form-control" id="image" type="file" name="screenshot">
-                            <div class="invalid-feedback" id="screenshot-error"></div>
+
                         </div>
 
                         {{-- Admin Options (Shown when Admin is selected) --}}
@@ -821,6 +818,12 @@
                                     </label>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="mt-2">
+                            {{-- Screenshot Upload --}}
+                            <label class="control-label mt-3">Upload Screenshot</label>
+                            <input class="form-control" id="image" type="file" name="screenshot">
                         </div>
 
                         {{-- Submit --}}

@@ -177,11 +177,9 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::put('/pay-verification/{id}', [PendingPaymentsVerifications::class, 'update']); // New route
     Route::delete('/pay-verification/{id}', [PendingPaymentsVerifications::class, 'destroy']); // New route
 
-
     // Verification Controller For Items
     Route::get('/item-verification', [ItemsVerificationController::class, 'index']);
     Route::get('/verify-items', [ItemsVerificationController::class, 'verifyItems']);
-
 
     // Routes For Attendance Sheet
     Route::get('/wager-attendance', [AttendanceSheetController::class, 'index']);
@@ -193,8 +191,6 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::put('/attendance/labour/update/{id}', [AttendanceSheetController::class, 'updateLabour']);
     Route::get('/attendance/site/show/{id}', [AttendanceSheetController::class, 'showAttendanceBySite']);
     Route::get('attendance/pdf', [PDFController::class, 'generateAttendancePdf'])->name('generateAttendancePdf');
-
-
 
     // Route For Managing Payments By Admin
     Route::get('/manage-payment', [AdminPaymentController::class, 'index']);

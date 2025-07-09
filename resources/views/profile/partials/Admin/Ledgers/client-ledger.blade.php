@@ -176,19 +176,22 @@
             <i class="menu-icon fa fa-building"></i>
         </div>
         <h2 class="text-xl font-semibold">Ledger Report</h2>
-        <div class="ms-auto action-buttons d-flex gap-2">
-            <!-- Dropdown Menu -->
-            <form action="{{ url('client/ledger/report') }}" method="GET">
-                <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
-                <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
-                <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
-                <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
-                <button type="submit" class="btn btn-outline">
-                    <i class="far fa-file-pdf"></i>  PDF
-                </button>
-            </form>
 
-        </div>
+        @if (auth()->user()->role_name === 'admin' || auth()->user()->role_name === 'site_engineer')
+            <div class="ms-auto action-buttons d-flex gap-2">
+                <!-- Dropdown Menu -->
+                <form action="{{ url('client/ledger/report') }}" method="GET">
+                    <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
+                    <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
+                    <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
+                    <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
+                    <button type="submit" class="btn btn-outline">
+                        <i class="far fa-file-pdf"></i> PDF
+                    </button>
+                </form>
+
+            </div>
+        @endif
     </div>
 
 

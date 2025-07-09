@@ -181,7 +181,7 @@
             <i class="menu-icon fa fa-building"></i>
         </div>
 
-        <h2 class="text-xl font-semibold">{{ $site->site_name }}</h2>
+        <h2 class="text-xl font-semibold">{{ ucwords($site->site_name) }}</h2>
 
         <div class="ms-auto action-buttons d-flex gap-2">
 
@@ -781,6 +781,8 @@
                         {{-- Site (hidden) --}}
                         <input type="hidden" name="site_id" value="{{ $site->id }}" />
 
+
+
                         {{-- Select Payee --}}
                         <div class="mb-3">
                             <select name="payment_initiator" id="payment_initiator" style="cursor: pointer"
@@ -792,6 +794,8 @@
                             <div class="invalid-feedback" id="payment_initiator-error"></div>
 
                         </div>
+
+
 
                         {{-- Supplier Options --}}
                         <div id="supplierOptions" style="display: none;" class="mb-3">
@@ -806,10 +810,6 @@
 
                             </select>
 
-                            {{-- Screenshot Upload --}}
-                            <label class="control-label mt-3">Upload Screenshot</label>
-                            <input class="form-control" id="image" type="file" name="screenshot">
-                            <div class="invalid-feedback" id="screenshot-error"></div>
                         </div>
 
                         {{-- Admin Options (Shown when Admin is selected) --}}
@@ -830,6 +830,13 @@
                                     </label>
                                 </div>
                             </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{-- Screenshot Upload --}}
+                            <label class="control-label mt-3">Upload Screenshot</label>
+                            <input class="form-control" id="image" type="file" name="screenshot">
+                            <div class="invalid-feedback" id="screenshot-error"></div>
                         </div>
 
                         <div class="modal-footer">

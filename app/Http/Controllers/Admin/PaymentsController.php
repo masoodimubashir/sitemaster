@@ -116,20 +116,133 @@ class PaymentsController extends Controller
     /**
      * Store a newly created resource in storage.
      */
+    // public function store(Request $request)
+    // {
+
+    //     try {
+
+    //         DB::beginTransaction();
+
+    //         $validatedData = Validator::make($request->all(), [
+    //             'screenshot' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+    //             'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
+    //             'transaction_type' => 'nullable|in:0,1',
+    //             'entity_type' => 'required|in:site,supplier',
+    //             'entity_id' => 'required|integer',
+    //             'payment_id' => 'required|integer',
+    //         ]);
+
+    //         if ($validatedData->fails()) {
+    //             return response()->json([
+    //                 'errors' => $validatedData->errors()
+    //             ], 422);
+    //         }
+
+    //         $adminPayment = AdminPayment::find($request->input('payment_id'));
+
+    //         if (!$adminPayment) {
+    //             return response()->json([
+    //                 'error' => 'Admin payment entry not found.',
+    //             ], 404);
+    //         }
+
+    //         if ($adminPayment->amount < $request->input('amount')) {
+    //             return response()->json([
+    //                 'error' => 'Insufficient balance in admin payment.',
+    //             ], 422);
+    //         }
+
+    //         $transactionType = $request->input('transaction_type');
+    //         $entityType = $request->input('entity_type');
+    //         $entityId = $request->input('entity_id');
+
+    //         // Determine site_id and supplier_id based on logic
+    //         $siteId = null;
+    //         $supplierId = null;
+
+    //         if (is_null($transactionType)) {
+
+    //             if ($entityType === 'site') {
+    //                 $siteId = $entityId;
+    //                 $supplierId = $adminPayment->supplier_id;
+    //             } elseif ($entityType === 'supplier') {
+    //                 $supplierId = $entityId;
+    //                 $siteId = $adminPayment->site_id;
+    //             }
+
+    //             if (!$siteId || !$supplierId) {
+    //                 return response()->json([
+    //                     'error' => 'Both site and supplier must be specified for internal transfers.',
+    //                 ], 422);
+    //             }
+
+    //         } else {
+    //             // For normal sent/received transactions
+    //             if ($entityType === 'site') {
+    //                 $siteId = $entityId;
+    //             } elseif ($entityType === 'supplier') {
+    //                 $supplierId = $entityId;
+    //             }
+    //         }
+
+    //         $payment = Payment::create([
+    //             'amount' => $request->input('amount'),
+    //             'transaction_type' => $transactionType,
+    //             'site_id' => $siteId,
+    //             'supplier_id' => $supplierId,
+    //             'verified_by_admin' => 1,
+    //             'payment_initiator' => 1, // Always admin for now
+    //         ]);
+
+    //         if (!$payment) {
+    //             DB::rollBack();
+    //             return response()->json([
+    //                 'error' => 'Payment could not be created. Please try again.',
+    //             ], 500);
+    //         }
+
+    //         if ($adminPayment->amount == $request->input('amount')) {
+    //             $adminPayment->delete();
+    //         } else {
+    //             $adminPayment->update([
+    //                 'amount' => $adminPayment->amount - $request->input('amount'),
+    //             ]);
+    //         }
+
+    //         DB::commit();
+
+    //         return response()->json([
+    //             'message' => 'Payment created successfully.',
+    //         ], 201);
+
+    //     } catch (Exception $e) {
+    //         DB::rollBack();
+
+    //         Log::error("Payment creation failed: " . $e->getMessage());
+
+    //         return response()->json([
+    //             'error' => 'Payment cannot be made. Please try again later.',
+    //         ], 500);
+    //     }
+
+    // }
+
+
+
+
     public function store(Request $request)
     {
-
         try {
             DB::beginTransaction();
 
             $validatedData = Validator::make($request->all(), [
+                'screenshot' => 'nullable|image|mimes:jpeg,jpg|max:2048',
                 'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
                 'transaction_type' => 'nullable|in:0,1',
                 'entity_type' => 'required|in:site,supplier',
                 'entity_id' => 'required|integer',
                 'payment_id' => 'required|integer',
             ]);
-
 
             if ($validatedData->fails()) {
                 return response()->json([
@@ -160,7 +273,6 @@ class PaymentsController extends Controller
             $supplierId = null;
 
             if (is_null($transactionType)) {
-                // Internal/system transfer must involve both site and supplier
                 if ($entityType === 'site') {
                     $siteId = $entityId;
                     $supplierId = $adminPayment->supplier_id;
@@ -169,13 +281,11 @@ class PaymentsController extends Controller
                     $siteId = $adminPayment->site_id;
                 }
 
-
                 if (!$siteId || !$supplierId) {
                     return response()->json([
                         'error' => 'Both site and supplier must be specified for internal transfers.',
                     ], 422);
                 }
-
             } else {
                 // For normal sent/received transactions
                 if ($entityType === 'site') {
@@ -185,6 +295,24 @@ class PaymentsController extends Controller
                 }
             }
 
+            // Handle screenshot logic
+            $screenshotPath = null;
+            $oldScreenshotPath = $adminPayment->screenshot;
+
+            if ($request->hasFile('screenshot')) {
+                // New screenshot uploaded
+                $screenshotPath = $request->file('screenshot')->store('payment_screenshots', 'public');
+
+                // Delete old screenshot if exists
+                if ($oldScreenshotPath && Storage::disk('public')->exists($oldScreenshotPath)) {
+                    Storage::disk('public')->delete($oldScreenshotPath);
+                }
+            } elseif ($oldScreenshotPath) {
+                // No new screenshot but existing one in admin payment
+                $screenshotPath = $oldScreenshotPath;
+            }
+            // Else both are null, so $screenshotPath remains null
+
             $payment = Payment::create([
                 'amount' => $request->input('amount'),
                 'transaction_type' => $transactionType,
@@ -192,6 +320,7 @@ class PaymentsController extends Controller
                 'supplier_id' => $supplierId,
                 'verified_by_admin' => 1,
                 'payment_initiator' => 1, // Always admin for now
+                'screenshot' => $screenshotPath, // Set the screenshot path
             ]);
 
             if (!$payment) {
@@ -199,6 +328,11 @@ class PaymentsController extends Controller
                 return response()->json([
                     'error' => 'Payment could not be created. Please try again.',
                 ], 500);
+            }
+
+            // Update admin payment with new screenshot if it was uploaded
+            if ($request->hasFile('screenshot')) {
+                $adminPayment->update(['screenshot' => $screenshotPath]);
             }
 
             if ($adminPayment->amount == $request->input('amount')) {
@@ -217,15 +351,21 @@ class PaymentsController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-
             Log::error("Payment creation failed: " . $e->getMessage());
+
+            // Clean up if screenshot was uploaded but transaction failed
+            if (isset($screenshotPath) && $screenshotPath && Storage::disk('public')->exists($screenshotPath)) {
+                Storage::disk('public')->delete($screenshotPath);
+            }
 
             return response()->json([
                 'error' => 'Payment cannot be made. Please try again later.',
             ], 500);
         }
-
     }
+
+
+
 
     /**
      * Show the form for creating a new resource.

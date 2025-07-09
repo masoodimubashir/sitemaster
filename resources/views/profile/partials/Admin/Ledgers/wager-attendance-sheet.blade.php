@@ -5,6 +5,7 @@
     <div id="ajaxAlertContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; width: 300px;"></div>
 
     @php
+
         $month = now()->month;
         $year = now()->year;
         $daysInMonth = \Carbon\Carbon::create($year, $month, 1)->daysInMonth;
@@ -14,6 +15,7 @@
         $currentDate = \Carbon\Carbon::create($year, $month, 1);
         $prevMonth = $currentDate->copy()->subMonth();
         $nextMonth = $currentDate->copy()->addMonth();
+
     @endphp
 
     @php
@@ -29,7 +31,6 @@
             <h4 class="mb-1">
                 <i class="fas fa-calendar-check text-info me-2"></i> Attendance Summary
             </h4>
-          
         </div>
 
         <div
@@ -66,11 +67,9 @@
                         onchange="this.form.submit()">
                 </div>
 
-                {{-- Reset Button --}}
-                <button type="button" class="btn btn-sm btn-secondary" onclick="resetFilters()">
-                    Reset
-                </button>
+             
             </form>
+            
         </div>
 
         {{-- Summary Cards --}}

@@ -215,12 +215,7 @@
                     </li>
 
                     @if ($user === 'admin')
-                        <li>
-                            <a class="dropdown-item"
-                                href="{{ url($user . '/unverified-supplier-payments/' . $data['supplier']->id) }}">
-                                <i class="fas fa-exclamation-circle me-2"></i> Unverified Payments
-                            </a>
-                        </li>
+                  
                          <li>
                         <a class="dropdown-item"
                             href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}">

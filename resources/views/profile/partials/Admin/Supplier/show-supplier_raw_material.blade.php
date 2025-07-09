@@ -457,11 +457,7 @@
                                 @endforeach
                             </select>
 
-                            {{-- File Upload for Screenshot --}}
-                            <div class="mt-3">
-                                <input class="form-control form-control-md" id="image" type="file"
-                                    name="screenshot">
-                            </div>
+
                         </div>
 
                         {{-- Admin Options (Shown when Admin is selected) --}}
@@ -486,6 +482,11 @@
                             </div>
                         </div>
 
+                        {{-- File Upload for Screenshot --}}
+                        <div class="mt-3">
+                            <input class="form-control form-control-md" id="image" type="file"
+                                name="screenshot">
+                        </div>
 
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

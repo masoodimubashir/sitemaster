@@ -75,6 +75,7 @@
                 <input type="text"
                        id="items-${itemCount}-item_name"
                        name="items[${itemCount}][item_name]"
+                       class="control-label"
                 />
                 <label for="items-${itemCount}-item_name" class="control-label">Item Name</label>
                 <i class="bar"></i>

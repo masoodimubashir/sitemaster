@@ -40,7 +40,7 @@ class UserSitePayments extends Controller
         try {
 
             $validatedData = Validator::make($request->all(), [
-                'screenshot' => 'sometimes|mimes:png,jpg,webp, jpeg|max:1024',
+                'screenshot' => 'nullable|mimes:png,jpg,webp, jpeg|max:1024',
                 'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99',],
                 'transaction_type' => 'nullable|in:0,1',
                 'site_id' => 'nullable|exists:sites,id',
@@ -54,12 +54,16 @@ class UserSitePayments extends Controller
                 return response()->json(
                     [
                         'errors' => $validatedData->errors(),
-                    ],
-                    422
+                    ],422
                 );
             }
 
+            if ($request->hasFile('screenshot')) {
+                $image_path = $request->file('screenshot')->store('Payment', 'public');
+            }
+
             AdminPayment::create([
+                'screenshot' => $image_path,
                 'amount' => $request->input('amount'),
                 'transaction_type' => $request->input('transaction_type'),
                 'site_id' => $request->input('site_id'),

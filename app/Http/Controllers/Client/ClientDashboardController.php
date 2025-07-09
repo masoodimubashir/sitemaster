@@ -3,10 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
-use App\Models\DailyWager;
-use App\Models\Item;
 use App\Models\Site;
-use App\Models\Supplier;
 use Illuminate\Http\Request;
 
 use function Pest\Laravel\get;

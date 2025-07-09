@@ -71,7 +71,7 @@
                                             @endforeach
                                         </select>
                                         <button type="button" class="btn btn-info" id="resetFilters">
-                                            <i class="fas fa-sync-alt"></i>
+                                            Reset
                                         </button>
                                     </div>
                                 </div>

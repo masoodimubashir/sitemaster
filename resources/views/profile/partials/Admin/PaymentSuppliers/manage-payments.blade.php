@@ -66,6 +66,31 @@
             font-size: 0.85em;
             border-radius: 50px;
         }
+        
+        .screenshot-thumbnail {
+            max-width: 100px;
+            max-height: 100px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .screenshot-thumbnail:hover {
+            transform: scale(1.05);
+        }
+        
+        .screenshot-container {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px dashed #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        
+        .screenshot-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
     </style>
 
     <x-breadcrumb :names="['Manage Payment']" :urls="['admin/manage-payment']"></x-breadcrumb>
@@ -80,7 +105,6 @@
                                 <i class="fas fa-money-bill-transfer me-2 text-info"></i>
                                 Payment Transactions
                             </h5>
-
                         </div>
                     </div>
 
@@ -148,10 +172,10 @@
                                     <thead class="bg-light">
                                         <tr>
                                             <th class="fw-bold ps-4">Date</th>
-                                            <th class="fw-bold">Entity</th>
                                             <th class="fw-bold">Name</th>
                                             <th class="fw-bold">Type</th>
                                             <th class="fw-bold text-end">Amount</th>
+                                            <th class="fw-bold">Screenshot</th>
                                             <th class="fw-bold text-center pe-4">Actions</th>
                                         </tr>
                                     </thead>
@@ -161,15 +185,9 @@
                                                 <td class="ps-4">
                                                     <div class="d-flex flex-column">
                                                         <span>{{ Carbon::parse($payment['created_at'])->format('d M Y') }}</span>
-
                                                     </div>
                                                 </td>
-                                                <td>
-                                                    <span>
-                                                        {{ $payment['entity_type'] === Site::class ? 'Site' : 'Supplier' }}
-                                                    </span>
-                                                </td>
-
+                                               
                                                 <td>
                                                     <span>
                                                         {{ ucfirst($payment['entity_type'] === Site::class ? $payment['entity']->site_name : $payment['entity']->name) }}
@@ -201,24 +219,30 @@
                                                             N/A
                                                         </span>
                                                     @endif
-
                                                 </td>
                                                 <td class="text-end">
-                                                    <span
-                                                        class="fw-bold text-{{ $payment['transaction_type'] === 1 ? 'warning' : 'success' }}">
+                                                    <span class="fw-bold text-{{ $payment['transaction_type'] === 1 ? 'warning' : 'success' }}">
                                                         {{ Number::currency($payment['amount'], 'INR') }}
-
                                                     </span>
                                                 </td>
+                                                <td>
+                                                    @if($payment['screenshot'])
+                                                        <a href="{{ asset('storage/' . $payment['screenshot']) }}" target="_blank">
+                                                            <img src="{{ asset('storage/' . $payment['screenshot']) }}" class="screenshot-thumbnail" alt="Payment Screenshot">
+                                                        </a>
+                                                    @else
+                                                        <span class="text-muted">No screenshot</span>
+                                                    @endif
+                                                </td>
                                                 <td class="text-center">
-
                                                     <button data-bs-toggle="modal" data-bs-target="#payment_model"
                                                         onclick="makePayment(
                                                             {{ $payment['id'] }},
                                                             '{{ $payment['entity']->id }}',
                                                             '{{ $payment['entity_type'] == Site::class ? 'site' : 'supplier' }}',
                                                             '{{ $payment['amount'] }}',
-                                                            '{{ $payment['transaction_type'] }}'
+                                                            '{{ $payment['transaction_type'] }}',
+                                                            '{{ $payment['screenshot'] }}'
                                                         )"
                                                         class="btn btn-sm rounded-pill fw-medium px-3 py-1 d-flex align-items-center gap-1 mx-auto"
                                                         style="
@@ -229,11 +253,9 @@
                                                         "
                                                         onmouseover="this.style.backgroundColor='{{ $payment['transaction_type'] === 1 ? 'rgba(255, 193, 7, 0.2)' : 'rgba(25, 135, 84, 0.2)' }}'"
                                                         onmouseout="this.style.backgroundColor='{{ $payment['transaction_type'] === 1 ? 'rgba(255, 193, 7, 0.1)' : 'rgba(25, 135, 84, 0.1)' }}'">
-                                                        <i
-                                                            class="bi bi-{{ $payment['transaction_type'] === 1 ? 'arrow-up-right' : 'arrow-down-left' }} small"></i>
+                                                        <i class="bi bi-{{ $payment['transaction_type'] === 1 ? 'arrow-up-right' : 'arrow-down-left' }} small"></i>
                                                         {{ 'Pay' }}
                                                     </button>
-
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -249,9 +271,6 @@
                             @endif
                         </div>
 
-
-
-                        <!-- Style 2: Compact with Ellipsis -->
                         @if ($payments->hasPages())
                             <div class="d-flex justify-content-between align-items-center mt-4">
                                 <div class="text-muted small">
@@ -333,14 +352,11 @@
                                 </nav>
                             </div>
                         @endif
-
-
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 
     <div id="messageContainer"></div>
 
@@ -349,7 +365,7 @@
         data-bs-backdrop="static" data-bs-keyboard="false" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content modal-payment">
-                <form class="payment_form">
+                <form class="payment_form" enctype="multipart/form-data">
                     <div class="modal-header text-black">
                         <h5 class="modal-title" id="paymentModalLabel">
                             <i class="fas fa-money-bill-wave me-2"></i>
@@ -382,6 +398,14 @@
                             </div>
                         </div>
 
+                        <!-- Existing Screenshot -->
+                        <div class="mb-3" id="existing_screenshot_container">
+                            <span class="screenshot-label">Current Screenshot:</span>
+                            <div class="screenshot-container" id="existing_screenshot">
+                                <!-- Screenshot will be displayed here -->
+                            </div>
+                        </div>
+
                         <hr>
 
                         <!-- Payment Amount -->
@@ -390,18 +414,25 @@
                             <div class="input-group">
                                 <span class="input-group-text">₹</span>
                                 <input type="number" id="payment_amount" name="amount" class="form-control"
-                                    placeholder="Enter payment amount" step="0.01" min="0">
+                                    placeholder="Enter payment amount"  min="0">
                             </div>
                             <div id="amount_error" class="invalid-feedback d-none">
                                 Payment amount cannot exceed the original amount
                             </div>
+                        </div>
+
+                        <!-- Screenshot Upload -->
+                        <div class="form-group mb-3">
+                            <label for="screenshot" class="form-label fw-bold">Payment Screenshot (Optional)</label>
+                            <input type="file" class="form-control" id="screenshot" name="screenshot" accept="image/*">
+                            <small class="text-muted">Upload proof of payment (JPG, PNG,)</small>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="submit" id="submit_payment" class="btn btn-success" disabled>
                             <i class="fas fa-paper-plane me-1"></i>
-                            Submit Payment
+                            Make Payment
                         </button>
                     </div>
                 </form>
@@ -409,12 +440,10 @@
         </div>
     </div>
 
-
     @push('scripts')
-        <!-- Place this script in your layout file's head or before closing body tag -->
         <script>
             // Define makePayment in global scope
-            function makePayment(id, entity_id, entityType, amount, transactionType) {
+            function makePayment(id, entity_id, entityType, amount, transactionType, screenshot) {
                 $('#payment_id').val(id);
                 $('#entity_id').val(entity_id);
                 $('#entity_type').val(entityType);
@@ -430,6 +459,20 @@
                 // Set badge colors
                 $('#display_transaction_type').removeClass('bg-warning bg-success')
                     .addClass(transactionType === '1' ? 'bg-warning' : 'bg-success');
+
+                // Handle screenshot display
+                const screenshotContainer = $('#existing_screenshot');
+                if (screenshot) {
+                    $('#existing_screenshot_container').show();
+                    screenshotContainer.html(`
+                        <a href="/storage/${screenshot}" target="_blank">
+                            <img src="/storage/${screenshot}" class="screenshot-thumbnail" alt="Payment Screenshot">
+                        </a>
+                    `);
+                } else {
+                    $('#existing_screenshot_container').hide();
+                    screenshotContainer.html('<span class="text-muted">No screenshot available</span>');
+                }
 
                 // Enable submit button by default
                 $('#submit_payment').prop('disabled', false);
@@ -557,14 +600,14 @@
 
                 function displayAlert(type, message) {
                     const alertHtml = `
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
-                        <div>${message}</div>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            `;
+                        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'} me-2"></i>
+                                <div>${message}</div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
 
                     $('#messageContainer').append(alertHtml);
 
@@ -576,14 +619,4 @@
             });
         </script>
     @endpush
-
-
-
-
-
-
-
-
-
-
 </x-app-layout>

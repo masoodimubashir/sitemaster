@@ -193,9 +193,7 @@
                         value="{{ request('monthYear', $year . '-' . str_pad($month, 2, '0', STR_PAD_LEFT)) }}"
                         onchange="this.form.submit()">
                 </div>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="resetSiteFilters()">
-                    Reset
-                </button>
+           
             </form>
         </div>
 

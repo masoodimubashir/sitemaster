@@ -33,9 +33,9 @@ class UserDailyExpensesController extends Controller
 
             // Validation rules
             $validator = Validator::make($request->all(), [
-                'item_name' => 'nullable|string|max:255',
+                'item_name' => 'required|string|max:255',
                 'price' => 'required|numeric|max:9999999999',
-                'bill_photo' => 'required|image|mimes:jpg,jpeg,webp|max:1024',
+                'bill_photo' => 'nullable|image|mimes:jpg,jpeg,webp|max:1024',
                 'phase_id' => 'required|exists:phases,id',
                 'site_id' => 'required|exists:sites,id',
             ]);
