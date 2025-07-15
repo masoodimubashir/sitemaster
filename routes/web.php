@@ -173,9 +173,9 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     // Verify Controllers For Pending Payments
     Route::get('/pay-verification', [PendingPaymentsVerifications::class, 'index']);
     Route::put('/verify-payments', [PendingPaymentsVerifications::class, 'verifyPayment']);
-    Route::get('/pay-verification/{id}/edit', [PendingPaymentsVerifications::class, 'edit']); // New route
-    Route::put('/pay-verification/{id}', [PendingPaymentsVerifications::class, 'update']); // New route
-    Route::delete('/pay-verification/{id}', [PendingPaymentsVerifications::class, 'destroy']); // New route
+    Route::get('/pay-verification/{id}/edit', [PendingPaymentsVerifications::class, 'edit']); 
+    Route::put('/pay-verification/{id}', [PendingPaymentsVerifications::class, 'update']); 
+    Route::delete('/pay-verification/{id}', [PendingPaymentsVerifications::class, 'destroy']); 
 
     // Verification Controller For Items
     Route::get('/item-verification', [ItemsVerificationController::class, 'index']);

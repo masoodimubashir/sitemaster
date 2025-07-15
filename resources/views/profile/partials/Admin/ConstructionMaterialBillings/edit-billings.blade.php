@@ -47,6 +47,14 @@
                             <x-input-error :messages="$errors->get('amount')" class="mt-2" />
                         </div>
 
+                        <!-- Unit -->
+                        <div class="form-group mb-3 ">
+                            <input type="number" name="unit_count" id="unit_count" value="{{ $construction_material_billing->unit_count }}" />
+                            <label for="unit_count" class="control-label">Units</label>
+                            <i class="bar"></i>
+                            <p class="mt-1 text-danger" id="unit_count-error"></p>
+                        </div>
+
                         <!-- Select Site -->
                         <div class="form-group">
                             <input type="hidden" name="site_id"
@@ -59,7 +67,8 @@
 
                         <div class="mt-4">
 
-                            <label for="supplier_id" class="mb-1" style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">Select Supplier</label>
+                            <label for="supplier_id" class="mb-1"
+                                style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">Select Supplier</label>
                             <select id="supplier_id" class="form-select form-select-sm text-black" name="supplier_id">
                                 @foreach ($suppliers as $supplier)
                                     <option
@@ -86,7 +95,8 @@
 
                         <!-- Item Bill Photo -->
                         <div class="mt-4">
-                            <label for="image" class="mb-1" style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">Item Bill</label>
+                            <label for="image" class="mb-1"
+                                style="font-size: 0.8rem; color: rgba(17, 17, 17, 0.48);">Item Bill</label>
                             <input class="form-control form-control-md" id="image" type="file" name="image">
                             @error('image')
                                 <x-input-error :messages="$message" class="mt-2" />

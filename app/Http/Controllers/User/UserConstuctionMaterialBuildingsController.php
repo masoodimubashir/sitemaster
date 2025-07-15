@@ -34,6 +34,7 @@ class UserConstuctionMaterialBuildingsController extends Controller
                 'item_name' => 'required|string',
                 'supplier_id' => 'required|exists:suppliers,id',
                 'phase_id' => 'required|exists:phases,id',
+                'unit_count' => 'required|integer|min:1',
             ]);
 
             if ($validator->fails()) {
@@ -57,6 +58,7 @@ class UserConstuctionMaterialBuildingsController extends Controller
                 $material->supplier_id = $request->input('supplier_id');
                 $material->user_id = auth()->user()->id;
                 $material->phase_id = $request->input('phase_id');
+                $material->unit_count = $request->input('unit_count');
                 $material->save();
 
                 $data = [
@@ -114,7 +116,8 @@ class UserConstuctionMaterialBuildingsController extends Controller
                     'amount' => 'required|numeric|max:9999999999',
                     'item_name' => 'required',
                     'supplier_id' => 'required|exists:suppliers,id',
-                    'phase_id' => 'required|exists:phases,id'
+                    'phase_id' => 'required|exists:phases,id',
+                    'unit_count' => 'required|integer|min:1'
                 ]);
 
 
@@ -142,7 +145,8 @@ class UserConstuctionMaterialBuildingsController extends Controller
                     'item_name' => $validatedData['item_name'],
                     'supplier_id' => $validatedData['supplier_id'],
                     'user_id' => auth()->id(),
-                    'phase_id' => $validatedData['phase_id']
+                    'phase_id' => $validatedData['phase_id'],
+                    'unit_count' => $validatedData['unit_count']
                 ]);
 
                 // Update financial balances

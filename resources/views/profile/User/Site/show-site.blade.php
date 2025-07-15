@@ -506,12 +506,31 @@
                         id="constructionBillingForm">
                         @csrf
 
-                        <!-- Amount -->
-                        <div class="form-group mb-3">
-                            <input type="number" name="amount" id="amount" />
-                            <label for="amount" class="control-label">Material Price</label>
-                            <i class="bar"></i>
-                            <p class="mt-1 text-danger" id="amount-error"></p>
+                        <div class="row">
+
+                            <div class="col-md-6">
+                                <!-- Amount -->
+                                <div class="form-group mb-3 ">
+                                    <input type="number" name="amount" id="amount" />
+                                    <label for="amount" class="control-label">Material Price</label>
+                                    <i class="bar"></i>
+                                    <p class="mt-1 text-danger" id="amount-error"></p>
+                                </div>
+                            </div>
+
+
+
+                            <div class="col-md-6">
+                                <!-- Unit -->
+                                <div class="form-group mb-3 ">
+                                    <input type="number" name="unit_count" id="unit_count" />
+                                    <label for="unit_count" class="control-label">Units</label>
+                                    <i class="bar"></i>
+                                    <p class="mt-1 text-danger" id="unit_count-error"></p>
+                                </div>
+                            </div>
+
+
                         </div>
 
                         <div class="row">

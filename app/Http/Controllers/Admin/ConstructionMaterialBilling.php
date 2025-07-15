@@ -74,7 +74,9 @@ class ConstructionMaterialBilling extends Controller
                 'item_name' => 'required|string',
                 'supplier_id' => 'required|exists:suppliers,id',
                 'phase_id' => 'required|exists:phases,id',
+                'unit_count' => 'required|integer|min:1',
             ]);
+
 
 
             if ($validator->fails()) {
@@ -99,6 +101,7 @@ class ConstructionMaterialBilling extends Controller
                 $constructionBilling->supplier_id = $request->input('supplier_id');
                 $constructionBilling->user_id = auth()->user()->id;
                 $constructionBilling->phase_id = $request->input('phase_id');
+                $constructionBilling->unit_count = $request->input('unit_count');
                 $constructionBilling->save();
 
                 if ($constructionBilling) {
@@ -160,7 +163,8 @@ class ConstructionMaterialBilling extends Controller
                 'amount' => 'required|numeric|max:9999999999',
                 'item_name' => 'required',
                 'supplier_id' => 'required|exists:suppliers,id',
-                'phase_id' => 'required|exists:phases,id'
+                'phase_id' => 'required|exists:phases,id',
+                'unit_count' => 'required|integer|min:1',
             ]);
 
 
@@ -183,13 +187,14 @@ class ConstructionMaterialBilling extends Controller
 
             // Update billing record
             $construction_material_billing->update([
-                'amount' => $validatedData['amount'],
+                'amount' => $validatedData['amount'] ,
                 'item_image_path' => $image_path,
                 'item_name' => $validatedData['item_name'],
                 'verified_by_admin' => 1,
                 'supplier_id' => $validatedData['supplier_id'],
                 'user_id' => auth()->id(),
-                'phase_id' => $validatedData['phase_id']
+                'phase_id' => $validatedData['phase_id'],
+                'unit_count' => $validatedData['unit_count'],
             ]);
 
             // Update financial balances

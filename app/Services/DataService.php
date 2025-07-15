@@ -155,7 +155,7 @@ class DataService
     {
         return $materials->map(function ($material) {
 
-            $serviceCharge = $this->calculateServiceCharge($material->amount, $material->phase->site->service_charge);
+            $serviceCharge = $this->calculateServiceCharge($material->amount * $material->unit_count, $material->phase->site->service_charge);
 
 
             return [
@@ -164,11 +164,11 @@ class DataService
                 'description' => $material->item_name ?? null,
                 'category' => 'Material',
                 'credit' => 0,
-                'debit' => $material->amount,
+                'debit' => $material->amount * $material->unit_count,
                 'transaction_type' => null,
                 'payment_initiator' => 'Supplier',
                 'site' => $material->phase->site->site_name ?? null,
-                'total_amount_with_service_charge' => $serviceCharge + $material->amount,
+                'total_amount_with_service_charge' => $serviceCharge + ($material->amount * $material->unit_count),
                 'supplier' => $material->supplier->name ?? null,
                 'supplier_id' => $material->supplier_id ?? null,
                 'site_id' => $material->phase->site_id ?? null,
