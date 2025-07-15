@@ -54,7 +54,7 @@ To get started with the project locally, follow the instructions below:
 ```bash
 # Step 1: Clone the repository
 git clone <repository-url>
-cd goodguys-platform
+
 
 # Step 2: Install PHP dependencies
 composer install
