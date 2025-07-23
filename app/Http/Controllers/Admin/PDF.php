@@ -60,7 +60,7 @@ class PDF extends Fpdf
         $this->Cell($pageWidth / 2, 10, 'Address: DownTown Sopore, Baramulla', 0, 0, 'L');
 
         // Right cell
-        $this->Cell($pageWidth / 2, 10, 'Contact No: +91 9797230468', 0, 0, 'R');
+        $this->Cell($pageWidth / 2, 10, 'Contact No: +91-7204091802', 0, 0, 'R');
 
         $this->Ln(20);
     }
@@ -138,6 +138,12 @@ class PDF extends Fpdf
         $this->Cell($this->width * 2, $this->height, 'Total Paid', 1, 0, 'L', true);
         $this->Cell($this->width * 2, $this->height, $data['total_paid'], 1, 0, 'L', true);
         $this->Ln();
+
+
+        $this->Cell($this->width * 2, $this->height, 'Total Returns', 1, 0, 'L', true);
+        $this->Cell($this->width * 2, $this->height, $data['returns'], 1, 0, 'L', true);
+        $this->Ln();
+
 
         $this->AddPage();
     }
@@ -471,108 +477,115 @@ class PDF extends Fpdf
     function sitePaymentTable($site)
     {
 
-        $this->setMargins($this->m_left, $this->m_top, $this->m_right);
-
-
-        if (!$site) {
+        // Handle empty data cases
+        if (!$site || count($site->payments) <= 0) {
             $this->SetFillColor(245, 245, 245);
+            $this->SetTextColor(200, 0, 0);
             $this->Cell(0, 10, 'No Data Available', 1, 0, 'C', true);
             $this->Ln();
             return;
         }
 
-        if (count($site->payments) <= 0) {
-            $this->SetFillColor(245, 245, 245);
-            $this->Cell(0, 10, 'No Data Available', 1, 0, 'C', true);
-            $this->Ln();
-            return;
-        }
-
-        // Title Section
         $this->SetTextColor(0, 170, 183);
-        $this->Text(188 / 2, 40, 'SiteMaster');
-        $this->Ln(15);
+        $this->SetFont('Helvetica', 'B', 16);
+        $this->Cell(0, 10, 'SITE PAYMENT REPORT', 0, 1, 'C');
+        $this->SetFont('Helvetica', '', 10);
+        $this->Ln(5);
 
-        // Site Details Section
-        $this->SetFillColor($this->c_f_r, $this->c_f_g, $this->c_f_b);
-        // $this->SetTextColor(255, 255, 255);
+        $this->SetFillColor(240, 240, 240);
+        $this->SetTextColor(0, 0, 0);
+        $this->SetFont('Helvetica', 'B', 12);
+        $this->Cell(0, 8, 'Site Information', 0, 1, 'L', true);
+        $this->SetFont('Helvetica', '', 10);
+        $this->Ln(2);
 
-        // Site Information Headers
         $site_details = [
             'Site Name' => $site->site_name,
             'Location' => $site->location,
             'Contact No' => $site->contact_no,
-            'Service Charge' => $site->service_charge,
-            'Site Owner' => $site->site_owner_name
+            'Service Charge' => number_format($site->service_charge, 2),
+            'Site Owner' => $site->site_owner_name,
+            'Total Payments' => number_format($site->payments_sum_amount, 2),
         ];
 
         foreach ($site_details as $label => $value) {
-
             $this->SetFillColor(245, 245, 245);
             $this->SetTextColor(51, 51, 51);
-            $this->Cell($this->width * 2.4, $this->height, $label, 1, 0, 'L', true);
+            $this->Cell(60, 8, $label, 1, 0, 'L', true);
 
-            $this->Cell($this->width * 2, $this->height, ucwords($value), 1, 0, 'L', true);
-
-            $this->Ln();
+            $this->SetFillColor(255, 255, 255);
+            $this->Cell(0, 8, $value, 1, 1, 'L', true);
         }
 
-        // Add spacing before table headers
-        $this->Ln(5);
-
-        // Set header styling
+        $this->Ln(10);
         $this->SetFillColor(0, 170, 183);
         $this->SetTextColor(255, 255, 255);
+        $this->SetFont('Helvetica', 'B', 11);
 
-        // Table Headers with teal background
+        // Table headers
         $headers = ['Date', 'Supplier', 'Amount'];
-        foreach ($headers as $header) {
-            $this->Cell($this->width * 1.465, $this->height, $header, 1, 0, 'C', true);
+        $headerWidths = [50, 90, 50];
+
+        foreach ($headers as $key => $header) {
+            $this->Cell($headerWidths[$key], 8, $header, 1, 0, 'C', true);
         }
         $this->Ln();
 
-        // Table Content
+        // Table content
         $this->SetFillColor(255, 255, 255);
         $this->SetTextColor(51, 51, 51);
+        $this->SetFont('Helvetica', '', 9);
 
-        foreach ($site->payments as $site_payment) {
-            $this->Cell($this->width * 1.465, $this->height, $site_payment->created_at->format('d-m-y'), 1, 0, 'C', true);
-            $this->Cell($this->width * 1.465, $this->height, ucwords($site_payment->supplier->name ?? '-'), 1, 0, 'L', true);
-            $this->Cell($this->width * 1.465, $this->height, number_format($site_payment->amount, 2), 1, 1, 'L', true);
+        $total = 0;
+        foreach ($site->payments as $payment) {
+            $this->Cell($headerWidths[0], 8, $payment->created_at->format('d-M-Y'), 1, 0, 'C');
+            $this->Cell($headerWidths[1], 8, ucwords($payment->supplier->name ?? '-'), 1, 0, 'C');
+            $this->Cell($headerWidths[2], 8, number_format($payment->amount, 2), 1, 1, 'C');
+            $total += $payment->amount;
         }
+
+        // ======================
+        // SUMMARY SECTION
+        // ======================
+        $this->SetFont('Helvetica', 'B', 10);
+        $this->SetFillColor(220, 220, 220);
+        $this->Cell(array_sum($headerWidths) - $headerWidths[2], 8, 'Total Payments', 1, 0, 'R', true);
+        $this->Cell($headerWidths[2], 8, number_format($total, 2), 1, 1, 'R', true);
+
     }
 
-    public function ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance, $service_charge_amount)
+    public function ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance, $service_charge_amount, $returns)
     {
         // Set top margin before rendering
         $this->SetMargins($this->m_left, $this->m_top, $this->m_right);
-        $this->SetY($this->m_top); // Respect top margin
+        $this->SetY($this->m_top);
 
         // Title
         $this->SetTextColor(0, 170, 183);
         $this->SetFontSize(16);
-        $this->SetXY(10, 20); // Adjust position
-        $this->Ln(10); // Add space before table
+        $this->SetXY(10, 20);
+        $this->Ln(10);
 
         $this->SetFontSize($this->font_size);
 
         // Column widths (transaction_type removed)
         $columns = [
-            'date' => $this->width / 3,
-            'supplier' => $this->width / 1.3,
+            'date' => $this->width / 3.9,
+            'supplier' => $this->width / 2,
             'site' => $this->width / 1.4,
             'phase' => $this->width / 1.9,
             'category' => $this->width / 2,
             'description' => $this->width / 1.4,
             'debit' => $this->width / 2.5,
             'credit' => $this->width / 2.5,
+            'return' => $this->width / 2.9,
         ];
 
         // Table header (transaction_type removed)
         $this->SetFillColor(81, 177, 225);
         $this->SetTextColor(255, 255, 255);
 
-        foreach (['Date', 'Supplier Name', 'Site Name', 'Phase', 'Type', 'Narration', 'Debit', 'Credit'] as $i => $label) {
+        foreach (['Date', 'Supplier Name', 'Site Name', 'Phase', 'Type', 'Narration', 'Purchases', 'Payments', 'Return'] as $i => $label) {
             $this->Cell(array_values($columns)[$i], $this->height, $label, 1, 0, 'L', true);
         }
         $this->Ln();
@@ -630,6 +643,11 @@ class PDF extends Fpdf
             // Credit
             $this->SetXY($x, $y);
             $this->Cell($columns['credit'], $maxHeight, $ledger['credit'], 1);
+            $x += $columns['credit'];
+
+            // Return
+            $this->SetXY($x, $y);
+            $this->Cell($columns['return'], $maxHeight, $ledger['return'], 1);
 
             // Move to next row
             $this->Ln($maxHeight);
@@ -648,6 +666,7 @@ class PDF extends Fpdf
             'Payment Made' => $total_paid,
             'Total Amount' => $effective_balance,
             'Balance' => $total_due,
+            'Total Returns' => $returns
         ];
 
         foreach ($summaryRows as $label => $value) {
@@ -840,102 +859,172 @@ class PDF extends Fpdf
     }
 
 
-    // Add this method to your PDF class
+
     public function phaseWiseAttendanceReport($title, $subtitle, $dates, $workers, $attendanceData, $totals, $info)
     {
 
+        $this->SetMargins($this->m_left, $this->m_top, $this->m_right);
+
 
         $this->AddPage('L');
-        $this->SetFont('helvetica', 'B', 14);
+
+        // Set document information
+        $this->SetCreator('Your Company Name');
+        $this->SetAuthor('Your System');
+        $this->SetSubject('Attendance Report');
+
+        // Header Section
+        $this->SetFont('helvetica', 'B', 16);
         $this->Cell(0, 10, $title, 0, 1, 'C');
-        $this->SetFont('helvetica', '', 12);
+
+        $this->SetFont('helvetica', 'B', 12);
         $this->Cell(0, 8, $subtitle, 0, 1, 'C');
 
-        // Display site and phase info
-        $this->Ln(5);
+        // Add a line separator
+        $this->Ln(8);
+
+        // Information Section with better layout
         $this->SetFont('helvetica', '', 10);
-        $this->Cell(0, 8, 'Site: ' . $info['site_name'], 0, 1);
-        $this->Cell(0, 8, 'Phase: ' . $info['phase_name'], 0, 1);
-        $this->Cell(0, 8, 'Period: ' . $info['month_year'], 0, 1);
-        $this->Ln(10);
-
-        // Calculate column widths (use full page width)
-        $pageWidth = $this->GetPageWidth() - 20; // Leave 10mm margins on each side
-        $nameColWidth = 22; // Fixed width for worker names
-        $dateColWidth = ($pageWidth - $nameColWidth) / count($dates); // Removed remarks column
-
-        // Table header
-        $this->SetFillColor(220, 220, 220);
         $this->SetTextColor(0);
-        $this->SetDrawColor(0, 0, 0);
+        $this->SetFillColor(240, 240, 240);
+
+        // Create an information table
+        $this->Cell(40, 8, 'Site:', 1, 0, 'L', true);
+        $this->Cell(0, 8, $info['site_name'], 1, 1);
+        $this->Cell(40, 8, 'Phase:', 1, 0, 'L', true);
+        $this->Cell(0, 8, $info['phase_name'], 1, 1);
+        $this->Cell(40, 8, 'Period:', 1, 0, 'L', true);
+        $this->Cell(0, 8, $info['month_year'], 1, 1);
+
+        $this->Ln(12);
+
+        // Attendance Table
+        $pageWidth = $this->GetPageWidth() - 4;
+        $nameColWidth = 30; // Increased width for names
+        $dateColWidth = ($pageWidth - $nameColWidth - 10) / count($dates);
+
+        // Table Header with improved styling
+        $this->SetFont('helvetica', 'B', 6);
+        $this->SetFillColor(31, 73, 125); // Dark blue
+        $this->SetTextColor(255);
+        // $this->SetDrawColor(31, 73, 125);
         $this->SetLineWidth(0.3);
 
         // Name column
-        $this->Cell($nameColWidth, 8, 'NAME', 1, 0, 'C', true);
+        $this->Cell($nameColWidth, 10, 'WORKER NAME', 1, 0, 'C', true);
 
-        // Date columns
+        // Date columns with day names
         foreach ($dates as $date) {
-            $dateFormatted = Carbon::parse($date)->format('d');
-            $this->Cell($dateColWidth, 8, $dateFormatted, 1, 0, 'C', true);
+            $dateObj = Carbon::parse($date);
+            $this->Cell($dateColWidth, 10, $dateObj->format('D') . "\n" . $dateObj->format('d'), 1, 0, 'C', true, '');
         }
-        $this->Ln();
 
-        // Table data
-        $this->SetFillColor(255, 255, 255);
+        // Totals column
+        $this->Cell(10, 10, 'TOT', 1, 1, 'C', true);
+
+        // Table Data
+        $this->SetFillColor(255);
         $this->SetTextColor(0);
         $this->SetFont('helvetica', '', 8);
 
-
+        $fill = false;
         foreach ($workers as $worker) {
-            $this->Cell($nameColWidth, 6, $worker['name'], 'LR', 0, 'L');
+            $this->SetFillColor($fill ? 240 : 255);
+            $fill = !$fill;
 
+            // Worker name with type indicator
+            $name = $worker['name'];
+
+            $this->Cell($nameColWidth, 8, $name, 'LR', 0, 'L', true);
+
+            $totalPresent = 0;
             foreach ($dates as $date) {
-
-
-                $attendance = 0;
-                if ($attendanceData[$worker['name']][$date]) {
+                $attendance = '';
+                if (isset($attendanceData[$worker['name']][$date])) {
                     $attendance = $attendanceData[$worker['name']][$date] === 1 ? 'P' : 'A';
+                    if ($attendance === 'P')
+                        $totalPresent++;
                 }
-                $this->Cell($dateColWidth, 6, $attendance, 'LR', 0, 'C');
+                $this->Cell($dateColWidth, 8, $attendance, 'LR', 0, 'C', true);
             }
 
-            $this->Cell(30, 6, '', 'LR', 0, 'L');
-            $this->Ln();
+            // Total present days for this worker
+            $this->SetFont('helvetica', 'B', 8);
+            $this->Cell(10, 8, $totalPresent, 'LR', 1, 'C', true);
+            $this->SetFont('helvetica', '', 8);
         }
 
         // Close the table
-        $this->Cell($nameColWidth + (count($dates) * $dateColWidth), 0, '', 'T');
-        $this->Ln(10);
+        $this->Cell($nameColWidth + (count($dates) * $dateColWidth) + 10, 0, '', 'T');
+        $this->Ln(12);
 
-        // Totals section
-        $this->SetFont('helvetica', 'B', 10);
-        $this->Cell(0, 8, 'TOTALS FOR ' . strtoupper($info['phase_name']), 0, 1);
+        $this->AddPage('L');
+
+        // Totals Section with improved layout
+        $this->SetFont('helvetica', 'B', 12);
+        $this->SetTextColor(31, 73, 125);
+        $this->Cell(0, 8, 'PAYMENT SUMMARY FOR ' . strtoupper($info['phase_name']), 0, 1, 'C');
+        $this->Ln(5); // Add some spacing
+
+        // Create a summary table
+        $this->SetFont('helvetica', '', 10);
+        $this->SetFillColor(220, 230, 241); // Light blue header fill
+        $this->SetTextColor(0);
+        $this->SetDrawColor(150, 150, 150); // Gray border color
+
+        // Table header (improved alignment)
+        $headerWidths = [80, 50, 50, 60, 53]; // Column widths
+        $headers = ['Worker', 'Type', 'Days Worked', 'Rate per Day', 'Total Amount'];
+
+        // Draw header row
+        foreach ($headers as $key => $header) {
+            $this->Cell($headerWidths[$key], 8, $header, 1, 0, 'C', true);
+        }
+        $this->Ln();
+
+        // Reset fill for data rows
+        $this->SetFillColor(240, 240, 240);
+        $fill = false; // Alternate row shading
 
         // Wasta totals
         foreach ($totals['wastas'] as $name => $data) {
-            $this->Cell(40, 6, $name . ' (Wasta):', 0, 0);
-            $this->Cell(20, 6, $data['present_days'] . ' days', 0, 0);
-            $this->Cell(30, 6, number_format($data['total_amount']), 0, 1);
+            $this->Cell($headerWidths[0], 8, $name, 'LR', 0, 'L', $fill);
+            $this->Cell($headerWidths[1], 8, 'Wasta', 'LR', 0, 'C', $fill);
+            $this->Cell($headerWidths[2], 8, $data['present_days'] . ' days', 'LR', 0, 'C', $fill);
+            $this->Cell($headerWidths[3], 8, number_format($data['total_amount'] / $data['present_days'], 2), 'LR', 0, 'R', $fill);
+            $this->Cell($headerWidths[4], 8, number_format($data['total_amount'], 2), 'LR', 1, 'R', $fill);
+            $fill = !$fill; // Toggle fill for next row
         }
 
         // Labour totals
         foreach ($totals['labours'] as $name => $data) {
-            $this->Cell(40, 6, $name . ' (Labour):', 0, 0);
-            $this->Cell(20, 6, $data['present_days'] . ' days', 0, 0);
-            $this->Cell(30, 6, number_format($data['total_amount']), 0, 1);
+            $this->Cell($headerWidths[0], 8, $name, 'LR', 0, 'L', $fill);
+            $this->Cell($headerWidths[1], 8, 'Labour', 'LR', 0, 'C', $fill);
+            $this->Cell($headerWidths[2], 8, $data['present_days'] . ' days', 'LR', 0, 'C', $fill);
+            $this->Cell($headerWidths[3], 8, number_format($data['total_amount'] / $data['present_days'], 2), 'LR', 0, 'R', $fill);
+            $this->Cell($headerWidths[4], 8, number_format($data['total_amount'], 2), 'LR', 1, 'R', $fill);
+            $fill = !$fill; // Toggle fill for next row
         }
 
-        // Grand total
-        $this->Ln(5);
-        $this->SetFont('helvetica', 'B', 12);
-        $this->Cell(40, 8, 'PHASE TOTAL:', 0, 0);
-        $this->Cell(30, 8, number_format($totals['grand_total']), 0, 1);
+        // Close the table with bottom border
+        $this->Cell(array_sum($headerWidths), 0, '', 'T');
+        $this->Ln(8);
 
-        // Footer
-        $this->Ln(10);
-        $this->SetFont('helvetica', '', 8);
-        $this->Cell(0, 8, 'Generated on: ' . Carbon::now()->format('d-M-Y h:i A'), 0, 1);
-        $this->Ln(5);
+        // Grand total with emphasis
+        $this->SetFont('helvetica', 'B', 14);
+        $this->SetTextColor(31, 73, 125);
+        $this->Cell(array_sum(array_slice($headerWidths, 0, 3)), 10, 'TOTAL FOR PHASE:', 0, 0, 'R');
+        $this->Cell($headerWidths[3] + $headerWidths[4], 10, number_format($totals['grand_total'], 2), 0, 1, 'R');
+        $this->SetFont('helvetica', '', 10);
+
+    }
+
+    // Helper function to convert numbers to words (you need to implement this)
+    protected function numberToWords($number)
+    {
+        // Implement your number to words conversion logic here
+        // This is just a placeholder
+        return 'Amount in words';
     }
 
 

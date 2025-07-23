@@ -62,32 +62,30 @@ class SiteController extends Controller
 
 
         $validator = Validator::make($request->all(), [
-            'site_name' => 'required|string|min:5',
+            'site_name' => 'required|string|min:1',
             'service_charge' => 'required|decimal:0,2',
             'location' => 'required|string',
-            'user_id' => 'required|exists:users,id',
+            'engineer_ids' => 'required|array|min:1',
+            'engineer_ids.*' => 'exists:users,id',
             'client_id' => 'required|exists:clients,id',
             'contact_no' => 'required|digits:10',
         ], [
-            'user_id.required' => 'The Site Engineer is required.',
-            'user_id.exists' => 'The selected Site Engineer is invalid.',
+            'engineer_ids.required' => 'The Site Engineer is required.',
+            'engineer_ids.*.exists' => 'One or more selected engineers are invalid.',
         ]);
-
 
         if ($validator->fails()) {
             return response()->json([
                 'status' => false,
-                'message' => 'Some Form Fields Are Missing...',
+                'message' => 'Some form fields are missing or invalid.',
                 'errors' => $validator->errors()
             ], 422);
         }
 
         try {
-
             $validatedData = $validator->validated();
 
-            $user = User::find($validatedData['user_id']);
-            $client = Client::find($validatedData['client_id']);
+            $client = Client::findOrFail($validatedData['client_id']);
 
             $site = Site::create([
                 'site_name' => $validatedData['site_name'],
@@ -96,17 +94,25 @@ class SiteController extends Controller
                 'service_charge' => $validatedData['service_charge'],
                 'site_owner_name' => $client->name,
                 'is_on_going' => true,
-                'user_id' => $validatedData['user_id'],
                 'client_id' => $validatedData['client_id'],
             ]);
 
-            $user->notify(new UserSiteNotification());
+            // Attach engineers
+            $site->users()->attach($validatedData['engineer_ids']);
+
+            // Notify all assigned users
+            $users = User::whereIn('id', $validatedData['engineer_ids'])->get();
+
+            foreach ($users as $user) {
+                $user->notify(new UserSiteNotification());
+            }
 
             return response()->json([
                 'status' => true,
                 'message' => 'Site created successfully!',
                 'data' => $site
             ], 201);
+
         } catch (\Exception $e) {
             Log::error('Site creation failed: ' . $e->getMessage());
             return response()->json([
@@ -116,6 +122,7 @@ class SiteController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Display the specified resource.
@@ -161,11 +168,6 @@ class SiteController extends Controller
 
 
         $ledgersGroupedByPhase = $ledgers->groupBy('phase');
-
-        $balances = $this->dataService->calculateAllBalances($ledgers);
-        $withoutServiceCharge = $balances['without_service_charge'];
-        $withServiceCharge = $balances['with_service_charge'];
-
         // Per-phase breakdown
         $phaseData = [];
 
@@ -193,10 +195,6 @@ class SiteController extends Controller
                 'total_payment_amount' => $payments_total,
                 'phase_total' => $subtotal,
                 'phase_total_with_service_charge' => $withService,
-                'total_balance' => $withServiceCharge['balance'],
-                'total_due' => $withServiceCharge['due'],
-                'effective_balance' => $withoutServiceCharge['due'],
-                'total_paid' => $withServiceCharge['paid'],
                 'construction_material_billings' => $records->where('category', 'Material'),
                 'square_footage_bills' => $records->where('category', 'SQFT'),
                 'daily_expenses' => $records->where('category', 'Expense'),
@@ -222,7 +220,7 @@ class SiteController extends Controller
         $site_id = $request->input('site_id', $id);
         $supplier_id = $request->input('supplier_id', 'all');
         $phase_id = $request->input('phase_id', 'all');
-        $startDate = $request->input('start_date'); // for 'custom'
+        $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
         // Call the service to get all data including wasta and labours
@@ -256,6 +254,7 @@ class SiteController extends Controller
         $total_paid = $withServiceCharge['paid'];
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
+        $returns = $withoutServiceCharge['return'];
 
 
         // Paginate the ledgers
@@ -273,25 +272,27 @@ class SiteController extends Controller
         // Get additional data for the view
         $items = Item::orderBy('item_name')->get();
 
-        $workforce_suppliers = Supplier::where([
-            'is_workforce_provider' => 1,
-            'deleted_at' => null
-        ])->orderBy('name')->get();
+        // Single query to get both workforce and raw material providers
+        $supp = Supplier::whereNull('deleted_at')
+            ->orderBy('name')
+            ->get();
 
-        $raw_material_providers = Supplier::where([
-            'is_raw_material_provider' => 1,
-            'deleted_at' => null
-        ])->orderBy('name')->get();
+        // Separate them into different collections
+        $workforce_suppliers = $supp->where('is_workforce_provider', 1);
+        $raw_material_providers = $supp->where('is_raw_material_provider', 1);
 
         $phases = Phase::where([
             'deleted_at' => null,
             'site_id' => $site_id
         ])->latest()->get();
 
-        $site = Site::select('id', 'site_name')->where([
-            'is_on_going' => 1,
-            'deleted_at' => null
-        ])->find($site_id);
+        $site = Site::with('client')
+            ->select('id', 'site_name', 'client_id')
+            ->where([
+                'is_on_going' => 1,
+                'deleted_at' => null
+            ])
+            ->find($site_id);
 
         return view("profile.partials.Admin.Site.show-site", compact(
             'paginatedLedgers',
@@ -307,6 +308,7 @@ class SiteController extends Controller
             'raw_material_providers',
             'phases',
             'site',
+            'returns'
         ));
     }
 
@@ -332,17 +334,58 @@ class SiteController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateSiteRequest $request, string $id)
+    public function update(Request $request, string $id)
     {
-        $site_id = base64_decode($id);
+        try {
 
-        $request->validated();
+            $site_id = base64_decode($id);
 
-        $site = Site::find($site_id);
+            $validator = Validator::make($request->all(), [
+                'site_name' => 'required|string|min:1',
+                'service_charge' => 'required|decimal:0,2',
+                'location' => 'required|string',
+                'engineer_ids' => 'required|array|min:1',
+                'engineer_ids.*' => 'exists:users,id',
+                'contact_no' => 'required|digits:10',
+            ], [
+                'engineer_ids.required' => 'The Site Engineer is required.',
+                'engineer_ids.*.exists' => 'One or more selected engineers are invalid.',
+            ]);
 
-        $site->update($request->validated());
 
-        return redirect()->route('sites.index')->with('status', 'update');
+            $validatedData = $validator->validated();
+
+            $site = Site::findOrFail($site_id);
+
+            // Update site details
+            $site->update([
+                'site_name' => $validatedData['site_name'],
+                'location' => $validatedData['location'],
+                'contact_no' => $validatedData['contact_no'],
+                'service_charge' => $validatedData['service_charge'],
+            ]);
+
+            // Sync engineers - this will detach any not in the array and attach new ones
+            $currentEngineers = $site->users()->pluck('users.id')->toArray();
+            $newEngineers = $validatedData['engineer_ids'];
+
+            $site->users()->sync($newEngineers);
+
+            // Notify newly assigned users
+            $addedEngineers = array_diff($newEngineers, $currentEngineers);
+            if (!empty($addedEngineers)) {
+                $users = User::whereIn('id', $addedEngineers)->get();
+                foreach ($users as $user) {
+                    $user->notify(new UserSiteNotification());
+                }
+            }
+
+            return redirect()->route('sites.index')->with('status', 'update');
+
+        } catch (\Exception $e) {
+            Log::error('Site update failed: ' . $e->getMessage());
+            return redirect()->back()->with('status', 'error');
+        }
     }
 
     /**

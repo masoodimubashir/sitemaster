@@ -21,7 +21,6 @@ return new class extends Migration
             $table->integer('service_charge');
             $table->string('site_owner_name');
             $table->boolean('is_on_going');
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('client_id')->constrained()->cascadeOnDelete();
             $table->softDeletes();
             $table->timestamps();

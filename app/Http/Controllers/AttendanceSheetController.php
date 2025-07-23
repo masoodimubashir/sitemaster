@@ -19,40 +19,48 @@ class AttendanceSheetController extends Controller
 
     public function index(Request $request)
     {
-        // Get month/year from request or use current
-        if ($request->filled('monthYear')) {
-            [$year, $month] = explode('-', $request->input('monthYear'));
+        // Handle date filtering
+        $dateFilter = $request->input('date_filter', 'month');
+        $monthYear = $request->input('monthYear', now()->format('Y-m'));
+        $customStart = $request->input('custom_start', now()->startOfMonth()->format('Y-m-d'));
+        $customEnd = $request->input('custom_end', now()->endOfMonth()->format('Y-m-d'));
+
+        // Set date range based on filter type
+        if ($dateFilter === 'month') {
+            [$year, $month] = explode('-', $monthYear);
+            $startDate = Carbon::create($year, $month, 1)->startOfDay();
+            $endDate = $startDate->copy()->endOfMonth();
+            $totalDays = $startDate->daysInMonth;
         } else {
-            $month = now()->month;
-            $year = now()->year;
+            $startDate = Carbon::parse($customStart)->startOfDay();
+            $endDate = Carbon::parse($customEnd)->endOfDay();
+            $totalDays = $startDate->diffInDays($endDate) + 1; // Inclusive of both start and end dates
         }
 
-        // Base query
+        // Base query for wastas with eager loading
         $wastasQuery = Wasta::with([
-            'attendances' => function ($query) use ($month, $year) {
-                $query->whereMonth('attendance_date', $month)
-                    ->whereYear('attendance_date', $year);
+            'attendances' => function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('attendance_date', [$startDate, $endDate]);
             },
-            'labours.attendances' => function ($query) use ($month, $year) {
-                $query->whereMonth('attendance_date', $month)
-                    ->whereYear('attendance_date', $year);
+            'labours.attendances' => function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('attendance_date', [$startDate, $endDate]);
             },
             'phase.site'
         ]);
 
-        // Filter by site
+        // Filter by site if selected
         if ($request->filled('site_id')) {
             $wastasQuery->whereHas('phase.site', function ($query) use ($request) {
                 $query->where('id', $request->input('site_id'));
             });
         }
 
-        // Filter by phase
+        // Filter by phase if selected
         if ($request->filled('phase_id')) {
             $wastasQuery->where('phase_id', $request->phase_id);
         }
 
-        // Paginate the data (10 per page)
+        // Paginate and transform results
         $perPage = 10;
         $wastas = $wastasQuery->paginate($perPage)->through(function ($wasta) {
             $wasta->present_days = $wasta->attendances->where('is_present', true)->count();
@@ -69,30 +77,39 @@ class AttendanceSheetController extends Controller
             return $wasta;
         });
 
-        // Monthly days for attendance
-        $daysInMonth = \Carbon\Carbon::create($year, $month)->daysInMonth;
-
-        // All sites/phases for filters
-        $sites = Site::where('is_on_going', 1)->get();
+        // Get all sites and phases for filters
+        $sites = Site::where('is_on_going', true)->get();
         $phases = Phase::with('site')->latest()->get();
 
-        // Totals for current page only
+        // Calculate totals
         $siteTotal = [
             'wasta_amount' => $wastas->sum('total_amount'),
             'labour_amount' => $wastas->sum('labours_total_amount'),
-            'combined_total' => $wastas->sum('combined_total'),
+            'combined_total' => $wastas->sum('combined_total')
         ];
 
+        $totalLabours = $wastas->sum(fn($w) => $w->labours->count());
+
+
+        // Format date range for display
+        $dateRange = $startDate->format('M d, Y') . ' - ' . $endDate->format('M d, Y');
 
         return view('profile.partials.Admin.Ledgers.wager-attendance-sheet', [
             'wastas' => $wastas,
-            'month' => $month,
-            'year' => $year,
-            'daysInMonth' => $daysInMonth,
-            'phases' => $phases,
             'sites' => $sites,
-            'selectedSiteId' => $request->input('site_id'),
+            'phases' => $phases,
             'siteTotal' => $siteTotal,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'totalDays' => $totalDays,
+            'dateRange' => $dateRange,
+            'dateFilter' => $dateFilter,
+            'monthYear' => $monthYear,
+            'customStart' => $customStart,
+            'customEnd' => $customEnd,
+            'selectedSiteId' => $request->input('site_id'),
+            'selectedPhaseId' => $request->input('phase_id'),
+            'totalLabours' => $totalLabours,
         ]);
     }
 
@@ -101,12 +118,14 @@ class AttendanceSheetController extends Controller
     public function storeWastaAttendance(Request $request)
     {
 
-        try {
 
-            $data = Validator::make($request->only('wasta_id', 'is_present', 'date'), [
+
+        try {
+            $data = Validator::make($request->only('wasta_id', 'is_present', 'attendance_id', 'attendance_date'), [
                 'wasta_id' => 'required|exists:wastas,id',
                 'is_present' => 'required|boolean',
-                'date' => 'required|date'
+                'attendance_id' => 'nullable|exists:attendances,id',
+                'attendance_date' => 'required|date',
             ]);
 
             if ($data->fails()) {
@@ -115,35 +134,43 @@ class AttendanceSheetController extends Controller
                 ], 422);
             }
 
-            $wasta = Wasta::find($data->validated()['wasta_id']);
+            $validatedData = $data->validated();
+            $wasta = Wasta::find($validatedData['wasta_id']);
 
-            $wasta->attendances()->create([
-                'attendable_type' => 'App\Models\Wasta',
-                'attendable_id' => $wasta->id,
-                'is_present' => $data->validated()['is_present'],
-                'attendance_date' => now(),
-            ]);
+            $wasta->attendances()->updateOrCreate(
+                [
+                    'attendable_type' => 'App\Models\Wasta',
+                    'attendable_id' => $wasta->id,
+                    'id' => $validatedData['attendance_id'],
+                    'attendance_date' => $validatedData['attendance_date'],
+                ],
+                [
+                    'is_present' => $validatedData['is_present'],
+                ]
+            );
 
             return response()->json([
-                'message' => 'Wasta created successfully',
+                'message' => 'Wasta attendance updated successfully',
             ], 200);
-        } catch (Exception $e) {
 
+        } catch (Exception $e) {
+            Log::error($e->getMessage());
             return response()->json([
                 'message' => 'Something went wrong',
             ], 500);
         }
+
     }
 
     public function storelabourAttendance(Request $request)
     {
-
         try {
 
-            $data = Validator::make($request->only('labour_id', 'is_present', 'date'), [
+            $data = Validator::make($request->only('labour_id', 'is_present', 'attendance_id', 'attendance_date'), [
                 'labour_id' => 'required|exists:labours,id',
                 'is_present' => 'required|boolean',
-                'date' => 'required|date'
+                'attendance_id' => 'nullable|exists:attendances,id',
+                'attendance_date' => 'required|date',
             ]);
 
             if ($data->fails()) {
@@ -152,25 +179,32 @@ class AttendanceSheetController extends Controller
                 ], 422);
             }
 
-            $labour = Labour::find($data->validated()['labour_id']);
+            $validatedData = $data->validated();
+            $labour = Labour::find($validatedData['labour_id']);
 
-            $labour->attendances()->create([
-                'attendable_type' => 'App\Models\Wasta',
-                'attendable_id' => $labour->id,
-                'is_present' => $data->validated()['is_present'],
-                'attendance_date' => now(),
-            ]);
+            $labour->attendances()->updateOrCreate(
+                [
+                    'attendable_type' => 'App\Models\Labour',
+                    'attendable_id' => $labour->id,
+                    'id' => $validatedData['attendance_id'],
+                    'attendance_date' => $validatedData['attendance_date'],
+                ],
+                [
+                    'is_present' => $validatedData['is_present'],
+                ]
+            );
 
             return response()->json([
-                'message' => 'Wasta created successfully',
+                'message' => 'Labour attendance updated successfully',
             ], 200);
-        } catch (Exception $e) {
 
+        } catch (Exception $e) {
             return response()->json([
                 'message' => 'Something went wrong',
             ], 500);
         }
     }
+
 
     public function storeLabour(Request $request)
     {
@@ -281,26 +315,33 @@ class AttendanceSheetController extends Controller
 
     public function showAttendanceBySite(Request $request, string $id)
     {
-
         $site = Site::findOrFail($id);
 
-        // Get month/year from request or use current
-        if ($request->filled('monthYear')) {
-            [$year, $month] = explode('-', $request->input('monthYear'));
+        // Handle date filtering
+        $dateFilter = $request->input('date_filter', 'month');
+        $monthYear = $request->input('monthYear', now()->format('Y-m'));
+        $customStart = $request->input('custom_start', now()->startOfMonth()->format('Y-m-d'));
+        $customEnd = $request->input('custom_end', now()->endOfMonth()->format('Y-m-d'));
+
+        // Set date range based on filter type
+        if ($dateFilter === 'month') {
+            [$year, $month] = explode('-', $monthYear);
+            $startDate = Carbon::create($year, $month, 1)->startOfDay();
+            $endDate = $startDate->copy()->endOfMonth();
+            $totalDays = $startDate->daysInMonth;
         } else {
-            $month = now()->month;
-            $year = now()->year;
+            $startDate = Carbon::parse($customStart)->startOfDay();
+            $endDate = Carbon::parse($customEnd)->endOfDay();
+            $totalDays = round($startDate->diffInDays($endDate)); // Fixed calculation
         }
 
         // Base query for wastas
         $wastasQuery = Wasta::with([
-            'attendances' => function ($query) use ($month, $year) {
-                $query->whereMonth('attendance_date', $month)
-                    ->whereYear('attendance_date', $year);
+            'attendances' => function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('attendance_date', [$startDate, $endDate]);
             },
-            'labours.attendances' => function ($query) use ($month, $year) {
-                $query->whereMonth('attendance_date', $month)
-                    ->whereYear('attendance_date', $year);
+            'labours.attendances' => function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('attendance_date', [$startDate, $endDate]);
             },
             'phase'
         ])->whereHas('phase.site', function ($query) use ($site) {
@@ -312,6 +353,7 @@ class AttendanceSheetController extends Controller
             $wastasQuery->where('phase_id', $request->phase_id);
         }
 
+        // Paginate and transform results
         $perPage = 10;
         $wastas = $wastasQuery->paginate($perPage)->through(function ($wasta) {
             $wasta->present_days = $wasta->attendances->where('is_present', true)->count();
@@ -328,10 +370,9 @@ class AttendanceSheetController extends Controller
             return $wasta;
         });
 
-        $daysInMonth = \Carbon\Carbon::create($year, $month)->daysInMonth;
-
-        $daysInMonth = Carbon::create($year, $month)->daysInMonth;
         $phases = Phase::where('site_id', $site->id)->orderBy('phase_name')->get();
+
+        $totalLabours = $wastas->sum(fn($w) => $w->labours->count());
 
         // Calculate site totals
         $siteTotal = [
@@ -340,14 +381,23 @@ class AttendanceSheetController extends Controller
             'combined_total' => $wastas->sum('combined_total')
         ];
 
+        // Format date range for display
+        $dateRange = $startDate->format('M d, Y') . ' - ' . $endDate->format('M d, Y');
+
         return view('profile.partials.Admin.Ledgers.site-wager-attendance-sheet', compact(
             'wastas',
-            'month',
-            'year',
-            'daysInMonth',
             'site',
             'phases',
-            'siteTotal'
+            'siteTotal',
+            'startDate',
+            'endDate',
+            'totalDays',
+            'dateRange',
+            'dateFilter',
+            'monthYear',
+            'customStart',
+            'customEnd',
+            'totalLabours'
         ));
     }
 

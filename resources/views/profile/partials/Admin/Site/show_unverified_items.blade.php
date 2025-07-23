@@ -20,15 +20,18 @@
                 <div class="card-body">
                     <!-- Filter Section -->
                     <div class=" border-0 mb-3">
-                        <form action="{{ url()->current() }}" method="GET" id="filterForm">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <label for="site_id" class="form-label">Site</label>
-                                    <select class="form-select bg-white text-black auto-submit" name="site_id"
-                                        id="site_id">
-                                        <option value="all" {{ request('site_id') === 'all' ? 'selected' : '' }}>
-                                            All Sites
-                                        </option>
+
+
+                        <form action="{{ url()->current() }}" method="GET" id="filterForm"
+                            class="rounded mb-4">
+                            <div class="row g-3 align-items-end">
+
+                                <!-- Site -->
+                                <div class="col-md-2">
+                                    <label for="site_id" class="form-label fw-semibold">Site</label>
+                                    <select class="form-select auto-submit bg-white text-black cursor-pointer" name="site_id" id="site_id">
+                                        <option value="all" {{ request('site_id') === 'all' ? 'selected' : '' }}>All
+                                            Sites</option>
                                         @foreach ($sites as $site)
                                             <option value="{{ $site->id }}"
                                                 {{ request('site_id') == $site->id ? 'selected' : '' }}>
@@ -38,13 +41,12 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-4">
-                                    <label for="phase" class="form-label">Phase</label>
-                                    <select class="form-select bg-white text-black auto-submit" name="phase"
-                                        id="phase">
-                                        <option value="all" {{ request('phase') === 'all' ? 'selected' : '' }}>
-                                            All Phases
-                                        </option>
+                                <!-- Phase -->
+                                <div class="col-md-2">
+                                    <label for="phase" class="form-label fw-semibold">Phase</label>
+                                    <select class="form-select auto-submit bg-white text-black cursor-pointer" name="phase" id="phase">
+                                        <option value="all" {{ request('phase') === 'all' ? 'selected' : '' }}>All
+                                            Phases</option>
                                         @foreach ($phases as $phase)
                                             <option value="{{ $phase }}"
                                                 {{ request('phase') == $phase ? 'selected' : '' }}>
@@ -54,29 +56,45 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-4">
-                                    <label for="supplier" class="form-label">Supplier</label>
-                                    <div class="input-group">
-                                        <select class="form-select bg-white text-black auto-submit" name="supplier"
-                                            id="supplier">
-                                            <option value="all"
-                                                {{ request('supplier') === 'all' ? 'selected' : '' }}>
-                                                All Suppliers
+                                <!-- Supplier -->
+                                <div class="col-md-2">
+                                    <label for="supplier" class="form-label fw-semibold">Supplier</label>
+                                    <select class="form-select auto-submit bg-white text-black cursor-pointer" name="supplier" id="supplier">
+                                        <option value="all" {{ request('supplier') === 'all' ? 'selected' : '' }}>All
+                                            Suppliers</option>
+                                        @foreach ($suppliers as $supplier)
+                                            <option value="{{ $supplier }}"
+                                                {{ request('supplier') == $supplier ? 'selected' : '' }}>
+                                                {{ ucwords($supplier) }}
                                             </option>
-                                            @foreach ($suppliers as $supplier)
-                                                <option value="{{ $supplier }}"
-                                                    {{ request('supplier') == $supplier ? 'selected' : '' }}>
-                                                    {{ ucwords($supplier) }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                        <button type="button" class="btn btn-info" id="resetFilters">
-                                            Reset
-                                        </button>
-                                    </div>
+                                        @endforeach
+                                    </select>
                                 </div>
+
+                                <!-- From Date -->
+                                <div class="col-md-2">
+                                    <label for="from_date" class="form-label fw-semibold">From Date</label>
+                                    <input type="date" name="from_date" id="from_date"
+                                        class="form-control auto-submit" value="{{ request('from_date') }}">
+                                </div>
+
+                                <!-- To Date -->
+                                <div class="col-md-2">
+                                    <label for="to_date" class="form-label fw-semibold">To Date</label>
+                                    <input type="date" name="to_date" id="to_date" class="form-control auto-submit"
+                                        value="{{ request('to_date') }}">
+                                </div>
+
+                                <!-- Reset Button -->
+                                <div class="col-md-2 text-end">
+                                    <button type="button" class="btn btn-secondary w-100"
+                                        id="resetFilters">Reset</button>
+                                </div>
+
                             </div>
                         </form>
+
+
 
 
                     </div>
@@ -316,23 +334,24 @@
 
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Auto-submit when any filter changes
+            // Auto-submit on change
             document.querySelectorAll('.auto-submit').forEach(select => {
                 select.addEventListener('change', function() {
                     document.getElementById('filterForm').submit();
                 });
             });
 
-            // Reset form functionality
+            // Reset filters
             document.getElementById('resetFilters').addEventListener('click', function() {
-                // Reset all select elements to 'all'
-                document.querySelectorAll('.auto-submit').forEach(select => {
-                    select.value = 'all';
-                });
-
-                // Submit the form to reset all filters
-                document.getElementById('filterForm').submit();
+                const form = document.getElementById('filterForm');
+                form.querySelectorAll('select, input[type="date"]').forEach(el => el.value = 'all');
+                form.querySelector('#from_date').value = '';
+                form.querySelector('#to_date').value = '';
+                form.submit();
             });
         });
+    </script>
+
+
     </script>
 </x-app-layout>

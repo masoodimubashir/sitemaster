@@ -195,7 +195,7 @@
         </div>
     </div>
 
-
+    <div id="messageContainer"></div>
 
     <!-- Create Site Modal -->
     <div id="create-site-modal" class="modal fade" aria-hidden="true" aria-labelledby="createSiteModalLabel"
@@ -207,7 +207,10 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="createSiteForm" class="forms-sample material-form" enctype="multipart/form-data">
+                    <!-- Message Container for Success/Error Messages -->
+                    <div id="messageContainer"></div>
+
+                       <form id="createSiteForm" class="forms-sample material-form" enctype="multipart/form-data">
                         @csrf
 
                         <!-- Site Name -->
@@ -219,17 +222,15 @@
 
                         <!-- Service Charge -->
                         <div class="form-group">
-                            <input type="number" min="0" name="service_charge" id="service_charge"
-                                step="0.01" />
+                            <input type="number" min="0" name="service_charge" id="service_charge" />
                             <label for="service_charge" class="control-label">Service Charge</label><i
                                 class="bar"></i>
                             <div id="service_charge-error" class="error-message invalid-feedback"></div>
                         </div>
 
-                        <!-- Service Charge -->
+                        <!-- Contact No -->
                         <div class="form-group">
-                            <input type="number" min="0" name="contact_no" id="contact_no"
-                                step="0.01" />
+                            <input type="text" name="contact_no" id="contact_no" />
                             <label for="contact_no" class="control-label">Contact No</label><i class="bar"></i>
                             <div id="contact_no-error" class="error-message invalid-feedback"></div>
                         </div>
@@ -242,19 +243,71 @@
                         </div>
 
                         <div class="row">
-                            <!-- Select User -->
+                            <!-- Multi-select for Engineers -->
                             <div class="col-md-6">
-                                <select name="user_id" id="user_id" class="form-select text-black form-select-sm"
-                                    style="cursor: pointer">
-                                    <option value="" selected>Select Engineer</option>
-                                    @foreach ($users as $user)
-                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                    @endforeach
-                                </select>
-                                <div id="user_id-error" class="error-message invalid-feedback"></div>
+                                <div class="dropdown">
+
+                                    <button class="form-control d-flex justify-content-between align-items-center"
+                                        type="button" id="engineerDropdown" data-bs-toggle="dropdown"
+                                        aria-expanded="false">
+                                        <span id="selectedEngineersText" class="text-muted">
+                                            @if (isset($site) && $site->users->count() > 0)
+                                                {{ $site->users->pluck('name')->join(', ') }}
+                                            @else
+                                                Select Engineers
+                                            @endif
+                                        </span>
+                                        <i class="fas fa-chevron-down text-secondary"></i>
+                                    </button>
+
+
+                                    <div id="engineer_ids-error" class="error-message invalid-feedback"></div>
+
+                                    <div class="dropdown-menu w-100 p-0" aria-labelledby="engineerDropdown">
+                                        <!-- Search -->
+                                        <div class="p-2 border-bottom">
+                                            <input type="text" class="form-control form-control-sm"
+                                                id="engineerSearch" placeholder="Search engineers..."
+                                                onkeyup="filterEngineers()">
+                                        </div>
+
+                                        <!-- Engineers List -->
+                                        <div style="max-height: 200px; overflow-y: auto;">
+                                            @foreach ($users as $user)
+                                                <div class="engineer-option">
+                                                    <div class="form-check px-3">
+                                                        <input class="form-check-input engineer-checkbox"
+                                                            type="checkbox" style="margin-left: 0px"
+                                                            name="engineer_ids[]"
+                                                            id="engineer_checkbox_{{ $user->id }}"
+                                                            value="{{ $user->id }}"
+                                                            @if (isset($site) && $site->users->contains($user->id)) checked @endif
+                                                            onchange="updateSelectedEngineersText()">
+                                                        <label class="form-check-label"
+                                                            for="engineer_checkbox_{{ $user->id }}">
+                                                            {{ $user->name }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+
+                                        <!-- Buttons -->
+                                        <div class="d-flex justify-content-end">
+                                            <button type="button" class="btn btn-sm"
+                                                onclick="clearAllEngineers()">
+                                                <i class="fas fa-times me-1"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm"
+                                                onclick="closeEngineerDropdown()">
+                                                <i class="fas fa-check me-1"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Select Client -->
+                            <!-- Client Selection -->
                             <div class="col-md-6">
                                 <select name="client_id" id="client_id" class="form-select text-black form-select-sm"
                                     style="cursor: pointer">
@@ -265,122 +318,228 @@
                                 </select>
                                 <div id="client_id-error" class="error-message invalid-feedback"></div>
                             </div>
+                        </div>
 
-
-                            <div class="flex items-center justify-end mt-4">
-                                <button type="button" class="btn btn-sm btn-secondary me-2"
-                                    data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-sm btn-success" id="submitSiteBtn">
-                                    Create Site
-                                </button>
-                            </div>
+                        <!-- Form Buttons -->
+                        <div class="d-flex justify-content-end align-items-center  mt-4">
+                            <button type="button" class="btn btn-sm btn-secondary me-2"
+                                data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-success" id="submitSiteBtn">
+                                <span class="spinner-border spinner-border-sm d-none" role="status"
+                                    aria-hidden="true"></span>
+                                <span class="submit-text">Create Site</span>
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
     </div>
 
+    @push('scripts')
+        <script>
+            $(document).ready(function() {
+                // Initialize tooltips
+                $('[data-bs-toggle="tooltip"]').tooltip();
 
-    <div id="messageContainer"></div>
+                // Auto-dismiss alerts after 5 seconds
+                setTimeout(() => {
+                    $('.alert').alert('close');
+                }, 5000);
 
-    <script>
-        $(document).ready(function() {
+                // Update selected engineers text
+                function updateSelectedEngineersText() {
+                    const checkboxes = document.querySelectorAll('.engineer-checkbox:checked');
+                    const selectedText = document.getElementById('selectedEngineersText');
 
-            const messageContainer = $('#messageContainer');
+                    if (checkboxes.length === 0) {
+                        selectedText.textContent = 'Select Engineers';
+                    } else if (checkboxes.length <= 3) {
+                        // Show names when 3 or fewer engineers are selected
+                        const names = Array.from(checkboxes).map(checkbox => {
+                            return checkbox.nextElementSibling.textContent.trim();
+                        }).join(', ');
+                        selectedText.textContent = names;
+                    } else {
+                        // Show count when more than 3 engineers are selected
+                        selectedText.textContent = `${checkboxes.length} Engineers Selected`;
+                    }
+                }
 
-            $('#createSiteForm').submit(function(e) {
-                e.preventDefault();
+                // Clear all selections
+                function clearAllEngineers() {
+                    document.querySelectorAll('.engineer-checkbox').forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    updateSelectedEngineersText();
+                }
 
-                // Clear previous messages and errors
-                $('.invalid-feedback').remove();
-                $('.is-invalid').removeClass('is-invalid');
-                messageContainer.html('');
+                // Close dropdown
+                function closeEngineerDropdown() {
+                    const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('engineerDropdown'));
+                    if (dropdown) {
+                        dropdown.hide();
+                    }
+                }
 
-                // Button state
-                const submitBtn = $('#submitSiteBtn');
-                const originalBtnText = submitBtn.html();
-                submitBtn.prop('disabled', true).html(
-                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating...'
-                );
+                // Filter engineers list
+                function filterEngineers() {
+                    const term = document.getElementById('engineerSearch').value.toLowerCase();
+                    document.querySelectorAll('.engineer-option').forEach(option => {
+                        const label = option.querySelector('label').textContent.toLowerCase();
+                        option.style.display = label.includes(term) ? 'block' : 'none';
+                    });
+                }
 
-                // Form data
-                const formData = new FormData(this);
+                // Make functions globally accessible
+                window.updateSelectedEngineersText = updateSelectedEngineersText;
+                window.clearAllEngineers = clearAllEngineers;
+                window.closeEngineerDropdown = closeEngineerDropdown;
+                window.filterEngineers = filterEngineers;
 
-                // AJAX request
-                $.ajax({
-                    url: '/admin/sites',
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(response) {
-                        if (response.status) {
+                // Initialize on page load
+                updateSelectedEngineersText();
 
-                            // Show success message
-                            messageContainer.html(`
+                // Form validation and submission
+                $('#createSiteForm').submit(function(e) {
+                    e.preventDefault();
+
+                    const form = $(this);
+                    const submitBtn = $('#submitSiteBtn');
+                    const spinner = submitBtn.find('.spinner-border');
+                    const submitText = submitBtn.find('.submit-text');
+
+                    // Clear previous error messages
+                    form.find('.is-invalid').removeClass('is-invalid');
+                    form.find('.invalid-feedback').text('');
+                    $('#messageContainer').html('');
+
+                    // Validate form
+                    if (form[0].checkValidity() === false) {
+                        e.stopPropagation();
+                        form.addClass('was-validated');
+                        return;
+                    }
+
+                    // Show loading state
+                    submitBtn.prop('disabled', true);
+                    spinner.removeClass('d-none');
+                    submitText.text('Creating...');
+
+                    // Form data
+                    const formData = new FormData(this);
+
+                    // AJAX request
+                    $.ajax({
+                        url: '/admin/sites',
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            if (response.status) {
+                                // Show success message
+                                $('#messageContainer').html(`
                             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                ${response.message}
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    <div>${response.message}</div>
+                                </div>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                             </div>
                         `);
 
-                            // Reset form and hide modal
-                            $('#createSiteForm')[0].reset();
-                            $('#create-site-modal').modal('hide');
+                                // Reset form and hide modal
+                                form[0].reset();
+                                form.removeClass('was-validated');
+                                updateSelectedEngineersText(); // Reset engineer selection display
 
-                            // Optional: reload after delay
-                            setTimeout(() => {
-                                location.reload();
-                            }, 1500);
-                        }
-                    },
-                    error: function(xhr) {
-                        let errorMsg = 'An unexpected error occurred.';
+                                // Hide modal after showing success
+                                setTimeout(() => {
+                                    $('#create-site-modal').modal('hide');
+                                }, 1000);
 
-                        if (xhr.responseJSON) {
-                            errorMsg = xhr.responseJSON.message || errorMsg;
+                                // Reload after delay
+                                setTimeout(() => {
+                                    location.reload();
+                                }, 1500);
+                            }
+                        },
+                        error: function(xhr) {
+                            let errorMsg = 'An error occurred. Please try again.';
 
-                            // Handle validation errors (422 status)
                             if (xhr.status === 422 && xhr.responseJSON.errors) {
                                 const errors = xhr.responseJSON.errors;
-                                $.each(errors, function(field, messages) {
-                                    const input = $(`[name="${field}"]`);
-                                    const formGroup = input.closest('.form-group');
 
-                                    if (input.length) {
-                                        input.addClass('is-invalid');
-                                        if (formGroup.length) {
-                                            formGroup.append(
-                                                `<div class="invalid-feedback">${messages.join('<br>')}</div>`
-                                            );
-                                        } else {
-                                            input.after(
-                                                `<div class="invalid-feedback">${messages.join('<br>')}</div>`
-                                            );
-                                        }
+                                $.each(errors, function(field, messages) {
+                                    // Handle array fields like engineer_ids
+                                    let fieldName = field;
+                                    if (field.includes('.')) {
+                                        fieldName = field.split('.')[0];
+                                    }
+
+                                    // Find the input element
+                                    const input = form.find(
+                                        `[name="${fieldName}"], [name="${fieldName}[]"], #${fieldName}`
+                                    );
+
+                                    // Add error class
+                                    input.addClass('is-invalid');
+
+                                    // Find the error container
+                                    const errorContainer = form.find(`#${fieldName}-error`);
+                                    if (errorContainer.length) {
+                                        errorContainer.text(messages.join(' '));
+                                        errorContainer.show();
                                     }
                                 });
+
+                            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                                errorMsg = xhr.responseJSON.message;
+
+                                $('#messageContainer').html(`
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                <div>${errorMsg}</div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `);
                             }
+
+                        },
+                        complete: function() {
+                            // Reset button state
+                            submitBtn.prop('disabled', false);
+                            spinner.addClass('d-none');
+                            submitText.text('Create Site');
                         }
-                    },
-                    complete: function() {
-                        submitBtn.prop('disabled', false).html(originalBtnText);
-                    }
+                    });
+                });
+
+                // Clear validation when modal is hidden
+                $('#create-site-modal').on('hidden.bs.modal', function() {
+                    const form = $('#createSiteForm');
+                    form.removeClass('was-validated');
+                    form.find('.is-invalid').removeClass('is-invalid');
+                    form.find('.invalid-feedback').text('');
+                    $('#messageContainer').html('');
+                    form[0].reset();
+                    updateSelectedEngineersText();
+                });
+
+                // Clear validation when modal is shown
+                $('#create-site-modal').on('shown.bs.modal', function() {
+                    $('#site_name').focus();
                 });
             });
+        </script>
+    @endpush
 
-            // Clear validation errors when modal is hidden
-            $('#create-site-modal').on('hidden.bs.modal', function() {
-                $('.invalid-feedback').remove();
-                $('.is-invalid').removeClass('is-invalid');
-                messageContainer.html('');
-            });
-
-        });
-    </script>
 
 
 

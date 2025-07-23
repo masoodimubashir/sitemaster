@@ -100,11 +100,8 @@ class ViewSiteController extends Controller
                 'daily_expenses_total_amount' => $expenses_total,
                 'daily_wastas_total_amount' => $wasta_total,
                 'daily_labours_total_amount' => $labour_total,
-                'total_payment_amount' => $payments_total,
                 'phase_total' => $subtotal,
                 'phase_total_with_service_charge' => $withService,
-                'total_balance' => $withServiceCharge['balance'],
-                'total_due' => $withServiceCharge['due'],
                 'effective_balance' => $withoutServiceCharge['due'],
                 'total_paid' => $withServiceCharge['paid'],
                 'construction_material_billings' => $records->where('category', 'Material'),
@@ -169,6 +166,7 @@ class ViewSiteController extends Controller
         $total_paid = $withServiceCharge['paid'];
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
+        $return = $withoutServiceCharge['return'];
 
         // Paginate the ledgers
         $paginatedLedgers = new LengthAwarePaginator(
@@ -201,10 +199,15 @@ class ViewSiteController extends Controller
             'site_id' => $site_id
         ])->latest()->get();
 
-        $site = Site::select('id', 'site_name')->where([
-            'is_on_going' => 1,
-            'deleted_at' => null
-        ])->find($site_id);
+        $site = Site::with('client')
+            ->select('id', 'site_name', 'client_id')
+            ->where([
+                'is_on_going' => 1,
+                'deleted_at' => null
+            ])
+            ->find($id);
+
+            
 
         return view(
             'profile.User.Site.show-site',
@@ -222,6 +225,7 @@ class ViewSiteController extends Controller
                 'raw_material_providers',
                 'phases',
                 'site',
+                'return'
             )
         );
     }

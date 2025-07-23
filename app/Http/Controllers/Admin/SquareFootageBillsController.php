@@ -60,7 +60,7 @@ class SquareFootageBillsController extends Controller
             $validator = Validator::make($request->all(), [
                 'image_path' => 'nullable|mimes:png,jpg,webp,jpeg|max:1024',
                 'wager_name' => 'required|string|max:255',
-                'price' => 'required|numeric|max:9999999999',
+                'price' => 'nullable|numeric|max:9999999999',
                 'type' => 'required|in:per_sqr_ft,per_unit,full_contract',
                 'multiplier' => 'required|numeric|min:0',
                 'phase_id' => 'required|exists:phases,id',
@@ -103,7 +103,10 @@ class SquareFootageBillsController extends Controller
 
                 if ($sqft) {
 
-                    $this->setSiteTotalAmount($request->phase_id, $price);
+                    $this->setSiteTotalAmount(
+                        $request->phase_id,
+                        $price ?? 0.00
+                    );
 
                     DB::commit();
                 }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('image_path')->nullable();
             $table->string('wager_name');
-            $table->decimal('price');
+            $table->decimal('price')->nullable();
             $table->enum('type', ['per_sqr_ft', 'per_unit', 'full_contract']);
             $table->decimal('multiplier', 12, 2);
             $table->foreignId('phase_id')->constrained()->cascadeOnDelete();

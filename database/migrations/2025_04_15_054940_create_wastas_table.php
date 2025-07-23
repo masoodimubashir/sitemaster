@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('wastas', function (Blueprint $table) {
             $table->id();
-            $table->string('wasta_name');
+            $table->string('wasta_name')->nullable();
             $table->foreignId('phase_id')->constrained('phases')->cascadeOnDelete();
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->cascadeOnDelete();
             $table->integer('price');

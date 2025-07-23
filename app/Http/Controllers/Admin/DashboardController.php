@@ -24,7 +24,7 @@ class DashboardController extends Controller
         $sitesQuery = Site::query();
 
         if ($search) {
-            $sitesQuery->where(function ($query) use ($search) {
+            $sitesQuery->where(function ($query) use ($search): void {
                 $query->where('site_name', 'like', '%' . $search . '%')
                     ->orWhereHas('client', function ($q) use ($search) {
                         $q->where('name', 'like', '%' . $search . '%');

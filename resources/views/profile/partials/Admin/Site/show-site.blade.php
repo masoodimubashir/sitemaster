@@ -181,7 +181,7 @@
             <i class="menu-icon fa fa-building"></i>
         </div>
 
-        <h2 class="text-xl font-semibold">{{ ucwords($site->site_name) }}</h2>
+        <h2 class="text-xl font-semibold">{{ ucwords($site->site_name) }} | {{ ucwords($site->client->name) }}</h2>
 
         <div class="ms-auto action-buttons d-flex gap-2">
 
@@ -249,11 +249,6 @@
                         View Payments
                     </a>
                 </li>
-
-
-
-
-
             </ul>
 
             <form action="{{ url($user . '/ledger/report') }}" method="GET">
@@ -265,6 +260,7 @@
                     <i class="far fa-file-pdf"></i> PDF
                 </button>
             </form>
+            
         </div>
 
     </div>
@@ -355,6 +351,13 @@
                 <div class="summary-amount got-text">₹{{ $total_paid }}</div>
                 <div class="summary-label got-text">Total Paid</div>
             </div>
+
+            <div class="summary-card got">
+                <div class="summary-amount got-text">₹{{ $returns }}</div>
+                <div class="summary-label got-text">Total Returns</div>
+            </div>
+
+
         </div>
 
 
@@ -367,8 +370,9 @@
                         <th class="fw-bold">Date</th>
                         <th class="fw-bold">Customer Name</th>
                         <th class="fw-bold">Details</th>
-                        <th class="fw-bold text-end">Debit</th>
-                        <th class="fw-bold text-end">Credit</th>
+                        <th class="fw-bold">Returns</th>
+                        <th class="fw-bold ">Purchases</th>
+                        <th class="fw-bold ">Payments</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -385,14 +389,24 @@
                                         {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
                                     </small>
                                 </td>
-                                <td class="text-end text-danger fw-bold">
-                                    @if ($ledger['debit'] > 0)
-                                        ₹{{ number_format($ledger['debit']) }}
+                                <td class=" text-danger fw-bold">
+                                    @if ($ledger['return'] > 0)
+                                        ₹{{ number_format($ledger['return']) }}
                                     @else
                                         ₹0
                                     @endif
                                 </td>
-                                <td class="text-end text-success fw-bold">
+                                <td class="fw-bold">
+                                    @if ($ledger['debit'] > 0)
+                                        ₹{{ number_format($ledger['debit']) }}
+                                    @else
+                                        <div class="fw-bold">₹0</div>
+                                        <small class="text-muted">
+                                            {{ ucwords($ledger['amount_status']) }} 
+                                        </small>
+                                    @endif
+                                </td>
+                                <td class=" text-success fw-bold">
                                     @if ($ledger['credit'] > 0)
                                         ₹{{ number_format($ledger['credit']) }}
                                     @else
@@ -403,7 +417,7 @@
                         @endforeach
                     @else
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">No records available</td>
+                            <td colspan="6" class="text-center py-4 text-muted">No records available</td>
                         </tr>
                     @endif
                 </tbody>
@@ -510,44 +524,57 @@
                     <form enctype="multipart/form-data" class="forms-sample material-form"
                         id="constructionBillingForm">
                         @csrf
-
                         <div class="row">
-
                             <div class="col-md-6">
                                 <!-- Amount -->
-                                <div class="form-group mb-3 ">
-                                    <input type="number" name="amount" id="amount" />
+                                <div class="form-group mb-3">
+                                    <input type="number" name="amount" id="amount" step="0.01"
+                                        min="0" />
                                     <label for="amount" class="control-label">Material Price</label>
                                     <i class="bar"></i>
                                     <p class="mt-1 text-danger" id="amount-error"></p>
                                 </div>
                             </div>
 
-
-
                             <div class="col-md-6">
                                 <!-- Unit -->
-                                <div class="form-group mb-3 ">
-                                    <input type="number" name="unit_count" id="unit_count" />
+                                <div class="form-group mb-3">
+                                    <input type="number" name="unit_count" id="unit_count" min="1" />
                                     <label for="unit_count" class="control-label">Units</label>
                                     <i class="bar"></i>
                                     <p class="mt-1 text-danger" id="unit_count-error"></p>
                                 </div>
                             </div>
-
-
                         </div>
 
                         <div class="row">
-                            <!-- Item Name -->
-                            <div class="col-md-6 mb-3">
-                                <select class="form-select text-black form-select-sm" name="item_name">
-                                    <option value="">Select Item</option>
-                                    @foreach ($items as $item)
-                                        <option value="{{ $item->item_name }}">{{ $item->item_name }}</option>
-                                    @endforeach
-                                </select>
-                                <p class="mt-1 text-danger" id="item_name-error"></p>
+                            <!-- Item Name - Toggleable Field -->
+                            <div class="col-12 mb-3">
+                                <div class="btn-group btn-group-sm mb-2" role="group">
+                                    <button type="button" class="btn btn-outline-primary toggle-item-btn active"
+                                        data-mode="select">View list</button>
+                                    <button type="button" class="btn btn-outline-secondary toggle-item-btn"
+                                        data-mode="custom">Enter custom</button>
+                                </div>
+
+                                <!-- Item Select (visible by default) -->
+                                <div id="item-select-container">
+                                    <select class="form-select text-black form-select-sm" name="item_name"
+                                        id="item_name">
+                                        <option value="">Select Item</option>
+                                        @foreach ($items as $item)
+                                            <option value="{{ $item->item_name }}">{{ $item->item_name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="mt-1 text-danger" id="item_name-error"></p>
+                                </div>
+
+                                <!-- Custom Input (hidden by default) -->
+                                <div id="custom-item-container" style="display: none;">
+                                    <input type="text" class="form-control" name="custom_item_name"
+                                        id="custom_item_name" placeholder="Enter item name">
+                                    <p class="mt-1 text-danger" id="custom_item_name-error"></p>
+                                </div>
                             </div>
 
                             <!-- Supplier -->
@@ -573,7 +600,7 @@
                             </div>
 
                             <!-- Image Upload -->
-                            <div class="col-md-6 mb-3">
+                            <div class="col-12 mb-3">
                                 <input class="form-control form-control-md" id="image" type="file"
                                     name="image">
                                 <p class="mt-1 text-danger" id="image-error"></p>
@@ -584,7 +611,6 @@
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-success">Create Billing</button>
                         </div>
-
                     </form>
 
                 </div>
@@ -788,6 +814,14 @@
                     <form id="payment_supplierForm" class="forms-sample material-form" enctype="multipart/form-data">
                         @csrf
 
+                        <div class="d-flex align-items-center gap-2 mb-3 p-2 border-start border-3 border-primary">
+                            <i class="bi bi-building text-primary"></i>
+                            <div>
+                                <small class="text-muted d-block">Client</small>
+                                <strong>{{ $site->client->name }}</strong>
+                            </div>
+                        </div>
+
                         {{-- Amount --}}
                         <div class="form-group">
                             <input type="text" name="amount" class="form-control" />
@@ -796,11 +830,8 @@
                             <div class="invalid-feedback" id="amount-error"></div>
                         </div>
 
-
                         {{-- Site (hidden) --}}
                         <input type="hidden" name="site_id" value="{{ $site->id }}" />
-
-
 
                         {{-- Select Payee --}}
                         <div class="mb-3">
@@ -811,10 +842,7 @@
                                 <option value="0">Admin</option>
                             </select>
                             <div class="invalid-feedback" id="payment_initiator-error"></div>
-
                         </div>
-
-
 
                         {{-- Supplier Options --}}
                         <div id="supplierOptions" style="display: none;" class="mb-3">
@@ -826,26 +854,25 @@
                                     </option>
                                 @endforeach
                                 <div class="invalid-feedback" id="supplier_id-error"></div>
-
                             </select>
-
                         </div>
 
                         {{-- Admin Options (Shown when Admin is selected) --}}
                         <div id="adminOptions" style="display: none;" class="mt-4">
-                            <div class="row g-3">
+
+                            <div class="row g-3 mt-2">
                                 {{-- Sent Radio Option --}}
                                 <div class="col-auto">
                                     <label for="transaction_sent">
                                         <input type="radio" name="transaction_type" id="transaction_sent"
-                                            value="1"> Sent
+                                            value="1"> Return To {{ $site->client->name }}
                                     </label>
                                 </div>
                                 {{-- Received Radio Option --}}
                                 <div class="col-auto">
                                     <label for="transaction_received">
                                         <input type="radio" name="transaction_type" id="transaction_received"
-                                            value="0"> Received
+                                            value="0"> Received By Admin
                                     </label>
                                 </div>
                             </div>
@@ -959,18 +986,42 @@
             });
 
 
-            //  Script For Construction Form
+            // Toggle between item selection modes
+            $('.toggle-item-btn').click(function() {
+                const mode = $(this).data('mode');
+
+                // Update button states
+                $('.toggle-item-btn').removeClass('active btn-primary').addClass('btn-outline-secondary');
+                $(this).removeClass('btn-outline-secondary').addClass('active btn-primary');
+
+                // Toggle fields
+                if (mode === 'select') {
+                    $('#item-select-container').show();
+                    $('#custom-item-container').hide();
+                    $('#custom_item_name').val(''); // Clear custom input
+                } else {
+                    $('#item-select-container').hide();
+                    $('#custom-item-container').show();
+                    $('#item_name').val(''); // Clear select
+                }
+            });
+
+            // Form submission handler
             $('form[id^="constructionBillingForm"]').on('submit', function(e) {
-
                 e.preventDefault();
-
                 const form = $(this);
                 const formData = new FormData(form[0]);
                 const messageContainer = $('#messageContainer');
                 messageContainer.empty();
 
-                // Clear previous error messages for this form
+                // Clear previous error messages
                 form.find('.text-danger').text('');
+
+                // Determine which item field to use
+                if ($('#custom-item-container').is(':visible') && $('#custom_item_name').val()) {
+                    formData.set('item_name', $('#custom_item_name').val());
+                    formData.delete('custom_item_name');
+                }
 
                 $.ajax({
                     url: '{{ route('construction-material-billings.store') }}',
@@ -979,59 +1030,50 @@
                     contentType: false,
                     processData: false,
                     success: function(response) {
-
                         messageContainer.html(`
-                            <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                    </div>
-                                </div>
+                    <div class="alert align-items-center text-white bg-success border-0" role="alert">
+                        <div class="d-flex">
+                            <div class="toast-body">
+                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
                             </div>
-                        `);
+                        </div>
+                    </div>
+                `);
 
                         form[0].reset();
+                        $('.toggle-item-btn[data-mode="select"]')
+                            .click(); // Reset to select mode
 
-                        // Auto-hide success message after 2 seconds
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                             location.reload();
                         }, 2000);
                     },
                     error: function(response) {
-
-                        if (response.status === 422) { // Validation errors
-
+                        if (response.status === 422) {
                             const errors = response.responseJSON.errors;
-
-                            // Display specific error for each field
                             for (const field in errors) {
-
-                                const errorMsg = errors[field][0];
-
-                                form.find(`[name="${field}"]`).siblings('.text-danger').text(
-                                    errorMsg);
-
-                                if (!form.find(`[name="${field}"]`).siblings('.text-danger')
-                                    .length) {
-                                    form.find(`#${field}-error`).text(errorMsg);
+                                const errorElement = $(`#${field}-error`);
+                                if (errorElement.length) {
+                                    errorElement.text(errors[field][0]);
+                                } else {
+                                    form.find(`[name="${field}"]`).siblings('.text-danger')
+                                        .text(errors[field][0]);
                                 }
                             }
                         } else {
                             messageContainer.html(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    An unexpected error occurred. Please try again later.
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
+                        <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
+                            An unexpected error occurred. Please try again later.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `);
                         }
 
-                        // Auto-hide general error message after 5 seconds
                         setTimeout(function() {
                             messageContainer.find('.alert').alert('close');
                         }, 5000);
                     }
-
                 });
             });
 
@@ -1213,160 +1255,6 @@
 
 
 
-            // Script For Daily Wager
-            $('form[id^="dailyWager"]').on('submit', function(e) {
-
-                e.preventDefault();
-
-                const form = $(this);
-                const formData = new FormData(form[0]);
-                const messageContainer = $('#messageContainer');
-                messageContainer.empty();
-
-                $('.text-danger').text('');
-
-                $.ajax({
-                    url: '{{ route('dailywager.store') }} ',
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
-                        messageContainer.html(`
-                            <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                    </div>
-                                </div>
-                            </div>
-                        `);
-
-                        form[0].reset();
-
-                        // Auto-hide success message and reload
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload(); // This should reload the page
-                        }, 2000);
-                    },
-                    error: function(response) {
-
-                        if (response.status === 422) { // Validation errors
-
-                            const errors = response.responseJSON.errors;
-
-                            // Display general error message
-                            messageContainer.html(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    Please fix the errors below
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
-
-                            // Loop through each error field
-                            for (const field in errors) {
-                                // Get the first error message from the array
-                                const errorMsg = errors[field][0];
-
-                                // First, try to find the field by name and update sibling error element
-                                const inputField = form.find(`[name="${field}"]`);
-                                if (inputField.length > 0) {
-                                    // Try to find sibling error container
-                                    const siblingError = inputField.siblings(
-                                        '.text-danger');
-                                    if (siblingError.length > 0) {
-                                        siblingError.text(errorMsg);
-                                    } else {
-                                        // If no sibling found, try to find by ID
-                                        form.find(`#${field}-error`).text(errorMsg);
-                                    }
-                                } else {
-                                    // If input not found, try to find error container by ID directly
-                                    form.find(`#${field}-error`).text(errorMsg);
-                                }
-                            }
-                        } else {
-                            messageContainer.html(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    An unexpected error occurred. Please try again later.
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                </div>
-                            `);
-                        }
-
-                        // Auto-hide general error message after 5 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                        }, 5000);
-                    }
-                });
-            });
-
-
-            $('form[id^="wagerAttendance"]').on('submit', function(e) {
-                e.preventDefault();
-
-                const form = $(this);
-                const formData = new FormData(form[0]);
-                const messageContainer = $('#messageContainer');
-                messageContainer.empty();
-
-                $('.text-danger').text('');
-
-                $.ajax({
-                    url: '{{ route('daily-wager-attendance.store') }} ',
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
-
-                        messageContainer.html(`
-                    <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                            </div>
-                        </div>
-                    </div>
-            `);
-
-                        form[0].reset();
-
-                        // Auto-hide success message after 3 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload();
-
-                        }, 2000);
-                    },
-                    error: function(response) {
-
-                        if (response.status === 422) {
-                            messageContainer.html(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show  " role="alert">
-                         ${response.responseJSON.errors}
-
-                    </div>`)
-
-                        } else {
-                            messageContainer.html(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                        An unexpected error occurred. Please try again later.
-
-                    </div>
-                `);
-                        }
-                        // Auto-hide error message after 5 seconds
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-
-                        }, 2000);
-                    }
-                });
-            });
-
 
             // Script For Payment
 
@@ -1417,7 +1305,6 @@
                                 const input = $(`[name="${field}"]`);
                                 const formGroup = input.closest('.form-group');
 
-                                input.addClass('is-invalid');
 
                                 // Append Bootstrap validation error message
                                 if (formGroup.length) {

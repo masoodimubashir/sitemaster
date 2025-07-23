@@ -68,6 +68,8 @@ class PaymentsController extends Controller
         $total_paid = $withServiceCharge['paid'];
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
+        $returns = $withoutServiceCharge['return'];
+
 
         $perPage = $request->get('per_page', 20);
 
@@ -109,7 +111,8 @@ class PaymentsController extends Controller
             'suppliers',
             'sites',
             'effective_balance',
-            'phases'
+            'phases',
+            'returns'
         ));
     }
 
@@ -233,6 +236,7 @@ class PaymentsController extends Controller
     public function store(Request $request)
     {
         try {
+
             DB::beginTransaction();
 
             $validatedData = Validator::make($request->all(), [
@@ -319,7 +323,7 @@ class PaymentsController extends Controller
                 'site_id' => $siteId,
                 'supplier_id' => $supplierId,
                 'verified_by_admin' => 1,
-                'payment_initiator' => 1, // Always admin for now
+                'payment_initiator' => 0, // Always admin for now
                 'screenshot' => $screenshotPath, // Set the screenshot path
             ]);
 

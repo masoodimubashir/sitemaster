@@ -6,6 +6,7 @@ namespace App\Class;
 use App\Models\SiteTotalAmount;
 use App\Models\SupplierTotalAmount;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 trait HelperClass
@@ -144,22 +145,37 @@ trait HelperClass
     public function updateSiteTotalAmount(int $phase_id, float $new_amount)
     {
         try {
+            DB::beginTransaction();
 
-            $siteTotal = SiteTotalAmount::where('phase_id', $phase_id)->first();
+            $siteTotal = SiteTotalAmount::firstOrCreate(
+                ['phase_id' => $phase_id],
+                ['total_amount' => 0.00]
+            );
 
-            if (!$siteTotal) {
-                throw new ModelNotFoundException("Site total amount not found for phase: $phase_id.");
+            if ($new_amount == 0) {
+                // If new amount is zero, reset total
+                $siteTotal->update([
+                    'total_amount' => 0.00
+                ]);
+            } else {
+
+                $updatedAmount = $siteTotal->total_amount + $new_amount;
+
+                // Optional: prevent negative totals
+                $updatedAmount = max($updatedAmount, 0.00);
+
+                $siteTotal->update([
+                    'total_amount' => $updatedAmount
+                ]);
             }
 
-            $amount = $siteTotal->total_amount + $new_amount;
-
-            $siteTotal->update([
-                'total_amount' => $amount
-            ]);
+            DB::commit();
         } catch (ModelNotFoundException $e) {
-            throw $e;
+            DB::rollBack();
+            throw new \Exception("Site phase not found: $phase_id");
         } catch (\Exception $e) {
-            throw new \Exception('Unable to update site total amount. Please try again.');
+            DB::rollBack();
+            throw new \Exception('Failed to update site total amount: ' . $e->getMessage());
         }
     }
 
@@ -169,14 +185,13 @@ trait HelperClass
 
         $new_amount = 0;
 
-
-
         if ($new > $old) {
             $new_amount = $new - $old;
         }
         if ($new < $old) {
             $new_amount = $new - $old;
         }
+      
 
         return $new_amount;
     }

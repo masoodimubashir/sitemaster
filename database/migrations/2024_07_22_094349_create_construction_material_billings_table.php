@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('item_image_path')->nullable();
             $table->string('item_name');
-            $table->decimal('amount', 12, 2);
+            $table->decimal('amount', 12, 2)->nullable()->default(0.00);
             $table->integer('unit_count')->default(1);
             $table->boolean('verified_by_admin')->default(false);
             $table->foreignId('supplier_id')->constrained()->cascadeOnDelete();

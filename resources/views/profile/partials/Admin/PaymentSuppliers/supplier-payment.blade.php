@@ -4,164 +4,179 @@
     @endphp
 
     @if ($user === 'admin')
-        <x-breadcrumb :names="['Dashboard', 'View ' . $supplier->name, ' Back']" :urls="['admin/dashboard', 'admin/suppliers/' . $supplier->id, 'admin/suppliers/' . $supplier->id]" />
+        <x-breadcrumb :names="['Dashboard', 'View ' . $supplier->name, 'Payments']" 
+                     :urls="['admin/dashboard', 'admin/suppliers/' . $supplier->id, 'admin/suppliers/' . $supplier->id . '/payments']" />
     @else
-        <x-breadcrumb :names="['supplier', $supplier->name, ' Back']" :urls="['user/dashboard', 'user/suppliers/' . $supplier->id, 'user/suppliers/' . $supplier->id]" />
+        <x-breadcrumb :names="['Suppliers', $supplier->name, 'Payments']" 
+                     :urls="['user/dashboard', 'user/suppliers/' . $supplier->id, 'user/suppliers/' . $supplier->id . '/payments']" />
     @endif
 
-    <div class="row g-4 mb-4">
-        <!-- Supplier Info Cards -->
-        <div class="col-12 col-md-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-opacity-10">
-                            <i class="fas fa-user text-info fs-3 p-2"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Supplier</h6>
-                            <h5 class="mb-0">{{ ucwords($supplier->name) }}</h5>
+        <!-- Summary Cards -->
+        <div class="row g-4 mb-4">
+            <!-- Supplier Info Card -->
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="bg-opacity-10 rounded p-3 me-3">
+                                <i class="fas fa-user-tie text-primary fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Supplier Information</h6>
+                                <h4 class="mb-2">{{ ucwords($supplier->name) }}</h4>
+                                <p class="text-muted mb-1">
+                                    <i class="fas fa-phone me-2"></i>
+                                    <a href="tel:{{ $supplier->contact_no }}" class="text-decoration-none">
+                                        {{ $supplier->contact_no }}
+                                    </a>
+                                </p>
+                                <p class="text-muted mb-0">
+                                    <i class="fas fa-map-marker-alt me-2"></i>{{ ucwords($supplier->address) }}
+                                </p>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="d-flex align-items-center">
-                        <div class="bg-opacity-10">
-                            <i class="fa-solid fa-phone text-info fs-3 p-2"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Contact</h6>
-                            <h5 class="mb-0">
-                                <a href="tel:{{ $supplier->contact_no }}" class="text-decoration-none">
-                                    {{ $supplier->contact_no }}
-                                </a>
-                            </h5>
+            <!-- Payment Summary Card -->
+            <div class="col-md-6">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start mb-3">
+                            <div class="bg-opacity-10 rounded p-3 me-3">
+                                <i class="fas fa-money-bill-wave text-success fs-4"></i>
+                            </div>
+                            <div>
+                                <h6 class="text-muted mb-1">Payment Summary</h6>
+                                @if ($payments->count() > 0)
+                                    <h4 class="mb-2">{{ Number::currency($payments->sum('amount'), 'INR') }}</h4>
+                                    <p class="text-muted mb-1">
+                                        <i class="fas fa-list me-2"></i>{{ $payments->total() }} payment records
+                                    </p>
+                                  
+                                @else
+                                    <div class="alert alert-warning mb-0 py-2">
+                                        No payment records found
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-md-6">
-            <div class="card h-100 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex align-items-center mb-3">
-                        <div class="bg-opacity-10">
-                            <i class="fas fa-map-marker-alt text-info fs-3 p-2"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Location</h6>
-                            <h5 class="mb-0">{{ ucwords($supplier->address) }}</h5>
-                        </div>
-                    </div>
-
-                    <div class="d-flex align-items-center">
-                        <div class="bg-opacity-10">
-                            <i class="fas fa-money-bill text-info fs-3 p-2"></i>
-                        </div>
-                        <div>
-                            <h6 class="text-muted mb-1">Total Payments</h6>
-                            <h5 class="mb-0">{{ Number::currency($payments->sum('amount'), 'INR') }}</h5>
-                        </div>
-                    </div>
+        <!-- Payments Table Section -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-bottom-0 py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Payment History</h5>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Payments Table -->
-    <div class="row">
-        <div class="col-lg-12 grid-margin stretch-card">
-            <div class="card">
+            
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-bordered  mb-0">
-                        <thead>
+                    <table class="table  mb-0">
+                        <thead class="bg-light">
                             <tr>
-                                <th class="fw-bold bg-info text-white">Date</th>
-                                <th class="fw-bold bg-info text-white">Screenshot</th>
-                                <th class="fw-bold bg-info text-white">Site</th>
-                                <th class="fw-bold bg-info text-white">Site Owner</th>
-                                <th class="fw-bold bg-info text-white">Amount</th>
+                                <th class="fw-semibold">Date</th>
+                                <th class="fw-semibold">Receipt</th>
+                                <th class="fw-semibold">Site</th>
+                                <th class="fw-semibold">Site Owner</th>
+                                <th class="fw-semibold text-end">Amount</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @if ($payments->count() > 0)
-                                @foreach ($payments as $payment)
-                                    <tr>
-                                        <td>{{ $payment->created_at->format('d-M-Y') }}</td>
-                                        <td>
-                                            @if ($payment->screenshot)
-                                                <a href="{{ asset('storage/' . $payment->screenshot) }}"
-                                                    data-fancybox="gallery"
-                                                    data-caption="Payment - {{ $payment->created_at->format('d M Y') }}">
-                                                    <img src="{{ asset('storage/' . $payment->screenshot) }}"
-                                                        alt="Payment Receipt" class="img-thumbnail"
-                                                        style="width: 50px; height: 50px; object-fit: cover;">
-                                                </a>
-                                            @else
-                                                <span class="">No Screenshot</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ ucwords($payment->site->site_name ?? 'N/A') }}</td>
-                                        <td>{{ ucwords($payment->site->site_owner_name ?? 'N/A') }}</td>
-                                        <td class="fw-bold text-success">
-                                            {{ Number::currency($payment->amount, 'INR') }}
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            @else
-                                <tr>
-                                    <td colspan="5" class="text-center text-danger fw-bold py-4">
-                                        No payment records found
+                            @forelse ($payments as $payment)
+                                <tr class="align-middle">
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <span class="fw-medium">{{ $payment->created_at->format('d M Y') }}</span>
+                                            <small class="text-muted">{{ $payment->created_at->diffForHumans() }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if ($payment->screenshot)
+                                            <a href="{{ asset('storage/' . $payment->screenshot) }}" 
+                                               data-fancybox="gallery" 
+                                               class="receipt-thumbnail"
+                                               data-caption="Payment on {{ $payment->created_at->format('d M Y') }} - {{ Number::currency($payment->amount, 'INR') }}">
+                                                <div class="position-relative" style="width: 60px; height: 60px;">
+                                                    <img src="{{ asset('storage/' . $payment->screenshot) }}" 
+                                                         alt="Payment receipt" 
+                                                         class="img-thumbnail h-100 w-100 object-fit-cover">
+                                                    <div class="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-10">
+                                                        <i class="fas fa-search-plus text-white"></i>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        @else
+                                            <span class="text-danger">No receipt</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                           
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-0">{{ ucwords($payment->site->site_name ?? 'N/A') }}</h6>
+                                                <small class="text-muted">{{ $payment->site->location ?? '' }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {{ ucwords($payment->site->site_owner_name ?? 'N/A') }}
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="fw-bold text-success">{{ Number::currency($payment->amount, 'INR') }}</span>
                                     </td>
                                 </tr>
-                            @endif
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="d-flex flex-column align-items-center justify-content-center">
+                                            <i class="fas fa-money-bill-wave fa-3x text-muted mb-3"></i>
+                                            <h5 class="text-muted">No payments recorded yet</h5>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Pagination -->
                 @if ($payments->hasPages())
-                    <div class="p-3 border-top">
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination justify-content-center mb-0">
-                                @if ($payments->onFirstPage())
-                                    <li class="page-item disabled">
-                                        <span class="page-link">&laquo;</span>
-                                    </li>
-                                @else
-                                    <li class="page-item">
-                                        <a class="page-link" href="{{ $payments->previousPageUrl() }}"
-                                            rel="prev">&laquo;</a>
-                                    </li>
-                                @endif
-
-                                @foreach ($payments->getUrlRange(1, $payments->lastPage()) as $page => $url)
-                                    @if ($page == $payments->currentPage())
-                                        <li class="page-item active">
-                                            <span class="page-link">{{ $page }}</span>
-                                        </li>
-                                    @else
-                                        <li class="page-item">
-                                            <a class="page-link" href="{{ $url }}">{{ $page }}</a>
-                                        </li>
-                                    @endif
-                                @endforeach
-
-                                @if ($payments->hasMorePages())
-                                    <li class="page-item">
-                                        <a class="page-link" href="{{ $payments->nextPageUrl() }}"
-                                            rel="next">&raquo;</a>
-                                    </li>
-                                @else
-                                    <li class="page-item disabled">
-                                        <span class="page-link">&raquo;</span>
-                                    </li>
-                                @endif
-                            </ul>
-                        </nav>
+                    <div class="card-footer bg-white border-top-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="text-muted">
+                                Showing {{ $payments->firstItem() }} to {{ $payments->lastItem() }} of {{ $payments->total() }} entries
+                            </div>
+                            <nav aria-label="Page navigation">
+                                <ul class="pagination pagination-sm mb-0">
+                                    {{ $payments->links() }}
+                                </ul>
+                            </nav>
+                        </div>
                     </div>
                 @endif
             </div>
         </div>
-    </div>
+
+ 
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Fancybox
+        Fancybox.bind("[data-fancybox]", {
+            // Your custom options
+        });
+
+        // Tooltip initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[title]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
+    </script>
 </x-app-layout>

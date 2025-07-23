@@ -67,8 +67,8 @@ class PDFController extends Controller
         $total_paid = $withServiceCharge['paid'];
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
+        $returns = $withoutServiceCharge['return'];
 
-        // dd($balances);
 
         // Per-phase breakdown
         $phaseData = [];
@@ -119,6 +119,7 @@ class PDFController extends Controller
             'total_due' => $total_due,
             'effective_balance' => $effective_balance,
             'total_paid' => $total_paid,
+            'returns' => $returns
         ];
 
         $headers = [
@@ -130,6 +131,7 @@ class PDFController extends Controller
             'box6' => 'Location',
             'box7' => 'Debit',
             'box8' => 'Credit',
+            'box9' => 'Returns'
         ];
 
         // ✅ Generate the PDF with data
@@ -139,8 +141,8 @@ class PDFController extends Controller
         $pdf->SetFont('Times', '', 12);
         $pdf->SetTitle('Site PDF');
         $pdf->infoTable($headers, $data);
-        $pdf->siteTableData($phaseData); 
-        $file_name = 'Site PDF_' .  $data['site_name'] . '_' . Carbon::now()->format('Y-m-d') . '.pdf';
+        $pdf->siteTableData($phaseData);
+        $file_name = 'Site PDF_' . $data['site_name'] . '_' . Carbon::now()->format('Y-m-d') . '.pdf';
         return $pdf->Output($file_name, 'D');
     }
 
@@ -216,7 +218,6 @@ class PDFController extends Controller
             'box5' => 'Balance',
             'box6' => 'Site Owner',
             'box7' => 'Location',
-            'box8' => ''
         ];
 
         $pdf = new PDF();
@@ -225,9 +226,9 @@ class PDFController extends Controller
         $pdf->SetFont('Times', '', 12);
         $pdf->SetTitle('Site Phase Report');
         $pdf->phaseTableData($headers, $phases, $phaseCosting);
-        $file_name = 'Site_' . $phase->phase_name . "_" . "Phase" . '_' . Carbon::now()->format('Y-m-d')  . '.pdf';
+        $file_name = 'Site_' . $phase->phase_name . "_" . "Phase" . '_' . Carbon::now()->format('Y-m-d') . '.pdf';
         return $pdf->Output($file_name, 'D');
-    
+
     }
 
 
@@ -259,10 +260,23 @@ class PDFController extends Controller
         $site = Site::with([
             'payments' => function ($pay) {
                 $pay->where('verified_by_admin', 1)
-                    ->with(['supplier', 'site']);
+                    ->with(['supplier', 'site'])
+                    ->where(function ($query) {
+                        $query->whereNull('transaction_type')
+                            ->orWhere('transaction_type', 0);
+                    })
+                    ->latest();
             }
-        ], 'phases')
-            ->latest()
+        ])
+            ->withSum([
+                'payments' => function ($query) {
+                    $query->where('verified_by_admin', 1)
+                        ->where(function ($q) {
+                            $q->whereNull('transaction_type')
+                                ->orWhere('transaction_type', 0);
+                        });
+                }
+            ], 'amount')
             ->find($site_id);
 
 
@@ -278,7 +292,6 @@ class PDFController extends Controller
 
     public function showLedgerPdf(Request $request, DataService $dataService)
     {
-
 
         $dateFilter = $request->get('date_filter', 'lifetime');
         $site_id = $request->input('site_id', $request->input('site_id'));
@@ -320,6 +333,8 @@ class PDFController extends Controller
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
         $service_charge_amount = $balances['service_charge_amount'];
+        $returns = $withoutServiceCharge['return'];
+
 
         $ledgers = $ledgers->sortByDesc(function ($d) {
             return $d['created_at'];
@@ -330,32 +345,35 @@ class PDFController extends Controller
         $pdf->AddPage();
         $pdf->SetFont('Times', '', 10);
         $pdf->SetTitle('Ledger');
-        $pdf->ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance, $service_charge_amount);
+        $pdf->ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance, $service_charge_amount, $returns);
         $file_name = 'Ledger_' . Carbon::now()->format('Y-m-d') . '.pdf';
         return $pdf->Output($file_name, 'D');
-
     }
 
     public function generateAttendancePdf(Request $request)
     {
-        // Parse month and year
-        if ($request->filled('monthYear')) {
+        // Determine date range based on request
+        if ($request->input('date_filter') === 'custom' && $request->filled('custom_start') && $request->filled('custom_end')) {
+            $startDate = Carbon::parse($request->input('custom_start'));
+            $endDate = Carbon::parse($request->input('custom_end'));
+        } elseif ($request->filled('monthYear')) {
             [$year, $month] = explode('-', $request->input('monthYear'));
+            $startDate = Carbon::create($year, $month, 1);
+            $endDate = Carbon::create($year, $month, $startDate->daysInMonth);
         } else {
-            $month = now()->month;
-            $year = now()->year;
+            // Default to current month if no date range specified
+            $startDate = now()->startOfMonth();
+            $endDate = now()->endOfMonth();
         }
 
         // Load Wastas with their labours, phase, and site data
         $wastasQuery = Wasta::with([
             'phase.site',
-            'labours.attendances' => function ($query) use ($month, $year) {
-                $query->whereMonth('attendance_date', $month)
-                    ->whereYear('attendance_date', $year);
+            'labours.attendances' => function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('attendance_date', [$startDate, $endDate]);
             },
-            'attendances' => function ($query) use ($month, $year) {
-                $query->whereMonth('attendance_date', $month)
-                    ->whereYear('attendance_date', $year);
+            'attendances' => function ($query) use ($startDate, $endDate) {
+                $query->whereBetween('attendance_date', [$startDate, $endDate]);
             }
         ]);
 
@@ -378,9 +396,7 @@ class PDFController extends Controller
         // Group wastas by phase (even if filtered by single phase)
         $phases = $wastas->groupBy('phase_id');
 
-        // Get date range for the month
-        $startDate = Carbon::create($year, $month, 1);
-        $endDate = Carbon::create($year, $month, $startDate->daysInMonth);
+        // Get dates in range
         $dates = $this->getDatesInRange($startDate, $endDate);
 
         // Generate PDF
@@ -392,8 +408,15 @@ class PDFController extends Controller
 
             // Prepare title with all relevant information
             $title = ($site ? strtoupper($site->site_name) : 'ALL SITES') . ' LABOUR ATTENDANCE SHEET';
-            $subtitle = 'Phase: ' . ($phase->phase_name ?? 'All Phases') .
-                ' | Month: ' . $startDate->format('F Y');
+
+            // Prepare subtitle based on date range
+            if ($request->input('date_filter') === 'custom') {
+                $subtitle = 'Phase: ' . ($phase->phase_name ?? 'All Phases') .
+                    ' | Period: ' . $startDate->format('d-M-Y') . ' to ' . $endDate->format('d-M-Y');
+            } else {
+                $subtitle = 'Phase: ' . ($phase->phase_name ?? 'All Phases') .
+                    ' | Month: ' . $startDate->format('F Y');
+            }
 
             // Get all workers (wastas + their labours) for this phase
             $workers = [];
@@ -424,7 +447,9 @@ class PDFController extends Controller
             $info = [
                 'site_name' => $site->site_name ?? 'All Sites',
                 'phase_name' => $phase->phase_name ?? 'All Phases',
-                'month_year' => $startDate->format('F Y')
+                'month_year' => $request->input('date_filter') === 'custom'
+                    ? $startDate->format('d-M-Y') . ' to ' . $endDate->format('d-M-Y')
+                    : $startDate->format('F Y')
             ];
 
             // Add a new page for each phase
@@ -441,9 +466,13 @@ class PDFController extends Controller
 
         $filename = 'Attendance_' .
             ($site ? $site->site_name . '_' : '') .
-            $month . '_' . $year . '.pdf';
+            ($request->input('date_filter') === 'custom'
+                ? $startDate->format('Ymd') . '_to_' . $endDate->format('Ymd')
+                : $startDate->format('F_Y')) . '.pdf';
         return $pdf->Output($filename, 'D');
     }
+
+
     protected function prepareAttendanceData($wastas, $startDate, $endDate)
     {
         $attendanceData = [];

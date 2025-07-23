@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\ConstructionMaterialBilling;
 use App\Models\DailyExpenses;
-use App\Models\DailyWager;
 use App\Models\Labour;
 use App\Models\Payment;
 use App\Models\SquareFootageBill;
@@ -14,9 +13,7 @@ use Illuminate\Support\Collection;
 
 class DataService
 {
-    public function __construct()
-    {
-    }
+   
 
     public function getData(
         string $dateFilter,
@@ -81,42 +78,58 @@ class DataService
             'without_service_charge' => [
                 'paid' => 0,
                 'due' => 0,
-                'balance' => 0
+                'balance' => 0,
+                'return' => 0,
             ],
             'with_service_charge' => [
                 'paid' => 0,
                 'due' => 0,
-                'balance' => 0
+                'balance' => 0,
+                'return' => 0
             ],
             'total_debits' => 0,
             'total_credits' => 0,
+            'total_return' => 0,
             'service_charge_amount' => 0,
         ];
 
         foreach ($ledgers as $item) {
-            $credit = (float) ($item['credit']);
-            $debit = (float) ($item['debit']);
+            $credit = (float) ($item['credit'] ?? 0);
+            $debit = (float) ($item['debit'] ?? 0);
+            $return = (float) ($item['return'] ?? 0);
 
+            // Always sum these totals
             $totals['total_debits'] += $debit;
             $totals['total_credits'] += $credit;
+            $totals['total_return'] += $return;
 
             if ($item['category'] === 'Payment') {
                 $totals['without_service_charge']['paid'] += $credit;
                 $totals['with_service_charge']['paid'] += $credit;
+
+                $totals['without_service_charge']['return'] += $return;
+                $totals['with_service_charge']['return'] += $return;
+
                 $totals['without_service_charge']['due'] += $debit;
                 $totals['with_service_charge']['due'] += $debit;
             } else {
+                // For other categories (Labour, Material, etc.)
                 $totals['without_service_charge']['due'] += $debit;
                 $totals['with_service_charge']['due'] += $item['total_amount_with_service_charge'] ?? $debit;
                 $totals['service_charge_amount'] += $item['service_charge_amount'] ?? 0;
             }
         }
 
+        // dd($totals);
+
         $totals['without_service_charge']['balance'] =
-            $totals['without_service_charge']['due'] - $totals['without_service_charge']['paid'];
+            ($totals['without_service_charge']['due'] - $totals['without_service_charge']['paid'])
+            - $totals['without_service_charge']['return'];
 
         $totals['with_service_charge']['balance'] =
-            $totals['with_service_charge']['due'] - $totals['with_service_charge']['paid'];
+            ($totals['with_service_charge']['due'] - $totals['with_service_charge']['paid'])
+            - $totals['with_service_charge']['return'];
+
 
         return $totals;
     }
@@ -125,20 +138,48 @@ class DataService
 
     private function transformPayments(Collection $payments): Collection
     {
+
         return $payments->map(function ($pay) {
+            $hasSupplier = !empty($pay->supplier_id);
+            $hasSite = !empty($pay->site_id);
+
+            $amount_status = $pay->amount > 0 ? '' : 'Pending Payment';
+
+            $credit = 0;
+            $return = 0;
+
+            if ($hasSupplier || $hasSite) {
+                if ($pay->transaction_type === null || $pay->transaction_type === 0) {
+                    $credit = $pay->amount;
+                } elseif ($pay->transaction_type === 1) {
+                    $return = $pay->amount;
+                }
+            } else {
+                // Admin-initiated transactions
+                if ($pay->payment_initiator === 0) {
+                    if ($pay->transaction_type === 1) {
+                        $return = $pay->amount;
+                    } else {
+                        $credit = $pay->amount;
+                    }
+                }
+            }
+
             return [
                 'id' => $pay->id,
                 'verified_by_admin' => $pay->verified_by_admin,
                 'description' => 'Payment',
                 'category' => 'Payment',
-                'credit' => $pay->amount,
+                'credit' => $credit,
+                'amount_status' => $amount_status,
                 'debit' => 0,
-                'transaction_type' => $pay->supplier_id && $pay->site_id
+                'return' => $return,
+                'transaction_type' => $hasSupplier && $hasSite
                     ? 'Sent By ' . ucwords($pay->site->site_name)
-                    : ($pay->transaction_type === 0 ? 'Sent By Firm' : 'Received By Firm'),
-                'payment_initiator' => !empty($pay->site_id) && empty($pay->supplier_id)
+                    : ($pay->transaction_type === 0 ? 'Return To Firm' : 'Received By Admin'),
+                'payment_initiator' => $hasSite && !$hasSupplier
                     ? 'Site'
-                    : (!empty($pay->supplier_id) ? 'Supplier' : 'Admin'),
+                    : ($hasSupplier ? 'Supplier' : 'Admin'),
                 'site' => $pay->site->site_name ?? null,
                 'supplier' => $pay->supplier->name ?? null,
                 'supplier_id' => $pay->supplier_id ?? null,
@@ -157,6 +198,9 @@ class DataService
 
             $serviceCharge = $this->calculateServiceCharge($material->amount * $material->unit_count, $material->phase->site->service_charge);
 
+            $amount_status = $material->amount > 0 ? '' : 'Pending Price';
+            
+            $total_amount = $material->amount * $material->unit_count;
 
             return [
                 'id' => $material->id,
@@ -164,9 +208,11 @@ class DataService
                 'description' => $material->item_name ?? null,
                 'category' => 'Material',
                 'credit' => 0,
-                'debit' => $material->amount * $material->unit_count,
+                'amount_status' => $amount_status,
+                'debit' => $total_amount,
+                'return' => 0,
                 'transaction_type' => null,
-                'payment_initiator' => 'Supplier',
+                'payment_initiator' => 'NA',
                 'site' => $material->phase->site->site_name ?? null,
                 'total_amount_with_service_charge' => $serviceCharge + ($material->amount * $material->unit_count),
                 'supplier' => $material->supplier->name ?? null,
@@ -188,6 +234,9 @@ class DataService
         return $bills->map(function ($bill) {
 
             $amount = $bill->price * $bill->multiplier;
+
+            $amount_status = $bill->price > 0 ? '' : 'Pending Price';
+
             $serviceCharge = $this->calculateServiceCharge($amount, $bill->phase->site->service_charge);
 
             return [
@@ -196,11 +245,13 @@ class DataService
                 'verified_by_admin' => $bill->verified_by_admin,
                 'description' => $bill->wager_name ?? null,
                 'category' => 'SQFT',
+                'amount_status' => $amount_status,
                 'debit' => $amount,
                 'credit' => 0,
+                'return' => 0,
                 'total_amount_with_service_charge' => $serviceCharge + $amount,
                 'transaction_type' => null,
-                'payment_initiator' => 'Supplier',
+                'payment_initiator' => 'NA',
                 'site' => $bill->phase->site->site_name ?? null,
                 'supplier' => $bill->supplier->name ?? null,
                 'supplier_id' => $bill->supplier_id ?? null,
@@ -221,6 +272,9 @@ class DataService
 
             $serviceCharge = $this->calculateServiceCharge($expense->price, $expense->phase->site->service_charge);
 
+            $amount_status = $expense->price > 0 ? '' : 'Pending Price';
+
+
             return [
 
                 'id' => $expense->id,
@@ -228,10 +282,12 @@ class DataService
                 'description' => $expense->item_name ?? null,
                 'category' => 'Expense',
                 'credit' => 0,
+                'amount_status' => $amount_status,
                 'debit' => $expense->price,
+                'return' => 0,
                 'total_amount_with_service_charge' => $serviceCharge + $expense->price,
                 'transaction_type' => null,
-                'payment_initiator' => 'Site',
+                'payment_initiator' => 'NA',
                 'site' => $expense->phase->site->site_name ?? null,
                 'supplier' => null,
                 'supplier_id' => null,
@@ -252,7 +308,11 @@ class DataService
         return $wastas->map(function ($wasta) {
 
             $totalAmount = $this->calculateWastaTotal($wasta);
+
             $serviceCharge = $this->calculateServiceCharge($totalAmount, $wasta->phase->site->service_charge ?? 0);
+
+            $amount_status = $wasta->price > 0 ? '' : 'Pending Price';
+
 
             return [
 
@@ -261,9 +321,11 @@ class DataService
                 'description' => $wasta->wasta_name . ' /' . $wasta->price . ':Day' ?? null,
                 'category' => 'Wasta',
                 'credit' => 0,
+                'amount_status' => $amount_status,
                 'debit' => $totalAmount,
+                'return' => 0,
                 'transaction_type' => null,
-                'payment_initiator' => 'Site',
+                'payment_initiator' => 'NA',
                 'site' => $wasta->phase->site->site_name ?? null,
                 'supplier' => null,
                 'supplier_id' => null,
@@ -284,7 +346,11 @@ class DataService
         return $labours->map(function ($labour) {
 
             $totalAmount = $this->calculateLabourTotal($labour);
+
             $serviceCharge = $this->calculateServiceCharge($totalAmount, $labour->phase->site->service_charge ?? 0);
+
+            $amount_status = $labour->price > 0 ? '' : 'Pending Price';
+
 
             return [
 
@@ -293,9 +359,11 @@ class DataService
                 'description' => $labour->labour_name . ' /' . $labour->price . ':Day' ?? null,
                 'category' => 'Labour',
                 'credit' => 0,
+                'amount_status' => $amount_status,
                 'debit' => $totalAmount,
+                'return' => 0,
                 'transaction_type' => null,
-                'payment_initiator' => 'Site',
+                'payment_initiator' => 'NA',
                 'site' => $labour->phase->site->site_name ?? null,
                 'supplier' => null,
                 'supplier_id' => null,
@@ -305,7 +373,7 @@ class DataService
                 'created_at' => $labour->created_at,
                 'total_amount_with_service_charge' => $totalAmount + $serviceCharge,
                 'service_charge_amount' => $serviceCharge,
-                'image' =>  null,
+                'image' => null,
 
             ];
         });

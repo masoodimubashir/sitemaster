@@ -280,14 +280,27 @@
         </div>
     </div>
 
-    <!-- Download Report Button -->
-    <div class="mb-4">
-        <a class="btn-minimal" href="{{ url('/client/attendance/site/show/' . $site->id) }}">
-            <i class="fas fa-calendar-check me-2"></i> View Attendance
-        </a>
+    <div class="d-flex justify-content-start gap-2 align-items-center mb-4">
+
+        <!-- Download Report Button -->
+        <div class="mb-4">
+            <a class="btn-minimal" href="{{ url('/client/attendance/site/show/' . $site->id) }}">
+                <i class="fas fa-calendar-check me-2"></i> View Attendance
+            </a>
 
 
+        </div>
+
+        <!-- Download Report Button -->
+        <div class="mb-4">
+            <a href="{{ url('client/download-site/report/' . base64_encode($site->id)) }}" class="btn-minimal">
+                <i class="fas fa-download"></i>
+                Download Site Report
+            </a>
+        </div>
     </div>
+
+
 
     <!-- Phase Data -->
     @if (count($phaseData) > 0)
@@ -388,6 +401,15 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Generate PDF Button -->
+                <div class="d-flex justify-content-end mt-4 mb-4">
+                    <a href="{{ url('client/download-phase/report', ['id' => base64_encode($phase['phase_id'])]) }}"
+                        class="btn-minimal">
+                        <i class="fas fa-file-pdf"></i>
+                        Generate PDF
+                    </a>
+                </div>
                 @php
                     $tables = [
                         'construction_material_billings' => [
@@ -479,52 +501,52 @@
                                                 <td class="text-end fw-medium">
                                                     ₹{{ number_format($entry['total_amount_with_service_charge'], 2) }}
                                                 </td>
-                                               
+
                                             </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="6" class="text-center py-4 text-muted">
-                                                        <i class="fas fa-database me-2"></i> No records found
-                                                    </td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
+                                        @empty
+                                            <tr>
+                                                <td colspan="6" class="text-center py-4 text-muted">
+                                                    <i class="fas fa-database me-2"></i> No records found
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    @endforeach
-                </div>
-            @endforeach
-        @else
-            <div class="minimal-card p-5 text-center">
-                <i class="fas fa-info-circle" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
-                <h4 style="color: #6b7280; font-weight: 500;">No phase data available for this site.</h4>
+                    </div>
+                @endforeach
             </div>
-        @endif
+        @endforeach
+    @else
+        <div class="minimal-card p-5 text-center">
+            <i class="fas fa-info-circle" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+            <h4 style="color: #6b7280; font-weight: 500;">No phase data available for this site.</h4>
+        </div>
+    @endif
 
 
-        @push('scripts')
-            <script>
-                function showPhase(phaseIndex) {
-                    // Hide all phase contents
-                    document.querySelectorAll('.phase-content').forEach(content => {
-                        content.classList.add('d-none');
-                    });
+    @push('scripts')
+        <script>
+            function showPhase(phaseIndex) {
+                // Hide all phase contents
+                document.querySelectorAll('.phase-content').forEach(content => {
+                    content.classList.add('d-none');
+                });
 
-                    // Remove active class from all tabs
-                    document.querySelectorAll('.tab-minimal').forEach(tab => {
-                        tab.classList.remove('active');
-                    });
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab-minimal').forEach(tab => {
+                    tab.classList.remove('active');
+                });
 
-                    // Show selected phase content
-                    document.getElementById('phase-' + phaseIndex).classList.remove('d-none');
+                // Show selected phase content
+                document.getElementById('phase-' + phaseIndex).classList.remove('d-none');
 
-                    // Add active class to selected tab
-                    document.getElementById('tab-' + phaseIndex).classList.add('active');
-                }
-            </script>
-        @endpush
+                // Add active class to selected tab
+                document.getElementById('tab-' + phaseIndex).classList.add('active');
+            }
+        </script>
+    @endpush
 
 
-    </x-app-layout>
+</x-app-layout>

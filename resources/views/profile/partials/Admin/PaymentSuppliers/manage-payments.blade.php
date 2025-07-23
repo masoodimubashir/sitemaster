@@ -527,11 +527,7 @@
                         return;
                     }
 
-                    if (enteredAmount > originalAmount) {
-                        $('#payment_amount').addClass('is-invalid');
-                        $('#amount_error').removeClass('d-none');
-                        submitBtn.prop('disabled', true);
-                    } else if (enteredAmount <= 0) {
+                  if (enteredAmount <= 0) {
                         $('#payment_amount').addClass('is-invalid');
                         $('#amount_error').text('Amount must be greater than 0').removeClass('d-none');
                         submitBtn.prop('disabled', true);

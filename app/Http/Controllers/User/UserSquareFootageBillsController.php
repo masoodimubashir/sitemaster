@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use App\Models\SquareFootageBill;
 use App\Models\User;
 use App\Notifications\VerificationNotification;
-use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +15,8 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Exception;
+
 
 class UserSquareFootageBillsController extends Controller
 {
@@ -79,7 +80,10 @@ class UserSquareFootageBillsController extends Controller
 
                 if ($sqft) {
 
-                    $this->setSiteTotalAmount($request->phase_id, $price);
+                    $this->setSiteTotalAmount(
+                        $request->phase_id,
+                        $price ?? 0.00
+                    );
 
                     DB::commit();
                 }

@@ -175,30 +175,27 @@
         <div class="header-icon">
             <i class="menu-icon fa fa-building"></i>
         </div>
+        
         <h2 class="text-xl font-semibold">Ledger Report</h2>
 
-        @if (auth()->user()->role_name === 'admin' || auth()->user()->role_name === 'site_engineer')
-            <div class="ms-auto action-buttons d-flex gap-2">
-                <!-- Dropdown Menu -->
-                <form action="{{ url('client/ledger/report') }}" method="GET">
-                    <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
-                    <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
-                    <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
-                    <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
-                    <button type="submit" class="btn btn-outline">
-                        <i class="far fa-file-pdf"></i> PDF
-                    </button>
-                </form>
+        <div class="ms-auto action-buttons d-flex gap-2">
+            <!-- Dropdown Menu -->
+            <form action="{{ url('client/ledger/report') }}" method="GET">
+                <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
+                <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
+                <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
+                <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
+                <button type="submit" class="btn btn-outline">
+                    <i class="far fa-file-pdf"></i> PDF
+                </button>
+            </form>
 
-            </div>
-        @endif
+        </div>
+
     </div>
 
 
-
-
-    <form class="d-flex flex-column flex-md-row gap-2 w-100" action="{{ url()->current() }}" method="GET"
-        id="filterForm">
+    <form class="d-flex flex-column flex-md-row gap-2 w-100" action="{{ url()->current() }}" method="GET" id="filterForm">
 
         <!-- Supplier Select -->
         <select class="bg-white text-black form-select form-select-sm" name="phase_id" id="phaseFilter">
@@ -256,9 +253,8 @@
         <button type="button" class="btn btn-outline-secondary btn-sm" id="resetFilters">
             <i class="fas fa-undo"></i> Reset
         </button>
+
     </form>
-
-
 
     <div class="mt-4">
 
@@ -283,10 +279,13 @@
                 <div class="summary-amount got-text">₹{{ number_format($total_paid) }}</div>
                 <div class="summary-label got-text">Total Paid</div>
             </div>
+
+            <div class="summary-card got">
+                <div class="summary-amount got-text">₹{{ number_format($returns) }}</div>
+                <div class="summary-label got-text">Total Returns</div>
+            </div>
+
         </div>
-
-
-
 
         <div class="table-responsive">
             <table class="table mb-0">
@@ -295,8 +294,9 @@
                         <th class="fw-bold">DATE</th>
                         <th class="fw-bold">Customer Name</th>
                         <th class="fw-bold">DETAILS</th>
-                        <th class="fw-bold text-end">Debit</th>
-                        <th class="fw-bold text-end">Credit</th>
+                        <th class="fw-bold">Return</th>
+                        <th class="fw-bold text-end">Purchases</th>
+                        <th class="fw-bold text-end">Payments</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -312,6 +312,13 @@
                                     <small class="text-muted">
                                         {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
                                     </small>
+                                </td>
+                                <td class="text-danger fw-bold">
+                                    @if ($ledger['return'] > 0)
+                                        ₹{{ number_format($ledger['return']) }}
+                                    @else
+                                        ₹0
+                                    @endif
                                 </td>
                                 <td class="text-end text-danger fw-bold">
                                     @if ($ledger['debit'] > 0)

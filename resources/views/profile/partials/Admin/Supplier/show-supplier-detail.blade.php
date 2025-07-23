@@ -7,64 +7,6 @@
     @endphp
 
 
-    <style>
-        #messageContainer {
-            position: fixed;
-            bottom: 5%;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 999999999;
-        }
-
-        .accordion {
-            margin: 0 auto;
-        }
-
-        /* Accordion item */
-        .accordion-item {
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 5px;
-        }
-
-        /* Accordion header */
-        .accordion-header {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 15px;
-            text-align: left;
-            font-size: 16px;
-            cursor: pointer;
-            width: 100%;
-            display: block;
-            outline: none;
-            border-radius: 4px;
-        }
-
-        /* Accordion content */
-        .accordion-content {
-            display: none;
-            /* Hidden by default */
-            padding: 15px;
-            background-color: #f1f1f1;
-            border-top: 1px solid #ddd;
-        }
-
-        /* Transition for smooth expansion */
-        .accordion-content {
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
-
-        .accordion-content.show {
-            display: block;
-            max-height: 500px;
-            /* Arbitrary large value */
-        }
-    </style>
-
-
 
     <div class="row g-4">
 

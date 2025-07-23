@@ -21,9 +21,10 @@ class MarkNotificationAsReadController extends Controller
     public function viewAllNotifications()
     {
 
-
-        $notifications = auth()->user()->unreadNotifications;
-
+        $notifications = auth()->user()->notifications()
+            ->whereNull('read_at')  
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
         return view("profile.partials.Admin.Dashboard.notifications", compact("notifications"));
     }

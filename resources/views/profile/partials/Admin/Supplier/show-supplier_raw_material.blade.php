@@ -189,52 +189,59 @@
 
         <div class="ms-auto action-buttons d-flex gap-2">
             <!-- Dropdown Menu for Quick Access -->
-            <div class="dropdown">
-                <button class="btn btn-sm btn-outline" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown"
-                    aria-expanded="false">
-                    <i class="fas fa-bolt me-1"></i> Quick Actions
+            <button class="btn btn-sm btn-outline" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown"
+                aria-expanded="false">
+                <i class="fas fa-bolt me-1"></i> Quick Actions
+            </button>
+
+            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+
+                <li>
+                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                        <i class="fas fa-hand-holding-usd me-2"></i> Make Payment
+                    </a>
+                </li>
+
+                <li>
+                    <hr class="dropdown-divider">
+                </li>
+
+
+
+                <li>
+                    <a class="dropdown-item" href="{{ url($user . '/supplier/payments', [$data['supplier']->id]) }}">
+                        <i class="fas fa-money-check-alt me-2"></i> View Payments
+                    </a>
+                </li>
+
+                @if ($user === 'admin')
+                    <li>
+                        <a class="dropdown-item"
+                            href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}">
+                            <i class="fas fa-file-invoice me-2"></i> Payment Report
+                        </a>
+                    </li>
+                @endif
+
+                <li>
+                    <a class="dropdown-item"
+                        href="{{ url($user . '/supplier/detail', ['id' => $data['supplier']->id]) }}">
+                        <i class="fas fa-user-circle me-2"></i> View Detailed Profile
+                    </a>
+                </li>
+
+
+            </ul>
+
+            <form action="{{ url($user . '/ledger/report') }}" method="GET">
+                <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
+                <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
+                <input type="hidden" name="supplier_id" value="{{ request('supplier_id', $data['supplier']->id) }}">
+                <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
+                <button type="submit" class="btn btn-outline">
+                    <i class="far fa-file-pdf"></i> PDF
                 </button>
-
-                <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-
-                    <li>
-                        <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                            <i class="fas fa-hand-holding-usd me-2"></i> Make Payment
-                        </a>
-                    </li>
-
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
-
-
-
-                    <li>
-                        <a class="dropdown-item"
-                            href="{{ url($user . '/supplier/payments', [$data['supplier']->id]) }}">
-                            <i class="fas fa-money-check-alt me-2"></i> View Payments
-                        </a>
-                    </li>
-
-                    @if ($user === 'admin')
-                        <li>
-                            <a class="dropdown-item"
-                                href="{{ url($user . '/supplier-payment/report', ['id' => base64_encode($data['supplier']->id)]) }}">
-                                <i class="fas fa-file-invoice me-2"></i> Payment Report
-                            </a>
-                        </li>
-                    @endif
-
-                    <li>
-                        <a class="dropdown-item"
-                            href="{{ url($user . '/supplier/detail', ['id' => $data['supplier']->id]) }}">
-                            <i class="fas fa-user-circle me-2"></i> View Detailed Profile
-                        </a>
-                    </li>
-
-
-                </ul>
-            </div>
+            </form>
 
         </div>
 
@@ -306,20 +313,28 @@
                 <div class="summary-amount got-text">₹{{ number_format($data['totalCredit']) }}</div>
                 <div class="summary-label got-text">Total Paid</div>
             </div>
+
+
+            <div class="summary-card got">
+                <div class="summary-amount got-text">₹{{ number_format($data['returns']) }}</div>
+                <div class="summary-label got-text">Total Returns</div>
+            </div>
+
         </div>
 
 
 
         <div class="card">
             <div class="table-responsive mt-4">
-                <table class="table table-hover mb-0">
+                <table class="table  mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Date</th>
                             <th>Customer Name</th>
                             <th>Details</th>
-                            <th class="text-end">Debit</th>
-                            <th class="text-end">Credit</th>
+                            <th>Return</th>
+                            <th>Purchases</th>
+                            <th>Payments</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -336,14 +351,24 @@
                                             {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
                                         </small>
                                     </td>
-                                    <td class="text-end text-danger fw-bold">
-                                        @if ($ledger['debit'] > 0)
-                                            ₹{{ number_format($ledger['debit']) }}
+                                    <td class="text-danger fw-bold">
+                                        @if ($ledger['return'] > 0)
+                                            ₹{{ number_format($ledger['return']) }}
                                         @else
                                             ₹0
                                         @endif
                                     </td>
-                                    <td class="text-end text-success fw-bold">
+                                    <td class="fw-bold">
+                                        @if ($ledger['debit'] > 0)
+                                            ₹{{ number_format($ledger['debit']) }}
+                                        @else
+                                            <div class="fw-bold">₹0</div>
+                                            <small class="text-muted">
+                                                {{ ucwords($ledger['amount_status']) }}
+                                            </small>
+                                        @endif
+                                    </td>
+                                    <td class="text-success fw-bold">
                                         @if ($ledger['credit'] > 0)
                                             ₹{{ number_format($ledger['credit']) }}
                                         @else
@@ -354,7 +379,7 @@
                             @endforeach
                         @else
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">No records available</td>
+                                <td colspan="6" class="text-center py-4 text-muted">No records available</td>
                             </tr>
                         @endif
                     </tbody>
@@ -416,9 +441,20 @@
             <div class="modal-content">
 
                 <div class="modal-body">
+
+
+
                     <form id="payment_form" class="forms-sample material-form" enctype="multipart/form-data">
 
                         @csrf
+
+                        <div class="d-flex align-items-center gap-2 p-2 border-start border-3 border-primary">
+                            <i class="bi bi-building text-primary"></i>
+                            <div>
+                                <small class="text-muted d-block">Supplier</small>
+                                <strong>{{ $supplier->name }}</strong>
+                            </div>
+                        </div>
 
                         {{-- Phase Name --}}
                         <div class="form-group">
@@ -433,20 +469,38 @@
                             <x-input-error :messages="$errors->get('supplier_id')" class="mt-2" />
                         </div>
 
-                        {{-- Select Payee Dropdown --}}
-                        <div class="mb-2">
-                            <select name="payment_initiator" id="payment_initiator"
-                                class="form-select text-black form-select-sm" style="cursor: pointer"
-                                onchange="togglePayOptions()">
-                                <option value="" selected>Select Payee</option>
-                                <option value="1">Site</option>
-                                <option value="0">Admin</option>
+
+
+                        @if ($user === 'user')
+                            <select name="site_id" id="site_id" class="form-select text-black form-select-sm"
+                                style="cursor: pointer">
+                                <option for="site_id" value="">Select Site</option>
+                                @foreach ($sites as $site)
+                                    <option value="{{ $site['site_id'] }}">
+                                        {{ $site['site_name'] }}
+                                    </option>
+                                @endforeach
                             </select>
-                        </div>
+                        @endif
 
+                        @if ($user === 'admin')
+                            {{-- Select Payee Dropdown --}}
+                            <div class="mb-3">
 
-                        {{-- Supplier Options (Shown when Supplier is selected) --}}
-                        <div id="supplierOptions" style="display: none;" class="mt-2">
+                                <input type="checkbox" name="payment_initiator" id="payment_initiator"
+                                    class="form-check-input" value="1" onchange="togglePayOptions()">
+                                <label class="form-check-label" for="payment_initiator">
+                                    Pay To Admin
+                                </label>
+                            </div>
+
+                            <div class="mb-3">
+
+                                <label class="form-check-label" for="payment_initiator">
+                                    OR
+                                </label>
+                            </div>
+
                             <select name="site_id" id="site_id" class="form-select text-black form-select-sm"
                                 style="cursor: pointer">
                                 <option for="site_id" value="">Select Site</option>
@@ -457,30 +511,28 @@
                                 @endforeach
                             </select>
 
-
-                        </div>
-
-                        {{-- Admin Options (Shown when Admin is selected) --}}
-                        <div id="adminOptions" style="display: none;" class="mt-2">
-                            <div class="row g-3">
-                                {{-- Sent Radio Option --}}
-                                <div class="col-auto">
-                                    <label for="transaction_sent">
-                                        <input type="radio" name="transaction_type" id="transaction_sent"
-                                            value="1">
-                                        Sent
-                                    </label>
-                                </div>
-                                {{-- Received Radio Option --}}
-                                <div class="col-auto">
-                                    <label for="transaction_received">
-                                        <input type="radio" name="transaction_type" id="transaction_received"
-                                            value="0">
-                                        Received
-                                    </label>
+                            {{-- Admin Options (Shown when Admin is selected) --}}
+                            <div id="adminOptions" style="display: none;" class="mt-2">
+                                <div class="row g-3">
+                                    {{-- Sent Radio Option --}}
+                                    <div class="col-auto">
+                                        <label for="transaction_sent">
+                                            <input type="radio" name="transaction_type" id="transaction_sent"
+                                                value="1">
+                                            Return To {{ $supplier->name }}
+                                        </label>
+                                    </div>
+                                    {{-- Received Radio Option --}}
+                                    <div class="col-auto">
+                                        <label for="transaction_received">
+                                            <input type="radio" name="transaction_type" id="transaction_received"
+                                                value="0">
+                                            Received By Admin
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        @endif
 
                         {{-- File Upload for Screenshot --}}
                         <div class="mt-3">
@@ -497,6 +549,7 @@
                         </div>
 
                     </form>
+
                 </div>
 
             </div>
@@ -508,182 +561,223 @@
 
     </div>
 
-    <script>
-        $(document).ready(function() {
-            $('form[id="payment_form"]').on('submit', function(e) {
-                e.preventDefault();
+    @push('scripts')
+        <script>
+            $(document).ready(function() {
+                // Toggle payment options based on checkbox
+                function togglePayOptions() {
+                    const payToAdmin = document.getElementById('payment_initiator').checked;
+                    const adminOptions = document.getElementById('adminOptions');
 
-                const form = $(this);
-                const formData = new FormData(form[0]);
-                const messageContainer = $('#messageContainer');
-                messageContainer.empty();
+                    if (payToAdmin) {
+                        adminOptions.style.display = 'block';
+                        // Add smooth transition
+                        $(adminOptions).slideDown(300);
+                    } else {
+                        // Clear radio selections when hiding
+                        $('input[name="transaction_type"]').prop('checked', false);
+                        $(adminOptions).slideUp(300);
+                    }
+                }
 
-                $('.text-danger').remove();
+                // Make function globally accessible
+                window.togglePayOptions = togglePayOptions;
 
-                $.ajax({
-                    url: '{{ url($user . '/supplier/payments') }}',
-                    type: 'POST',
-                    data: formData,
-                    contentType: false,
-                    processData: false,
-                    success: function(response) {
-                        messageContainer.append(`
-                        <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                            <div class="d-flex">
-                                <div class="toast-body">
-                                    <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                </div>
+                // Form submission with enhanced styling
+                $('form[id="payment_form"]').on('submit', function(e) {
+                    e.preventDefault();
+
+                    const form = $(this);
+                    const formData = new FormData(form[0]);
+                    const messageContainer = $('#messageContainer');
+                    const submitBtn = $('#submitPaymentBtn');
+                    const spinner = submitBtn.find('.spinner-border');
+                    const submitText = submitBtn.find('.submit-text');
+
+                    // Clear previous messages and errors
+                    messageContainer.empty();
+                    $('.is-invalid').removeClass('is-invalid');
+                    $('.invalid-feedback').remove();
+
+                    // Show loading state
+                    submitBtn.prop('disabled', true);
+                    spinner.removeClass('d-none');
+                    submitText.html('<i class="bi bi-hourglass-split me-2"></i>Processing...');
+
+                    $.ajax({
+                        url: '{{ url($user . '/supplier/payments') }}',
+                        type: 'POST',
+                        data: formData,
+                        contentType: false,
+                        processData: false,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            messageContainer.html(`
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-check-circle-fill me-2 fs-4"></i>
+                            <div>
+                                <strong>Success!</strong> ${response.message}
                             </div>
                         </div>
-                    `);
-                        form[0].reset();
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `);
 
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                            location.reload();
-                        }, 2000);
-                    },
-                    error: function(xhr) {
-                        const messageContainer = $('#messageContainer');
-                        messageContainer.empty();
+                            // Reset form
+                            form[0].reset();
+                            $('#adminOptions').hide();
 
-                        if (xhr.status === 422 && xhr.responseJSON.errors) {
-                            const errors = xhr.responseJSON.errors;
+                            // Reload page after delay
+                            setTimeout(function() {
+                                location.reload();
+                            }, 2000);
+                        },
+                        error: function(xhr) {
+                            if (xhr.status === 422 && xhr.responseJSON.errors) {
+                                const errors = xhr.responseJSON.errors;
 
-                            // Loop through errors and display them next to inputs
-                            $.each(errors, function(field, messages) {
-                                const input = $(`[name="${field}"]`);
-                                const formGroup = input.closest('.form-group');
+                                // Display field-specific errors only in the current form
+                                $.each(errors, function(field, messages) {
+                                    const input = form.find(
+                                        `[name="${field}"]`
+                                    ); // Use form scope instead of global $
+                                    const formGroup = input.closest('.form-group, .mb-3');
 
-                                input.addClass('is-invalid');
+                                    input.addClass('is-invalid');
 
-                                // Append Bootstrap validation error message
-                                if (formGroup.length) {
-                                    formGroup.append(
-                                        `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
-                                    );
-                                } else {
-                                    input.after(
-                                        `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
-                                    );
-                                }
-                            });
+                                    // Create error message
+                                    const errorMsg =
+                                        `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`;
 
+                                    if (formGroup.length) {
+                                        formGroup.append(errorMsg);
+                                    } else {
+                                        input.after(errorMsg);
+                                    }
+                                });
+                            } else {
+                                // Only show general error for non-validation errors
+                                messageContainer.html(`
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-exclamation-circle-fill me-2 fs-4"></i>
+                    <div>
+                        <strong>Error!</strong> An unexpected error occurred. Please try again later.
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        `);
 
-                        } else {
-                            messageContainer.append(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    An unexpected error occurred. Please try again later.
-                                </div>
-                            `);
+                                // Auto-dismiss error after 5 seconds
+                                setTimeout(function() {
+                                    messageContainer.find('.alert').alert('close');
+                                }, 5000);
+                            }
+                        },
+
+                        complete: function() {
+                            // Reset button state
+                            submitBtn.prop('disabled', false);
+                            spinner.addClass('d-none');
+                            submitText.html('<i class="bi bi-credit-card me-2"></i>Pay');
                         }
-
-                        setTimeout(function() {
-                            messageContainer.find('.alert').alert('close');
-                        }, 4000);
-                    }
+                    });
                 });
+
+                // Clear validation errors on input change
+                $('input, select').on('input change', function() {
+                    $(this).removeClass('is-invalid');
+                    $(this).siblings('.invalid-feedback').remove();
+                });
+
+                // Initialize tooltips if any
+                $('[data-bs-toggle="tooltip"]').tooltip();
             });
 
 
-        });
 
-        function togglePayOptions() {
-            const payTo = document.getElementById('payment_initiator').value;
-            const supplierOptions = document.getElementById('supplierOptions');
-            const adminOptions = document.getElementById('adminOptions');
+            document.addEventListener('DOMContentLoaded', function() {
 
-            if (payTo === "1") {
-                supplierOptions.style.display = 'block';
-                adminOptions.style.display = 'none';
-            } else if (payTo === "0") {
-                supplierOptions.style.display = 'none';
-                adminOptions.style.display = 'block';
-            } else {
+                const supplierFilter = document.getElementById('supplierFilter');
+                const filterForm = document.getElementById('filterForm');
+                const dateFilter = document.getElementById('dateFilter');
+                const customDateRange = document.getElementById('customDateRange');
+                const resetBtn = document.getElementById('resetFilters');
 
-                supplierOptions.style.display = 'none';
-                adminOptions.style.display = 'none';
-            }
-        }
+                // Ensure form submits to the correct URL with site ID
+                filterForm.action = "{{ url()->current() }}";
 
-
-        document.addEventListener('DOMContentLoaded', function() {
-
-            const supplierFilter = document.getElementById('supplierFilter');
-            const filterForm = document.getElementById('filterForm');
-            const dateFilter = document.getElementById('dateFilter');
-            const customDateRange = document.getElementById('customDateRange');
-            const resetBtn = document.getElementById('resetFilters');
-
-            // Ensure form submits to the correct URL with site ID
-            filterForm.action = "{{ url()->current() }}";
-
-            // Toggle date range visibility
-            dateFilter.addEventListener('change', function() {
-                if (this.value === 'custom') {
-                    customDateRange.style.display = 'flex';
-                } else {
-                    customDateRange.style.display = 'none';
-                    // Clear date inputs when not using custom range
-                    document.querySelector('input[name="start_date"]').value = '';
-                    document.querySelector('input[name="end_date"]').value = '';
-                }
-                submitForm();
-            });
-
-            // Auto-submit when any filter changes (except date inputs)
-            document.querySelectorAll('#filterForm select:not(#dateFilter)').forEach(select => {
-                select.addEventListener('change', function() {
+                // Toggle date range visibility
+                dateFilter.addEventListener('change', function() {
+                    if (this.value === 'custom') {
+                        customDateRange.style.display = 'flex';
+                    } else {
+                        customDateRange.style.display = 'none';
+                        // Clear date inputs when not using custom range
+                        document.querySelector('input[name="start_date"]').value = '';
+                        document.querySelector('input[name="end_date"]').value = '';
+                    }
                     submitForm();
                 });
-            });
 
-            // For date inputs, add a small delay before submitting
-            document.querySelectorAll('#customDateRange input').forEach(input => {
-                let timeout;
-                input.addEventListener('change', function() {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => {
+                // Auto-submit when any filter changes (except date inputs)
+                document.querySelectorAll('#filterForm select:not(#dateFilter)').forEach(select => {
+                    select.addEventListener('change', function() {
                         submitForm();
-                    }, 500);
-                });
-            });
-
-            // Reset all filters
-            resetBtn.addEventListener('click', function() {
-                // Reset form values
-                filterForm.reset();
-                // Ensure default selections
-                document.getElementById('supplierFilter').value = 'all';
-                document.getElementById('dateFilter').value = 'today';
-                // Hide custom date range
-                customDateRange.style.display = 'none';
-                // Submit the form
-                submitForm();
-            });
-
-            // Initialize date range visibility based on current selection
-            if (dateFilter.value === 'custom') {
-                customDateRange.style.display = 'flex';
-            }
-
-            // Custom form submission to preserve URL structure
-            function submitForm() {
-                // Get all current query parameters
-                const params = new URLSearchParams(window.location.search);
-
-                // Update with new form values
-                new FormData(filterForm).forEach((value, key) => {
-                    if (value) params.set(key, value);
-                    else params.delete(key);
+                    });
                 });
 
-                // Preserve the site ID in the URL path
-                const newUrl = "{{ url()->current() }}?" + params.toString();
-                window.location.href = newUrl;
-            }
-        });
-    </script>
+                // For date inputs, add a small delay before submitting
+                document.querySelectorAll('#customDateRange input').forEach(input => {
+                    let timeout;
+                    input.addEventListener('change', function() {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => {
+                            submitForm();
+                        }, 500);
+                    });
+                });
+
+                // Reset all filters
+                resetBtn.addEventListener('click', function() {
+                    // Reset form values
+                    filterForm.reset();
+                    // Ensure default selections
+                    document.getElementById('supplierFilter').value = 'all';
+                    document.getElementById('dateFilter').value = 'today';
+                    // Hide custom date range
+                    customDateRange.style.display = 'none';
+                    // Submit the form
+                    submitForm();
+                });
+
+                // Initialize date range visibility based on current selection
+                if (dateFilter.value === 'custom') {
+                    customDateRange.style.display = 'flex';
+                }
+
+                // Custom form submission to preserve URL structure
+                function submitForm() {
+                    // Get all current query parameters
+                    const params = new URLSearchParams(window.location.search);
+
+                    // Update with new form values
+                    new FormData(filterForm).forEach((value, key) => {
+                        if (value) params.set(key, value);
+                        else params.delete(key);
+                    });
+
+                    // Preserve the site ID in the URL path
+                    const newUrl = "{{ url()->current() }}?" + params.toString();
+                    window.location.href = newUrl;
+                }
+            });
+        </script>
+    @endpush
 
 
 </x-app-layout>

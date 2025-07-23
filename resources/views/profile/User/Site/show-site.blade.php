@@ -353,6 +353,12 @@
                 <div class="summary-amount got-text">₹{{ number_format($total_paid) }}</div>
                 <div class="summary-label got-text">Total Paid</div>
             </div>
+
+            <div class="summary-card got">
+                <div class="summary-amount got-text">₹{{ number_format($return) }}</div>
+                <div class="summary-label got-text">Total Returns</div>
+            </div>
+
         </div>
 
 
@@ -365,8 +371,9 @@
                         <th class="fw-bold">DATE</th>
                         <th class="fw-bold">Customer Name</th>
                         <th class="fw-bold">DETAILS</th>
-                        <th class="fw-bold text-end">Debit</th>
-                        <th class="fw-bold text-end">Credit</th>
+                        <th class="fw-bold">Return</th>
+                        <th class="fw-bold">Debit</th>
+                        <th class="fw-bold">Credit</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -383,14 +390,24 @@
                                         {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
                                     </small>
                                 </td>
-                                <td class="text-end text-danger fw-bold">
-                                    @if ($ledger['debit'] > 0)
-                                        ₹{{ number_format($ledger['debit']) }}
+                                <td class="text-danger fw-bold">
+                                    @if ($ledger['return'] > 0)
+                                        ₹{{ number_format($ledger['return']) }}
                                     @else
                                         ₹0
                                     @endif
                                 </td>
-                                <td class="text-end text-success fw-bold">
+                                <td class="fw-bold">
+                                    @if ($ledger['debit'] > 0)
+                                        ₹{{ number_format($ledger['debit']) }}
+                                    @else
+                                        <div class="fw-bold">₹0</div>
+                                        <small class="text-muted">
+                                            {{ ucwords($ledger['amount_status']) }}
+                                        </small>
+                                    @endif
+                                </td>
+                                <td class="text-success fw-bold">
                                     @if ($ledger['credit'] > 0)
                                         ₹{{ number_format($ledger['credit']) }}
                                     @else
@@ -401,7 +418,7 @@
                         @endforeach
                     @else
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">No records available</td>
+                            <td colspan="6" class="text-center py-4 text-muted">No records available</td>
                         </tr>
                     @endif
                 </tbody>
@@ -505,44 +522,57 @@
                     <form enctype="multipart/form-data" class="forms-sample material-form"
                         id="constructionBillingForm">
                         @csrf
-
                         <div class="row">
-
                             <div class="col-md-6">
                                 <!-- Amount -->
-                                <div class="form-group mb-3 ">
-                                    <input type="number" name="amount" id="amount" />
+                                <div class="form-group mb-3">
+                                    <input type="number" name="amount" id="amount" step="0.01"
+                                        min="0" />
                                     <label for="amount" class="control-label">Material Price</label>
                                     <i class="bar"></i>
                                     <p class="mt-1 text-danger" id="amount-error"></p>
                                 </div>
                             </div>
 
-
-
                             <div class="col-md-6">
                                 <!-- Unit -->
-                                <div class="form-group mb-3 ">
-                                    <input type="number" name="unit_count" id="unit_count" />
+                                <div class="form-group mb-3">
+                                    <input type="number" name="unit_count" id="unit_count" min="1" />
                                     <label for="unit_count" class="control-label">Units</label>
                                     <i class="bar"></i>
                                     <p class="mt-1 text-danger" id="unit_count-error"></p>
                                 </div>
                             </div>
-
-
                         </div>
 
                         <div class="row">
-                            <!-- Item Name -->
-                            <div class="col-md-6 mb-3">
-                                <select class="form-select text-black form-select-sm" name="item_name">
-                                    <option value="">Select Item</option>
-                                    @foreach ($items as $item)
-                                        <option value="{{ $item->item_name }}">{{ $item->item_name }}</option>
-                                    @endforeach
-                                </select>
-                                <p class="mt-1 text-danger" id="item_name-error"></p>
+                            <!-- Item Name - Toggleable Field -->
+                            <div class="col-12 mb-3">
+                                <div class="btn-group btn-group-sm mb-2" role="group">
+                                    <button type="button" class="btn btn-outline-primary toggle-item-btn active"
+                                        data-mode="select">View list</button>
+                                    <button type="button" class="btn btn-outline-secondary toggle-item-btn"
+                                        data-mode="custom">Enter custom</button>
+                                </div>
+
+                                <!-- Item Select (visible by default) -->
+                                <div id="item-select-container">
+                                    <select class="form-select text-black form-select-sm" name="item_name"
+                                        id="item_name">
+                                        <option value="">Select Item</option>
+                                        @foreach ($items as $item)
+                                            <option value="{{ $item->item_name }}">{{ $item->item_name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="mt-1 text-danger" id="item_name-error"></p>
+                                </div>
+
+                                <!-- Custom Input (hidden by default) -->
+                                <div id="custom-item-container" style="display: none;">
+                                    <input type="text" class="form-control" name="custom_item_name"
+                                        id="custom_item_name" placeholder="Enter item name">
+                                    <p class="mt-1 text-danger" id="custom_item_name-error"></p>
+                                </div>
                             </div>
 
                             <!-- Supplier -->
@@ -568,7 +598,7 @@
                             </div>
 
                             <!-- Image Upload -->
-                            <div class="col-md-6 mb-3">
+                            <div class="col-12 mb-3">
                                 <input class="form-control form-control-md" id="image" type="file"
                                     name="image">
                                 <p class="mt-1 text-danger" id="image-error"></p>
@@ -579,7 +609,6 @@
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                             <button type="submit" class="btn btn-success">Create Billing</button>
                         </div>
-
                     </form>
 
                 </div>
@@ -673,16 +702,13 @@
                             </div>
                         </div>
 
-
                         <!-- Image -->
                         <div class="mt-3">
                             <label for="image">Item Bill</label>
                             <input class="form-control form-control-md" id="image" type="file"
                                 name="image_path">
                             <p class="text-danger" id="image_path-error"></p>
-
                         </div>
-
 
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -778,66 +804,39 @@
             <div class="modal-content">
                 <div class="modal-body">
                     <form id="payment_supplierForm" class="forms-sample material-form" enctype="multipart/form-data">
+
                         @csrf
+
+                        <div class="d-flex align-items-center gap-2 mb-3 p-2 border-start border-3 border-primary">
+                            <i class="bi bi-building text-primary"></i>
+                            <div>
+                                <small class="text-muted d-block">Client</small>
+                                <strong>{{ $site->client->name }}</strong>
+                            </div>
+                        </div>
 
                         {{-- Amount --}}
                         <div class="form-group">
                             <input type="number" min="0" name="amount" />
                             <label for="input" class="control-label">Amount</label><i class="bar"></i>
                             <div class="invalid-feedback" id="amount-error"></div>
-
                         </div>
 
                         {{-- Site (hidden) --}}
                         <input type="hidden" name="site_id" value="{{ $site->id }}" />
 
-
-                        {{-- Select Payee --}}
-                        <div class="mb-3">
-                            <select name="payment_initiator" id="payment_initiator" style="cursor: pointer"
-                                class="form-select text-black form-select-sm" onchange="togglePayOptions()">
-                                <option value="">Select Payee</option>
-                                <option value="1">Supplier</option>
-                                <option value="0">Admin</option>
-                            </select>
-                            <div class="invalid-feedback" id="payment_initiator-error"></div>
-                        </div>
-
                         {{-- Supplier Options --}}
-                        <div id="supplierOptions" style="display: none;" class="mb-3">
-                            <select name="supplier_id" id="supplier_id" class="form-select text-black"
-                                style="cursor: pointer">
-                                <option value="">Select Supplier</option>
-                                @foreach ($suppliers as $supplier)
-                                    <option value="{{ $supplier['supplier_id'] }}">
-                                        {{ $supplier['supplier_name'] }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <div class="invalid-feedback" id="supplier_id-error"></div>
+                        <select name="supplier_id" id="supplier_id" class="form-select text-black"
+                            style="cursor: pointer">
+                            <option value="">Select Supplier</option>
+                            @foreach ($suppliers as $supplier)
+                                <option value="{{ $supplier['supplier_id'] }}">
+                                    {{ $supplier['supplier_name'] }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="invalid-feedback" id="supplier_id-error"></div>
 
-
-                        </div>
-
-                        {{-- Admin Options (Shown when Admin is selected) --}}
-                        <div id="adminOptions" style="display: none;" class="mt-4">
-                            <div class="row g-3">
-                                {{-- Sent Radio Option --}}
-                                <div class="col-auto">
-                                    <label for="transaction_sent">
-                                        <input type="radio" name="transaction_type" id="transaction_sent"
-                                            value="1"> Sent
-                                    </label>
-                                </div>
-                                {{-- Received Radio Option --}}
-                                <div class="col-auto">
-                                    <label for="transaction_received">
-                                        <input type="radio" name="transaction_type" id="transaction_received"
-                                            value="0"> Received
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
 
                         <div class="mt-2">
                             {{-- Screenshot Upload --}}
@@ -946,6 +945,30 @@
                     }
                 });
             });
+
+
+
+            // Toggle between item selection modes
+            $('.toggle-item-btn').click(function() {
+                const mode = $(this).data('mode');
+
+                // Update button states
+                $('.toggle-item-btn').removeClass('active btn-primary').addClass('btn-outline-secondary');
+                $(this).removeClass('btn-outline-secondary').addClass('active btn-primary');
+
+                // Toggle fields
+                if (mode === 'select') {
+                    $('#item-select-container').show();
+                    $('#custom-item-container').hide();
+                    $('#custom_item_name').val(''); // Clear custom input
+                } else {
+                    $('#item-select-container').hide();
+                    $('#custom-item-container').show();
+                    $('#item_name').val(''); // Clear select
+                }
+            });
+
+
 
 
             //  Script For Construction Form

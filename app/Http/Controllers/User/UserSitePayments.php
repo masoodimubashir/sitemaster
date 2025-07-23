@@ -8,9 +8,12 @@ use App\Models\Payment;
 use App\Models\PaymentSupplier;
 use App\Models\Site;
 use App\Models\Supplier;
+use App\Models\User;
+use App\Notifications\PaymentNotification;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 
 class UserSitePayments extends Controller
@@ -39,28 +42,36 @@ class UserSitePayments extends Controller
 
         try {
 
+
             $validatedData = Validator::make($request->all(), [
                 'screenshot' => 'nullable|mimes:png,jpg,webp, jpeg|max:1024',
                 'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99',],
                 'transaction_type' => 'nullable|in:0,1',
                 'site_id' => 'nullable|exists:sites,id',
                 'supplier_id' => 'nullable|exists:suppliers,id',
-                'payment_initiator' => 'required|in:0,1',
             ]);
-
-
 
             if ($validatedData->fails()) {
                 return response()->json(
                     [
                         'errors' => $validatedData->errors(),
-                    ],422
+                    ],
+                    422
                 );
             }
+
+            $image_path = null;
 
             if ($request->hasFile('screenshot')) {
                 $image_path = $request->file('screenshot')->store('Payment', 'public');
             }
+
+            $site = Site::find($request->input('site_id'));
+
+            Notification::send(
+                User::where('role_name', 'admin')->get(),
+                new PaymentNotification($request->input('amount'), $site->site_name)
+            );
 
             AdminPayment::create([
                 'screenshot' => $image_path,

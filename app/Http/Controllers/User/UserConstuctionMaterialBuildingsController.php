@@ -6,6 +6,7 @@ use App\Class\HelperClass;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\ConstructionMaterialBilling as ModelsConstructionMaterialBilling;
+use App\Models\Item;
 use App\Models\Supplier;
 use App\Notifications\VerificationNotification;
 use Exception;
@@ -28,10 +29,12 @@ class UserConstuctionMaterialBuildingsController extends Controller
 
             DB::beginTransaction();
 
+            // Validate the request data
             $validator = Validator::make($request->all(), [
                 'image' => 'nullable|mimes:png,jpg,webp|max:1024',
-                'amount' => 'required|numeric|max:1000000',
-                'item_name' => 'required|string',
+                'amount' => 'nullable|numeric|min:0|max:1000000',
+                'item_name' => 'nullable|string|max:255',
+                'custom_item_name' => 'nullable|string|max:255',
                 'supplier_id' => 'required|exists:suppliers,id',
                 'phase_id' => 'required|exists:phases,id',
                 'unit_count' => 'required|integer|min:1',
@@ -68,7 +71,11 @@ class UserConstuctionMaterialBuildingsController extends Controller
 
                 if ($material) {
 
-                    $this->setSiteTotalAmount($request->phase_id, $request->amount);
+                    // Update site total amount
+                    $this->setSiteTotalAmount(
+                        $request->phase_id,
+                        (float) ($request->input('amount', 0.00))
+                    );
 
                     DB::commit();
                 }
@@ -99,7 +106,9 @@ class UserConstuctionMaterialBuildingsController extends Controller
 
         $suppliers = Supplier::where('is_raw_material_provider', 1)->orderBy('id', 'desc')->get();
 
-        return view('profile.partials.Admin.ConstructionMaterialBillings.edit-billings', compact('construction_material_billing', 'suppliers'));
+        $items = Item::orderBy('item_name')->get();
+
+        return view('profile.partials.Admin.ConstructionMaterialBillings.edit-billings', compact('construction_material_billing', 'suppliers', 'items'));
     }
 
     /**
@@ -111,13 +120,19 @@ class UserConstuctionMaterialBuildingsController extends Controller
 
         return DB::transaction(function () use ($request, $id) {
             try {
-                $validatedData = $request->validate([
+                $construction_material_billing = ModelsConstructionMaterialBilling::findOrFail($id);
+
+                $validator = Validator::make($request->all(), [
                     'image' => 'nullable|mimes:png,jpg,webp|max:1024',
-                    'amount' => 'required|numeric|max:9999999999',
-                    'item_name' => 'required',
+                    'amount' => 'nullable|numeric|min:0|max:1000000',
+                    'item_name' => 'required_without:custom_item_name|string|max:255',
+                    'custom_item_name' => 'required_without:item_name|string|max:255',
                     'supplier_id' => 'required|exists:suppliers,id',
                     'phase_id' => 'required|exists:phases,id',
-                    'unit_count' => 'required|integer|min:1'
+                    'unit_count' => 'required|integer|min:1',
+                ], [
+                    'item_name.required_without' => 'This field is required',
+                    'custom_item_name.required_without' => 'This field is required',
                 ]);
 
 

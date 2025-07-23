@@ -7,17 +7,17 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class UserSiteNotification extends Notification
+class PaymentNotification extends Notification
 {
     use Queueable;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    public function __construct(public float $amount, public string $site)
     {
-        //
     }
+   
 
     /**
      * Get the notification's delivery channels.
@@ -29,9 +29,9 @@ class UserSiteNotification extends Notification
         return ['database'];
     }
 
-    // /**
-    //  * Get the mail representation of the notification.
-    //  */
+    /**
+     * Get the mail representation of the notification.
+     */
     // public function toMail(object $notifiable): MailMessage
     // {
     //     return (new MailMessage)
@@ -48,7 +48,7 @@ class UserSiteNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'message' => "A New Site Has Been Assigned By The Admin",
+            'message' => 'Payment of '. $this->amount .  ' received for site: ' . $this->site,
         ];
     }
 }

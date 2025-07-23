@@ -24,14 +24,9 @@ class Site extends Model
         'is_on_going',
     ];
 
-    /**
-     * Get the user that owns the Site
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     */
-    public function user(): BelongsTo
+    public function users()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsToMany(User::class, 'site_users');
     }
 
     /**

@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('labours', function (Blueprint $table) {
             $table->id();
+            $table->string('labour_name')->nullable();
             $table->foreignId('wasta_id')->constrained('wastas')->cascadeOnDelete();
             $table->foreignId('phase_id')->constrained('phases')->cascadeOnDelete();
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->cascadeOnDelete();
-            $table->string('labour_name');
             $table->integer('price');
             $table->string('contact_no');
             $table->timestamps();

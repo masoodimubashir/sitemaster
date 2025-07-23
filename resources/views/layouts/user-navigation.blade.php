@@ -36,13 +36,12 @@
             </a>
         </li>
 
-        <li class="nav-item nav-category">Verifications</li>
 
         <!-- Verify Items -->
         <li class="nav-item">
             <a class="nav-link {{ request()->is('user/item-verification*') ? 'active' : '' }}" href="{{ url('user/item-verification') }}">
                 <i class="fas fa-clipboard-check menu-icon"></i>
-                <span class="menu-title">Verify Items</span>
+                <span class="menu-title">Items</span>
             </a>
         </li>
 
@@ -50,7 +49,7 @@
         <li class="nav-item">
             <a class="nav-link {{ request()->is('user/pay-verification*') ? 'active' : '' }}" href="{{ url('user/pay-verification') }}">
                 <i class="fas fa-file-invoice-dollar menu-icon"></i>
-                <span class="menu-title">Verify Payments</span>
+                <span class="menu-title">Payments</span>
             </a>
         </li>
     </ul>

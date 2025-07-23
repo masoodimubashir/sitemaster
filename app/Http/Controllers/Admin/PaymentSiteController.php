@@ -17,9 +17,13 @@ class PaymentSiteController extends Controller
 
         $site = Site::find($id);
 
-        $payments = $payments = $site->payments()
+        $payments = $site->payments()
             ->with(['site', 'supplier'])
             ->where('verified_by_admin', 1)
+            ->where(function ($query) {
+                $query->whereNull('transaction_type')
+                    ->orWhere('transaction_type', 0);
+            })
             ->paginate(10);
 
         return view('profile.partials.Admin.PaymentSuppliers.site-payment-supplier', compact(
@@ -62,20 +66,20 @@ class PaymentSiteController extends Controller
                 $path = $request->file('screenshot')->storeAs('Payment', $imageName, 'public');
             }
 
-            if ($request->filled('payment_initiator') && !$request->filled('supplier_id')) {
+            // if ($request->filled('payment_initiator') && !$request->filled('supplier_id')) {
 
-                AdminPayment::create([
-                    'screenshot' => $path,
-                    'amount' => $request->input('amount'),
-                    'transaction_type' => $request->input('transaction_type'),
-                    'entity_id' => $request->input('site_id'),
-                    'entity_type' => Site::class,
-                ]);
+            //     dd($request->all());
 
-                return response()->json(['message' => 'Payment To Admin']);
-            }
+            //     AdminPayment::create([
+            //         'screenshot' => $path,
+            //         'amount' => $request->input('amount'),
+            //         'transaction_type' => $request->input('transaction_type'),
+            //         'entity_id' => $request->input('site_id'),
+            //         'entity_type' => Site::class,
+            //     ]);
 
-
+            //     return response()->json(['message' => 'Payment To Admin']);
+            // }
 
             $payment = new Payment();
             $payment->amount = $request->input('amount');
@@ -83,11 +87,11 @@ class PaymentSiteController extends Controller
             $payment->supplier_id = $request->input('supplier_id');
             $payment->transaction_type = $request->input('transaction_type');
             $payment->verified_by_admin = 1;
-            $payment->payment_initiator = $request->filled('supplier_id') ? 1 : 0;
+            $payment->payment_initiator = $request->filled('supplier_id') && $request->filled('site_id') ? 1 : 0;
             $payment->screenshot = $path;
             $payment->save();
 
-            return response()->json(['message' => 'Payment created successfully']);
+            return response()->json(['message' => 'Payment Done...']);
         } catch (Exception $th) {
 
             return response()->json(['error' => 'Payment Cannot Be Made.. Try Again']);

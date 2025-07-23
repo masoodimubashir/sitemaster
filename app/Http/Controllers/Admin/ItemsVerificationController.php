@@ -23,24 +23,22 @@ class ItemsVerificationController extends Controller
 {
     public function index(Request $request)
     {
-        // Get filter parameters
         $siteId = $request->input('site_id');
         $phaseName = $request->input('phase');
         $supplierName = $request->input('supplier');
         $verificationStatus = $request->input('verification_status');
+        $from_date = $request->input('from_date');
+        $to_date = $request->input('to_date');
 
-        // 1. Fetch attendance-based items (Wasta/Labour)
-        $attendanceItems = $this->getAttendanceItems($siteId, $phaseName, $verificationStatus);
-
-        // 2. Fetch other items (raw materials, bills, expenses)
-        $otherItems = $this->getOtherItems($siteId, $phaseName, $supplierName, $verificationStatus);
+        // Fetch items
+        $attendanceItems = $this->getAttendanceItems($siteId, $phaseName, $verificationStatus, $from_date, $to_date);
+        $otherItems = $this->getOtherItems($siteId, $phaseName, $supplierName, $verificationStatus, $from_date, $to_date);
 
         $data = $otherItems->merge($attendanceItems)->sortByDesc('created_at');
 
-        // Get filter options
         $filterOptions = $this->getFilterOptions();
 
-        // Paginate results
+        // Pagination
         $perPage = $request->get('per_page', 10);
         $paginatedData = new LengthAwarePaginator(
             $data->forPage($request->input('page', 1), $perPage),
@@ -56,56 +54,52 @@ class ItemsVerificationController extends Controller
         ));
     }
 
-    protected function getAttendanceItems($siteId, $phaseName, $verificationStatus)
+
+    protected function getAttendanceItems($siteId, $phaseName, $verificationStatus, $from_date = null, $to_date = null)
     {
         $query = Attendance::with([
-            'attendable' => function ($query) {
-                $query->with(['phase.site']);
+            'attendable' => function ($q) {
+                $q->with(['phase.site']);
 
-                // Only load wasta relationship if attendable is Labour
-                if ($query->getModel() instanceof Labour) {
-                    $query->with('wasta');
+                if ($q->getModel() instanceof Labour) {
+                    $q->with('wasta');
                 }
             }
         ])
             ->whereIn('attendable_type', [Wasta::class, Labour::class])
-            ->whereHas('attendable', function ($query) use ($siteId, $phaseName) {
-                $query->whereHas('phase.site', function ($query) use ($siteId) {
-                    $query->whereNull('deleted_at');
+            ->whereHas('attendable', function ($q) use ($siteId, $phaseName) {
+                $q->whereHas('phase.site', function ($q) use ($siteId) {
+                    $q->whereNull('deleted_at');
                     if ($siteId && $siteId !== 'all') {
-                        $query->where('id', $siteId);
+                        $q->where('id', $siteId);
                     }
-                })
-                    ->whereHas('phase', function ($query) use ($phaseName) {
-                        $query->whereNull('deleted_at');
-                        if ($phaseName && $phaseName !== 'all') {
-                            $query->where('phase_name', $phaseName);
-                        }
-                    });
+                })->whereHas('phase', function ($q) use ($phaseName) {
+                    $q->whereNull('deleted_at');
+                    if ($phaseName && $phaseName !== 'all') {
+                        $q->where('phase_name', $phaseName);
+                    }
+                });
             });
 
-        // Apply verification status filter
+        // Apply verification status
         if ($verificationStatus && $verificationStatus !== 'all') {
             $query->where('is_present', $verificationStatus === 'verified');
         }
+
+        // Apply date filters
+        $query->when($from_date, fn($q) => $q->whereDate('created_at', '>=', $from_date))
+            ->when($to_date, fn($q) => $q->whereDate('created_at', '<=', $to_date));
 
         return $query->latest()
             ->get()
             ->map(function ($attendance) {
                 $attendable = $attendance->attendable;
-
-                if (!$attendable) {
+                if (!$attendable)
                     return null;
-                }
 
                 $isWasta = $attendable instanceof Wasta;
                 $isLabour = $attendable instanceof Labour;
 
-                if (!$isWasta && !$isLabour) {
-                    return null;
-                }
-
-                // For Labour, use the wasta relationship if loaded
                 $supplierName = $isLabour
                     ? ($attendable->relationLoaded('wasta') ? $attendable->wasta->wasta_name : 'NA')
                     : 'NA';
@@ -124,117 +118,111 @@ class ItemsVerificationController extends Controller
                     'created_at' => $attendance->created_at,
                     'verified_by_admin' => $attendance->is_present ? 1 : 0,
                     'is_present' => $attendance->is_present,
-                    'price' => $attendable->price ?? 0,     
+                    'price' => $attendable->price ?? 0,
                 ];
-            })
-            ->filter()
-            ->values();
+            })->filter()->values();
     }
-    protected function getOtherItems($siteId, $phaseName, $supplierName, $verificationStatus)
+
+    protected function getOtherItems($siteId, $phaseName, $supplierName, $verificationStatus, $from_date = null, $to_date = null)
     {
         $items = collect();
 
-        // Raw Materials
+        // Common filters
+        $filters = function ($query) use ($siteId, $phaseName, $supplierName, $verificationStatus, $from_date, $to_date) {
+            $query->whereHas('phase.site', fn($q) => $q->whereNull('deleted_at'));
+            $query->whereHas('phase', fn($q) => $q->whereNull('deleted_at'));
+
+            if ($siteId && $siteId !== 'all') {
+                $query->whereHas('phase.site', fn($q) => $q->where('id', $siteId));
+            }
+
+            if ($phaseName && $phaseName !== 'all') {
+                $query->whereHas('phase', fn($q) => $q->where('phase_name', $phaseName));
+            }
+
+            if ($supplierName && $supplierName !== 'all') {
+                $query->whereHas('supplier', fn($q) => $q->where('name', $supplierName));
+            }
+
+            if ($verificationStatus && $verificationStatus !== 'all') {
+                $query->where('verified_by_admin', $verificationStatus === 'verified' ? 1 : 0);
+            }
+
+            if ($from_date) {
+                $query->whereDate('created_at', '>=', $from_date);
+            }
+
+            if ($to_date) {
+                $query->whereDate('created_at', '<=', $to_date);
+            }
+        };
+
+        // Construction Material Billing
         $items = $items->merge(
             ConstructionMaterialBilling::with(['phase.site', 'supplier'])
-                ->whereHas('phase', fn($q) => $q->whereNull('deleted_at'))
-                ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-                ->whereHas('phase.site', fn($q) => $q->whereNull('deleted_at'))
-                ->when($siteId && $siteId !== 'all', fn($q) =>
-                    $q->whereHas('phase.site', fn($sq) => $sq->where('id', $siteId)))
-                ->when($phaseName && $phaseName !== 'all', fn($q) =>
-                    $q->whereHas('phase', fn($pq) => $pq->where('phase_name', $phaseName)))
-                ->when($supplierName && $supplierName !== 'all', fn($q) =>
-                    $q->whereHas('supplier', fn($sq) => $sq->where('name', $supplierName)))
-                ->when($verificationStatus && $verificationStatus !== 'all', fn($q) =>
-                    $q->where('verified_by_admin', $verificationStatus === 'verified' ? 1 : 0))
+                ->where($filters)
                 ->latest()
                 ->get()
-                ->map(function ($item) {
-                    return [
-                        'id' => $item->id,
-                        'supplier' => $item->supplier->name ?? 'NA',
-                        'description' => $item->item_name ?? 'NA',
-                        'category' => 'Raw Material',
-                        'phase' => $item->phase->phase_name ?? 'NA',
-                        'site' => $item->phase->site->site_name ?? 'NA',
-                        'site_id' => $item->phase->site_id ?? null,
-                        'supplier_id' => $item->supplier_id ?? null,
-                        'created_at' => $item->created_at,
-                        'verified_by_admin' => $item->verified_by_admin,
-                        'price' => $item->amount ?? null,
-                    ];
-                })
+                ->map(fn($item) => [
+                    'id' => $item->id,
+                    'supplier' => $item->supplier->name ?? 'NA',
+                    'description' => $item->item_name ?? 'NA',
+                    'category' => 'Raw Material',
+                    'phase' => $item->phase->phase_name ?? 'NA',
+                    'site' => $item->phase->site->site_name ?? 'NA',
+                    'site_id' => $item->phase->site_id ?? null,
+                    'supplier_id' => $item->supplier_id ?? null,
+                    'created_at' => $item->created_at,
+                    'verified_by_admin' => $item->verified_by_admin,
+                    'price' => $item->amount ?? null,
+                ])
         );
 
         // Square Footage Bills
         $items = $items->merge(
             SquareFootageBill::with(['phase.site', 'supplier'])
-                ->whereHas('phase', fn($q) => $q->whereNull('deleted_at'))
-                ->whereHas('supplier', fn($q) => $q->whereNull('deleted_at'))
-                ->whereHas('phase.site', fn($q) => $q->whereNull('deleted_at'))
-                ->when($siteId && $siteId !== 'all', fn($q) =>
-                    $q->whereHas('phase.site', fn($sq) => $sq->where('id', $siteId)))
-                ->when($phaseName && $phaseName !== 'all', fn($q) =>
-                    $q->whereHas('phase', fn($pq) => $pq->where('phase_name', $phaseName)))
-                ->when($supplierName && $supplierName !== 'all', fn($q) =>
-                    $q->whereHas('supplier', fn($sq) => $sq->where('name', $supplierName)))
-                ->when($verificationStatus && $verificationStatus !== 'all', fn($q) =>
-                    $q->where('verified_by_admin', $verificationStatus === 'verified' ? 1 : 0))
+                ->where($filters)
                 ->latest()
                 ->get()
-                ->map(function ($item) {
-                    return [
-                        'id' => $item->id,
-                        'supplier' => $item->supplier->name ?? 'NA',
-                        'description' => $item->wager_name ?? 'NA',
-                        'category' => 'Square Footage Bill',
-                        'phase' => $item->phase->phase_name ?? 'NA',
-                        'site' => $item->phase->site->site_name ?? 'NA',
-                        'site_id' => $item->phase->site_id ?? null,
-                        'supplier_id' => $item->supplier_id ?? null,
-                        'created_at' => $item->created_at,
-                        'verified_by_admin' => $item->verified_by_admin,
-                        'price' => $item->price * $item->multiplier ?? null,
-
-                    ];
-                })
+                ->map(fn($item) => [
+                    'id' => $item->id,
+                    'supplier' => $item->supplier->name ?? 'NA',
+                    'description' => $item->wager_name ?? 'NA',
+                    'category' => 'Square Footage Bill',
+                    'phase' => $item->phase->phase_name ?? 'NA',
+                    'site' => $item->phase->site->site_name ?? 'NA',
+                    'site_id' => $item->phase->site_id ?? null,
+                    'supplier_id' => $item->supplier_id ?? null,
+                    'created_at' => $item->created_at,
+                    'verified_by_admin' => $item->verified_by_admin,
+                    'price' => $item->price * $item->multiplier ?? null,
+                ])
         );
 
         // Daily Expenses
         $items = $items->merge(
             DailyExpenses::with(['phase.site', 'supplier'])
-                ->whereHas('phase', fn($q) => $q->whereNull('deleted_at'))
-                ->whereHas('phase.site', fn($q) => $q->whereNull('deleted_at'))
-                ->when($siteId && $siteId !== 'all', fn($q) =>
-                    $q->whereHas('phase.site', fn($sq) => $sq->where('id', $siteId)))
-                ->when($phaseName && $phaseName !== 'all', fn($q) =>
-                    $q->whereHas('phase', fn($pq) => $pq->where('phase_name', $phaseName)))
-                ->when($supplierName && $supplierName !== 'all', fn($q) =>
-                    $q->whereHas('supplier', fn($sq) => $sq->where('name', $supplierName)))
-                ->when($verificationStatus && $verificationStatus !== 'all', fn($q) =>
-                    $q->where('verified_by_admin', $verificationStatus === 'verified' ? 1 : 0))
+                ->where($filters)
                 ->latest()
                 ->get()
-                ->map(function ($item) {
-                    return [
-                        'id' => $item->id,
-                        'supplier' => $item->supplier->name ?? 'NA',
-                        'description' => $item->item_name ?? 'NA',
-                        'category' => 'Daily Expense',
-                        'phase' => $item->phase->phase_name ?? 'NA',
-                        'site' => $item->phase->site->site_name ?? 'NA',
-                        'site_id' => $item->phase->site_id ?? null,
-                        'supplier_id' => $item->supplier_id ?? null,
-                        'created_at' => $item->created_at,
-                        'verified_by_admin' => $item->verified_by_admin,
-                        'price' => $item->price ?? null,
-                    ];
-                })
+                ->map(fn($item) => [
+                    'id' => $item->id,
+                    'supplier' => $item->supplier->name ?? 'NA',
+                    'description' => $item->item_name ?? 'NA',
+                    'category' => 'Daily Expense',
+                    'phase' => $item->phase->phase_name ?? 'NA',
+                    'site' => $item->phase->site->site_name ?? 'NA',
+                    'site_id' => $item->phase->site_id ?? null,
+                    'supplier_id' => $item->supplier_id ?? null,
+                    'created_at' => $item->created_at,
+                    'verified_by_admin' => $item->verified_by_admin,
+                    'price' => $item->price ?? null,
+                ])
         );
 
         return $items;
     }
+
 
     protected function getFilterOptions()
     {

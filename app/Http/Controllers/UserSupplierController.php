@@ -114,6 +114,7 @@ class UserSupplierController extends Controller
             'totalCredit' => $totals['without_service_charge']['paid'],
             'balance' => $totals['without_service_charge']['balance'],
             'sites' => $sites,
+            'returns' => $totals['without_service_charge']['return']
         ];
 
         if ($supplier->is_raw_material_provider == 1) {

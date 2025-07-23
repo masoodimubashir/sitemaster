@@ -16,6 +16,7 @@ class ConstructionMaterialBilling extends Model
         'item_name',
         'verified_by_admin',
         'supplier_id',
+        'user_id',
         'phase_id',
         'unit_count'
     ];

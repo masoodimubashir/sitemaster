@@ -5,9 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AdminPayment;
 use App\Models\Payment;
+use App\Models\Site;
 use App\Models\Supplier;
+use App\Models\User;
+use App\Notifications\PaymentNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 
 class PaymentSupplierController extends Controller
@@ -37,23 +41,34 @@ class PaymentSupplierController extends Controller
 
         if ($request->ajax()) {
 
+
             $validatedData = Validator::make($request->all(), [
                 'screenshot' => 'nullable|mimes:png,jpg,webp, jpeg|max:1024',
                 'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99',],
                 'transaction_type' => 'sometimes|in:0,1',
-                'site_id' => 'nullable|exists:sites,id',
-                'supplier_id' => 'nullable|exists:suppliers,id',
-                'payment_initiator' => 'required|in:0,1',
+                'site_id' => 'required|exists:sites,id',
+                'supplier_id' => 'required|exists:suppliers,id',
+                'payment_initiator' => 'nullable|in:0,1',
             ]);
 
             if ($validatedData->fails()) {
+                
                 return response()->json([
                     'errors' => $validatedData->errors(),
                 ], 422);
             }
 
+            $site = Site::find($request->input('site_id'));
+
             if (auth()->user()->role_name === 'site_engineer') {
+
                 $this->sendpaymentToAdmin($request);
+
+                Notification::send(
+                    User::where('role_name', 'admin')->get(),
+                    new PaymentNotification($request->input('amount'), $site->site_name)
+                );
+
                 return response()->json([
                     'message' => 'Payment To Admin'
                 ]);
@@ -65,25 +80,6 @@ class PaymentSupplierController extends Controller
                 $image_path = $request->file('screenshot')->store('Payment', 'public');
             }
 
-            if ($request->filled('payment_initiator') && !$request->filled('site_id')) {
-
-
-                AdminPayment::create([
-                    'screenshot' => $image_path,
-                    'amount' => $request->input('amount'),
-                    'transaction_type' => $request->input('transaction_type'),
-                    'entity_id' => $request->input('supplier_id'),
-                    'entity_type' => Supplier::class,
-                ]);
-
-                return response()->json([
-                    'message' => 'Payment To Admin'
-                ]);
-
-            }
-
-
-
             try {
 
                 $payment = new Payment();
@@ -91,12 +87,13 @@ class PaymentSupplierController extends Controller
                 $payment->site_id = $request->input('site_id');
                 $payment->supplier_id = $request->input('supplier_id');
                 $payment->verified_by_admin = auth()->user()->role_name === 'site_engineer' ? 0 : 1;
-                $payment->payment_initiator = $request->filled('supplier_id') || $request->filled('site_id') ? 1 : 0;
+                $payment->payment_initiator = $request->filled('supplier_id') && $request->filled('site_id') ? 1 : 0;
+                $payment->transaction_type = $request->input('transaction_type');
                 $payment->screenshot = $image_path;
                 $payment->save();
 
                 return response()->json([
-                    'message' => 'Supplier payment created successfully.'
+                    'message' => 'Payment Done...'
                 ]);
 
             } catch (\Exception $e) {

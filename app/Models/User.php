@@ -47,15 +47,11 @@ class User extends Authenticatable
         ];
     }
 
-    /**
-     * Get all of the sites for the User
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function sites(): HasMany
+    public function sites()
     {
-        return $this->hasMany(Site::class);
+        return $this->belongsToMany(Site::class, 'site_users');
     }
+
 
     /**
      * Get all of the construction_material_billings for the User
@@ -77,5 +73,5 @@ class User extends Authenticatable
         return $this->hasMany(WagerAttendance::class);
     }
 
-    
+
 }

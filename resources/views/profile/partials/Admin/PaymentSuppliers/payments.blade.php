@@ -191,7 +191,7 @@
                 <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
                 <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
                 <button type="submit" class="btn btn-outline">
-                    <i class="far fa-file-pdf"></i> Download PDF
+                    <i class="far fa-file-pdf"></i>  PDF
                 </button>
             </form>
 
@@ -249,6 +249,8 @@
             </option>
             <option value="this_year" {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>This Year</option>
             <option value="custom" {{ request('date_filter') === 'custom' ? 'selected' : '' }}>Custom Range</option>
+            <option value="lifetime" {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>All Data</option>
+
         </select>
 
         <!-- Date Range Inputs -->
@@ -291,6 +293,11 @@
                 <div class="summary-amount got-text">₹{{ $total_paid }}</div>
                 <div class="summary-label got-text">Total Paid</div>
             </div>
+
+            <div class="summary-card got">
+                <div class="summary-amount got-text">₹{{ $returns }}</div>
+                <div class="summary-label got-text">Total Returns</div>
+            </div>
         </div>
 
 
@@ -303,8 +310,9 @@
                         <th class="fw-bold">Date</th>
                         <th class="fw-bold">Customer Name</th>
                         <th class="fw-bold">Details</th>
-                        <th class="fw-bold text-end">Debit</th>
-                        <th class="fw-bold text-end">Credit</th>
+                        <th class="fw-bold">Returns</th>
+                        <th class="fw-bold">Purchases</th>
+                        <th class="fw-bold">Payments</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -321,14 +329,24 @@
                                         {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
                                     </small>
                                 </td>
-                                <td class="text-end text-danger fw-bold">
-                                    @if ($ledger['debit'] > 0)
-                                        ₹{{ number_format($ledger['debit']) }}
+                                <td class="text-danger fw-bold">
+                                    @if ($ledger['return'] > 0)
+                                        ₹{{ number_format($ledger['return']) }}
                                     @else
                                         ₹0
                                     @endif
                                 </td>
-                                <td class="text-end text-success fw-bold">
+                                <td class="fw-bold">
+                                    @if ($ledger['debit'] > 0)
+                                        ₹{{ number_format($ledger['debit']) }}
+                                    @else
+                                        <div class="fw-bold">₹0</div>
+                                        <small class="text-muted">
+                                            {{ ucwords($ledger['amount_status']) }}
+                                        </small>
+                                    @endif
+                                </td>
+                                <td class="text-success fw-bold">
                                     @if ($ledger['credit'] > 0)
                                         ₹{{ number_format($ledger['credit']) }}
                                     @else
@@ -339,7 +357,7 @@
                         @endforeach
                     @else
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">No records available</td>
+                            <td colspan="6" class="text-center py-4 text-muted">No records available</td>
                         </tr>
                     @endif
                 </tbody>

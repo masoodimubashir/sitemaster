@@ -73,6 +73,8 @@ Route::middleware(['auth:clients', 'isClient'])->prefix('client')->group(functio
 
     Route::get('/attendance/site/show/{id}', [AttendanceSheetController::class, 'showAttendanceBySite']);
 
+    Route::get('attendance/pdf', [PDFController::class, 'generateAttendancePdf'])->name('generateAttendancePdf');
+
 
 });
 
@@ -108,6 +110,8 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     // Suppliers Routes
     Route::resource('/suppliers', SupplierController::class);
     Route::get('/supplier/detail/{id}', [SupplierController::class, 'showSupplierDetail']);
+    Route::resource('/supplier/payments', PaymentSupplierController::class);
+
 
     // Items Controller
     Route::resource('/items', ItemController::class);
@@ -115,16 +119,11 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     // Sites Controller
     Route::resource('/sites', SiteController::class);
     Route::get('/sites/details/{id}', [SiteController::class, 'showSiteDetails']);
-
-    //  This Route Is Used To Make Payment In Supplier View
-    Route::resource('/supplier/payments', PaymentSupplierController::class);
-
-    Route::get('sites/payments/{id}', [PaymentSiteController::class, 'showPayment']);
-    Route::post('sites/payments', [PaymentSiteController::class, 'makePayment']);
+    Route::post('/sites/update-on-going/{id}', UpdateOnGoingController::class)->name('sites.update-on-going');
+    Route::get('/sites/payments/{id}', [PaymentSiteController::class, 'showPayment']);
+    Route::post('/sites/payments', [PaymentSiteController::class, 'makePayment']);
     Route::put('/sites/payments/{id}', [PaymentSiteController::class, 'updatePayment']);
 
-    //  On Going Site Updated With This Route
-    Route::post('sites/update-on-going/{id}', UpdateOnGoingController::class)->name('sites.update-on-going');
 
     // Route::resource('/workforce', WorkforceController::class);
 
@@ -134,9 +133,9 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
 
     Route::resource('/daily-expenses', DailyExpensesController::class);
 
-    Route::resource('/dailywager', DailyWagerController::class);
+    // Route::resource('/dailywager', DailyWagerController::class);
 
-    Route::resource('/daily-wager-attendance', WagerAttendanceController::class);
+    // Route::resource('/daily-wager-attendance', WagerAttendanceController::class);
 
     Route::resource('/phase', PhaseController::class);
 
@@ -145,7 +144,7 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     // Route::get('/site/ledger/{id}', SitePaymentController::class)->name('sites.view-ledger');
 
     // View Supplier Ledger
-    Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');
+    // Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');
 
     // Payments Controller
     Route::resource('/payments', PaymentsController::class);
@@ -167,15 +166,15 @@ Route::middleware(['auth', 'verified', 'isAdmin'])->prefix('admin')->group(funct
     Route::post('verify/materials/{id}', [AdminVerificationController::class, 'verifyConstructionMaterials'])->name('verifyConstructionMaterials');
     Route::post('verify/square-footage/{id}', [AdminVerificationController::class, 'verifySquareFootage'])->name('verifySquareFootage');
     Route::post('verify/expenses/{id}', [AdminVerificationController::class, 'verifyExpenses'])->name('verifyExpenses');
-    Route::post('verify/wagers/{id}', [AdminVerificationController::class, 'verifyDailyWagers'])->name('verifyDailyWagers');
-    Route::post('verify/attendance/{id}', [AdminVerificationController::class, 'verifyAttendance'])->name('verifyAttendance');
+    // Route::post('verify/wagers/{id}', [AdminVerificationController::class, 'verifyDailyWagers'])->name('verifyDailyWagers');
+    // Route::post('verify/attendance/{id}', [AdminVerificationController::class, 'verifyAttendance'])->name('verifyAttendance');
 
     // Verify Controllers For Pending Payments
     Route::get('/pay-verification', [PendingPaymentsVerifications::class, 'index']);
     Route::put('/verify-payments', [PendingPaymentsVerifications::class, 'verifyPayment']);
-    Route::get('/pay-verification/{id}/edit', [PendingPaymentsVerifications::class, 'edit']); 
-    Route::put('/pay-verification/{id}', [PendingPaymentsVerifications::class, 'update']); 
-    Route::delete('/pay-verification/{id}', [PendingPaymentsVerifications::class, 'destroy']); 
+    Route::get('/pay-verification/{id}/edit', [PendingPaymentsVerifications::class, 'edit']);
+    Route::put('/pay-verification/{id}', [PendingPaymentsVerifications::class, 'update']);
+    Route::delete('/pay-verification/{id}', [PendingPaymentsVerifications::class, 'destroy']);
 
     // Verification Controller For Items
     Route::get('/item-verification', [ItemsVerificationController::class, 'index']);
@@ -212,6 +211,13 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::get('/sites/{id}', [ViewSiteController::class, 'show']);
     Route::get('/sites/details/{id}', [ViewSiteController::class, 'showDetails']);
     Route::post('/sites/store', [ViewSiteController::class, 'store']);
+    Route::resource('site/payments', UserSitePayments::class);
+
+    // Site Payments
+    Route::resource('supplier/payments', PaymentSupplierController::class);
+    Route::get('sites/payments/{id}', [PaymentSiteController::class, 'showPayment']);
+    Route::resource('/payments', PaymentsController::class);
+
 
     // User Supplier Controller
     Route::resource('/suppliers', UserSupplierController::class);
@@ -238,33 +244,22 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
     Route::get('/daily-expenses/{id}', [UserDailyExpensesController::class, 'edit']);
     Route::put('/daily-expenses/{id}', [UserDailyExpensesController::class, 'update']);
 
-    // Daily Wager Routes
-    Route::post('/dailywager', [UserDailyWagerController::class, 'store']);
-    Route::get('/dailywager/{id}/edit', [UserDailyWagerController::class, 'edit']);
-    Route::put('/dailywager/{id}', [UserDailyWagerController::class, 'update']);
+    // // Daily Wager Routes
+    // Route::post('/dailywager', [UserDailyWagerController::class, 'store']);
+    // Route::get('/dailywager/{id}/edit', [UserDailyWagerController::class, 'edit']);
+    // Route::put('/dailywager/{id}', [UserDailyWagerController::class, 'update']);
 
-    // Attendance Routes
-    Route::post('/daily-wager-attendance', [UserWagerAttendanceController::class, 'store']);
-    Route::get('/daily-wager-attendance/{id}/edit', [UserWagerAttendanceController::class, 'edit']);
-    Route::put('/daily-wager-attendance/{id}', [UserWagerAttendanceController::class, 'update']);
-
-    // Site Payments
-    Route::resource('site/payments', UserSitePayments::class);
+    // // Attendance Routes
+    // Route::post('/daily-wager-attendance', [UserWagerAttendanceController::class, 'store']);
+    // Route::get('/daily-wager-attendance/{id}/edit', [UserWagerAttendanceController::class, 'edit']);
+    // Route::put('/daily-wager-attendance/{id}', [UserWagerAttendanceController::class, 'update']);
 
     // View Ledger
     // Route::get('/site/ledger/{id}', UserLedgerController::class);
     Route::get('/site/ledger/{id}', SitePaymentController::class)->name('sites.view-ledger');
 
-    // Site Payments
-    Route::resource('supplier/payments', PaymentSupplierController::class);
-    Route::get('sites/payments/{id}', [PaymentSiteController::class, 'showPayment']);
-
     // View Supplier Ledger
     Route::get('/supplier/ledger/{id}', SupplierPaymentController::class)->name('suppliers.view-ledger');
-
-    // User Payments Controllers
-    Route::resource('/payments', PaymentsController::class);
-
 
     // Notification Routes
     Route::get('/markAllAsRead', [MarkNotificationAsReadController::class, 'markAllNotificationAsRead'])
@@ -306,10 +301,6 @@ Route::middleware(['auth', 'isUser'])->prefix('user')->group(function () {
 
 
 });
-
-
-// Routes accessible to both admin and site engineers
-Route::middleware(['isAdmin', 'isUser'])->group(function () { });
 
 
 require __DIR__ . '/auth.php';

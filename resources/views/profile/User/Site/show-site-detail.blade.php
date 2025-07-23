@@ -298,6 +298,7 @@
                     <h3 class="section-title">{{ ucfirst($phase['phase']) }}</h3>
 
                     <div class="row">
+
                         <div class="col-md-6">
                             <div class="metric-row">
                                 <span class="metric-label">Construction Materials</span>
@@ -315,6 +316,7 @@
                                     class="metric-value">₹{{ number_format($phase['daily_expenses_total_amount'], 2) }}</span>
                             </div>
                         </div>
+
                         <div class="col-md-6">
                             <div class="metric-row">
                                 <span class="metric-label">Wasta</span>
@@ -327,52 +329,24 @@
                                     class="metric-value">₹{{ number_format($phase['daily_labours_total_amount'], 2) }}</span>
                             </div>
                             <div class="metric-row">
-                                <span class="metric-label">Subtotal</span>
+                                <span class="metric-label">Effective Balance</span>
                                 <span class="metric-value">₹{{ number_format($phase['phase_total'], 2) }}</span>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="divider"></div>
-
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="metric-row">
-                                <span class="metric-label">Service Charge (10%)</span>
-                                <span
-                                    class="metric-value">₹{{ number_format($phase['phase_total_with_service_charge'] - $phase['phase_total'], 2) }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="metric-row">
-                                <span class="metric-label">Total Paid</span>
-                                <span class="metric-value">₹{{ number_format($phase['total_paid'], 2) }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="metric-row">
-                                <span class="metric-label">Total Due</span>
-                                <span class="metric-value">₹{{ number_format($phase['total_due'], 2) }}</span>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="total-row">
+
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="metric-row mb-0">
                                     <span class="metric-label">Total Amount</span>
                                     <span class="metric-value"
                                         style="font-size: 16px;">₹{{ number_format($phase['phase_total_with_service_charge'], 2) }}</span>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="metric-row mb-0">
-                                    <span class="metric-label">Effective Balance</span>
-                                    <span class="metric-value"
-                                        style="font-size: 16px;">₹{{ number_format($phase['effective_balance'], 2) }}</span>
-                                </div>
-                            </div>
+                            
                         </div>
                     </div>
                 </div>
@@ -429,7 +403,8 @@
                                                 ? 'receipt'
                                                 : ($tableKey === 'daily_wastas'
                                                     ? 'handshake'
-                                                    : 'users'))) }} me-2"></i>
+                                                    : 'users'))) }} me-2">
+                                </i>
                                 {{ $table['label'] }}
                             </h4>
                         </div>
@@ -452,7 +427,7 @@
                                             <tr>
                                                 <td>{{ \Carbon\Carbon::parse($entry['created_at'])->format('d-M-Y') }}
                                                 </td>
-                                                  <td>
+                                                <td>
                                                     @if ($entry['image'])
                                                         <div class="position-relative d-inline-block">
                                                             <img src="{{ asset('storage/' . $entry['image']) }}"
@@ -478,11 +453,10 @@
                                                 <td class="text-nowrap">
                                                     @switch($entry['category'])
                                                         @case('Material')
-                                                            <a href="{{ url('/user/construction-material-billings/'. base64_encode($entry['id'])) }}"
+                                                            <a href="{{ url('/user/construction-material-billings/' . base64_encode($entry['id'])) }}"
                                                                 class="text-primary me-2" title="Edit">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
-                                                           
                                                         @break
 
                                                         @case('SQFT')
@@ -490,7 +464,6 @@
                                                                 class="text-primary me-2" title="Edit">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
-                                                           
                                                         @break
 
                                                         @case('Expense')
@@ -498,7 +471,6 @@
                                                                 class="text-primary me-2" title="Edit">
                                                                 <i class="fas fa-edit"></i>
                                                             </a>
-                                                           
                                                         @break
                                                     @endswitch
                                                 </td>

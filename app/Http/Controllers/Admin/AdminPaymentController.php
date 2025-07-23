@@ -35,6 +35,7 @@ class AdminPaymentController extends Controller
 
         try {
 
+
             $rules = [
                 'amount' => 'required|numeric|min:1',
                 'entity' => 'required',

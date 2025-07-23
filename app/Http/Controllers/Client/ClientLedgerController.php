@@ -57,6 +57,7 @@ class ClientLedgerController extends Controller
         $total_paid = $withServiceCharge['paid'];
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
+        $returns = $withoutServiceCharge['return'];
 
         $perPage = $request->get('per_page', 20);
 
@@ -100,7 +101,8 @@ class ClientLedgerController extends Controller
             'suppliers',
             'sites',
             'effective_balance',
-            'phases'
+            'phases',
+            'returns'
         ));
 
 

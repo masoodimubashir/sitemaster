@@ -11,7 +11,7 @@
             transition: all 0.3s ease;
         }
 
-      
+
 
         .minimal-card {
             background: white;
@@ -280,6 +280,8 @@
         </a>
     </div>
 
+
+
     <!-- Phase Data -->
     @if (count($phaseData) > 0)
         <!-- Phase Tabs -->
@@ -299,6 +301,8 @@
                 <!-- Financial Summary -->
                 <div class="summary-section">
                     <h3 class="section-title">{{ ucfirst($phase['phase']) }}</h3>
+
+
 
                     <div class="row">
                         <div class="col-md-6">
@@ -334,50 +338,24 @@
                                 <span class="metric-value">₹{{ number_format($phase['phase_total'], 2) }}</span>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="divider"></div>
 
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="metric-row">
-                                <span class="metric-label">Service Charge (10%)</span>
-                                <span
-                                    class="metric-value">₹{{ number_format($phase['phase_total_with_service_charge'] - $phase['phase_total'], 2) }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="metric-row">
-                                <span class="metric-label">Total Paid</span>
-                                <span class="metric-value">₹{{ number_format($phase['total_paid'], 2) }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="metric-row">
-                                <span class="metric-label">Total Due</span>
-                                <span class="metric-value">₹{{ number_format($phase['total_due'], 2) }}</span>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="total-row">
+
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="metric-row mb-0">
                                     <span class="metric-label">Total Amount</span>
                                     <span class="metric-value"
                                         style="font-size: 16px;">₹{{ number_format($phase['phase_total_with_service_charge'], 2) }}</span>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="metric-row mb-0">
-                                    <span class="metric-label">Effective Balance</span>
-                                    <span class="metric-value"
-                                        style="font-size: 16px;">₹{{ number_format($phase['effective_balance'], 2) }}</span>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
+
                 </div>
 
                 <!-- Generate PDF Button -->
@@ -445,8 +423,8 @@
                                             <th>Bill Proof</th>
                                             <th>Description</th>
                                             <th>Supplier</th>
-                                            <th class="text-end">Amount</th>
-                                            <th class="text-end">Total (with SC)</th>
+                                            <th>Amount</th>
+                                            <th>Total (with SC)</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
@@ -477,8 +455,13 @@
 
                                                 <td>{{ $entry['description'] ?? '-' }}</td>
                                                 <td>{{ $entry['supplier'] ?? '-' }}</td>
-                                                <td class="text-end">₹{{ number_format($entry['debit'], 2) }}</td>
-                                                <td class="text-end fw-medium">
+                                                <td class="">
+                                                    <div class="fw-bold">{{ $entry['debit'] }}</div>
+                                                    <small class="text-muted">
+                                                        {{ ucwords($entry['amount_status']) }}
+                                                    </small>
+                                                </td>
+                                                <td class="fw-medium">
                                                     ₹{{ number_format($entry['total_amount_with_service_charge'], 2) }}
                                                 </td>
                                                 <td class="text-nowrap">
