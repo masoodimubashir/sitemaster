@@ -13,7 +13,7 @@ use Illuminate\Support\Collection;
 
 class DataService
 {
-   
+
 
     public function getData(
         string $dateFilter,
@@ -199,7 +199,7 @@ class DataService
             $serviceCharge = $this->calculateServiceCharge($material->amount * $material->unit_count, $material->phase->site->service_charge);
 
             $amount_status = $material->amount > 0 ? '' : 'Pending Price';
-            
+
             $total_amount = $material->amount * $material->unit_count;
 
             return [
@@ -306,19 +306,16 @@ class DataService
     private function transformWastas(Collection $wastas): Collection
     {
         return $wastas->map(function ($wasta) {
-
             $totalAmount = $this->calculateWastaTotal($wasta);
+            $presentDays = $wasta->attendances->where('is_present', true)->count();
 
             $serviceCharge = $this->calculateServiceCharge($totalAmount, $wasta->phase->site->service_charge ?? 0);
-
-            $amount_status = $wasta->price > 0 ? '' : 'Pending Price';
-
+            $amount_status = $presentDays > 0 ? '' : 'No Attendance';
 
             return [
-
                 'id' => $wasta->id,
                 'verified_by_admin' => $wasta->verified_by_admin,
-                'description' => $wasta->wasta_name . ' /' . $wasta->price . ':Day' ?? null,
+                'description' => $wasta->wasta_name,
                 'category' => 'Wasta',
                 'credit' => 0,
                 'amount_status' => $amount_status,
@@ -335,7 +332,7 @@ class DataService
                 'created_at' => $wasta->created_at,
                 'total_amount_with_service_charge' => $totalAmount + $serviceCharge,
                 'service_charge_amount' => $serviceCharge,
-                'service_charge_percentage' => $wasta->site->service_charge ?? 0,
+                'service_charge_percentage' => $wasta->phase->site->service_charge ?? 0,
                 'image' => null,
             ];
         });
@@ -344,19 +341,16 @@ class DataService
     private function transformLabours(Collection $labours): Collection
     {
         return $labours->map(function ($labour) {
-
             $totalAmount = $this->calculateLabourTotal($labour);
+            $presentDays = $labour->attendances->where('is_present', true)->count();
 
             $serviceCharge = $this->calculateServiceCharge($totalAmount, $labour->phase->site->service_charge ?? 0);
-
-            $amount_status = $labour->price > 0 ? '' : 'Pending Price';
-
+            $amount_status = $presentDays > 0 ? '' : 'No Attendance';
 
             return [
-
                 'id' => $labour->id,
                 'verified_by_admin' => $labour->verified_by_admin,
-                'description' => $labour->labour_name . ' /' . $labour->price . ':Day' ?? null,
+                'description' => $labour->labour_name,
                 'category' => 'Labour',
                 'credit' => 0,
                 'amount_status' => $amount_status,
@@ -374,21 +368,22 @@ class DataService
                 'total_amount_with_service_charge' => $totalAmount + $serviceCharge,
                 'service_charge_amount' => $serviceCharge,
                 'image' => null,
-
             ];
         });
     }
 
     private function calculateWastaTotal(Wasta $wasta): float
     {
-        $totalDays = $wasta->attendances->where('is_present', true)->count();
-        return $wasta->price * $totalDays;
+        return $wasta->attendances
+            ->where('is_present', true)
+            ->sum('price');
     }
 
     private function calculateLabourTotal(Labour $labour): float
     {
-        $totalDays = $labour->attendances->where('is_present', true)->count();
-        return $labour->price * $totalDays;
+        return $labour->attendances
+            ->where('is_present', true)
+            ->sum('price');
     }
 
     private function calculateServiceCharge(float $amount, float $serviceChargePercentage): float

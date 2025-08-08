@@ -34,7 +34,7 @@ class AttendanceSheetController extends Controller
         } else {
             $startDate = Carbon::parse($customStart)->startOfDay();
             $endDate = Carbon::parse($customEnd)->endOfDay();
-            $totalDays = $startDate->diffInDays($endDate) + 1; // Inclusive of both start and end dates
+            $totalDays = $startDate->diffInDays($endDate) + 1; // Inclusive count
         }
 
         // Base query for wastas with eager loading
@@ -48,27 +48,37 @@ class AttendanceSheetController extends Controller
             'phase.site'
         ]);
 
-        // Filter by site if selected
+        // Filter by site if provided
         if ($request->filled('site_id')) {
             $wastasQuery->whereHas('phase.site', function ($query) use ($request) {
                 $query->where('id', $request->input('site_id'));
             });
         }
 
-        // Filter by phase if selected
+        // Filter by phase if provided
         if ($request->filled('phase_id')) {
-            $wastasQuery->where('phase_id', $request->phase_id);
+            $wastasQuery->where('phase_id', $request->input('phase_id'));
         }
 
-        // Paginate and transform results
+        // Paginate and transform results with price from attendance records
         $perPage = 10;
-        $wastas = $wastasQuery->paginate($perPage)->through(function ($wasta) {
-            $wasta->present_days = $wasta->attendances->where('is_present', true)->count();
-            $wasta->total_amount = $wasta->present_days * $wasta->price;
+        $wastas = $wastasQuery->paginate($perPage)->through(function ($wasta) use ($startDate, $endDate) {
+            // Calculate wasta totals from attendance records
+            $wastaPresentDays = $wasta->attendances->where('is_present', true)->count();
+            $wastaTotalAmount = $wasta->attendances->where('is_present', true)->sum('price');
 
+            $wasta->present_days = $wastaPresentDays;
+            $wasta->total_amount = $wastaTotalAmount;
+            $wasta->avg_rate = $wastaPresentDays > 0 ? $wastaTotalAmount / $wastaPresentDays : 0;
+
+            // Calculate labour totals from attendance records
             $wasta->labours->each(function ($labour) {
-                $labour->present_days = $labour->attendances->where('is_present', true)->count();
-                $labour->total_amount = $labour->present_days * $labour->price;
+                $labourPresentDays = $labour->attendances->where('is_present', true)->count();
+                $labourTotalAmount = $labour->attendances->where('is_present', true)->sum('price');
+
+                $labour->present_days = $labourPresentDays;
+                $labour->total_amount = $labourTotalAmount;
+                $labour->avg_rate = $labourPresentDays > 0 ? $labourTotalAmount / $labourPresentDays : 0;
             });
 
             $wasta->labours_total_amount = $wasta->labours->sum('total_amount');
@@ -77,9 +87,14 @@ class AttendanceSheetController extends Controller
             return $wasta;
         });
 
-        // Get all sites and phases for filters
-        $sites = Site::where('is_on_going', true)->get();
-        $phases = Phase::with('site')->latest()->get();
+        // Get sites and phases for filters (only needed if not filtered)
+        $sites = $request->filled('site_id')
+            ? Site::where('id', $request->input('site_id'))->get()
+            : Site::where('is_on_going', true)->get();
+
+        $phases = $request->filled('phase_id')
+            ? Phase::where('id', $request->input('phase_id'))->with('site')->get()
+            : Phase::with('site')->latest()->get();
 
         // Calculate totals
         $siteTotal = [
@@ -89,7 +104,6 @@ class AttendanceSheetController extends Controller
         ];
 
         $totalLabours = $wastas->sum(fn($w) => $w->labours->count());
-
 
         // Format date range for display
         $dateRange = $startDate->format('M d, Y') . ' - ' . $endDate->format('M d, Y');
@@ -111,6 +125,8 @@ class AttendanceSheetController extends Controller
             'selectedPhaseId' => $request->input('phase_id'),
             'totalLabours' => $totalLabours,
         ]);
+
+
     }
 
 
@@ -121,11 +137,13 @@ class AttendanceSheetController extends Controller
 
 
         try {
-            $data = Validator::make($request->only('wasta_id', 'is_present', 'attendance_id', 'attendance_date'), [
+
+            $data = Validator::make($request->only('wasta_id', 'is_present', 'attendance_id', 'attendance_date', 'daily_price'), [
                 'wasta_id' => 'required|exists:wastas,id',
                 'is_present' => 'required|boolean',
                 'attendance_id' => 'nullable|exists:attendances,id',
                 'attendance_date' => 'required|date',
+                'daily_price' => 'required|integer',
             ]);
 
             if ($data->fails()) {
@@ -145,6 +163,7 @@ class AttendanceSheetController extends Controller
                     'attendance_date' => $validatedData['attendance_date'],
                 ],
                 [
+                    'price' => $validatedData['daily_price'],
                     'is_present' => $validatedData['is_present'],
                 ]
             );
@@ -166,11 +185,12 @@ class AttendanceSheetController extends Controller
     {
         try {
 
-            $data = Validator::make($request->only('labour_id', 'is_present', 'attendance_id', 'attendance_date'), [
+            $data = Validator::make($request->only('labour_id', 'is_present', 'attendance_id', 'attendance_date', 'daily_price'), [
                 'labour_id' => 'required|exists:labours,id',
                 'is_present' => 'required|boolean',
                 'attendance_id' => 'nullable|exists:attendances,id',
                 'attendance_date' => 'required|date',
+                'daily_price' => 'required|integer',
             ]);
 
             if ($data->fails()) {
@@ -190,6 +210,7 @@ class AttendanceSheetController extends Controller
                     'attendance_date' => $validatedData['attendance_date'],
                 ],
                 [
+                    'price' => $data->validated()['daily_price'],
                     'is_present' => $validatedData['is_present'],
                 ]
             );
@@ -211,11 +232,10 @@ class AttendanceSheetController extends Controller
 
         try {
 
-            $data = Validator::make($request->only('wasta_id', 'labour_name', 'price', 'contact', 'phase_id'), [
+            $data = Validator::make($request->only('wasta_id', 'labour_name', 'contact', 'phase_id'), [
                 "wasta_id" => "required|exists:wastas,id",
                 "phase_id" => "required|exists:phases,id",
                 "labour_name" => "required|string|max:255",
-                "price" => "required|numeric",
                 "contact" => "required|string|max:10",
             ]);
 
@@ -229,7 +249,6 @@ class AttendanceSheetController extends Controller
             Labour::create([
                 'wasta_id' => $data->validated()['wasta_id'],
                 'labour_name' => $data->validated()['labour_name'],
-                'price' => $data->validated()['price'],
                 'contact_no' => $data->validated()['contact'],
                 'phase_id' => $data->validated()['phase_id'],
             ]);
@@ -237,6 +256,7 @@ class AttendanceSheetController extends Controller
             return response()->json([
                 'message' => 'Labour Created Successfully',
             ], 200);
+
         } catch (Exception $e) {
             Log::error($e->getMessage());
             return response()->json([
@@ -332,10 +352,10 @@ class AttendanceSheetController extends Controller
         } else {
             $startDate = Carbon::parse($customStart)->startOfDay();
             $endDate = Carbon::parse($customEnd)->endOfDay();
-            $totalDays = round($startDate->diffInDays($endDate)); // Fixed calculation
+            $totalDays = round($startDate->diffInDays($endDate));
         }
 
-        // Base query for wastas
+        // Base query for wastas with eager loading
         $wastasQuery = Wasta::with([
             'attendances' => function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('attendance_date', [$startDate, $endDate]);
@@ -356,12 +376,16 @@ class AttendanceSheetController extends Controller
         // Paginate and transform results
         $perPage = 10;
         $wastas = $wastasQuery->paginate($perPage)->through(function ($wasta) {
-            $wasta->present_days = $wasta->attendances->where('is_present', true)->count();
-            $wasta->total_amount = $wasta->present_days * $wasta->price;
+            // Calculate wasta totals
+            $wastaPresentDays = $wasta->attendances->where('is_present', true);
+            $wasta->present_days = $wastaPresentDays->count();
+            $wasta->total_amount = $wastaPresentDays->sum('price');
 
+            // Calculate labour totals
             $wasta->labours->each(function ($labour) {
-                $labour->present_days = $labour->attendances->where('is_present', true)->count();
-                $labour->total_amount = $labour->present_days * $labour->price;
+                $labourPresentDays = $labour->attendances->where('is_present', true);
+                $labour->present_days = $labourPresentDays->count();
+                $labour->total_amount = $labourPresentDays->sum('price');
             });
 
             $wasta->labours_total_amount = $wasta->labours->sum('total_amount');
@@ -371,7 +395,6 @@ class AttendanceSheetController extends Controller
         });
 
         $phases = Phase::where('site_id', $site->id)->orderBy('phase_name')->get();
-
         $totalLabours = $wastas->sum(fn($w) => $w->labours->count());
 
         // Calculate site totals

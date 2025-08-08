@@ -424,15 +424,13 @@ class PDFController extends Controller
                 $workers[] = [
                     'name' => $wasta->wasta_name,
                     'type' => 'wasta',
-                    'price' => $wasta->price,
                     'contact' => $wasta->contact_no
                 ];
                 foreach ($wasta->labours as $labour) {
                     $workers[] = [
                         'name' => $labour->labour_name,
                         'type' => 'labour',
-                        'price' => $labour->price,
-                        'contact' => $labour->contact_no
+                        'contact' => $labour->contact
                     ];
                 }
             }
@@ -470,8 +468,8 @@ class PDFController extends Controller
                 ? $startDate->format('Ymd') . '_to_' . $endDate->format('Ymd')
                 : $startDate->format('F_Y')) . '.pdf';
         return $pdf->Output($filename, 'D');
-    }
 
+    }
 
     protected function prepareAttendanceData($wastas, $startDate, $endDate)
     {
@@ -480,9 +478,15 @@ class PDFController extends Controller
 
         // Initialize attendance data structure with all workers
         foreach ($wastas as $wasta) {
-            $attendanceData[$wasta->wasta_name] = [];
+            $attendanceData[$wasta->wasta_name] = [
+                'attendances' => [],
+                'total_amount' => 0
+            ];
             foreach ($wasta->labours as $labour) {
-                $attendanceData[$labour->labour_name] = [];
+                $attendanceData[$labour->labour_name] = [
+                    'attendances' => [],
+                    'total_amount' => 0
+                ];
             }
         }
 
@@ -492,17 +496,31 @@ class PDFController extends Controller
 
             foreach ($wastas as $wasta) {
                 // Wasta attendance
-                $attendanceData[$wasta->wasta_name][$dateStr] = $wasta->attendances
-                    ->where('attendance_date', $dateStr)
-                    ->where('is_present', true)
-                    ->count() > 0 ? 1 : 0;
+                $wastaAttendance = $wasta->attendances->firstWhere('attendance_date', $dateStr);
+                $isPresent = $wastaAttendance && $wastaAttendance->is_present;
+
+                $attendanceData[$wasta->wasta_name]['attendances'][$dateStr] = [
+                    'present' => $isPresent ? 1 : 0,
+                    'price' => $isPresent ? ($wastaAttendance->price ?? 0) : 0
+                ];
+
+                if ($isPresent) {
+                    $attendanceData[$wasta->wasta_name]['total_amount'] += $wastaAttendance->price ?? 0;
+                }
 
                 // Labour attendance
                 foreach ($wasta->labours as $labour) {
-                    $attendanceData[$labour->labour_name][$dateStr] = $labour->attendances
-                        ->where('attendance_date', $dateStr)
-                        ->where('is_present', true)
-                        ->count() > 0 ? 1 : 0;
+                    $labourAttendance = $labour->attendances->firstWhere('attendance_date', $dateStr);
+                    $isPresent = $labourAttendance && $labourAttendance->is_present;
+
+                    $attendanceData[$labour->labour_name]['attendances'][$dateStr] = [
+                        'present' => $isPresent ? 1 : 0,
+                        'price' => $isPresent ? ($labourAttendance->price ?? 0) : 0
+                    ];
+
+                    if ($isPresent) {
+                        $attendanceData[$labour->labour_name]['total_amount'] += $labourAttendance->price ?? 0;
+                    }
                 }
             }
 
@@ -522,21 +540,27 @@ class PDFController extends Controller
 
         foreach ($wastas as $wasta) {
             // Wasta totals
-            $presentDays = $wasta->attendances->where('is_present', true)->count();
+            $wastaPresentDays = $wasta->attendances->where('is_present', true)->count();
+            $wastaTotalAmount = $wasta->attendances->where('is_present', true)->sum('price');
+
             $totals['wastas'][$wasta->wasta_name] = [
-                'present_days' => $presentDays,
-                'total_amount' => $presentDays * $wasta->price
+                'present_days' => $wastaPresentDays,
+                'total_amount' => $wastaTotalAmount,
+                'avg_rate' => $wastaPresentDays > 0 ? $wastaTotalAmount / $wastaPresentDays : 0
             ];
-            $totals['grand_total'] += $presentDays * $wasta->price;
+            $totals['grand_total'] += $wastaTotalAmount;
 
             // Labour totals
             foreach ($wasta->labours as $labour) {
-                $presentDays = $labour->attendances->where('is_present', true)->count();
+                $labourPresentDays = $labour->attendances->where('is_present', true)->count();
+                $labourTotalAmount = $labour->attendances->where('is_present', true)->sum('price');
+
                 $totals['labours'][$labour->labour_name] = [
-                    'present_days' => $presentDays,
-                    'total_amount' => $presentDays * $labour->price
+                    'present_days' => $labourPresentDays,
+                    'total_amount' => $labourTotalAmount,
+                    'avg_rate' => $labourPresentDays > 0 ? $labourTotalAmount / $labourPresentDays : 0
                 ];
-                $totals['grand_total'] += $presentDays * $labour->price;
+                $totals['grand_total'] += $labourTotalAmount;
             }
         }
 
@@ -549,7 +573,11 @@ class PDFController extends Controller
         $current = clone $startDate;
 
         while ($current <= $endDate) {
-            $dates[] = $current->format('Y-m-d');
+            $dates[] = [
+                'date' => $current->format('Y-m-d'),
+                'day' => $current->format('D'),
+                'is_weekend' => $current->isWeekend()
+            ];
             $current->addDay();
         }
 

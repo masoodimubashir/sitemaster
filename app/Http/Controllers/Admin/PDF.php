@@ -863,9 +863,8 @@ class PDF extends Fpdf
     public function phaseWiseAttendanceReport($title, $subtitle, $dates, $workers, $attendanceData, $totals, $info)
     {
 
+        
         $this->SetMargins($this->m_left, $this->m_top, $this->m_right);
-
-
         $this->AddPage('L');
 
         // Set document information
@@ -883,7 +882,7 @@ class PDF extends Fpdf
         // Add a line separator
         $this->Ln(8);
 
-        // Information Section with better layout
+        // Information Section
         $this->SetFont('helvetica', '', 10);
         $this->SetTextColor(0);
         $this->SetFillColor(240, 240, 240);
@@ -900,14 +899,13 @@ class PDF extends Fpdf
 
         // Attendance Table
         $pageWidth = $this->GetPageWidth() - 4;
-        $nameColWidth = 30; // Increased width for names
+        $nameColWidth = 30;
         $dateColWidth = ($pageWidth - $nameColWidth - 10) / count($dates);
 
-        // Table Header with improved styling
+        // Table Header
         $this->SetFont('helvetica', 'B', 6);
-        $this->SetFillColor(31, 73, 125); // Dark blue
+        $this->SetFillColor(31, 73, 125);
         $this->SetTextColor(255);
-        // $this->SetDrawColor(31, 73, 125);
         $this->SetLineWidth(0.3);
 
         // Name column
@@ -915,8 +913,7 @@ class PDF extends Fpdf
 
         // Date columns with day names
         foreach ($dates as $date) {
-            $dateObj = Carbon::parse($date);
-            $this->Cell($dateColWidth, 10, $dateObj->format('D') . "\n" . $dateObj->format('d'), 1, 0, 'C', true, '');
+            $this->Cell($dateColWidth, 10, $date['day'] . "\n" . Carbon::parse($date['date'])->format('d'), 1, 0, 'C', true);
         }
 
         // Totals column
@@ -934,17 +931,32 @@ class PDF extends Fpdf
 
             // Worker name with type indicator
             $name = $worker['name'];
-
             $this->Cell($nameColWidth, 8, $name, 'LR', 0, 'L', true);
 
             $totalPresent = 0;
+            $totalAmount = 0;
+
             foreach ($dates as $date) {
                 $attendance = '';
-                if (isset($attendanceData[$worker['name']][$date])) {
-                    $attendance = $attendanceData[$worker['name']][$date] === 1 ? 'P' : 'A';
-                    if ($attendance === 'P')
+                $dateStr = $date['date'];
+                if (isset($attendanceData[$worker['name']]['attendances'][$dateStr])) {
+                    $present = $attendanceData[$worker['name']]['attendances'][$dateStr]['present'];
+                    $price = $attendanceData[$worker['name']]['attendances'][$dateStr]['price'];
+
+                    $attendance = $present ? 'P' : 'A';
+                    if ($present) {
                         $totalPresent++;
+                        $totalAmount += $price;
+                    }
                 }
+
+                // Highlight weekends
+                if ($date['is_weekend']) {
+                    $this->SetFillColor(230, 230, 230);
+                } else {
+                    $this->SetFillColor($fill ? 240 : 255);
+                }
+
                 $this->Cell($dateColWidth, 8, $attendance, 'LR', 0, 'C', true);
             }
 
@@ -960,21 +972,21 @@ class PDF extends Fpdf
 
         $this->AddPage('L');
 
-        // Totals Section with improved layout
+        // Payment Summary Section
         $this->SetFont('helvetica', 'B', 12);
         $this->SetTextColor(31, 73, 125);
-        $this->Cell(0, 8, 'PAYMENT SUMMARY FOR ' . strtoupper($info['phase_name']), 0, 1, 'C');
-        $this->Ln(5); // Add some spacing
+        $this->Cell(0, 8, 'SUMMARY FOR ' . strtoupper($info['phase_name']), 0, 1, 'C');
+        $this->Ln(5);
 
         // Create a summary table
         $this->SetFont('helvetica', '', 10);
-        $this->SetFillColor(220, 230, 241); // Light blue header fill
+        $this->SetFillColor(220, 230, 241);
         $this->SetTextColor(0);
-        $this->SetDrawColor(150, 150, 150); // Gray border color
+        $this->SetDrawColor(150, 150, 150);
 
-        // Table header (improved alignment)
-        $headerWidths = [80, 50, 50, 60, 53]; // Column widths
-        $headers = ['Worker', 'Type', 'Days Worked', 'Rate per Day', 'Total Amount'];
+        // Table header
+        $headerWidths = [80, 50, 50, 60, 53];
+        $headers = ['Worker', 'Type', 'Days Worked', 'Avg Rate', 'Total Amount'];
 
         // Draw header row
         foreach ($headers as $key => $header) {
@@ -984,16 +996,16 @@ class PDF extends Fpdf
 
         // Reset fill for data rows
         $this->SetFillColor(240, 240, 240);
-        $fill = false; // Alternate row shading
+        $fill = false;
 
         // Wasta totals
         foreach ($totals['wastas'] as $name => $data) {
             $this->Cell($headerWidths[0], 8, $name, 'LR', 0, 'L', $fill);
             $this->Cell($headerWidths[1], 8, 'Wasta', 'LR', 0, 'C', $fill);
             $this->Cell($headerWidths[2], 8, $data['present_days'] . ' days', 'LR', 0, 'C', $fill);
-            $this->Cell($headerWidths[3], 8, number_format($data['total_amount'] / $data['present_days'], 2), 'LR', 0, 'R', $fill);
+            $this->Cell($headerWidths[3], 8, number_format($data['avg_rate'], 2), 'LR', 0, 'R', $fill);
             $this->Cell($headerWidths[4], 8, number_format($data['total_amount'], 2), 'LR', 1, 'R', $fill);
-            $fill = !$fill; // Toggle fill for next row
+            $fill = !$fill;
         }
 
         // Labour totals
@@ -1001,31 +1013,23 @@ class PDF extends Fpdf
             $this->Cell($headerWidths[0], 8, $name, 'LR', 0, 'L', $fill);
             $this->Cell($headerWidths[1], 8, 'Labour', 'LR', 0, 'C', $fill);
             $this->Cell($headerWidths[2], 8, $data['present_days'] . ' days', 'LR', 0, 'C', $fill);
-            $this->Cell($headerWidths[3], 8, number_format($data['total_amount'] / $data['present_days'], 2), 'LR', 0, 'R', $fill);
+            $this->Cell($headerWidths[3], 8, number_format($data['avg_rate'], 2), 'LR', 0, 'R', $fill);
             $this->Cell($headerWidths[4], 8, number_format($data['total_amount'], 2), 'LR', 1, 'R', $fill);
-            $fill = !$fill; // Toggle fill for next row
+            $fill = !$fill;
         }
 
-        // Close the table with bottom border
+        // Close the table
         $this->Cell(array_sum($headerWidths), 0, '', 'T');
         $this->Ln(8);
 
-        // Grand total with emphasis
+        // Grand total
         $this->SetFont('helvetica', 'B', 14);
         $this->SetTextColor(31, 73, 125);
         $this->Cell(array_sum(array_slice($headerWidths, 0, 3)), 10, 'TOTAL FOR PHASE:', 0, 0, 'R');
         $this->Cell($headerWidths[3] + $headerWidths[4], 10, number_format($totals['grand_total'], 2), 0, 1, 'R');
-        $this->SetFont('helvetica', '', 10);
-
     }
 
-    // Helper function to convert numbers to words (you need to implement this)
-    protected function numberToWords($number)
-    {
-        // Implement your number to words conversion logic here
-        // This is just a placeholder
-        return 'Amount in words';
-    }
+
 
 
 }

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->morphs('attendable'); 
             $table->boolean('is_present')->default(false);
             $table->date('attendance_date');
+            $table->integer('price'); 
             $table->timestamps();
         });
     }

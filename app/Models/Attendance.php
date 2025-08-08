@@ -12,6 +12,7 @@ class Attendance extends Model
         'attendable_type',
         'is_present',
         'attendance_date',
+        'price'
     ];
 
     public function attendable()

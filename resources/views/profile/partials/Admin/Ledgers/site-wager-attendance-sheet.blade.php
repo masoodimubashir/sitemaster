@@ -1,6 +1,203 @@
 <x-app-layout>
 
 
+    <style>
+     
+
+        .attendance-header {
+            background: #f8fafc;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 20px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .today-header .day-name,
+        .today-header .day-number {
+            color: white !important;
+        }
+
+        .weekend-header {
+            background: #fef3c7 !important;
+        }
+
+        .weekend-header .day-name,
+        .weekend-header .day-number {
+            color: #92400e !important;
+        }
+
+
+        .wasta-row:hover {
+            background: #f1f5f9;
+        }
+
+        .labour-row {
+            background: #ffffff;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .labour-row:hover {
+            background: #f9fafb;
+        }
+
+        /* Worker cell styling */
+        .worker-cell {
+            padding: 14px 16px;
+            position: sticky;
+            left: 0;
+            background: inherit;
+            border-right: 2px solid #e5e7eb;
+            z-index: 5;
+        }
+
+        .worker-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .worker-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .worker-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0 0 4px 0;
+            line-height: 1.3;
+        }
+
+        .worker-meta {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .worker-count {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .phase-badge {
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .position-badge {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Attendance cell styling */
+        .attendance-cell {
+            padding: 8px;
+            text-align: center;
+            vertical-align: middle;
+            border-bottom: 1px solid #f3f4f6;
+            min-height: 50px;
+        }
+
+        .today-cell {
+            background: #eff6ff;
+            border-left: 2px solid #3b82f6;
+            border-right: 2px solid #3b82f6;
+        }
+
+        .weekend-cell {
+            background: #fffbeb;
+        }
+
+        .attendance-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            text-decoration: none;
+            color: inherit;
+            padding: 4px;
+            border-radius: 4px;
+            min-height: 40px;
+            transition: transform 0.1s;
+        }
+
+        .attendance-link:hover {
+            transform: scale(1.02);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .status-present {
+            color: #10b981;
+            font-size: 18px;
+        }
+
+        .status-absent {
+            color: #ef4444;
+            font-size: 18px;
+        }
+
+        .mark-present-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .mark-present-btn:hover {
+            background: #059669;
+        }
+
+       
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .attendance-wrapper {
+                margin: 10px;
+                border-radius: 6px;
+            }
+
+            .attendance-header {
+                padding: 12px 16px;
+            }
+
+            .attendance-title {
+                font-size: 16px;
+            }
+
+            .worker-cell {
+                padding: 12px;
+            }
+
+            .attendance-cell {
+                padding: 6px 4px;
+            }
+
+            .worker-column {
+                min-width: 200px !important;
+            }
+        }
+    </style>
 
     @php
 
@@ -31,30 +228,44 @@
         ]" />
     @endif
 
-    <div class="container-fluid">
-        <!-- Header -->
-        <div class="d-flex justify-content-end align-items-center mb-4">
 
+
+
+    @php
+        // User role detection
+        $user = match (auth()->user()->role_name) {
+            'admin' => 'admin',
+            'site_engineer' => 'user',
+            default => 'client',
+        };
+    @endphp
+
+
+
+    <div class="container-fluid">
+
+        <!-- Header Quick Actions -->
+        <div class="d-flex justify-content-end align-items-center mb-4">
             <div>
                 @if ($user === 'admin' || $user === 'user')
-                    <button class="btn btn-sm btn-success me-2" data-bs-toggle="modal"
+                    <button class="btn btn-success me-2 btn-sm" data-bs-toggle="modal"
                         data-bs-target="#modal-create-wasta">
                         <i class="fas fa-plus me-1"></i> Add Wasta
                     </button>
-                    <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#attendanceModal">
+                    <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#attendanceModal">
                         <i class="fas fa-plus me-1"></i> Add Labour
                     </button>
                 @endif
             </div>
         </div>
 
-        <!-- Filters -->
+        <!-- Filter Panel Card -->
         <div class="card mb-4">
             <div class="card-body">
                 <form id="attendanceFilterForm" method="GET" class="row g-3">
                     <input type="hidden" name="site_id" value="{{ $site->id }}">
 
-                    <!-- Date Filter Type -->
+                    <!-- Date Filter -->
                     <div class="col-md-3">
                         <label class="form-label">Select Date</label>
                         <select name="date_filter" class="form-select text-black" onchange="this.form.submit()">
@@ -63,18 +274,14 @@
                             </option>
                         </select>
                     </div>
-
-                    <!-- Month Selector -->
                     <div class="col-md-3" id="monthSelector"
-                        style="{{ $dateFilter !== 'month' ? 'display: none;' : '' }}">
+                        style="{{ $dateFilter !== 'month' ? 'display:none' : '' }}">
                         <label class="form-label">Month</label>
                         <input type="month" name="monthYear" class="form-control" value="{{ $monthYear }}"
                             onchange="this.form.submit()">
                     </div>
-
-                    <!-- Custom Date Range -->
-                    <div class="col-md-6 text-black" id="customDateRange"
-                        style="{{ $dateFilter !== 'custom' ? 'display: none;' : '' }}">
+                    <div class="col-md-6" id="customDateRange"
+                        style="{{ $dateFilter !== 'custom' ? 'display:none' : '' }}">
                         <div class="row g-2">
                             <div class="col-md-6">
                                 <label class="form-label">Start Date</label>
@@ -103,309 +310,334 @@
                         </select>
                     </div>
 
-                    <!-- Export Buttons -->
+                    <!-- Export PDF Button -->
                     <div class="col-md-3 d-flex align-items-end">
-                        <div class="btn-group">
-                            <button type="submit" formaction="{{ url($user . '/attendance/pdf') }}"
-                                class="btn btn-sm btn-outline-secondary">
-                                <i class="far fa-file-pdf me-1"></i> PDF
-                            </button>
-
-                        </div>
+                        <button type="submit" formaction="{{ url($user . '/attendance/pdf') }}"
+                            class="btn btn-outline-secondary btn-sm w-100">
+                            <i class="far fa-file-pdf me-1"></i> Export PDF
+                        </button>
                     </div>
+
                 </form>
             </div>
         </div>
 
         <!-- Summary Cards -->
-        <div class="row mb-4">
+        <div class="row mb-4 g-3">
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-opacity-10 p-3 rounded me-3">
-                                <i class="fas fa-users text-primary fs-4"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-1">Total Wastas</h6>
-                                <h3 class="mb-0">{{ $wastas->count() }}</h3>
-                                <small class="text-muted">₹{{ number_format($siteTotal['wasta_amount'], 2) }}
-                                    Total</small>
-                            </div>
+                <div class="card shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="fas fa-users fa-2x text-primary me-3"></i>
+                        <div>
+                            <div class="fs-6 text-muted">Total Wastas</div>
+                            <div class="fs-3 fw-bold">{{ $wastas->count() }}</div>
+                            <div class="small text-muted">₹{{ number_format($siteTotal['wasta_amount'], 2) }}</div>
                         </div>
                     </div>
                 </div>
             </div>
-
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-opacity-10 p-3 rounded me-3">
-                                <i class="fas fa-hard-hat text-info fs-4"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-1">Total Labours</h6>
-                                <h3 class="mb-0">{{ $totalLabours }}</h3>
-                                <small class="text-muted">₹{{ number_format($siteTotal['labour_amount'], 2) }}
-                                    Total</small>
-                            </div>
+                <div class="card shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="fas fa-hard-hat fa-2x text-info me-3"></i>
+                        <div>
+                            <div class="fs-6 text-muted">Total Labours</div>
+                            <div class="fs-3 fw-bold">{{ $totalLabours }}</div>
+                            <div class="small text-muted">₹{{ number_format($siteTotal['labour_amount'], 2) }}</div>
                         </div>
                     </div>
                 </div>
             </div>
-
             <div class="col-md-4">
-                <div class="card border-0 shadow-sm h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="bg-opacity-10 p-3 rounded me-3">
-                                <i class="fas fa-wallet text-success fs-4"></i>
-                            </div>
-                            <div>
-                                <h6 class="mb-1">Total Amount</h6>
-                                <h3 class="mb-0">₹{{ number_format($siteTotal['combined_total'], 2) }}</h3>
-                                <small class="text-muted">{{ $dateRange }}</small>
-                            </div>
+                <div class="card shadow-sm border-0">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="fas fa-wallet fa-2x text-success me-3"></i>
+                        <div>
+                            <div class="fs-6 text-muted">Total Amount</div>
+                            <div class="fs-3 fw-bold">₹{{ number_format($siteTotal['combined_total'], 2) }}</div>
+                            <div class="small text-muted">{{ $dateRange }}</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Tabs -->
+        <!-- Nav Tabs Bootstrap -->
         <ul class="nav nav-tabs mb-3" id="attendanceTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="summary-tab" data-bs-toggle="tab"
                     data-bs-target="#summary-tab-pane">
-                    Summary View
+                    <i class="fas fa-list me-1"></i> Summary View
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="calendar-tab" data-bs-toggle="tab" data-bs-target="#calendar-tab-pane">
-                    Calendar View
+                    <i class="fas fa-calendar-alt me-1"></i> Calendar View
                 </button>
             </li>
         </ul>
 
         <div class="tab-content">
-            <!-- Summary Tab -->
+            <!-- SUMMARY TABLE -->
             <div class="tab-pane fade show active" id="summary-tab-pane">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
-                                <thead class="table-light">
+                                <thead>
                                     <tr>
-                                        <th style="width: 25%;">Name</th>
+                                        <th>Name & Contact</th>
                                         <th>Type</th>
                                         <th>Phase</th>
-                                        <th>Present Days</th>
-                                        <th>Rate/Day</th>
+                                        <th>Attendance</th>
+                                        <th>Avg Rate</th>
                                         <th>Total Amount</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @foreach ($wastas as $wasta)
-                                        <tr>
+                                        <tr class="employee-row">
                                             <td>
-                                                <strong>{{ $wasta->wasta_name }}</strong>
-                                                <div class="small text-muted">{{ $wasta->contact_no }}</div>
+                                                <div>
+                                                    <strong class="d-block">{{ $wasta->wasta_name }}</strong>
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-phone me-1"></i>{{ $wasta->contact_no }}
+                                                    </small>
+                                                </div>
                                             </td>
                                             <td><span class="badge bg-primary">Wasta</span></td>
-                                            <td>{{ $wasta->phase->phase_name ?? '—' }}</td>
-                                            <td>{{ $wasta->present_days }}/{{ $totalDays }}</td>
-                                            <td>₹{{ number_format($wasta->price, 2) }}</td>
-                                            <td>₹{{ number_format($wasta->total_amount, 2) }}</td>
+                                            <td>
+                                                @if ($wasta->phase)
+                                                    <span
+                                                        class="badge bg-secondary">{{ $wasta->phase->phase_name }}</span>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                                        <div class="progress-bar bg-success"
+                                                            style="width: {{ ($wasta->present_days / $totalDays) * 100 }}%">
+                                                        </div>
+                                                    </div>
+                                                    <small
+                                                        class="text-muted">{{ $wasta->present_days }}/{{ $totalDays }}</small>
+                                                </div>
+                                            </td>
+                                            <td class="fw-medium">
+                                                @if ($wasta->present_days > 0)
+                                                    ₹{{ number_format($wasta->total_amount / $wasta->present_days, 2) }}
+                                                @else
+                                                    ₹0.00
+                                                @endif
+                                            </td>
+                                            <td class="fw-bold text-success">
+                                                ₹{{ number_format($wasta->total_amount, 2) }}</td>
+                                            <td>
+                                                @if ($user === 'admin' || $user === 'user')
+                                                    <button class="btn btn-sm btn-outline-primary wasta-edit-btn"
+                                                        data-wasta='@json($wasta)'>
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                @endif
+                                            </td>
                                         </tr>
                                         @foreach ($wasta->labours as $labour)
-                                            <tr>
+                                            <tr class="labour-row">
                                                 <td class="ps-4">
-                                                    {{ $labour->labour_name }}
-                                                    <div class="small text-muted">{{ $labour->contact }}</div>
+                                                    <div>
+                                                        <strong class="d-block">{{ $labour->labour_name }}</strong>
+                                                        <small class="text-muted">
+                                                            <i class="fas fa-phone me-1"></i>{{ $labour->contact }}
+                                                        </small>
+                                                    </div>
                                                 </td>
                                                 <td><span class="badge bg-info">Labour</span></td>
-                                                <td>—</td>
-                                                <td>{{ $labour->present_days }}/{{ $totalDays }}</td>
-                                                <td>₹{{ number_format($labour->price, 2) }}</td>
-                                                <td>₹{{ number_format($labour->total_amount, 2) }}</td>
+                                                <td><span class="text-muted">—</span></td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                                            <div class="progress-bar bg-info"
+                                                                style="width: {{ ($labour->present_days / $totalDays) * 100 }}%">
+                                                            </div>
+                                                        </div>
+                                                        <small
+                                                            class="text-muted">{{ $labour->present_days }}/{{ $totalDays }}</small>
+                                                    </div>
+                                                </td>
+                                                <td class="fw-medium">
+                                                    @if ($labour->present_days > 0)
+                                                        ₹{{ number_format($labour->total_amount / $labour->present_days, 2) }}
+                                                    @else
+                                                        ₹0.00
+                                                    @endif
+                                                </td>
+                                                <td class="fw-bold text-info">
+                                                    ₹{{ number_format($labour->total_amount, 2) }}</td>
+                                                <td>
+                                                    @if ($user === 'admin' || $user === 'user')
+                                                        <button class="btn btn-sm btn-outline-info labour-edit-btn"
+                                                            data-labour='@json($labour)'>
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                    @endif
+                                                </td>
                                             </tr>
                                         @endforeach
-                                        <tr class="bg-light">
+                                        <tr class="table-light">
                                             <td colspan="5" class="text-end fw-bold">Subtotal</td>
-                                            <td class="fw-bold">
-                                                ₹{{ number_format($wasta->total_amount + $wasta->labours->sum('total_amount'), 2) }}
-                                            </td>
+                                            <td class="fw-bold text-success">
+                                                ₹{{ number_format($wasta->combined_total, 2) }}</td>
+                                            <td></td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
+
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Calendar Tab -->
+            <!-- CALENDAR TABLE -->
             <div class="tab-pane fade" id="calendar-tab-pane">
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-sm mb-0">
-                                <thead class="table-light sticky-top">
+
+
+                        <div class="table-container">
+                            <table class="attendance-table table table-bordered align-middle mb-0">
+                                <thead>
                                     <tr>
-                                        <th class="sticky-start bg-white" style="min-width: 250px; z-index: 3;">
-                                            Wasta/Labour
+                                        <th class="worker-column bg-white sticky-start">
                                         </th>
-                                        @php
-                                            $currentDay = $startDate->copy();
-                                        @endphp
-                                        @while ($currentDay <= $endDate)
-                                            @php
-                                                $isWeekend = $currentDay->isWeekend();
-                                                $isToday = $currentDay->isToday();
-                                                $classes = [];
-                                                if ($isToday) {
-                                                    $classes[] = 'today-column';
-                                                }
-                                                if ($isWeekend) {
-                                                    $classes[] = 'weekend-column';
-                                                }
-                                            @endphp
-                                            <th class="{{ implode(' ', $classes) }} text-center"
-                                                style="width: 36px;">
-                                                <div class="d-flex flex-column align-items-center">
-                                                    <small class="fw-normal" style="font-size: 0.7rem;">
-                                                        {{ $currentDay->format('D')[0] }}
-                                                    </small>
-                                                    <span style="font-size: 0.8rem;">{{ $currentDay->day }}</span>
+                                        @php $curDay = $startDate->copy(); @endphp
+                                        @while ($curDay <= $endDate)
+                                            <th
+                                                class="date-header text-center {{ $curDay->isToday() ? '' : ($curDay->isWeekend() ? 'weekend-header bg-light' : '') }}">
+                                                <div class="date-content">
+                                                    <div class="day-name">{{ $curDay->format('D') }}</div>
+                                                    <div class="day-number">{{ $curDay->day }}</div>
                                                 </div>
                                             </th>
-                                            @php
-                                                $currentDay->addDay();
-                                            @endphp
+                                            @php $curDay->addDay(); @endphp
                                         @endwhile
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($wastas as $index => $wasta)
-                                        <!-- Wasta Row -->
-                                        <tr class="employee-row" data-bs-toggle="collapse"
-                                            data-bs-target="#collapse-{{ $index }}" style="cursor: pointer;">
-                                            <td class="sticky-start ps-3 bg-white" style="min-width: 250px;">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <strong>{{ $wasta->wasta_name }}</strong>
-                                                        <div class="small text-muted">
-                                                            {{ $wasta->labours->count() }} labours
+                                    @foreach ($wastas as $idx => $wasta)
+                                        <tr class="wasta-row fw-bold" data-bs-toggle="collapse"
+                                            data-bs-target="#cal-labours{{ $idx }}">
+                                            <td class="worker-cell sticky-start bg-white">
+                                                <div class="worker-info">
+                                                    <div class="worker-icon wasta-icon">
+                                                        <i class="fas fa-users"></i>
+                                                    </div>
+                                                    <div class="worker-details">
+                                                        <div class="worker-name">{{ $wasta->wasta_name }}
                                                         </div>
-                                                        <div class="small text-muted">
-                                                            @if ($wasta->phase)
-                                                                {{ $wasta->phase->phase_name }}
-                                                            @endif
+                                                        <div class="worker-meta">
+                                                            <span class="worker-count">({{ $wasta->labours->count() }}
+                                                                workers)</span>
+                                                            <span
+                                                                class="phase-badge">{{ $wasta->phase->phase_name ?? '—' }}</span>
                                                         </div>
                                                     </div>
-                                                    @if ($user === 'admin' || $user === 'user')
-                                                        <button class="btn btn-xs btn-outline-success wasta-edit-btn"
-                                                            data-wasta='@json($wasta)'>
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
-                                                    @endif
                                                 </div>
                                             </td>
-                                            @php
-                                                $currentDay = $startDate->copy();
-                                            @endphp
-                                            @while ($currentDay <= $endDate)
+                                            @php $curDay = $startDate->copy(); @endphp
+                                            @while ($curDay <= $endDate)
                                                 @php
-                                                    $dateFormatted = $currentDay->format('Y-m-d');
-                                                    $attendance = $wasta->attendances->firstWhere(
+                                                    $dateFmt = $curDay->format('Y-m-d');
+                                                    $attn = $wasta->attendances->firstWhere(
                                                         'attendance_date',
-                                                        $dateFormatted,
+                                                        $dateFmt,
                                                     );
-                                                    $isToday = $currentDay->isToday();
-                                                    $isPast = $currentDay->lt(now()->startOfDay());
+                                                    $isToday = $curDay->isToday();
+                                                    $isPast = $curDay->lt(now()->startOfDay());
                                                 @endphp
                                                 <td
-                                                    class="{{ $currentDay->isWeekend() ? 'weekend-column' : '' }} {{ $isToday ? 'today-column' : '' }} text-center">
-                                                    @if ($isToday)
-                                                        @if ($user === 'admin' || $user === 'user')
-                                                            <input type="checkbox"
-                                                                class="form-check-input wasta-attendance-checkbox"
-                                                                data-attendance-id="{{ $attendance->id ?? null }}"
-                                                                data-wasta-id="{{ $wasta->id }}"
-                                                                data-date="{{ $dateFormatted }}"
-                                                                {{ $attendance && $attendance->is_present ? 'checked' : '' }}>
+                                                    class="attendance-cell text-center align-middle {{ $isToday ? '' : ($curDay->isWeekend() ? 'weekend-header' : '') }}">
+                                                    <a href="javascript:void(0)"
+                                                        class="attendance-link open-attendance-modal"
+                                                        data-entity="wasta"
+                                                        data-attendance-id="{{ $attn->id ?? '' }}"
+                                                        data-worker-id="{{ $wasta->id }}"
+                                                        data-date="{{ $dateFmt }}"
+                                                        data-is-today="{{ $isToday }}"
+                                                        data-price="{{ $attn->price ?? '' }}"
+                                                        data-is-present="{{ $attn->is_present ?? 0 }}">
+                                                        @if ($attn && $attn->is_present)
+                                                            <i class="fas fa-check-circle status-present"></i>
+                                                            @if ($attn->price)
+                                                                <div class="price-text">₹{{ $attn->price }}</div>
+                                                            @endif
+                                                        @elseif ($isPast)
+                                                            <i class="fas fa-times-circle status-absent"></i>
+                                                        @else
+                                                            <i class="fas fa-pen-to-square"></i>
                                                         @endif
-                                                    @elseif ($attendance && $attendance->is_present)
-                                                        <i class="fas fa-check text-success"></i>
-                                                    @elseif ($isPast)
-                                                        <i class="fas fa-times text-danger"></i>
-                                                    @else
-                                                        <span class="text-muted">-</span>
-                                                    @endif
+                                                    </a>
                                                 </td>
-                                                @php
-                                                    $currentDay->addDay();
-                                                @endphp
+                                                @php $curDay->addDay(); @endphp
                                             @endwhile
                                         </tr>
-
-                                        <!-- Labour Rows -->
                                         @foreach ($wasta->labours as $labour)
-                                            <tr class="collapse" id="collapse-{{ $index }}">
-                                                <td class="sticky-start ps-4 bg-white" style="min-width: 250px;">
-                                                    <div class="d-flex justify-content-between align-items-center">
-                                                        <div>
-                                                            <strong>{{ $labour->labour_name }}</strong>
-                                                            <div class="small text-muted">{{ $labour->position }}
-                                                            </div>
-                                                            <div class="small text-muted">₹{{ $labour->price }}/day
-                                                            </div>
+                                            <tr class="labour-row collapse" id="cal-labours{{ $idx }}">
+                                                <td class="worker-cell sticky-start bg-white ps-4">
+                                                    <div class="worker-info">
+                                                        <div class="worker-icon labour-icon">
+                                                            <i class="fas fa-user"></i>
                                                         </div>
-                                                        @if ($user === 'admin' || $user === 'user')
-                                                            <button
-                                                                class="btn btn-xs btn-outline-success labour-edit-btn"
-                                                                data-labour='@json($labour)'>
-                                                                <i class="fas fa-edit"></i>
-                                                            </button>
-                                                        @endif
+                                                        <div class="worker-details">
+                                                            <div class="worker-name">
+                                                                {{ $labour->labour_name }}</div>
+                                                            @if ($labour->position)
+                                                                <div class="worker-meta">
+                                                                    <span
+                                                                        class="position-badge">{{ $labour->position }}</span>
+                                                                </div>
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                 </td>
-                                                @php
-                                                    $currentDay = $startDate->copy();
-                                                @endphp
-                                                @while ($currentDay <= $endDate)
+                                                @php $curDay = $startDate->copy(); @endphp
+                                                @while ($curDay <= $endDate)
                                                     @php
-                                                        $dateFormatted = $currentDay->format('Y-m-d');
-                                                        $attendance = $labour->attendances->firstWhere(
+                                                        $dateFmt = $curDay->format('Y-m-d');
+                                                        $attn = $labour->attendances->firstWhere(
                                                             'attendance_date',
-                                                            $dateFormatted,
+                                                            $dateFmt,
                                                         );
-                                                        $isToday = $currentDay->isToday();
-                                                        $isPast = $currentDay->lt(now()->startOfDay());
+                                                        $isToday = $curDay->isToday();
+                                                        $isPast = $curDay->lt(now()->startOfDay());
                                                     @endphp
                                                     <td
-                                                        class="{{ $currentDay->isWeekend() ? 'weekend-column' : '' }} {{ $isToday ? 'today-column' : '' }} text-center">
-                                                        @if ($isToday)
-                                                            @if ($user === 'admin' || $user === 'user')
-                                                                <input type="checkbox"
-                                                                    class="form-check-input labour-attendance-checkbox"
-                                                                    data-labour-id="{{ $labour->id }}"
-                                                                    data-date="{{ $dateFormatted }}"
-                                                                    data-attendance-id="{{ $attendance->id ?? null }}"
-                                                                    {{ $attendance && $attendance->is_present ? 'checked' : '' }}>
+                                                        class="attendance-cell text-center align-middle {{ $isToday ? '' : ($curDay->isWeekend() ? 'weekend-header' : '') }}">
+                                                        <a href="javascript:void(0)"
+                                                            class="attendance-link open-attendance-modal"
+                                                            data-entity="labour"
+                                                            data-attendance-id="{{ $attn->id ?? '' }}"
+                                                            data-worker-id="{{ $labour->id }}"
+                                                            data-date="{{ $dateFmt }}"
+                                                            data-is-today="{{ $isToday }}"
+                                                            data-price="{{ $attn->price ?? '' }}"
+                                                            data-is-present="{{ $attn->is_present ?? 0 }}">
+                                                            @if ($attn && $attn->is_present)
+                                                                <i class="fas fa-check-circle status-present"></i>
+                                                                @if ($attn->price)
+                                                                    <div class="price-text"> ₹{{ $attn->price }}</div>
+                                                                @endif
+                                                            @elseif ($isPast)
+                                                                <i class="fas fa-times-circle status-absent"></i>
+                                                            @else
+                                                            <i class="fas fa-pen-to-square"></i>
                                                             @endif
-                                                        @elseif ($attendance && $attendance->is_present)
-                                                            <i class="fas fa-check text-success"></i>
-                                                        @elseif ($isPast)
-                                                            <i class="fas fa-times text-danger"></i>
-                                                        @else
-                                                            <span class="text-muted">-</span>
-                                                        @endif
+                                                        </a>
                                                     </td>
-                                                    @php
-                                                        $currentDay->addDay();
-                                                    @endphp
+                                                    @php $curDay->addDay(); @endphp
                                                 @endwhile
                                             </tr>
                                         @endforeach
@@ -415,11 +647,9 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
 
-        <!-- Pagination -->
         @if ($wastas->hasPages())
             <div class="d-flex justify-content-between align-items-center mt-4">
                 <div class="text-muted small">
@@ -434,12 +664,92 @@
 
 
 
+    <!-- Attendance Modal -->
+    <div class="modal fade" id="attendanceEditModal" tabindex="-1" aria-labelledby="attendanceEditModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" id="attendanceEditModalLabel">Edit Attendance</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="attendanceEditForm">
+                        @csrf
+                        <input type="hidden" id="modalAttendanceId" name="attendance_id">
+                        <input type="hidden" id="modalWorkerType" name="worker_type"> <!-- wasta/labour -->
+                        <input type="hidden" id="modalWorkerId" name="worker_id">
+                        <input type="hidden" id="modalDate" name="date">
+                        <div class="mb-3">
+                            <input class="form-check-input" type="checkbox" id="modalIsPresent" name="is_present">
+                            <label class="form-check-label" for="modalIsPresent">
+                                Present
+                            </label>
+                        </div>
+                        <div class="mb-3">
+                            <label for="modalPrice" class="form-label">Price (₹)</label>
+                            <input type="number" class="form-control" id="modalPrice" name="price"
+                                placeholder="Enter price">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="saveAttendanceBtn">Save
+                        changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 
 
 
 
+
+
+
+    <!-- Attendance Modal -->
+    <div class="modal fade" id="attendanceEditModal" tabindex="-1" aria-labelledby="attendanceEditModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="attendanceEditModalLabel">Edit Attendance</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="attendanceEditForm">
+                        <input type="hidden" id="modalAttendanceId" name="attendance_id">
+                        <input type="hidden" id="modalWorkerType" name="worker_type"> <!-- 'wasta' or 'labour' -->
+                        <input type="hidden" id="modalWorkerId" name="worker_id">
+                        <input type="hidden" id="modalDate" name="date">
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="modalIsPresent"
+                                    name="is_present">
+                                <label class="form-check-label" for="modalIsPresent">
+                                    Present
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="modalPrice" class="form-label">Price (₹)</label>
+                            <input type="number" class="form-control" id="modalPrice" name="price"
+                                placeholder="Enter price">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveAttendanceBtn">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 
@@ -477,12 +787,6 @@
                                 @endforeach
                             </select>
                             <p class="text-danger" id="create_phase_id-error"></p>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="price_per_day" class="control-label">Price Per Day</label>
-                            <input id="price_per_day" name="price_per_day" type="number" class="form-control" />
-                            <p class="text-danger" id="price_per_day-error"></p>
                         </div>
 
                         <div class="form-group">
@@ -551,13 +855,6 @@
                             <label for="labour_name" class="control-label">Labour Name</label>
                             <input type="text" name="labour_name" class="form-control" />
                             <p class="text-danger" id="labour_name-error"></p>
-                        </div>
-
-                        <!-- Price -->
-                        <div class="form-group">
-                            <label for="price" class="control-label">Price</label>
-                            <input type="text" name="price" id="price" class="form-control" />
-                            <p class="text-danger" id="price-error"></p>
                         </div>
 
                         <!-- Contact -->
@@ -652,6 +949,114 @@
     @push('scripts')
         <script>
             $(document).ready(function() {
+                const userRole = '{{ $user }}';
+
+                // Handle Bootstrap 5 tab switch (fix vertical bounce bug in native BS)
+                $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function(e) {
+                    $($(e.relatedTarget).attr('href')).removeClass('show active');
+                    $($(e.target).attr('href')).addClass('show active');
+                });
+
+                // Show modal on calendar cell click
+                $(document).on("click", ".open-attendance-modal", function() {
+                    let entity = $(this).data("entity"),
+                        attnId = $(this).data("attendance-id") || "",
+                        workerId = $(this).data("worker-id"),
+                        date = $(this).data("date"),
+                        present = +$(this).data("is-present"),
+                        price = $(this).data("price") || "",
+                        isToday = $(this).data("is-today");
+
+                    // Set modal fields
+                    $("#modalAttendanceId").val(attnId);
+                    $("#modalWorkerType").val(entity);
+                    $("#modalWorkerId").val(workerId);
+                    $("#modalDate").val(date);
+                    $("#modalIsPresent").prop("checked", !!present);
+                    $("#modalPrice").val(price);
+                    $("#modalPrice").prop("disabled", !present);
+
+                    // Allow edit only for today
+                    $("#modalIsPresent,#modalPrice,#saveAttendanceBtn").prop("disabled", !isToday);
+
+                    $("#attendanceEditModal").modal("show");
+                });
+
+                // enable/disable price input with checkbox
+                $("#modalIsPresent").on("change", function() {
+                    $("#modalPrice").prop("disabled", !$(this).is(":checked"));
+                });
+
+                // Save attendance from modal (AJAX)
+                $("#saveAttendanceBtn").on("click", function() {
+                    let entity = $("#modalWorkerType").val(),
+                        attnId = $("#modalAttendanceId").val(),
+                        workerId = $("#modalWorkerId").val(),
+                        date = $("#modalDate").val(),
+                        isPresent = $("#modalIsPresent").is(":checked") ? 1 : 0,
+                        price = $("#modalPrice").val(),
+                        url = "/" + userRole + "/attendance/" + entity;
+
+                    let payload = {
+                        attendance_id: attnId ? attnId : undefined,
+                        attendance_date: date,
+                        is_present: isPresent,
+                        daily_price: price || null,
+                    };
+                    if (entity === "wasta") payload.wasta_id = workerId;
+                    else payload.labour_id = workerId;
+
+                    $.ajax({
+                        url: url,
+                        type: 'PUT',
+                        data: payload,
+                        success: function(response) {
+                            $("#attendanceEditModal").modal("hide");
+                            showAlert("success", "Attendance updated successfully!");
+                            setTimeout(() => location.reload(),
+                                700); // Or update table cell dynamically
+                        },
+                        error: function(xhr) {
+                            const errorMsg = xhr.responseJSON?.message ||
+                                "Failed to update attendance";
+                            showAlert("danger", errorMsg);
+                        }
+                    });
+                });
+
+                // Show/hide filter range selectors
+                $('select[name="date_filter"]').on('change', function() {
+                    if ($(this).val() === 'custom') {
+                        $('#customDateRange').show();
+                        $('#monthSelector').hide();
+                    } else {
+                        $('#customDateRange').hide();
+                        $('#monthSelector').show();
+                    }
+                });
+
+                // Alert utility
+                window.showAlert = function(type, message) {
+                    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+                    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                    const alertHtml = `<div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas ${icon} me-2"></i><div>${message}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>`;
+                    $('#ajaxAlertContainer').append(alertHtml);
+                    setTimeout(() => {
+                        $('.alert').alert('close');
+                    }, 5000);
+                };
+            });
+        </script>
+    @endpush
+
+
+    @push('scripts')
+        <script>
+            $(document).ready(function() {
                 // Pass PHP variable to JavaScript
                 const userRole = '{{ $user }}';
 
@@ -676,13 +1081,13 @@
                     const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
 
                     const alertHtml = `
-                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-                    <div class="d-flex align-items-center">
-                        <i class="fas ${icon} me-2"></i>
-                        <div>${message}</div>
-                    </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>`;
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <div class="d-flex align-items-center">
+                    <i class="fas ${icon} me-2"></i>
+                    <div>${message}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
 
                     $('#ajaxAlertContainer').append(alertHtml);
 
@@ -692,9 +1097,12 @@
                     }, 5000);
                 }
 
-                // Attendance Checkbox Handlers
+                // UPDATED: Wasta Attendance Checkbox with Price Support
                 $('.wasta-attendance-checkbox').change(function() {
                     const $this = $(this);
+                    const $priceInput = $this.closest('.attendance-cell').find('.daily-price-input');
+                    const dailyPrice = $priceInput.val() || null;
+
                     $.ajax({
                         url: `/${userRole}/attendance/wasta`,
                         type: 'PUT',
@@ -703,10 +1111,23 @@
                             attendance_date: $this.data('date'),
                             is_present: $this.is(':checked') ? 1 : 0,
                             attendance_id: $this.data('attendance-id'),
+                            daily_price: dailyPrice // Add daily price
                         },
-                        success: function() {
+                        success: function(response) {
                             showAlert('success', 'Attendance updated successfully');
-                            setTimeout(() => location.reload(), 1000);
+
+                            // Update attendance ID if newly created
+                            if (response.attendance_id && !$this.data('attendance-id')) {
+                                $this.attr('data-attendance-id', response.attendance_id);
+                            }
+
+                            // Optional: Update price input with confirmed value
+                            if (response.daily_price && $priceInput.length) {
+                                $priceInput.val(response.daily_price);
+                            }
+
+                            // Remove the auto-reload, let user continue working
+                            // setTimeout(() => location.reload(), 1000);
                         },
                         error: function(xhr) {
                             $this.prop('checked', !$this.is(':checked')); // Revert checkbox state
@@ -717,8 +1138,12 @@
                     });
                 });
 
+                // UPDATED: Labour Attendance Checkbox with Price Support
                 $('.labour-attendance-checkbox').change(function() {
                     const $this = $(this);
+                    const $priceInput = $this.closest('.attendance-cell').find('.daily-price-input');
+                    const dailyPrice = $priceInput.val() || null;
+
                     $.ajax({
                         url: `/${userRole}/attendance/labour`,
                         type: 'PUT',
@@ -727,10 +1152,23 @@
                             attendance_date: $this.data('date'),
                             is_present: $this.is(':checked') ? 1 : 0,
                             attendance_id: $this.data('attendance-id'),
+                            daily_price: dailyPrice // Add daily price
                         },
-                        success: function() {
+                        success: function(response) {
                             showAlert('success', 'Attendance updated successfully');
-                            setTimeout(() => location.reload(), 1000);
+
+                            // Update attendance ID if newly created
+                            if (response.attendance_id && !$this.data('attendance-id')) {
+                                $this.attr('data-attendance-id', response.attendance_id);
+                            }
+
+                            // Optional: Update price input with confirmed value
+                            if (response.daily_price && $priceInput.length) {
+                                $priceInput.val(response.daily_price);
+                            }
+
+                            // Remove the auto-reload, let user continue working
+                            // setTimeout(() => location.reload(), 1000);
                         },
                         error: function(xhr) {
                             $this.prop('checked', !$this.is(':checked')); // Revert checkbox state
@@ -739,6 +1177,69 @@
                             showAlert('error', errorMsg);
                         }
                     });
+                });
+
+                // NEW: Handle price input changes (when user changes price without toggling attendance)
+                $(document).on('change blur', '.daily-price-input', function() {
+                    const $this = $(this);
+                    const $checkbox = $this.closest('.attendance-cell').find('input[type="checkbox"]');
+                    const wastaId = $this.data('wasta-id');
+                    const labourId = $this.data('labour-id');
+                    const date = $this.data('date');
+                    const dailyPrice = $this.val();
+                    const isPresent = $checkbox.is(':checked');
+                    const attendanceId = $checkbox.data('attendance-id');
+
+                    // Only update if attendance is marked present or if there's an existing attendance record
+                    if (isPresent || attendanceId) {
+                        const url = wastaId ? `/${userRole}/attendance/wasta` :
+                            `/${userRole}/attendance/labour`;
+                        const data = {
+                            attendance_date: date,
+                            is_present: isPresent ? 1 : 0,
+                            daily_price: dailyPrice,
+                            attendance_id: attendanceId
+                        };
+
+                        if (wastaId) {
+                            data.wasta_id = wastaId;
+                        } else {
+                            data.labour_id = labourId;
+                        }
+
+                        $.ajax({
+                            url: url,
+                            type: 'PUT',
+                            data: data,
+                            success: function(response) {
+                                showAlert('success', 'Price updated successfully');
+
+                                // Update attendance ID if newly created
+                                if (response.attendance_id && !attendanceId) {
+                                    $checkbox.attr('data-attendance-id', response.attendance_id);
+                                }
+                            },
+                            error: function(xhr) {
+                                const errorMsg = xhr.responseJSON?.message ||
+                                    'Failed to update price';
+                                showAlert('error', errorMsg);
+                            }
+                        });
+                    }
+                });
+
+                // NEW: Quick Price Set for Multiple Days (Optional Enhancement)
+                $(document).on('click', '.quick-price-btn', function() {
+                    const entityType = $(this).data('entity-type'); // 'wasta' or 'labour'
+                    const entityId = $(this).data('entity-id');
+                    const entityName = $(this).data('entity-name');
+
+                    // Show modal or prompt for bulk price setting
+                    const newPrice = prompt(`Set price for all days for ${entityName}:`);
+                    if (newPrice && !isNaN(newPrice)) {
+                        $(`.daily-price-input[data-${entityType}-id="${entityId}"]`).val(newPrice);
+                        showAlert('success', `Price set to ₹${newPrice} for all days`);
+                    }
                 });
 
                 // Utility: Show form errors
@@ -749,12 +1250,11 @@
                     }
                 }
 
-                // CREATE WASTA
+                // CREATE WASTA (No changes needed, but can add default price)
                 $('#createWastaForm').submit(function(e) {
                     e.preventDefault();
                     const data = {
                         wager_name: $('#create_wager_name').val(),
-                        price_per_day: $('#price_per_day').val(),
                         contact: $('#create_contact_no').val(),
                         site_id: $('#create_site_id').val(),
                         phase_id: $('#phase_id').val(),
@@ -806,14 +1306,13 @@
                     });
                 });
 
-                // CREATE LABOUR
+                // CREATE LABOUR (No changes needed, but can add default price)
                 $('#labourForm').submit(function(e) {
                     e.preventDefault();
                     const formData = {
                         wasta_id: $('select[name="wasta_id"]').val(),
                         site_id: $('#labour_site_id').val(),
                         labour_name: $('input[name="labour_name"]').val(),
-                        price: $('#price').val(),
                         contact: $('#contact').val(),
                         is_present: $('#is_present').is(':checked') ? 1 : 0,
                         phase_id: $('#labour_phase_id').val()

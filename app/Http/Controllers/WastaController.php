@@ -36,7 +36,6 @@ class WastaController extends Controller
 
                 $validator = Validator::make($request->all(), [
                     'wager_name' => 'nullable|string|max:255',
-                    'price_per_day' => 'required|integer',
                     'contact' => 'required|string|max:10',
                     'phase_id' => 'required|exists:phases,id',
                 ]);
@@ -51,7 +50,6 @@ class WastaController extends Controller
                 Wasta::create([
                     'phase_id' => $request->phase_id,
                     'wasta_name' => $request->wager_name,
-                    'price' => $request->price_per_day,
                     'contact_no' => $request->contact,
                 ]);
 

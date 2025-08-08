@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('wasta_id')->constrained('wastas')->cascadeOnDelete();
             $table->foreignId('phase_id')->constrained('phases')->cascadeOnDelete();
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->cascadeOnDelete();
-            $table->integer('price');
+            $table->integer('price')->nullable();
             $table->string('contact_no');
             $table->timestamps();
         });
