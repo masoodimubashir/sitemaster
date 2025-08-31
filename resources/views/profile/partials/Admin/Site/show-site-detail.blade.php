@@ -3,6 +3,8 @@
     <x-breadcrumb :names="['Sites', $site->site_name, ' Back']"
                   :urls="['/admin/sites', '/admin/sites/' . base64_encode($site->id), '/admin/sites/' . base64_encode($site->id)]"/>
 
+    <div id="messageContainer" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; max-width: 400px;"></div>
+
     <style>
         .hover-opacity-100:hover {
             opacity: 1 !important;

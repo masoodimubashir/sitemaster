@@ -563,6 +563,72 @@ class DataService
         ]);
     }
 
+    /**
+     * Get financial summary for a specific phase
+     */
+    public function getPhaseFinancialSummary($siteId, $phaseId): array
+    {
+        [$payments, $raw_materials, $squareFootageBills, $expenses] = $this->getData(
+            'lifetime',
+            $siteId,
+            'all',
+            null,
+            null,
+            $phaseId
+        );
+
+        $ledgers = $this->makeData(
+            $payments,
+            $raw_materials,
+            $squareFootageBills,
+            $expenses
+        );
+
+        $materials = $ledgers->where('category', 'Material');
+        $sqft = $ledgers->where('category', 'SQFT');
+        $expenses = $ledgers->where('category', 'Expense');
+        $payments = $ledgers->where('category', 'Payment');
+
+        $totalCosts = $materials->sum('debit') + $sqft->sum('debit') + $expenses->sum('debit');
+        $totalPayments = $payments->sum('credit');
+        $balance = $totalCosts - $totalPayments;
+
+        return [
+            'materials_cost' => $materials->sum('debit'),
+            'sqft_cost' => $sqft->sum('debit'),
+            'expenses_cost' => $expenses->sum('debit'),
+            'total_costs' => $totalCosts,
+            'total_payments' => $totalPayments,
+            'balance' => $balance,
+            'materials' => $materials->values(),
+            'sqft_work' => $sqft->values(),
+            'expenses' => $expenses->values(),
+            'payments' => $payments->values()
+        ];
+    }
+
+    /**
+     * Get attendance data for a specific site
+     */
+    public function getSiteAttendanceData($siteId, $dateFilter = 'today'): array
+    {
+        $dateRange = $this->filterByDate($dateFilter, null, null);
+        $attendances = $this->getAttendances($dateFilter, $dateRange, $siteId, 'all');
+
+        $totalWorkers = $attendances->count();
+        $dailyCost = $attendances->sum('debit');
+
+        // Calculate monthly cost (approximate)
+        $monthlyCost = $dailyCost * 30;
+
+        return [
+            'total_workers' => $totalWorkers,
+            'daily_cost' => $dailyCost,
+            'monthly_cost' => $monthlyCost,
+            'attendances' => $attendances->values()
+        ];
+    }
+
 
 }
 

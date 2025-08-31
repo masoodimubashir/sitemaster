@@ -15,7 +15,6 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Hash;
 
 class SiteController extends Controller
 {
@@ -45,7 +44,7 @@ class SiteController extends Controller
      * Store a newly created resource in storage.
      */
 
-    public function store(Request $request)
+     public function store(Request $request)
     {
 
         $validator = Validator::make($request->all(), [
@@ -243,18 +242,24 @@ class SiteController extends Controller
         ));
     }
 
+
     public function show(Request $request, DataService $dataService, $id)
     {
 
-        $site = Site::with('client')
-            ->select('id', 'site_name', 'client_id')->where([
+        $site = Site::with(['client', 'users'])
+            ->where([
                 'is_on_going' => 1,
                 'deleted_at' => null
             ])
             ->find(base64_decode($id));
 
+        if (!$site) {
+            return redirect()->route('sites.index')->with('error', 'Site not found');
+        }
+
+        // Get filter parameters
         $dateFilter = $request->input('date_filter', 'today');
-        $site_id = $request->input('site_id', $site->id);
+        $site_id = $site->id;
         $supplier_id = $request->input('supplier_id', 'all');
         $phase_id = $request->input('phase_id', 'all');
         $startDate = $request->input('start_date');
@@ -280,6 +285,21 @@ class SiteController extends Controller
             return $d['created_at'];
         });
 
+        // Handle AJAX requests for phase data
+        if ($request->ajax() && $request->has('phase_id') && $request->input('ajax_action') === 'get_phase_data') {
+            $requested_phase_id = $request->input('phase_id');
+
+            // Filter the ledger data for the specific phase
+            $phaseLedgers = $ledgers->filter(function ($item) use ($requested_phase_id) {
+                return isset($item['phase_id']) && $item['phase_id'] == $requested_phase_id;
+            });
+
+            return response()->json([
+                'success' => true,
+                'response' => $phaseLedgers,
+            ]);
+        }
+
         // Calculate balances
         $balances = $dataService->calculateAllBalances($ledgers);
         $withoutServiceCharge = $balances['without_service_charge'];
@@ -304,11 +324,103 @@ class SiteController extends Controller
 
         // Get additional data for the view
         $items = Item::orderBy('item_name')->get();
-
-        // Single query to get both workforce and raw material providers
         $supp = Supplier::whereNull('deleted_at')->orderBy('name')->get();
-
         $phases = Phase::where(['deleted_at' => null, 'site_id' => $site_id])->latest()->get();
+
+        // Get phase data for calculations tab using the same ledger data
+        $phaseData = $this->getPhaseDataFromLedgers($ledgers, $phases, $site);
+
+        // Get materials, expenses, and contractor billings for each phase using ledger data
+        $phasesWithData = [];
+        foreach ($phases as $phase) {
+            $phaseLedgers = $ledgers->filter(function ($item) use ($phase) {
+                return isset($item['phase_id']) && $item['phase_id'] == $phase->id;
+            });
+
+            $phasesWithData[$phase->id] = [
+                'phase' => $phase,
+                'materials' => $phaseLedgers->filter(function ($item) {
+                    return $item['category'] === 'Material';
+                })->values(),
+                'expenses' => $phaseLedgers->filter(function ($item) {
+                    return $item['category'] === 'Attendance' || $item['category'] === 'Expense';
+                })->values(),
+                'contractor_billings' => $phaseLedgers->filter(function ($item) {
+                    return $item['category'] === 'SQFT';
+                })->values(),
+                // Add financial summary for each phase
+                'financial_summary' => [
+                    'materials_total' => $phaseLedgers->filter(function ($item) {
+                        return $item['category'] === 'Material';
+                    })->sum('debit'),
+                    'expenses_total' => $phaseLedgers->filter(function ($item) {
+                        return $item['category'] === 'Attendance' || $item['category'] === 'Expense';
+                    })->sum('debit'),
+                    'contractor_total' => $phaseLedgers->filter(function ($item) {
+                        return $item['category'] === 'SQFT';
+                    })->sum('debit'),
+                ]
+            ];
+
+            // Calculate phase totals
+            $phaseTotal = $phasesWithData[$phase->id]['financial_summary']['materials_total'] +
+                $phasesWithData[$phase->id]['financial_summary']['expenses_total'] +
+                $phasesWithData[$phase->id]['financial_summary']['contractor_total'];
+
+            $phasesWithData[$phase->id]['financial_summary']['phase_total'] = $phaseTotal;
+            $phasesWithData[$phase->id]['financial_summary']['phase_total_with_service'] =
+                $phaseTotal + ($phaseTotal * $site->service_charge / 100);
+        }
+
+        // Prepare comprehensive data structure for frontend
+        $responseData = [
+            'site' => $site,
+            'financial_summary' => [
+                'effective_balance' => $effective_balance,
+                'total_paid' => $total_paid,
+                'total_due' => $total_due,
+                'total_balance' => $total_balance,
+                'returns' => $returns,
+                'service_charge_total' => $balances['service_charge_amount'] ?? 0,
+            ],
+            'filters' => [
+                'current' => [
+                    'date_filter' => $dateFilter,
+                    'site_id' => $site_id,
+                    'supplier_id' => $supplier_id,
+                    'phase_id' => $phase_id,
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                ],
+                'options' => [
+                    'suppliers' => $suppliers,
+                    'phases' => $phases,
+                    'sites' => [['site_id' => $site->id, 'site_name' => $site->site_name]]
+                ]
+            ],
+            'forms' => [
+                'items' => $items,
+                'suppliers' => $supp,
+                'phases' => $phases,
+            ],
+            'phases_with_data' => $phasesWithData,
+            'analytics' => [
+                'phase_breakdown' => array_values($phasesWithData),
+                'total_phases' => count($phases),
+                'active_phases' => count($phases->where('status', 'active')), // if you have status field
+            ],
+            'metadata' => [
+                'total_records' => $ledgers->count(),
+                'has_filters_applied' => $this->hasFiltersApplied($request),
+                'last_activity' => $ledgers->first()['created_at'] ?? null,
+                'user_role' => auth()->user()->role_name,
+            ]
+        ];
+
+        // Handle JSON requests
+        if ($request->expectsJson()) {
+            return response()->json($responseData);
+        }
 
         return view("profile.partials.Admin.Site.show-site", compact(
             'paginatedLedgers',
@@ -321,8 +433,61 @@ class SiteController extends Controller
             'phases',
             'site',
             'returns',
-            'supp'
+            'supp',
+            'phaseData',
+            'phasesWithData',
+            'responseData'
         ));
+    }
+
+    /**
+     * Get phase data from ledgers instead of querying models directly
+     */
+    private function getPhaseDataFromLedgers($ledgers, $phases, $site)
+    {
+        $phaseData = [];
+
+        foreach ($phases as $idx => $phase) {
+            $phaseLedgers = $ledgers->filter(function ($item) use ($phase) {
+                return isset($item['phase_id']) && $item['phase_id'] == $phase->id;
+            });
+
+            $phaseData[] = [
+                'phase' => $phase->phase_name,
+                'phase_total' => $phaseLedgers->sum('debit'),
+                'phase_total_with_service_charge' => $phaseLedgers->sum('total_amount_with_service_charge'),
+                'total_payment_amount' => $phaseLedgers->sum('credit'),
+                'construction_material_billings' => $phaseLedgers->filter(function ($item) {
+                    return $item['category'] === 'Material';
+                })->values(),
+                'square_footage_bills' => $phaseLedgers->filter(function ($item) {
+                    return $item['category'] === 'SQFT';
+                })->values(),
+                'daily_expenses' => $phaseLedgers->filter(function ($item) {
+                    return $item['category'] === 'Expense';
+                })->values(),
+                'daily_labours' => $phaseLedgers->filter(function ($item) {
+                    return $item['category'] === 'Attendance' && strpos(strtolower($item['description']), 'labour') !== false;
+                })->values(),
+                'daily_wastas' => $phaseLedgers->filter(function ($item) {
+                    return $item['category'] === 'Attendance' && strpos(strtolower($item['description']), 'wasta') !== false;
+                })->values(),
+            ];
+        }
+
+        return $phaseData;
+    }
+
+    /**
+     * Check if any filters are applied
+     */
+    private function hasFiltersApplied($request)
+    {
+        return $request->input('date_filter', 'today') !== 'today' ||
+            $request->input('supplier_id') !== 'all' ||
+            $request->input('phase_id') !== 'all' ||
+            $request->has('start_date') ||
+            $request->has('end_date');
     }
 
     /**
@@ -407,10 +572,14 @@ class SiteController extends Controller
     public function destroy(string $id)
     {
 
+        $site_id = base64_decode($id);
 
-        $site = Site::where('id', $id)->first();
+        $site = Site::where('id', $site_id)->first();
 
-        $hasPaymentRecords = $site->payments()->exists();
+        $hasPaymentRecords = $site::query()
+            ->whereHas('payments')
+            ->orWhereHas('adminPayments')
+            ->exists();
 
         if ($hasPaymentRecords) {
             return redirect()->back()->with('status', 'hasPaymentRecords');
@@ -419,6 +588,5 @@ class SiteController extends Controller
         $site->delete();
 
         return redirect()->back()->with('status', 'delete');
-
     }
 }

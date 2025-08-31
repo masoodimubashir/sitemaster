@@ -1,701 +1,1259 @@
-<x-app-layout>
+    <x-app-layout>
 
-    @php
-        $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
-    @endphp
+        @php
+            $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
+        @endphp
 
-    <style>
-        #messageContainer {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            z-index: 9999;
-        }
+        <style>
+            #messageContainer {
+                position: fixed;
+                bottom: 2rem;
+                right: 2rem;
+                z-index: 9999;
+            }
+
+            .site-header {
+                background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+                border-radius: 12px;
+                color: white;
+                padding: 2rem;
+                margin-bottom: 2rem;
+            }
+
+            .site-header h1 {
+                font-size: 2rem;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+            }
+
+            .site-header .subtitle {
+                opacity: 0.9;
+                font-size: 1.1rem;
+            }
+
+            .site-header .stats {
+                display: flex;
+                gap: 2rem;
+                margin-top: 1rem;
+            }
+
+            .site-header .stat-item {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .dashboard-tabs {
+                margin-bottom: 2rem;
+            }
+
+            .nav-tabs {
+                border-bottom: 2px solid #e9ecef;
+            }
+
+            .nav-tabs .nav-link {
+                border: none;
+                border-radius: 0;
+                color: #6c757d;
+                font-weight: 500;
+                padding: 1rem 1.5rem;
+                position: relative;
+            }
+
+            .nav-tabs .nav-link.active {
+                background-color: transparent;
+                color: #ff6b35;
+                border-bottom: 3px solid #ff6b35;
+            }
+
+            .nav-tabs .nav-link:hover {
+                border-color: transparent;
+                color: #ff6b35;
+            }
+
+            .metric-cards {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 1.5rem;
+                margin-bottom: 2rem;
+            }
+
+            .metric-card {
+                background: white;
+                border-radius: 12px;
+                padding: 1.5rem;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+                border: 1px solid #f0f0f0;
+            }
+
+            .metric-card .icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 1rem;
+                font-size: 1.5rem;
+            }
+
+            .metric-card.total-budget .icon {
+                background-color: rgba(255, 107, 53, 0.1);
+                color: #ff6b35;
+            }
+
+            .metric-card.total-spent .icon {
+                background-color: rgba(40, 167, 69, 0.1);
+                color: #28a745;
+            }
+
+            .metric-card.remaining .icon {
+                background-color: rgba(23, 162, 184, 0.1);
+                color: #17a2b8;
+            }
+
+            .metric-card.utilization .icon {
+                background-color: rgba(108, 117, 125, 0.1);
+                color: #6c757d;
+            }
+
+            .metric-card .amount {
+                font-size: 1.8rem;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+            }
+
+            .metric-card .label {
+                color: #6c757d;
+                font-size: 0.9rem;
+                margin: 0;
+            }
+
+            .progress-section {
+                background: white;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            }
+
+            .progress-section h5 {
+                margin-bottom: 1rem;
+                color: #495057;
+                font-weight: 600;
+            }
+
+            .phase-item {
+                background: white;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+                border: 1px solid #f0f0f0;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                position: relative;
+            }
+
+            .phase-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+                border-color: #ff6b35;
+            }
+
+            .phase-item .phase-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1rem;
+            }
+
+            .phase-item .phase-title {
+                font-weight: 600;
+                color: #495057;
+            }
+
+            .phase-item .phase-status {
+                padding: 0.25rem 0.75rem;
+                border-radius: 20px;
+                font-size: 0.8rem;
+                font-weight: 500;
+            }
+
+            .phase-status.completed {
+                background-color: #d4edda;
+                color: #155724;
+            }
+
+            .phase-status.active {
+                background-color: #fff3cd;
+                color: #856404;
+            }
+
+            .phase-status.pending {
+                background-color: #f8d7da;
+                color: #721c24;
+            }
+
+            .phase-actions {
+                position: absolute;
+                top: 1rem;
+                right: 1rem;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+            }
+
+            .phase-item:hover .phase-actions {
+                opacity: 1;
+            }
+
+            .btn-orange {
+                background-color: #ff6b35;
+                border-color: #ff6b35;
+                color: white;
+            }
+
+            .btn-orange:hover {
+                background-color: #e55a2b;
+                border-color: #e55a2b;
+                color: white;
+            }
+
+            .btn-outline-orange {
+                border-color: #ff6b35;
+                color: #ff6b35;
+            }
+
+            .btn-outline-orange:hover {
+                background-color: #ff6b35;
+                border-color: #ff6b35;
+                color: white;
+            }
+
+            .filters-section {
+                background: white;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            }
+
+            .filter-card {
+                background: #f8f9fa;
+                border: 1px solid #e9ecef;
+                border-radius: 8px;
+                padding: 0.75rem;
+                margin-bottom: 1rem;
+            }
+
+            .filter-card h6 {
+                margin-bottom: 0.5rem;
+                color: #495057;
+                font-weight: 600;
+            }
+
+            .phase-detail-tabs .nav-tabs {
+                border-bottom: 1px solid #dee2e6;
+                margin-bottom: 1.5rem;
+            }
+
+            .phase-detail-tabs .nav-link {
+                border: none;
+                color: #6c757d;
+                padding: 0.75rem 1rem;
+                margin-right: 1rem;
+                border-radius: 6px;
+            }
+
+            .phase-detail-tabs .nav-link.active {
+                background-color: #ff6b35;
+                color: white;
+            }
+
+            .phase-detail-tabs .nav-link:hover {
+                color: #ff6b35;
+                background-color: rgba(255, 107, 53, 0.1);
+            }
+        </style>
+
+        <style>
+            /* Existing styles remain the same... */
+
+            /* New styles for phase detail view */
+            .phase-detail-view {
+                display: none;
+                background: white;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 2rem;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+                border: 1px solid #f0f0f0;
+            }
+
+            .phase-detail-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 1.5rem;
+                padding-bottom: 1rem;
+                border-bottom: 1px solid #e9ecef;
+            }
+
+            .phase-detail-tabs .nav-tabs {
+                border-bottom: 1px solid #dee2e6;
+                margin-bottom: 1.5rem;
+            }
+
+            .phase-detail-tabs .nav-link {
+                border: none;
+                color: #6c757d;
+                padding: 0.75rem 1rem;
+                margin-right: 1rem;
+                border-radius: 6px;
+            }
+
+            .phase-detail-tabs .nav-link.active {
+                background-color: #ff6b35;
+                color: white;
+            }
+
+            .phase-detail-tabs .nav-link:hover {
+                color: #ff6b35;
+                background-color: rgba(255, 107, 53, 0.1);
+            }
+
+            .tab-content-section {
+                min-height: 300px;
+            }
+
+            .back-to-phases {
+                cursor: pointer;
+                color: #ff6b35;
+                font-weight: 500;
+            }
+
+            .back-to-phases:hover {
+                text-decoration: underline;
+            }
+
+            .add-entry-btn {
+                margin-bottom: 1rem;
+            }
+        </style>
 
 
-        .header-container {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-        }
+        <x-breadcrumb :names="['Sites', $site->site_name]" :urls="[$user . '/sites', $user . '/sites/' . base64_encode($site->id)]" />
 
-        .header-icon {
-            background-color: #3b82f6;
-            color: white;
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-        }
-
-
-        .summary-cards {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .summary-card {
-            flex: 1;
-            padding: 15px;
-            border-radius: 8px;
-        }
-
-        .summary-card.gave {
-            background-color: #fee2e2;
-        }
-
-        .summary-card.got {
-            background-color: #d1fae5;
-        }
-
-        .summary-card.balance {
-            background-color: #e0e7ff;
-        }
-
-        .summary-amount {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .summary-label {
-            font-size: 14px;
-        }
-
-        .gave-text {
-            color: #dc2626;
-        }
-
-        .got-text {
-            color: #059669;
-        }
-
-        .balance-text {
-            color: #4f46e5;
-        }
-
-        .report-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-        }
-
-        .report-table th {
-            text-align: left;
-            padding: 12px 15px;
-            border-bottom: 1px solid #e5e7eb;
-            font-weight: 500;
-            color: #4b5563;
-        }
-
-        .report-table td {
-            padding: 12px 15px;
-            border-bottom: 1px solid #f3f4f6;
-        }
-
-        .report-table tr:nth-child(even) {
-            background-color: #f9fafb;
-        }
-
-        .action-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-outline {
-            border: 1px solid #d1d5db;
-            background-color: white;
-            color: #374151;
-        }
-    </style>
-
-
-    <x-breadcrumb :names="['Sites', $site->site_name]" :urls="[$user . '/sites', $user . '/sites/' . base64_encode($site->id)]" />
-
-    <div class="header-container">
-
-
-        <div class="header-icon">
-            <i class="menu-icon fa fa-building"></i>
+        <!-- Site Header -->
+        <div class="site-header">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1>{{ ucwords($site->site_name) }}</h1>
+                    <p class="subtitle mb-0">Current Phase: Site Preparation</p>
+                    <div class="stats mt-3">
+                        <div class="stat-item">
+                            <i class="fas fa-layer-group"></i>
+                            <span>{{ count($phases) }} Phases</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-users"></i>
+                            <span>{{ count($site->users) }} Workers</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-chart-line"></i>
+                            <span>{{ $total_paid > 0 ? number_format((($total_paid / ($total_paid + $total_due)) * 100), 1) : 0 }}% Complete</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#phase">
+                        <i class="fas fa-plus me-1"></i> New Phase
+                    </button>
+                    <a href="{{ url($user . '/attendance/site/show/' . base64_encode($site->id)) }}" class="btn btn-outline-orange">
+                        <i class="fas fa-external-link-alt me-2"></i> View Full Attendance
+                    </a>
+                    <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#payment-supplier">
+                        <i class="fas fa-money-check-alt me-1"></i> Record Payment
+                    </button>
+                    <form action="{{ url($user . '/ledger/report') }}" method="GET" class="d-inline">
+                        <input type="hidden" name="site_id" value="{{ $site->id }}">
+                        <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
+                        <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
+                        <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
+                        @if(request('date_filter') === 'custom')
+                            <input type="hidden" name="start_date" value="{{ request('start_date') }}">
+                            <input type="hidden" name="end_date" value="{{ request('end_date') }}">
+                        @endif
+                        <button type="submit" class="btn btn-light btn-sm">
+                            <i class="far fa-file-pdf me-1"></i> Export Data
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
 
-        <h2 class="text-xl font-semibold">{{ ucwords($site->site_name) }} | {{ ucwords($site->client->name) }}</h2>
+        <!-- Navigation Tabs -->
+        <div class="dashboard-tabs">
+            <ul class="nav nav-tabs" id="siteTabs" role="tablist">
 
-        <div class="ms-auto action-buttons d-flex gap-2">
-
-
-            <button class="btn btn-outline btn-sm" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown"
-                aria-expanded="false">
-                <i class="fas fa-bolt me-1"></i> Quick Actions
-            </button>
-
-            <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                <!-- Entry Actions -->
-                <li>
-                    <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#phase">
-                        <i class="fas fa-layer-group me-2"></i> Add Phase
-                    </a>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="phases-tab" data-bs-toggle="tab" data-bs-target="#phases" type="button" role="tab">
+                        <i class="fas fa-layer-group me-2"></i> Phases
+                    </button>
                 </li>
 
-                <li>
-                    <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#modal-construction-billings">
-                        <i class="fas fa-truck-loading me-2"></i> Add Construction Billing
-                    </a>
-                </li>
-                <li>
-                    <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#modal-square-footage-bills">
-                        <i class="fas fa-ruler-combined me-2"></i> Add Contractor Billing
-                    </a>
-                </li>
-                <li>
-                    <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#modal-daily-expenses">
-                        <i class="fas fa-receipt me-2"></i> Add Daily Expense
-                    </a>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="calculations-tab" data-bs-toggle="tab" data-bs-target="#calculations" type="button" role="tab">
+                        <i class="fas fa-calculator me-2"></i> Calculations
+                    </button>
                 </li>
 
-                <li>
-                    <a class="dropdown-item" href="#payment-supplier" data-bs-toggle="modal" role="button">
-                        <i class="fas fa-money-bill me-2"></i> Pay balance
-                    </a>
-                </li>
 
-                <li>
-                    <hr class="dropdown-divider">
-                </li>
-
-                <!-- View / Utility Actions -->
-                <li>
-                    <a class="dropdown-item" href="{{ url('admin/sites/details/' . base64_encode($site->id)) }}">
-                        <i class="fas fa-info-circle me-2"></i> View Site Details
-                    </a>
-                </li>
-                <li>
-                    <a class="dropdown-item" href="{{ url($user . '/attendance/site/show/' . base64_encode($site->id)) }}">
-                        <i class="fas fa-calendar-check me-2"></i> View Attendance
-                    </a>
-                </li>
-                <li>
-                    <a class="dropdown-item"
-                        href="{{ url('admin/site-payment/report', ['id' => base64_encode($site->id)]) }}">
-                        <i class="fas fa-file-invoice-dollar me-2"></i> View Payment Report
-                    </a>
-                </li>
-
-                <li>
-                    <a class="dropdown-item" href="{{ url('admin/sites/payments', [$site->id]) }}">
-                        <i class="fas fa-list me-2"></i>
-                        View Payments
-                    </a>
-                </li>
             </ul>
-
-            <form action="{{ url($user . '/ledger/report') }}" method="GET">
-                <!-- Existing filters -->
-                <input type="hidden" name="site_id" value="{{ request('site_id', $site->id) }}">
-                <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
-                <input type="hidden" name="supplier_id" value="{{ request('supplier_id', $data['supplier']->id ?? 'all') }}">
-                <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
-
-                <!-- Missing custom date range filters -->
-                @if(request('date_filter') === 'custom')
-                    <input type="hidden" name="start_date" value="{{ request('start_date') }}">
-                    <input type="hidden" name="end_date" value="{{ request('end_date') }}">
-                @endif
-
-
-                <!-- Add more hidden inputs for any other query parameters you want to preserve -->
-                @foreach(request()->query() as $key => $value)
-                    @if(!in_array($key, ['site_id', 'date_filter', 'supplier_id', 'phase_id', 'start_date', 'end_date']))
-                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                    @endif
-                @endforeach
-
-                <button type="submit" class="btn btn-outline">
-                    <i class="far fa-file-pdf"></i> PDF
-                </button>
-            </form>
-
         </div>
 
-    </div>
-
-
-
-    <form class="d-flex flex-column flex-md-row gap-2 w-100" action="{{ url()->current() }}" method="GET"
-        id="filterForm">
-
-        <!-- Supplier Select -->
-        <select class="bg-white text-black form-select form-select-sm" name="phase_id" id="phaseFilter">
-            <option value="all" {{ request('phase_id') == 'all' ? 'selected' : '' }}>All Phases</option>
-            @if (!empty($phases))
-                @foreach ($phases as $phase)
-                    <option value="{{ $phase->id }}" {{ request('phase_id') == $phase->id ? 'selected' : '' }}>
-                        {{ $phase->phase_name }}
-                    </option>
-                @endforeach
-            @endif
-        </select>
-
-        <!-- Supplier Select -->
-        <select class="bg-white text-black form-select form-select-sm" name="supplier_id" id="supplierFilter">
-            <option value="all" {{ request('supplier_id') == 'all' ? 'selected' : '' }}>All Suppliers</option>
-            @if (!empty($suppliers))
-                @foreach ($suppliers as $supplier)
-                    <option value="{{ $supplier['supplier_id'] }}"
-                        {{ request('supplier_id') == $supplier['supplier_id'] ? 'selected' : '' }}>
-                        {{ $supplier['supplier_name'] }}
-                    </option>
-                @endforeach
-            @endif
-        </select>
-
-        <!-- Date Period Filter -->
-        <select class="bg-white text-black form-select form-select-sm" name="date_filter" id="dateFilter">
-            <option value="today" {{ request('date_filter') === 'today' ? 'selected' : '' }}>Today</option>
-            <option value="yesterday" {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>Yesterday
-            </option>
-            <option value="this_week" {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>This Week
-            </option>
-            <option value="this_month" {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>This Month
-            </option>
-            <option value="this_year" {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>This Year
-            </option>
-            <option value="custom" {{ request('date_filter') === 'custom' ? 'selected' : '' }}>Custom Range</option>
-            <option value="lifetime" {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>All Data</option>
-        </select>
-
-
-
-        <!-- Date Range Inputs (shown only when custom is selected) -->
-        <div id="customDateRange"
-            style="display: {{ request('date_filter') === 'custom' ? 'flex' : 'none' }}; gap: 0.5rem;">
-            <input type="date" name="start_date" class="form-control form-control-sm bg-white text-black"
-                value="{{ request('start_date') }}" placeholder="Start Date">
-            <input type="date" name="end_date" class="form-control form-control-sm bg-white text-black"
-                value="{{ request('end_date') }}" placeholder="End Date">
-        </div>
-
-        <!-- Reset Button -->
-        <button type="button" class="btn btn-outline-secondary btn-sm" id="resetFilters">
-            <i class="fas fa-undo"></i> Reset
-        </button>
-    </form>
-
-
-    <div class="mt-4">
-
-        <div class="summary-cards">
-
-            <div class="summary-card gave">
-                <div class="summary-amount gave-text">₹{{ $total_balance }}</div>
-                <div class="summary-label gave-text">Total Balance</div>
-            </div>
-
-            <div class="summary-card gave">
-                <div class="summary-amount gave-text">₹{{ $total_due }}</div>
-                <div class="summary-label gave-text">Total Due</div>
-            </div>
-
-            <div class="summary-card balance">
-                <div class="summary-amount balance-text">₹{{ $effective_balance }}</div>
-                <div class="summary-label balance-text">Effective Balance</div>
-            </div>
-
-            <div class="summary-card got">
-                <div class="summary-amount got-text">₹{{ $total_paid }}</div>
-                <div class="summary-label got-text">Total Paid</div>
-            </div>
-
-            <div class="summary-card got">
-                <div class="summary-amount got-text">₹{{ $returns }}</div>
-                <div class="summary-label got-text">Total Returns</div>
-            </div>
-
-
-        </div>
+        <!-- Tab Content -->
+        <div class="tab-content" id="siteTabContent">
 
 
 
 
-        <div class="table-responsive">
-            <table class="table mb-0">
-                <thead>
-                    <tr>
-                        <th class="fw-bold">Date</th>
-                        <th class="fw-bold">Customer Name</th>
-                        <th class="fw-bold">Details</th>
-                        <th class="fw-bold">Returns</th>
-                        <th class="fw-bold ">Purchases</th>
-                        <th class="fw-bold ">Payments</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if ($paginatedLedgers->count())
-                        @foreach ($paginatedLedgers as $ledger)
-                            <tr>
-                                <td>{{ \Carbon\Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
-                                <td>
-                                    <strong>{{ ucwords($ledger['supplier']) }}</strong>
-                                </td>
-                                <td>
-                                    <div class="fw-bold">{{ ucwords($ledger['description']) }}</div>
-                                    <small class="text-muted">
-                                        {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
-                                    </small>
-                                </td>
-                                <td class=" text-danger fw-bold">
-                                    @if ($ledger['return'] > 0)
-                                        ₹{{ number_format($ledger['return']) }}
-                                    @else
-                                        ₹0
-                                    @endif
-                                </td>
-                                <td class="fw-bold">
-                                    @if ($ledger['debit'] > 0)
-                                        ₹{{ number_format($ledger['debit']) }}
-                                    @else
-                                        <div class="fw-bold">₹0</div>
-                                        <small class="text-muted">
-                                            {{ ucwords($ledger['amount_status']) }}
-                                        </small>
-                                    @endif
-                                </td>
-                                <td class=" text-success fw-bold">
-                                    @if ($ledger['credit'] > 0)
-                                        ₹{{ number_format($ledger['credit']) }}
-                                    @else
-                                        ₹0
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    @else
-                        <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">No records available</td>
-                        </tr>
-                    @endif
-                </tbody>
-            </table>
-        </div>
-
-        @if ($paginatedLedgers->hasPages())
-            <div class="p-3 border-top">
-                <nav aria-label="Page navigation">
-                    <ul class="pagination justify-content-end mb-0">
-                        @if ($paginatedLedgers->onFirstPage())
-                            <li class="page-item disabled">
-                                <span class="page-link">&laquo;</span>
-                            </li>
-                        @else
-                            <li class="page-item">
-                                <a class="page-link" href="{{ $paginatedLedgers->previousPageUrl() }}"
-                                    rel="prev">&laquo;</a>
-                            </li>
-                        @endif
-
-                        @foreach ($paginatedLedgers->getUrlRange(1, $paginatedLedgers->lastPage()) as $page => $url)
-                            @if ($page == $paginatedLedgers->currentPage())
-                                <li class="page-item active">
-                                    <span class="page-link">{{ $page }}</span>
-                                </li>
-                            @else
-                                <li class="page-item">
-                                    <a class="page-link" href="{{ $url }}">{{ $page }}</a>
-                                </li>
-                            @endif
-                        @endforeach
-
-                        @if ($paginatedLedgers->hasMorePages())
-                            <li class="page-item">
-                                <a class="page-link" href="{{ $paginatedLedgers->nextPageUrl() }}"
-                                    rel="next">&raquo;</a>
-                            </li>
-                        @else
-                            <li class="page-item disabled">
-                                <span class="page-link">&raquo;</span>
-                            </li>
-                        @endif
-                    </ul>
-                </nav>
-            </div>
-        @endif
 
 
-    </div>
 
-    <div id="messageContainer"></div>
+            <!-- Phases Tab -->
+            <div class="tab-pane fade active" id="phases" role="tabpanel">
+
+                <!-- Metric Cards -->
+                <div class="metric-cards">
+                    <div class="metric-card total-budget">
+                        <div class="icon">
+                            <i class="fas fa-rupee-sign"></i>
+                        </div>
+                        <div class="amount">₹{{ number_format($total_paid + $total_due) }}</div>
+                        <p class="label">Total Budget</p>
+                    </div>
+
+                    <div class="metric-card total-spent">
+                        <div class="icon">
+                            <i class="fas fa-chart-line"></i>
+                        </div>
+                        <div class="amount">₹{{ number_format($total_paid) }}</div>
+                        <p class="label">Total Spent</p>
+                    </div>
+
+                    <div class="metric-card remaining">
+                        <div class="icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="amount">₹{{ number_format($total_due) }}</div>
+                        <p class="label">Remaining</p>
+                    </div>
+
+                    <div class="metric-card utilization">
+                        <div class="icon">
+                            <i class="fas fa-percentage"></i>
+                        </div>
+                        <div class="amount">{{ $total_paid > 0 ? number_format((($total_paid / ($total_paid + $total_due)) * 100), 1) : 0 }}%</div>
+                        <p class="label">Utilization</p>
+                    </div>
+                </div>
 
 
-    {{-- ------------------------------------------------------- All The Models Are Here ----------------------------------------------------------- --}}
-
-
-    {{-- Phase Form --}}
-
-    <div id="phase" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-        data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <form class="forms-sample material-form" id="phaseForm">
-                        @csrf
-
-                        {{-- Phase Name --}}
-                        <div class="form-group">
-                            <input type="text" name="phase_name" id="phase_name" />
-                            <label for="phase_name" class="control-label">Phase Name</label>
-                            <i class="bar"></i>
+                <!-- Filters -->
+                <div class="filters-section">
+                    <h5 class="mb-3"><i class="fas fa-filter me-2"></i>Filter Data</h5>
+                    <form action="{{ url()->current() }}" method="GET" id="filterForm">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="filter-card">
+                                    <h6><i class="fas fa-layer-group me-2"></i>Phase</h6>
+                                    <select class="form-select form-select-sm" name="phase_id" id="phaseFilter">
+                                        <option value="all" {{ request('phase_id') == 'all' ? 'selected' : '' }}>All Phases</option>
+                                        @if (!empty($phases))
+                                            @foreach ($phases as $phase)
+                                                <option value="{{ $phase->id }}" {{ request('phase_id') == $phase->id ? 'selected' : '' }}>
+                                                    {{ $phase->phase_name }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="filter-card">
+                                    <h6><i class="fas fa-truck me-2"></i>Supplier</h6>
+                                    <select class="form-select form-select-sm" name="supplier_id" id="supplierFilter">
+                                        <option value="all" {{ request('supplier_id') == 'all' ? 'selected' : '' }}>All Suppliers</option>
+                                        @if (!empty($suppliers))
+                                            @foreach ($suppliers as $supplier)
+                                                <option value="{{ $supplier['supplier_id'] }}" {{ request('supplier_id') == $supplier['supplier_id'] ? 'selected' : '' }}>
+                                                    {{ $supplier['supplier_name'] }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="filter-card">
+                                    <h6><i class="fas fa-calendar me-2"></i>Date Range</h6>
+                                    <select class="form-select form-select-sm" name="date_filter" id="dateFilter">
+                                        <option value="today" {{ request('date_filter') === 'today' ? 'selected' : '' }}>Today</option>
+                                        <option value="yesterday" {{ request('date_filter') === 'yesterday' ? 'selected' : '' }}>Yesterday</option>
+                                        <option value="this_week" {{ request('date_filter') === 'this_week' ? 'selected' : '' }}>This Week</option>
+                                        <option value="this_month" {{ request('date_filter') === 'this_month' ? 'selected' : '' }}>This Month</option>
+                                        <option value="this_year" {{ request('date_filter') === 'this_year' ? 'selected' : '' }}>This Year</option>
+                                        <option value="custom" {{ request('date_filter') === 'custom' ? 'selected' : '' }}>Custom Range</option>
+                                        <option value="lifetime" {{ request('date_filter') === 'lifetime' ? 'selected' : '' }}>All Data</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
-
-                        {{-- Date --}}
-                        <div class="form-group">
-                            <input type="date" name="created_at" id="created_at" />
-                            <label for="created_at" class="control-label">Date</label>
-                            <i class="bar"></i>
+                        <div id="customDateRange" class="row g-3 mt-2" style="display: {{ request('date_filter') === 'custom' ? 'flex' : 'none' }};">
+                            <div class="col-md-6">
+                                <div class="filter-card">
+                                    <h6><i class="fas fa-calendar-alt me-2"></i>Start Date</h6>
+                                    <input type="date" name="start_date" class="form-control form-control-sm" value="{{ request('start_date') }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="filter-card">
+                                    <h6><i class="fas fa-calendar-alt me-2"></i>End Date</h6>
+                                    <input type="date" name="end_date" class="form-control form-control-sm" value="{{ request('end_date') }}">
+                                </div>
+                            </div>
                         </div>
 
-
-                        {{-- Site --}}
-                        <div class="form-group">
-                            <input type="hidden" name="site_id" value="{{ $site->id }}" />
-                        </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-success">
-                                Create Phase
+                        <div class="text-center mt-3">
+                            <button type="button" class="btn btn-outline-orange me-2" id="resetFilters">
+                                <i class="fas fa-undo me-1"></i> Reset Filters
+                            </button>
+                            <button type="submit" class="btn btn-orange">
+                                <i class="fas fa-search me-1"></i> Apply Filters
                             </button>
                         </div>
-
                     </form>
                 </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Construction Material Form -->
-    <div id="modal-construction-billings" class="modal fade" aria-hidden="true" data-bs-backdrop="static"
-        data-bs-keyboard="false" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
 
-        <div class="modal-dialog modal-dialog-centered">
+                <!-- Phase List View (default) -->
+                <div id="phaseListView">
 
-            <div class="modal-content">
 
-                <div class="modal-body">
-
-                    <form enctype="multipart/form-data" class="forms-sample material-form"
-                        id="constructionBillingForm">
-                        @csrf
+                    @if(!empty($phases) && count($phases) > 0)
                         <div class="row">
-                            <div class="col-md-6">
-                                <!-- Amount -->
-                                <div class="form-group mb-3">
-                                    <input type="number" name="amount" id="amount" step="0.01"
-                                        min="0" />
-                                    <label for="amount" class="control-label">Material Price</label>
-                                    <i class="bar"></i>
-                                    <p class="mt-1 text-danger" id="amount-error"></p>
+                            @foreach($phases as $phase)
+                                <div class="col-lg-4 mb-4">
+                                    <div class="phase-item position-relative" onclick="openPhaseDetail({{ $phase->id }}, '{{ $phase->phase_name }}')">
+                                        <!-- Action Buttons -->
+                                        <div class="phase-actions">
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); editPhase({{ $phase->id }}, '{{ $phase->phase_name }}')" title="Edit Phase">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deletePhase({{ $phase->id }}, '{{ $phase->phase_name }}')" title="Delete Phase">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div class="phase-header">
+                                            <span class="phase-title">{{ $phase->phase_name }}</span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <small class="text-muted d-block"><i class="fas fa-calendar me-1"></i>Start: {{ \Carbon\Carbon::parse($phase->created_at)->format('d/m/Y') }}</small>
+                                            <small class="text-muted"><i class="fas fa-rupee-sign me-1"></i>Budget: ₹{{ number_format(150000) }}</small>
+                                        </div>
+                                        <div class="progress mb-3" style="height: 8px;">
+                                            <div class="progress-bar" style="width: 100%; background-color: #ff6b35;"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="text-muted"><i class="fas fa-user-tie me-1"></i>ABC Construction</small>
+                                            <small class="text-success fw-semibold">₹{{ number_format(149500) }}</small>
+                                        </div>
+
+                                        <!-- Click indicator -->
+                                        <div class="text-center mt-2">
+                                            <small class="text-muted"><i class="fas fa-mouse-pointer me-1"></i>Click to view details</small>
+                                        </div>
+                                    </div>
                                 </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-5">
+                            <i class="fas fa-layer-group text-muted mb-3" style="font-size: 3rem;"></i>
+                            <h5 class="text-muted">No phases created yet</h5>
+                            <p class="text-muted">Start by creating your first project phase</p>
+                            <button class="btn btn-orange" data-bs-toggle="modal" data-bs-target="#phase">
+                                <i class="fas fa-plus me-2"></i> Create First Phase
+                            </button>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Phase Detail View (hidden by default) -->
+                <div id="phaseDetailView" class="phase-detail-view">
+                    <div class="phase-detail-header">
+                        <div>
+                        <span class="back-to-phases" onclick="showPhaseList()">
+                            <i class="fas fa-arrow-left me-2"></i> Back to Phases
+                        </span>
+                            <h4 class="mt-2" id="phaseDetailTitle">Construction Data - <span id="phaseNameTitle"></span></h4>
+                        </div>
+                        <div class="phase-progress-badge">
+                            <span class="badge bg-success" id="phaseProgressBadge">100% Complete</span>
+                        </div>
+                    </div>
+
+                    <!-- Phase Detail Tabs -->
+                    <div class="phase-detail-tabs">
+                        <ul class="nav nav-tabs" id="phaseDetailTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="materials-tab" data-bs-toggle="tab" data-bs-target="#materials-content" type="button" role="tab">
+                                    <i class="fas fa-boxes me-2"></i> Materials
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="contractor-tab" data-bs-toggle="tab" data-bs-target="#contractor-content" type="button" role="tab">
+                                    <i class="fas fa-user-tie me-2"></i> Contractor Billing
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses-content" type="button" role="tab">
+                                    <i class="fas fa-receipt me-2"></i> Expenses
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Phase Detail Tab Content -->
+                    <div class="tab-content tab-content-section" id="phaseDetailTabContent">
+                        <!-- Materials Tab -->
+                        <div class="tab-pane fade show active" id="materials-content" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h6 class="mb-0">Material Entries</h6>
+                                <button class="btn btn-orange btn-sm add-entry-btn" onclick="addMaterial()">
+                                    <i class="fas fa-plus me-1"></i> Add Material
+                                </button>
                             </div>
 
-
-
-                            <div class="col-md-6">
-                                <!-- Unit -->
-                                <div class="form-group mb-3">
-                                    <input type="number" name="unit_count" id="unit_count" min="1" />
-                                    <label for="unit_count" class="control-label">Units</label>
-                                    <i class="bar"></i>
-                                    <p class="mt-1 text-danger" id="unit_count-error"></p>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Item</th>
+                                                <th>Quantity</th>
+                                                <th>Amount</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="materialsTableBody">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-4">No material entries found</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="row">
-                            <!-- Item Name - Toggleable Field -->
-                            <div class="col-12 mb-3">
-                                <div class="btn-group btn-group-sm mb-2" role="group">
-                                    <button type="button" class="btn btn-outline-primary toggle-item-btn active"
-                                        data-mode="select">View list</button>
-                                    <button type="button" class="btn btn-outline-secondary toggle-item-btn"
-                                        data-mode="custom">Enter custom</button>
+                        <!-- Contractor Billing Tab -->
+                        <div class="tab-pane fade" id="contractor-content" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h6 class="mb-0">Contractor Billing Entries</h6>
+                                <button class="btn btn-orange btn-sm add-entry-btn" onclick="addContractorBilling()">
+                                    <i class="fas fa-plus me-1"></i> Add Billing
+                                </button>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Contractor</th>
+                                                <th>Work Description</th>
+                                                <th>Amount</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="contractorTableBody">
+                                            <tr>
+                                                <td colspan="5" class="text-center text-muted py-4">No contractor billing entries found</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Expenses Tab -->
+                        <div class="tab-pane fade" id="expenses-content" role="tabpanel">
+                            <div class="d-flex justify-content-between align-items-center mb-4">
+                                <h6 class="mb-0">Expense Entries</h6>
+                                <button class="btn btn-orange btn-sm add-entry-btn" onclick="addExpense()">
+                                    <i class="fas fa-plus me-1"></i> Add Expense
+                                </button>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>Item</th>
+                                                <th>Amount</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="expensesTableBody">
+                                            <tr>
+                                                <td colspan="4" class="text-center text-muted py-4">No expense entries found</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Calculations Tab -->
+            <div class="tab-pane fade" id="calculations" role="tabpanel">
+                @if(!empty($phaseData) && count($phaseData) > 0)
+                    <div class="accordion" id="phaseAccordion">
+                        @foreach ($phaseData as $idx => $p)
+                            <div class="accordion-item border-0 mb-3 shadow-sm rounded-3">
+                                <h2 class="accordion-header" id="heading{{ $idx }}">
+                                    <button class="accordion-button {{ $idx !== 0 ? 'collapsed' : '' }} rounded-3" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $idx }}" aria-expanded="{{ $idx === 0 ? 'true' : 'false' }}" aria-controls="collapse{{ $idx }}" style="background-color: #f8f9fa;">
+                                        <div class="w-100">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="fw-semibold">Phase: {{ $p['phase'] }}</span>
+                                                <div class="text-end">
+                                                    <div class="fw-bold text-primary">₹{{ number_format($p['phase_total']) }}</div>
+                                                    <small class="text-muted">Total Cost</small>
+                                                </div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <small class="text-muted">
+                                                    With Service Charge: ₹{{ number_format($p['phase_total_with_service_charge']) }} |
+                                                    Paid: ₹{{ number_format($p['total_payment_amount']) }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ $idx }}" class="accordion-collapse collapse {{ $idx === 0 ? 'show' : '' }}" aria-labelledby="heading{{ $idx }}" data-bs-parent="#phaseAccordion">
+                                    <div class="accordion-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                {{--                                            <h6 class="mb-2 text-primary"><i class="fas fa-tools me-2"></i>Construction Materials (₹{{ number_format($p['construction_total_amount']) }})</h6>--}}
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-striped">
+                                                        <thead class="table-light">
+                                                        <tr><th>Date</th><th>Item</th><th>Amount</th></tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        @forelse($p['construction_material_billings'] as $row)
+                                                            <tr>
+                                                                <td>{{ \Carbon\Carbon::parse($row['created_at'])->format('d M Y') }}</td>
+                                                                <td>{{ $row['description'] }}</td>
+                                                                <td class="fw-semibold">₹{{ number_format($row['debit']) }}</td>
+                                                            </tr>
+                                                        @empty
+                                                            <tr><td colspan="3" class="text-center text-muted">No materials found</td></tr>
+                                                        @endforelse
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                {{--                                            <h6 class="mb-2 text-warning"><i class="fas fa-ruler-combined me-2"></i>Square Footage (₹{{ number_format($p['square_footage_total_amount']) }})</h6>--}}
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-striped">
+                                                        <thead class="table-light">
+                                                        <tr><th>Date</th><th>Work</th><th>Amount</th></tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        @forelse($p['square_footage_bills'] as $row)
+                                                            <tr>
+                                                                <td>{{ \Carbon\Carbon::parse($row['created_at'])->format('d M Y') }}</td>
+                                                                <td>{{ $row['description'] }}</td>
+                                                                <td class="fw-semibold">₹{{ number_format($row['debit']) }}</td>
+                                                            </tr>
+                                                        @empty
+                                                            <tr><td colspan="3" class="text-center text-muted">No square footage work found</td></tr>
+                                                        @endforelse
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                {{--                                            <h6 class="mb-2 text-danger"><i class="fas fa-receipt me-2"></i>Expenses (₹{{ number_format($p['daily_expenses_total_amount']) }})</h6>--}}
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-striped">
+                                                        <thead class="table-light">
+                                                        <tr><th>Date</th><th>Item</th><th>Amount</th></tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        @forelse($p['daily_expenses'] as $row)
+                                                            <tr>
+                                                                <td>{{ \Carbon\Carbon::parse($row['created_at'])->format('d M Y') }}</td>
+                                                                <td>{{ $row['description'] }}</td>
+                                                                <td class="fw-semibold">₹{{ number_format($row['debit']) }}</td>
+                                                            </tr>
+                                                        @empty
+                                                            <tr><td colspan="3" class="text-center text-muted">No expenses found</td></tr>
+                                                        @endforelse
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                {{--                                            <h6 class="mb-2 text-success"><i class="fas fa-users me-2"></i>Labour / Wasta (₹{{ number_format($p['daily_labours_total_amount'] + $p['daily_wastas_total_amount']) }})</h6>--}}
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-striped">
+                                                        <thead class="table-light">
+                                                        <tr><th>Date</th><th>Type</th><th>Amount</th></tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        @forelse($p['daily_wastas'] as $row)
+                                                            <tr>
+                                                                <td>{{ \Carbon\Carbon::parse($row['created_at'])->format('d M Y') }}</td>
+                                                                <td>Wasta: {{ $row['description'] }}</td>
+                                                                <td class="fw-semibold">₹{{ number_format($row['debit']) }}</td>
+                                                            </tr>
+                                                        @empty
+                                                        @endforelse
+                                                        @forelse($p['daily_labours'] as $row)
+                                                            <tr>
+                                                                <td>{{ \Carbon\Carbon::parse($row['created_at'])->format('d M Y') }}</td>
+                                                                <td>Labour: {{ $row['description'] }}</td>
+                                                                <td class="fw-semibold">₹{{ number_format($row['debit']) }}</td>
+                                                            </tr>
+                                                        @empty
+                                                        @endforelse
+                                                        @if(empty($p['daily_wastas']) && empty($p['daily_labours']))
+                                                            <tr><td colspan="3" class="text-center text-muted">No labour/wasta records found</td></tr>
+                                                        @endif
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-5">
+                        <i class="fas fa-calculator text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted">No phase calculations available</h5>
+                        <p class="text-muted">Create phases and add expenses to see detailed calculations</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Phase Detail Modal -->
+        <div id="phaseDetailModal" class="modal fade modal-lg" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%); color: white;">
+                        <h5 class="modal-title" id="phaseDetailTitle">
+                            <i class="fas fa-hammer me-2"></i> Construction Data - <span id="phaseNameTitle"></span>
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Phase Detail Tabs -->
+                        <div class="phase-detail-tabs">
+                            <ul class="nav nav-tabs" id="phaseDetailTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses-content" type="button" role="tab">
+                                        <i class="fas fa-receipt me-2"></i> Expenses
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="materials-tab" data-bs-toggle="tab" data-bs-target="#materials-content" type="button" role="tab">
+                                        <i class="fas fa-boxes me-2"></i> Materials
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="progress-tab" data-bs-toggle="tab" data-bs-target="#progress-content" type="button" role="tab">
+                                        <i class="fas fa-chart-line me-2"></i> Progress
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <!-- Phase Detail Tab Content -->
+                        <div class="tab-content" id="phaseDetailTabContent">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-outline-orange">Save Draft</button>
+                        <button type="button" class="btn btn-orange">Save Construction Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+        <div id="phase" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
+             data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <form class="forms-sample material-form" id="phaseForm">
+                            @csrf
+
+                            Phase Name
+                            <div class="form-group">
+                                <input type="text" name="phase_name" id="phase_name" />
+                                <label for="phase_name" class="control-label">Phase Name</label>
+                                <i class="bar"></i>
+                            </div>
+
+
+                            Date
+                            <div class="form-group">
+                                <input type="date" name="created_at" id="created_at" />
+                                <label for="created_at" class="control-label">Date</label>
+                                <i class="bar"></i>
+                            </div>
+
+
+                            Site
+                            <div class="form-group">
+                                <input type="hidden" name="site_id" value="{{ $site->id }}" />
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">
+                                    Create Phase
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Construction Material Form -->
+        <div id="modal-construction-billings" class="modal fade" aria-hidden="true" data-bs-backdrop="static"
+             data-bs-keyboard="false" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+
+            <div class="modal-dialog modal-dialog-centered">
+
+                <div class="modal-content">
+
+                    <div class="modal-body">
+
+                        <form enctype="multipart/form-data" class="forms-sample material-form"
+                              id="constructionBillingForm">
+                            @csrf
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <!-- Amount -->
+                                    <div class="form-group mb-3">
+                                        <input type="number" name="amount" id="amount" step="0.01"
+                                               min="0" />
+                                        <label for="amount" class="control-label">Material Price</label>
+                                        <i class="bar"></i>
+                                        <p class="mt-1 text-danger" id="amount-error"></p>
+                                    </div>
                                 </div>
 
-                                <!-- Item Select (visible by default) -->
-                                <div id="item-select-container">
-                                    <select class="form-select text-black form-select-sm" name="item_name"
-                                        id="item_name">
-                                        <option value="">Select Item</option>
-                                        @foreach ($items as $item)
-                                            <option value="{{ $item->item_name }}">{{ $item->item_name }}</option>
+
+
+                                <div class="col-md-6">
+                                    <!-- Unit -->
+                                    <div class="form-group mb-3">
+                                        <input type="number" name="unit_count" id="unit_count" min="1" />
+                                        <label for="unit_count" class="control-label">Units</label>
+                                        <i class="bar"></i>
+                                        <p class="mt-1 text-danger" id="unit_count-error"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <!-- Item Name - Toggleable Field -->
+                                <div class="col-12 mb-3">
+                                    <div class="btn-group btn-group-sm mb-2" role="group">
+                                        <button type="button" class="btn btn-outline-primary toggle-item-btn active"
+                                                data-mode="select">View list</button>
+                                        <button type="button" class="btn btn-outline-secondary toggle-item-btn"
+                                                data-mode="custom">Enter custom</button>
+                                    </div>
+
+                                    <!-- Item Select (visible by default) -->
+                                    <div id="item-select-container">
+                                        <select class="form-select text-black form-select-sm" name="item_name"
+                                                id="item_name">
+                                            <option value="">Select Item</option>
+                                            @foreach ($items as $item)
+                                                <option value="{{ $item->item_name }}">{{ $item->item_name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <p class="mt-1 text-danger" id="item_name-error"></p>
+                                    </div>
+
+
+
+                                    <!-- Custom Input (hidden by default) -->
+                                    <div id="custom-item-container" style="display: none;">
+                                        <input type="text" class="form-control" name="custom_item_name"
+                                               id="custom_item_name" placeholder="Enter item name">
+                                        <p class="mt-1 text-danger" id="custom_item_name-error"></p>
+                                    </div>
+
+
+                                    Date
+                                    <div class="form-group">
+                                        <input type="date" name="created_at" id="created_at" />
+                                        <label for="created_at" class="control-label">Date</label>
+                                        <i class="bar"></i>
+                                        <p class="mt-1 text-danger" id="created_at-error"></p>
+
+                                    </div>
+                                </div>
+
+                                <!-- Supplier -->
+                                <div class="col-md-6 mb-3">
+                                    <select class="form-select text-black form-select-sm" name="supplier_id">
+                                        <option value="">Select Supplier</option>
+                                        @foreach ($supp as $supplier)
+                                            <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
                                         @endforeach
                                     </select>
-                                    <p class="mt-1 text-danger" id="item_name-error"></p>
+                                    <p class="mt-1 text-danger" id="supplier_id-error"></p>
                                 </div>
 
-
-
-                                <!-- Custom Input (hidden by default) -->
-                                <div id="custom-item-container" style="display: none;">
-                                    <input type="text" class="form-control" name="custom_item_name"
-                                        id="custom_item_name" placeholder="Enter item name">
-                                    <p class="mt-1 text-danger" id="custom_item_name-error"></p>
+                                <!-- Phase -->
+                                <div class="col-md-6 mb-3">
+                                    <select class="form-select text-black form-select-sm" name="phase_id">
+                                        <option value="">Select Phase</option>
+                                        @foreach ($phases as $phase)
+                                            <option value="{{ $phase->id }}">{{ $phase->phase_name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="mt-1 text-danger" id="phase_id-error"></p>
                                 </div>
 
-
-                                {{-- Date --}}
-                                <div class="form-group">
-                                    <input type="date" name="created_at" id="created_at" />
-                                    <label for="created_at" class="control-label">Date</label>
-                                    <i class="bar"></i>
-                                    <p class="mt-1 text-danger" id="created_at-error"></p>
-
+                                <!-- Image Upload -->
+                                <div class="col-12 mb-3">
+                                    <input class="form-control form-control-md" id="image" type="file"
+                                           name="image">
+                                    <p class="mt-1 text-danger" id="image-error"></p>
                                 </div>
                             </div>
 
-                            <!-- Supplier -->
-                            <div class="col-md-6 mb-3">
-                                <select class="form-select text-black form-select-sm" name="supplier_id">
-                                    <option value="">Select Supplier</option>
-                                    @foreach ($supp as $supplier)
-                                        <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
-                                    @endforeach
-                                </select>
-                                <p class="mt-1 text-danger" id="supplier_id-error"></p>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">Create Billing</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+        {{--     Square Footage Bill Model--}}
+        <div id="modal-square-footage-bills" class="modal fade" aria-hidden="true" data-bs-backdrop="static"
+             data-bs-keyboard="false" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+
+            <div class="modal-dialog modal-dialog-centered">
+
+                <div class="modal-content">
+
+                    <div class="modal-body">
+
+                        Create Square Footage Bills
+                        <form id="squareFootageBills" enctype="multipart/form-data" class="forms-sample material-form">
+
+                            @csrf
+
+                            Date
+                            <div class="form-group">
+                                <input type="date" name="created_at" id="created_at" />
+                                <label for="created_at" class="control-label">Date</label>
+                                <i class="bar"></i>
+                                <p class="mt-1 text-danger" id="created_at-error"></p>
+
                             </div>
 
-                            <!-- Phase -->
-                            <div class="col-md-6 mb-3">
-                                <select class="form-select text-black form-select-sm" name="phase_id">
-                                    <option value="">Select Phase</option>
-                                    @foreach ($phases as $phase)
-                                        <option value="{{ $phase->id }}">{{ $phase->phase_name }}</option>
-                                    @endforeach
-                                </select>
-                                <p class="mt-1 text-danger" id="phase_id-error"></p>
+                            <!-- Wager Name -->
+                            <div class="form-group">
+                                <input id="wager_name" type="text" name="wager_name" />
+                                <label for="wager_name" class="control-label" />Work
+                                Type</label><i class="bar"></i>
+                                <p class="text-danger" id="wager_name-error"></p>
                             </div>
 
-                            <!-- Image Upload -->
-                            <div class="col-12 mb-3">
+                            <!-- Price -->
+                            <div class="form-group">
+                                <input id="price" type="number" name="price" />
+                                <label for="price" class="control-label" />Price</label><i class="bar"></i>
+                                <p class="text-danger" id="price-error"></p>
+                            </div>
+
+                            <!-- Number Of Days -->
+                            <div class="form-group">
+                                <input id="multiplier" type="number" name="multiplier" />
+                                <label for="multiplier" class="control-label">Multiplier</label><i class="bar"></i>
+
+                                <p class="text-danger" id="multiplier-error"></p>
+                            </div>
+
+                            <div class="row">
+
+                                <div class="col-md-4">
+                                    <!-- Type -->
+                                    <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
+                                            name="type" style="cursor: pointer">
+                                        <option value="">Select Type</option>
+                                        <option value="per_sqr_ft">Per Square Feet</option>
+                                        <option value="per_unit">Per Unit</option>
+                                        <option value="full_contract">Full Contract
+                                        </option>
+                                    </select>
+                                    <p class="text-danger" id="type-error"></p>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <!-- Select Supplier -->
+                                    <select class="form-select text-black form-select-sm" id="supplier_id"
+                                            name="supplier_id" style="cursor: pointer">
+                                        <option value="">Select Supplier</option>
+                                        @foreach ($supp as $supplier)
+                                            <option value="{{ $supplier->id }}">
+                                                {{ $supplier->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+
+                                    <p class="text-danger" id="supplier_id-error"></p>
+
+                                </div>
+
+
+                                <!-- Phases -->
+                                <div class="col-md-4">
+                                    <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
+                                            name="phase_id" style="cursor: pointer">
+                                        <option value="">Select Phase</option>
+                                        @foreach ($phases as $phase)
+                                            <option value="{{ $phase->id }}">
+                                                {{ $phase->phase_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <p class=" mt-1 text-danger" id="phase_id-error"></p>
+                                </div>
+                            </div>
+
+
+                            <!-- Image -->
+                            <div class="mt-3">
+                                <label for="image">Item Bill</label>
                                 <input class="form-control form-control-md" id="image" type="file"
-                                    name="image">
-                                <p class="mt-1 text-danger" id="image-error"></p>
+                                       name="image_path">
+                                <p class="text-danger" id="image_path-error"></p>
+
                             </div>
-                        </div>
 
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-success">Create Billing</button>
-                        </div>
-                    </form>
 
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">
+                                    {{ __('Create Bill') }}
+                                </button>
+                            </div>
+
+
+
+                        </form>
+
+                    </div>
                 </div>
             </div>
         </div>
 
-    </div>
+        <!-- Daily Expense -->
+        <div id="modal-daily-expenses" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
+             data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
 
+            Daily Expenses
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <form id="dailyExpenses" class="forms-sample material-form">
 
-    {{-- Square Footage Bill Model --}}
-    <div id="modal-square-footage-bills" class="modal fade" aria-hidden="true" data-bs-backdrop="static"
-        data-bs-keyboard="false" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
+                            @csrf
 
-        <div class="modal-dialog modal-dialog-centered">
-
-            <div class="modal-content">
-
-                <div class="modal-body">
-
-                    {{-- Create Square Footage Bills --}}
-                    <form id="squareFootageBills" enctype="multipart/form-data" class="forms-sample material-form">
-
-                        @csrf
-
-                        {{-- Date --}}
-                        <div class="form-group">
-                            <input type="date" name="created_at" id="created_at" />
-                            <label for="created_at" class="control-label">Date</label>
-                            <i class="bar"></i>
-                            <p class="mt-1 text-danger" id="created_at-error"></p>
-
-                        </div>
-
-                        <!-- Wager Name -->
-                        <div class="form-group">
-                            <input id="wager_name" type="text" name="wager_name" />
-                            <label for="wager_name" class="control-label" />Work
-                            Type</label><i class="bar"></i>
-                            <p class="text-danger" id="wager_name-error"></p>
-                        </div>
-
-                        <!-- Price -->
-                        <div class="form-group">
-                            <input id="price" type="number" name="price" />
-                            <label for="price" class="control-label" />Price</label><i class="bar"></i>
-                            <p class="text-danger" id="price-error"></p>
-                        </div>
-
-                        <!-- Number Of Days -->
-                        <div class="form-group">
-                            <input id="multiplier" type="number" name="multiplier" />
-                            <label for="multiplier" class="control-label">Multiplier</label><i class="bar"></i>
-
-                            <p class="text-danger" id="multiplier-error"></p>
-                        </div>
-
-                        <div class="row">
-
-                            <div class="col-md-4">
-                                <!-- Type -->
-                                <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
-                                    name="type" style="cursor: pointer">
-                                    <option value="">Select Type</option>
-                                    <option value="per_sqr_ft">Per Square Feet</option>
-                                    <option value="per_unit">Per Unit</option>
-                                    <option value="full_contract">Full Contract
-                                    </option>
-                                </select>
-                                <p class="text-danger" id="type-error"></p>
-                            </div>
-
-                            <div class="col-md-4">
-                                <!-- Select Supplier -->
-                                <select class="form-select text-black form-select-sm" id="supplier_id"
-                                    name="supplier_id" style="cursor: pointer">
-                                    <option value="">Select Supplier</option>
-                                    @foreach ($supp as $supplier)
-                                        <option value="{{ $supplier->id }}">
-                                            {{ $supplier->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-
-                                <p class="text-danger" id="supplier_id-error"></p>
+                            Date
+                            <div class="form-group">
+                                <input type="date" name="created_at" id="created_at" />
+                                <label for="created_at" class="control-label">Date</label>
+                                <i class="bar"></i>
+                                <p class="mt-1 text-danger" id="created_at-error"></p>
 
                             </div>
 
+                            <!-- Wager Name -->
+                            <div class="form-group">
+                                <input id="item_name" type="text" name="item_name" />
+                                <label for="item_name" class="control-label">Item
+                                    Name</label><i class="bar"></i>
+                                <p class="text-danger" id="date-error"></p>
+                            </div>
+
+                            <!-- Price -->
+                            <div class="form-group">
+                                <input id="price" type="number" name="price" />
+                                <label for="price" class="control-label">Price</label><i class="bar"></i>
+                                <p class="text-danger" id="description-error"></p>
+                            </div>
+
+                            <!-- sites -->
+                            <div class="form-group">
+                                <input id="site_id" type="hidden" name="site_id" value="{{ $site->id }}" />
+                            </div>
 
                             <!-- Phases -->
-                            <div class="col-md-4">
+                            <div class=" col-12">
                                 <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
-                                    name="phase_id" style="cursor: pointer">
-                                    <option value="">Select Phase</option>
+                                        name="phase_id" style="cursor: pointer">
+                                    <option value="">Select Phase
+                                    </option>
                                     @foreach ($phases as $phase)
                                         <option value="{{ $phase->id }}">
                                             {{ $phase->phase_name }}
@@ -704,771 +1262,574 @@
                                 </select>
                                 <p class=" mt-1 text-danger" id="phase_id-error"></p>
                             </div>
-                        </div>
 
 
-                        <!-- Image -->
-                        <div class="mt-3">
-                            <label for="image">Item Bill</label>
-                            <input class="form-control form-control-md" id="image" type="file"
-                                name="image_path">
-                            <p class="text-danger" id="image_path-error"></p>
+                            <div class="col-12 mt-3">
 
-                        </div>
+                                <input class="form-control" type="file" id="formFile" name="bill_photo">
 
+                                <p class="text-danger" id="category_id-error"></p>
 
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-success">
-                                {{ __('Create Bill') }}
-                            </button>
-                        </div>
-
-
-
-                    </form>
-
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-
-    <!-- Daily Expense -->
-    <div id="modal-daily-expenses" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-        data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
-
-        {{-- Daily Expenses  --}}
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <form id="dailyExpenses" class="forms-sample material-form">
-
-                        @csrf
-
-                        {{-- Date --}}
-                        <div class="form-group">
-                            <input type="date" name="created_at" id="created_at" />
-                            <label for="created_at" class="control-label">Date</label>
-                            <i class="bar"></i>
-                            <p class="mt-1 text-danger" id="created_at-error"></p>
-
-                        </div>
-
-                        <!-- Wager Name -->
-                        <div class="form-group">
-                            <input id="item_name" type="text" name="item_name" />
-                            <label for="item_name" class="control-label">Item
-                                Name</label><i class="bar"></i>
-                            <p class="text-danger" id="date-error"></p>
-                        </div>
-
-                        <!-- Price -->
-                        <div class="form-group">
-                            <input id="price" type="number" name="price" />
-                            <label for="price" class="control-label">Price</label><i class="bar"></i>
-                            <p class="text-danger" id="description-error"></p>
-                        </div>
-
-                        <!-- sites -->
-                        <div class="form-group">
-                            <input id="site_id" type="hidden" name="site_id" value="{{ $site->id }}" />
-                        </div>
-
-                        <!-- Phases -->
-                        <div class=" col-12">
-                            <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
-                                name="phase_id" style="cursor: pointer">
-                                <option value="">Select Phase
-                                </option>
-                                @foreach ($phases as $phase)
-                                    <option value="{{ $phase->id }}">
-                                        {{ $phase->phase_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <p class=" mt-1 text-danger" id="phase_id-error"></p>
-                        </div>
-
-
-                        <div class="col-12 mt-3">
-
-                            <input class="form-control" type="file" id="formFile" name="bill_photo">
-
-                            <p class="text-danger" id="category_id-error"></p>
-
-                        </div>
-
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-success">
-                                {{ __('Create Bill') }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-
-    {{-- Payment Modal --}}
-    <div id="payment-supplier" class="modal fade" aria-hidden="true" tabindex="-1" data-bs-backdrop="static"
-        data-bs-keyboard="false">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <form id="payment_supplierForm" class="forms-sample material-form" enctype="multipart/form-data">
-                        @csrf
-
-
-
-
-                        <div class="d-flex align-items-center gap-2 mb-3 p-2 border-start border-3 border-primary">
-                            <i class="bi bi-building text-primary"></i>
-                            <div>
-                                <small class="text-muted d-block">Client</small>
-                                <strong>{{ $site->client->name }}</strong>
                             </div>
-                        </div>
 
-                        {{-- Date --}}
-                        <div class="form-group">
-                            <input type="date" name="created_at" id="created_at" />
-                            <label for="created_at" class="control-label">Date</label>
-                            <i class="bar"></i>
-                            <p class="mt-1 text-danger" id="created_at-error"></p>
-                        </div>
 
-                        {{-- Amount --}}
-                        <div class="form-group">
-                            <input type="text" name="amount" class="form-control" />
-                            <label class="control-label">Amount</label>
-                            <i class="bar"></i>
-                            <div class="invalid-feedback" id="amount-error"></div>
-                        </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">
+                                    {{ __('Create Bill') }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
 
-                        {{-- Site (hidden) --}}
-                        <input type="hidden" name="site_id" value="{{ $site->id }}" />
+            </div>
+        </div>
 
-                        {{-- Select Payee --}}
-                        <div class="mb-3">
-                            <select name="payment_initiator" id="payment_initiator" style="cursor: pointer"
-                                class="form-select text-black form-select-sm" onchange="togglePayOptions()">
-                                <option value="">Select Payee</option>
-                                <option value="1">Supplier</option>
-                                <option value="0">Admin</option>
-                            </select>
-                            <div class="invalid-feedback" id="payment_initiator-error"></div>
-                        </div>
 
-                        {{-- Supplier Options --}}
-                        <div id="supplierOptions" style="display: none;" class="mb-3">
-                            <select name="supplier_id" id="supplier_id" class="form-select text-black"
-                                style="cursor: pointer">
-                                <option value="">Select Supplier</option>
-                                @foreach ($suppliers as $supplier)
-                                    <option value="{{ $supplier['supplier_id'] }}">{{ $supplier['supplier_name'] }}
-                                    </option>
-                                @endforeach
-                                <div class="invalid-feedback" id="supplier_id-error"></div>
-                            </select>
+        {{--     Payment Modal--}}
+        <div id="payment-supplier" class="modal fade" aria-hidden="true" tabindex="-1" data-bs-backdrop="static"
+             data-bs-keyboard="false">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <form id="payment_supplierForm" class="forms-sample material-form" enctype="multipart/form-data">
+                            @csrf
 
-                            {{-- Screenshot Upload --}}
+
+
+
+                            <div class="d-flex align-items-center gap-2 mb-3 p-2 border-start border-3 border-primary">
+                                <i class="bi bi-building text-primary"></i>
+                                <div>
+                                    <small class="text-muted d-block">Client</small>
+                                    <strong>{{ $site->client->name }}</strong>
+                                </div>
+                            </div>
+
+                            Date
+                            <div class="form-group">
+                                <input type="date" name="created_at" id="created_at" />
+                                <label for="created_at" class="control-label">Date</label>
+                                <i class="bar"></i>
+                                <p class="mt-1 text-danger" id="created_at-error"></p>
+                            </div>
+
+                            Amount
+                            <div class="form-group">
+                                <input type="text" name="amount" class="form-control" />
+                                <label class="control-label">Amount</label>
+                                <i class="bar"></i>
+                                <div class="invalid-feedback" id="amount-error"></div>
+                            </div>
+
+                            Site (hidden)
+                            <input type="hidden" name="site_id" value="{{ $site->id }}" />
+
+                            Select Payee
                             <div class="mb-3">
-                                <label class="control-label mt-3">Upload Screenshot</label>
-                                <input class="form-control" id="image" type="file" name="screenshot">
-                                <div class="invalid-feedback" id="screenshot-error"></div>
+                                <select name="payment_initiator" id="payment_initiator" style="cursor: pointer"
+                                        class="form-select text-black form-select-sm" onchange="togglePayOptions()">
+                                    <option value="">Select Payee</option>
+                                    <option value="1">Supplier</option>
+                                    <option value="0">Admin</option>
+                                </select>
+                                <div class="invalid-feedback" id="payment_initiator-error"></div>
                             </div>
 
-                            {{-- Narration  --}}
-                            <div>
-                                <label class="control-label mt-3">Narration</label>
-                                <textarea id="narration" class="form-control" name="narration"></textarea>
-                                <div class="invalid-feedback" id="narration-error"></div>
-                            </div>
-                        </div>
+                            Supplier Options
+                            <div id="supplierOptions" style="display: none;" class="mb-3">
+                                <select name="supplier_id" id="supplier_id" class="form-select text-black"
+                                        style="cursor: pointer">
+                                    <option value="">Select Supplier</option>
+                                    @foreach ($suppliers as $supplier)
+                                        <option value="{{ $supplier['supplier_id'] }}">{{ $supplier['supplier_name'] }}
+                                        </option>
+                                    @endforeach
+                                    <div class="invalid-feedback" id="supplier_id-error"></div>
+                                </select>
 
-                        {{-- Admin Options (Shown when Admin is selected) --}}
-                        <div id="adminOptions" style="display: none;" class="mt-4">
-
-                            <div class="row g-3 mt-2">
-                                {{-- Sent Radio Option --}}
-                                <div class="col-auto">
-                                    <label for="transaction_sent">
-                                        <input type="radio" name="transaction_type" id="transaction_sent"
-                                            value="1"> Return To {{ $site->client->name }}
-                                    </label>
+                                Screenshot Upload
+                                <div class="mb-3">
+                                    <label class="control-label mt-3">Upload Screenshot</label>
+                                    <input class="form-control" id="image" type="file" name="screenshot">
+                                    <div class="invalid-feedback" id="screenshot-error"></div>
                                 </div>
-                                {{-- Received Radio Option --}}
-                                <div class="col-auto">
-                                    <label for="transaction_received">
-                                        <input type="radio" name="transaction_type" id="transaction_received"
-                                            value="0"> Received By Admin
-                                    </label>
+
+                                Narration
+                                <div>
+                                    <label class="control-label mt-3">Narration</label>
+                                    <textarea id="narration" class="form-control" name="narration"></textarea>
+                                    <div class="invalid-feedback" id="narration-error"></div>
                                 </div>
                             </div>
-                        </div>
+
+                            Admin Options (Shown when Admin is selected)
+                            <div id="adminOptions" style="display: none;" class="mt-4">
+
+                                <div class="row g-3 mt-2">
+                                    Sent Radio Option
+                                    <div class="col-auto">
+                                        <label for="transaction_sent">
+                                            <input type="radio" name="transaction_type" id="transaction_sent"
+                                                   value="1"> Return To {{ $site->client->name }}
+                                        </label>
+                                    </div>
+                                    Received Radio Option
+                                    <div class="col-auto">
+                                        <label for="transaction_received">
+                                            <input type="radio" name="transaction_type" id="transaction_received"
+                                                   value="0"> Received By Admin
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
 
 
 
 
 
 
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-success">Pay</button>
-                        </div>
-                    </form>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-success">Pay</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
 
-    <div id="messageContainer"></div>
+        <div id="messageContainer"></div>
 
 
+        <!-- The rest of your code remains the same (modals, etc.) -->
 
+        @push('scripts')
+            <script>
+                // Global variables
+                let currentPhaseId = null;
+                let currentPhaseName = '';
 
-    {{-- ------------------------------------------  All The Scripts For This Page Are Below ---------------------------------------- --}}
+                // Initialize when document is ready
+                document.addEventListener('DOMContentLoaded', function() {
+                    initializeFormSubmissions();
+                    initializeEventListeners();
+                });
 
-    @push('scripts')
-        <script>
-            $(document).ready(function() {
+                function initializeFormSubmissions() {
+                    // Phase Form
+                    $('#phaseForm').on('submit', function(e) {
+                        e.preventDefault();
+                        submitForm($(this), '/admin/phases', 'Phase created successfully');
+                    });
 
+                    // Construction Billing Form
+                    $('#constructionBillingForm').on('submit', function(e) {
+                        e.preventDefault();
+                        submitForm($(this), '/admin/construction-billings', 'Material added successfully');
+                    });
 
-                // Model Ajax Functions
-                $('form[id="phaseForm"]').on('submit', function(e) {
-                    e.preventDefault();
+                    // Square Footage Form
+                    $('#squareFootageBills').on('submit', function(e) {
+                        e.preventDefault();
+                        submitForm($(this), '/admin/square-footage-bills', 'Contractor billing added successfully');
+                    });
 
-                    const form = $(this);
+                    // Daily Expenses Form
+                    $('#dailyExpenses').on('submit', function(e) {
+                        e.preventDefault();
+                        submitForm($(this), '/admin/daily-expenses', 'Expense added successfully');
+                    });
+
+                    // Payment Form
+                    $('#payment_supplierForm').on('submit', function(e) {
+                        e.preventDefault();
+                        submitForm($(this), '/admin/payments', 'Payment recorded successfully');
+                    });
+                }
+
+                function initializeEventListeners() {
+                    // Toggle item input method
+                    $('.toggle-item-btn').on('click', function() {
+                        const mode = $(this).data('mode');
+                        $('.toggle-item-btn').removeClass('active').removeClass('btn-primary').addClass('btn-outline-secondary');
+                        $(this).addClass('active btn-primary').removeClass('btn-outline-secondary');
+
+                        if (mode === 'custom') {
+                            $('#item-select-container').hide();
+                            $('#custom-item-container').show();
+                        } else {
+                            $('#item-select-container').show();
+                            $('#custom-item-container').hide();
+                        }
+                    });
+
+                    // Date filter toggle
+                    $('#dateFilter').on('change', function() {
+                        if ($(this).val() === 'custom') {
+                            $('#customDateRange').show();
+                        } else {
+                            $('#customDateRange').hide();
+                        }
+                    });
+
+                    // Reset filters
+                    $('#resetFilters').on('click', function() {
+                        $('#filterForm').find('select, input').val('');
+                        $('#filterForm').submit();
+                    });
+                }
+
+                function submitForm(form, url, successMessage) {
                     const formData = new FormData(form[0]);
-                    const messageContainer = $('#messageContainer');
-                    messageContainer.empty();
 
-                    $('.text-danger').remove();
+                    // Show loading state
+                    const submitBtn = form.find('button[type="submit"]');
+                    const originalText = submitBtn.html();
+                    submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Processing...').prop('disabled', true);
+
+                    // Clear previous errors
+                    form.find('.is-invalid').removeClass('is-invalid');
+                    form.find('.invalid-feedback, .text-danger').html('');
 
                     $.ajax({
-                        url: '{{ url('admin/phase') }}',
+                        url: url,
                         type: 'POST',
                         data: formData,
-                        contentType: false,
                         processData: false,
+                        contentType: false,
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
                         success: function(response) {
+                            showMessage(successMessage, 'success');
                             form[0].reset();
-                            messageContainer.html(`
-                             <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
-                                 <div class="d-flex">
-                                    <div class="toast-body">
-                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                    </div>
-                                </div>
-                            </div> `);
 
-                            setTimeout(function() {
-                                messageContainer.find('.alert').alert('close');
-                                location.reload();
-                            }, 2000);
+                            // Close modal
+                            form.closest('.modal').modal('hide');
+
+                            // Reload page or update UI as needed
+                            if (currentPhaseId) {
+                                loadPhaseData(currentPhaseId);
+                            } else {
+                                location.reload(); // Reload page to see new data
+                            }
                         },
                         error: function(xhr) {
-                            const messageContainer = $('#messageContainer');
-                            messageContainer.empty();
-
-                            if (xhr.status === 422 && xhr.responseJSON.errors) {
-                                const errors = xhr.responseJSON.errors;
-
-                                // Loop through errors and display them next to inputs
-                                $.each(errors, function(field, messages) {
-                                    const input = $(`[name="${field}"]`);
-                                    const formGroup = input.closest('.form-group');
-
-                                    input.addClass('is-invalid');
-
-                                    // Append Bootstrap validation error message
-                                    if (formGroup.length) {
-                                        formGroup.append(
-                                            `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
-                                        );
-                                    } else {
-                                        input.after(
-                                            `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
-                                        );
-                                    }
-                                });
-
-
-                            } else {
-                                messageContainer.append(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    An unexpected error occurred. Please try again later.
-                                </div>
-                            `);
-                            }
-
-                            setTimeout(function() {
-                                messageContainer.find('.alert').alert('close');
-                            }, 4000);
-                        }
-
-
-
-                    });
-                });
-
-
-                // Toggle between item selection modes
-                $('.toggle-item-btn').click(function() {
-                    const mode = $(this).data('mode');
-
-                    // Update button states
-                    $('.toggle-item-btn').removeClass('active btn-primary').addClass('btn-outline-secondary');
-                    $(this).removeClass('btn-outline-secondary').addClass('active btn-primary');
-
-                    // Toggle fields
-                    if (mode === 'select') {
-                        $('#item-select-container').show();
-                        $('#custom-item-container').hide();
-                        $('#custom_item_name').val(''); // Clear custom input
-                    } else {
-                        $('#item-select-container').hide();
-                        $('#custom-item-container').show();
-                        $('#item_name').val(''); // Clear select
-                    }
-                });
-
-                // Form submission handler
-                $('form[id^="constructionBillingForm"]').on('submit', function(e) {
-                    e.preventDefault();
-                    const form = $(this);
-                    const formData = new FormData(form[0]);
-                    const messageContainer = $('#messageContainer');
-                    messageContainer.empty();
-
-                    // Clear previous error messages
-                    form.find('.text-danger').text('');
-
-                    // Determine which item field to use
-                    if ($('#custom-item-container').is(':visible') && $('#custom_item_name').val()) {
-                        formData.set('item_name', $('#custom_item_name').val());
-                        formData.delete('custom_item_name');
-                    }
-
-                    $.ajax({
-                        url: '{{ route('construction-material-billings.store') }}',
-                        type: 'POST',
-                        data: formData,
-                        contentType: false,
-                        processData: false,
-                        success: function(response) {
-                            messageContainer.html(`
-                    <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                            </div>
-                        </div>
-                    </div>
-                `);
-
-                            form[0].reset();
-                            $('.toggle-item-btn[data-mode="select"]')
-                                .click(); // Reset to select mode
-
-                            setTimeout(function() {
-                                messageContainer.find('.alert').alert('close');
-                                location.reload();
-                            }, 2000);
-                        },
-                        error: function(response) {
-                            if (response.status === 422) {
-                                const errors = response.responseJSON.errors;
+                            const errors = xhr.responseJSON.errors;
+                            if (errors) {
+                                // Display validation errors
                                 for (const field in errors) {
-                                    const errorElement = $(`#${field}-error`);
-                                    if (errorElement.length) {
-                                        errorElement.text(errors[field][0]);
-                                    } else {
-                                        form.find(`[name="${field}"]`).siblings('.text-danger')
-                                            .text(errors[field][0]);
+                                    const input = form.find('[name="' + field + '"]');
+                                    const errorContainer = form.find('#' + field + '-error');
+
+                                    if (input.length) {
+                                        input.addClass('is-invalid');
+                                    }
+                                    if (errorContainer.length) {
+                                        errorContainer.html(errors[field][0]);
                                     }
                                 }
                             } else {
-                                messageContainer.html(`
-                        <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                            An unexpected error occurred. Please try again later.
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    `);
+                                showMessage('An error occurred. Please try again.', 'error');
                             }
-
-                            setTimeout(function() {
-                                messageContainer.find('.alert').alert('close');
-                            }, 5000);
+                        },
+                        complete: function() {
+                            submitBtn.html(originalText).prop('disabled', false);
                         }
                     });
-                });
+                }
 
-
-
-                // Script For Square Footage Bills
-                $('form[id^="squareFootageBills"]').on('submit', function(e) {
-                    e.preventDefault();
-
-                    const form = $(this);
-                    const formData = new FormData(form[0]);
-                    const messageContainer = $('#messageContainer');
-                    messageContainer.empty();
-
-                    // Clear previous error messages for this form only
-                    form.find('.text-danger').text('');
-
-                    $.ajax({
-                        url: '{{ route('square-footage-bills.store') }}',
-                        type: 'POST',
-                        data: formData,
-                        contentType: false,
-                        processData: false,
-                        success: function(response) {
-                            messageContainer.html(`
-                <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                        </div>
-                    </div>
+                function showMessage(message, type) {
+                    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                    const messageHtml = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
-            `);
+            `;
 
-                            form[0].reset();
+                    $('#messageContainer').html(messageHtml);
 
-                            setTimeout(function() {
-                                messageContainer.find('.alert').alert('close');
-                                location.reload();
-                            }, 2000);
-                        },
-                        error: function(response) {
-                            if (response.status === 422) { // Validation errors
-                                const errors = response.responseJSON.errors;
-
-                                // Loop through each error field
-                                for (const field in errors) {
-                                    // Get the first error message from the array
-                                    const errorMsg = errors[field][0];
-
-                                    // First, try to find the field by name and update sibling error element
-                                    const inputField = form.find(`[name="${field}"]`);
-                                    if (inputField.length > 0) {
-                                        // Try to find sibling error container
-                                        const siblingError = inputField.siblings('.text-danger');
-                                        if (siblingError.length > 0) {
-                                            siblingError.text(errorMsg);
-                                        } else {
-                                            // If no sibling found, try to find by ID
-                                            form.find(`#${field}-error`).text(errorMsg);
-                                        }
-                                    } else {
-                                        // If input not found, try to find error container by ID directly
-                                        form.find(`#${field}-error`).text(errorMsg);
-                                    }
-                                }
-
-                                // Log fields that couldn't be found for debugging
-                                for (const field in errors) {
-                                    const inputField = form.find(`[name="${field}"]`);
-                                    const errorContainer = form.find(`#${field}-error`);
-                                    if (inputField.length === 0 && errorContainer.length === 0) {
-                                        console.log(
-                                            `Warning: Could not find field or error container for: ${field}`
-                                        );
-                                    }
-                                }
-                            } else {
-                                messageContainer.html(`
-                    <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                        An unexpected error occurred. Please try again later.
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `);
-                            }
-
-                            // Auto-hide a general error message after 5 seconds
-                            setTimeout(function() {
-                                messageContainer.find('.alert').alert('close');
-                            }, 5000);
-                        }
-                    });
-                });
-
-
-
-                // Script For Daily Expense
-                $('form[id^="dailyExpenses"]').on('submit', function(e) {
-
-                    e.preventDefault();
-
-                    const form = $(this);
-                    const formData = new FormData(form[0]);
-                    const messageContainer = $('#messageContainer') // Form-specific message container
-                    messageContainer.empty();
-
-                    // Clear previous error messages for this form only
-                    form.find('.text-danger').text('');
-
-                    $.ajax({
-                        url: '{{ route('daily-expenses.store') }}',
-                        type: 'POST',
-                        data: formData,
-                        contentType: false,
-                        processData: false,
-                        success: function(response) {
-                            messageContainer.html(`
-                    <div class="alert align-items-center text-white bg-success border-0" role="alert">
-                        <div class="d-flex">
-                            <div class="toast-body">
-                                <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                            </div>
-                        </div>
-                    </div>
-                `);
-
-                            form[0].reset();
-
-                            // Auto-hide success message after 2 seconds
-                            setTimeout(function() {
-                                messageContainer.find('.alert').alert('close');
-                                location.reload();
-                            }, 2000);
-                        },
-                        error: function(response) {
-
-                            if (response.status === 422) {
-
-                                const errors = response.responseJSON.errors;
-
-                                // Loop through each error field
-                                for (const field in errors) {
-                                    // Get the first error message from the array
-                                    const errorMsg = errors[field][0];
-
-                                    // First, try to find the field by name and update sibling error element
-                                    const inputField = form.find(`[name="${field}"]`);
-                                    if (inputField.length > 0) {
-                                        // Try to find sibling error container
-                                        const siblingError = inputField.siblings(
-                                            '.text-danger');
-                                        if (siblingError.length > 0) {
-                                            siblingError.text(errorMsg);
-                                        } else {
-                                            // If no sibling found, try to find by ID
-                                            form.find(`#${field}-error`).text(errorMsg);
-                                        }
-                                    } else {
-                                        // If input not found, try to find error container by ID directly
-                                        form.find(`#${field}-error`).text(errorMsg);
-                                    }
-                                }
-                            } else {
-                                messageContainer.html(`
-                                 <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                     An unexpected error occurred. Please try again later.
-                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                                 </div>
-                             `);
-                            }
-
-                            // Auto-hide general error message after 5 seconds
-                            setTimeout(function() {
-                                messageContainer.find('.alert').alert('close');
-                            }, 5000);
-                        }
-                    });
-                });
-
-
-
-
-                // Script For Payment
-
-                $('form[id="payment_supplierForm"]').on('submit', function(e) {
-                    e.preventDefault();
-
-                    const form = $(this);
-                    const formData = new FormData(form[0]);
-                    const messageContainer = $('#messageContainer');
-                    messageContainer.empty();
-
-                    $('.text-danger').remove();
-
-                    $.ajax({
-                        url: '{{ url('admin/sites/payments') }}',
-                        type: 'POST',
-                        data: formData,
-                        contentType: false,
-                        processData: false,
-                        success: function(response) {
-                            messageContainer.html(`
-                            <div  class="alert align-items-center text-white bg-success border-0" role="alert" >
-                                <div class="d-flex">
-                                    <div class="toast-body">
-                                        <strong><i class="fas fa-check-circle me-2"></i></strong>${response.message}
-                                    </div>
-                                </div>
-                            </div>
-                        `);
-                            form[0].reset();
-
-                            // Auto-hide success message after 3 seconds
-                            setTimeout(function() {
-                                messageContainer.find('.alert').alert('close');
-                                location.reload();
-
-                            }, 2000);
-                        },
-                        error: function(xhr) {
-                            const messageContainer = $('#messageContainer');
-                            messageContainer.empty();
-
-                            if (xhr.status === 422 && xhr.responseJSON.errors) {
-                                const errors = xhr.responseJSON.errors;
-
-                                // Loop through errors and display them next to inputs
-                                $.each(errors, function(field, messages) {
-                                    const input = $(`[name="${field}"]`);
-                                    const formGroup = input.closest('.form-group');
-
-
-                                    // Append Bootstrap validation error message
-                                    if (formGroup.length) {
-                                        formGroup.append(
-                                            `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
-                                        );
-                                    } else {
-                                        input.after(
-                                            `<div class="invalid-feedback d-block">${messages.join('<br>')}</div>`
-                                        );
-                                    }
-                                });
-
-
-                            } else {
-                                messageContainer.append(`
-                                <div class="alert alert-danger mt-3 alert-dismissible fade show" role="alert">
-                                    An unexpected error occurred. Please try again later.
-                                </div>
-                            `);
-                            }
-
-                            setTimeout(function() {
-                                messageContainer.find('.alert').alert('close');
-                            }, 4000);
-                        }
-
-                    });
-                });
-
-            });
-
-            // Script For Payment Form
-            function togglePayOptions() {
-                const payTo = document.getElementById('payment_initiator').value; // Get the selected value
-                const supplierOptions = document.getElementById('supplierOptions'); // Supplier section
-                const adminOptions = document.getElementById('adminOptions'); // Admin section
-
-                // Check the selected value and toggle visibility accordingly
-                if (payTo === "1") {
-                    supplierOptions.style.display = 'block'; // Show Supplier options
-                    adminOptions.style.display = 'none'; // Hide Admin options
-                } else if (payTo === "0") {
-                    supplierOptions.style.display = 'none'; // Hide Supplier options
-                    adminOptions.style.display = 'block'; // Show Admin options
-                } else {
-                    // Hide both sections if "Select Payee" or invalid option is selected
-                    supplierOptions.style.display = 'none';
-                    adminOptions.style.display = 'none';
+                    // Auto dismiss after 5 seconds
+                    setTimeout(() => {
+                        $('#messageContainer').empty();
+                    }, 5000);
                 }
-            }
 
-            document.addEventListener('DOMContentLoaded', function() {
+                // Phase Management Functions
+                function openPhaseDetail(phaseId, phaseName) {
+                    currentPhaseId = phaseId;
+                    currentPhaseName = phaseName;
 
-                const supplierFilter = document.getElementById('supplierFilter');
-                const filterForm = document.getElementById('filterForm');
-                const dateFilter = document.getElementById('dateFilter');
-                const phaseFilter = document.getElementById('phaseFilter');
-                const customDateRange = document.getElementById('customDateRange');
-                const resetBtn = document.getElementById('resetFilters');
+                    // Update detail view title
+                    document.getElementById('phaseNameTitle').textContent = phaseName;
 
-                // Ensure form submits to the correct URL with site ID
-                filterForm.action = "{{ url()->current() }}";
+                    // Show detail view, hide list view
+                    document.getElementById('phaseListView').style.display = 'none';
+                    document.getElementById('phaseDetailView').style.display = 'block';
 
-                // Toggle date range visibility
-                dateFilter.addEventListener('change', function() {
-                    if (this.value === 'custom') {
-                        customDateRange.style.display = 'flex';
-                    } else {
-                        customDateRange.style.display = 'none';
-                        // Clear date inputs when not using custom range
-                        document.querySelector('input[name="start_date"]').value = '';
-                        document.querySelector('input[name="end_date"]').value = '';
+                    // Load phase data
+                    loadPhaseData(phaseId);
+                }
+
+                function showPhaseList() {
+                    // Show list view, hide detail view
+                    document.getElementById('phaseListView').style.display = 'block';
+                    document.getElementById('phaseDetailView').style.display = 'none';
+
+                    // Reset current phase
+                    currentPhaseId = null;
+                    currentPhaseName = '';
+                }
+
+                function loadPhaseData(phaseId) {
+                    // Show loading state in all tables
+                    document.getElementById('expensesTableBody').innerHTML = `
+                <tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+            `;
+                    document.getElementById('materialsTableBody').innerHTML = `
+                <tr><td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+            `;
+                    document.getElementById('contractorTableBody').innerHTML = `
+                <tr><td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>
+            `;
+
+                    // Load phase data via AJAX
+                    $.ajax({
+                        url: window.location.href,
+                        type: 'GET',
+                        data: {
+                            ajax_action: 'get_phase_data',
+                            phase_id: phaseId
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                // Categorize the response data
+                                const phaseLedgers = response.response || [];
+
+                                const materials = phaseLedgers.filter(item => item.category === 'Material');
+                                const expenses = phaseLedgers.filter(item =>
+                                    item.category === 'Attendance' || item.category === 'Expense'
+                                );
+                                const contractorBillings = phaseLedgers.filter(item => item.category === 'SQFT');
+
+                                populateExpensesTable(expenses);
+                                populateMaterialsTable(materials);
+                                populateContractorTable(contractorBillings);
+                            } else {
+                                throw new Error('Failed to load data');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error loading phase data:', error);
+                            document.getElementById('expensesTableBody').innerHTML = `
+                        <tr><td colspan="4" class="text-center text-danger">Failed to load data</td></tr>
+                    `;
+                            document.getElementById('materialsTableBody').innerHTML = `
+                        <tr><td colspan="5" class="text-center text-danger">Failed to load data</td></tr>
+                    `;
+                            document.getElementById('contractorTableBody').innerHTML = `
+                        <tr><td colspan="5" class="text-center text-danger">Failed to load data</td></tr>
+                    `;
+                        }
+                    });
+                }
+
+                function populateExpensesTable(expenses) {
+                    const tbody = document.getElementById('expensesTableBody');
+                    if (!expenses || expenses.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">No expense entries found</td></tr>';
+                        return;
                     }
-                    submitForm();
-                });
 
-                // Auto-submit when any filter changes (except date inputs)
-                document.querySelectorAll('#filterForm select:not(#dateFilter)').forEach(select => {
-                    select.addEventListener('change', function() {
-                        submitForm();
-                    });
-                });
-
-                // For date inputs, add a small delay before submitting
-                document.querySelectorAll('#customDateRange input').forEach(input => {
-                    let timeout;
-                    input.addEventListener('change', function() {
-                        clearTimeout(timeout);
-                        timeout = setTimeout(() => {
-                            submitForm();
-                        }, 500);
-                    });
-                });
-
-                // Reset all filters
-                resetBtn.addEventListener('click', function() {
-                    // Reset form values
-                    filterForm.reset();
-                    // Ensure default selections
-                    document.getElementById('supplierFilter').value = 'all';
-                    document.getElementById('dateFilter').value = 'today';
-                    document.getElementById('phaseFilter').value = 'all';
-                    // Hide custom date range
-                    customDateRange.style.display = 'none';
-                    // Submit the form
-                    submitForm();
-                });
-
-                // Initialize date range visibility based on current selection
-                if (dateFilter.value === 'custom') {
-                    customDateRange.style.display = 'flex';
+                    tbody.innerHTML = expenses.map(expense => `
+                <tr>
+                    <td>${new Date(expense.created_at).toLocaleDateString()}</td>
+                    <td>${expense.description}</td>
+                    <td>₹${expense.debit}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteExpense(${expense.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
                 }
 
-                // Custom form submission to preserve URL structure
-                function submitForm() {
-                    // Get all current query parameters
-                    const params = new URLSearchParams(window.location.search);
+                function populateMaterialsTable(materials) {
+                    const tbody = document.getElementById('materialsTableBody');
+                    if (!materials || materials.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No material entries found</td></tr>';
+                        return;
+                    }
 
-                    // Update with new form values
-                    new FormData(filterForm).forEach((value, key) => {
-                        if (value) params.set(key, value);
-                        else params.delete(key);
-                    });
-
-                    // Preserve the site ID in the URL path
-                    const newUrl = "{{ url()->current() }}?" + params.toString();
-                    window.location.href = newUrl;
+                    tbody.innerHTML = materials.map(material => `
+                <tr>
+                    <td>${new Date(material.created_at).toLocaleDateString()}</td>
+                    <td>${material.description}</td>
+                    <td>${material.unit_count || 1}</td>
+                    <td>₹${material.debit}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteMaterial(${material.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
                 }
-            });
-        </script>
-    @endpush
-</x-app-layout>
+
+                function populateContractorTable(billings) {
+                    const tbody = document.getElementById('contractorTableBody');
+                    if (!billings || billings.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">No contractor billing entries found</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = billings.map(billing => `
+                <tr>
+                    <td>${new Date(billing.created_at).toLocaleDateString()}</td>
+                    <td>${billing.supplier || 'N/A'}</td>
+                    <td>${billing.description}</td>
+                    <td>₹${billing.debit}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteContractorBilling(${billing.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+                }
+
+                function addExpense() {
+                    // Reset the existing expense form
+                    document.getElementById('dailyExpenses').reset();
+
+                    // Set the phase_id in the form
+                    const phaseSelect = document.querySelector('#dailyExpenses select[name="phase_id"]');
+                    if (phaseSelect && currentPhaseId) {
+                        phaseSelect.value = currentPhaseId;
+                    }
+
+                    // Show expense modal
+                    const expenseModal = new bootstrap.Modal(document.getElementById('modal-daily-expenses'));
+                    expenseModal.show();
+                }
+
+                function addMaterial() {
+                    // Reset the existing material form
+                    document.getElementById('constructionBillingForm').reset();
+
+                    // Set the phase_id in the form
+                    const phaseSelect = document.querySelector('#constructionBillingForm select[name="phase_id"]');
+                    if (phaseSelect && currentPhaseId) {
+                        phaseSelect.value = currentPhaseId;
+                    }
+
+                    // Show material modal
+                    const materialModal = new bootstrap.Modal(document.getElementById('modal-construction-billings'));
+                    materialModal.show();
+                }
+
+                function addContractorBilling() {
+                    // Reset the existing contractor form
+                    document.getElementById('squareFootageBills').reset();
+
+                    // Set the phase_id in the form
+                    const phaseSelect = document.querySelector('#squareFootageBills select[name="phase_id"]');
+                    if (phaseSelect && currentPhaseId) {
+                        phaseSelect.value = currentPhaseId;
+                    }
+
+                    // Show contractor modal
+                    const contractorModal = new bootstrap.Modal(document.getElementById('modal-square-footage-bills'));
+                    contractorModal.show();
+                }
+
+                function deleteExpense(expenseId) {
+                    if (confirm('Are you sure you want to delete this expense?')) {
+                        $.ajax({
+                            url: `/admin/expenses/${expenseId}`,
+                            type: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function() {
+                                showMessage('Expense deleted successfully', 'success');
+                                loadPhaseData(currentPhaseId);
+                            },
+                            error: function() {
+                                showMessage('Failed to delete expense', 'error');
+                            }
+                        });
+                    }
+                }
+
+                function deleteMaterial(materialId) {
+                    if (confirm('Are you sure you want to delete this material?')) {
+                        $.ajax({
+                            url: `/admin/materials/${materialId}`,
+                            type: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function() {
+                                showMessage('Material deleted successfully', 'success');
+                                loadPhaseData(currentPhaseId);
+                            },
+                            error: function() {
+                                showMessage('Failed to delete material', 'error');
+                            }
+                        });
+                    }
+                }
+
+                function deleteContractorBilling(billingId) {
+                    if (confirm('Are you sure you want to delete this contractor billing?')) {
+                        $.ajax({
+                            url: `/admin/contractor-billings/${billingId}`,
+                            type: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                            },
+                            success: function() {
+                                showMessage('Contractor billing deleted successfully', 'success');
+                                loadPhaseData(currentPhaseId);
+                            },
+                            error: function() {
+                                showMessage('Failed to delete contractor billing', 'error');
+                            }
+                        });
+                    }
+                }
+
+                function togglePayOptions() {
+                    const payee = document.getElementById('payment_initiator').value;
+                    const supplierOptions = document.getElementById('supplierOptions');
+                    const adminOptions = document.getElementById('adminOptions');
+
+                    if (payee === '1') {
+                        supplierOptions.style.display = 'block';
+                        adminOptions.style.display = 'none';
+                    } else if (payee === '0') {
+                        supplierOptions.style.display = 'none';
+                        adminOptions.style.display = 'block';
+                    } else {
+                        supplierOptions.style.display = 'none';
+                        adminOptions.style.display = 'none';
+                    }
+                }
+            </script>
+        @endpush
+
+
+
+
+    </x-app-layout>
+
+
+
+
+

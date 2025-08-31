@@ -92,7 +92,7 @@ class DailyExpensesController extends Controller
                 }
 
                 return response()->json(['message' => 'Expenses detail created successfully.'], 201);
-            
+
             } catch (Exception $e) {
                 // Handle any unexpected errors
                 return response()->json(['error' => 'An unexpected error occurred: ' . $e->getMessage()], 500);
