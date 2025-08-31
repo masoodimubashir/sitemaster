@@ -6,14 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Models\Phase;
 use App\Models\Site;
 use App\Models\Supplier;
+use App\Models\Wager;
 use App\Models\Wasta;
 use App\Services\DataService;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
+
 
 class PDFController extends Controller
 {
-
 
 
     public function __construct(private DataService $dataService)
@@ -35,8 +37,9 @@ class PDFController extends Controller
         // Load site (for service charge, name, etc.)
         $site = Site::findOrFail($site_id);
 
+
         // Load processed financial data
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses,] = $this->dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
@@ -51,8 +54,6 @@ class PDFController extends Controller
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wastas,
-            $labours
         )->sortByDesc(fn($entry) => $entry['created_at']);
 
         $ledgersGroupedByPhase = $ledgers->filter(function ($entry) {
@@ -232,9 +233,93 @@ class PDFController extends Controller
     }
 
 
-    public function showSupplierPaymentPdf(string $id)
+    public function showLedgerPdf(Request $request)
     {
 
+        $date_filter = $request->input('date_filter');
+        $site_id = $request->input('site_id');
+        $supplier_id = $request->input('supplier_id');
+        $start_date = $request->input('start_date');
+        $end_date = $request->input('end_date');
+        $phase_id = $request->input('phase_id');
+
+        // Check if attendance should be excluded
+        $excludeAttendance = $request->input('exclude_attendance', false);
+
+        if ($excludeAttendance) {
+            // For supplier controller - exclude attendance data
+            [$payments, $raw_materials, $squareFootageBills, $expenses] = $this->dataService->getData(
+                $date_filter,
+                $site_id,
+                $supplier_id,
+                $start_date,
+                $end_date,
+                $phase_id
+            );
+
+            $ledgers = $this->dataService->makeData(
+                $payments,
+                $raw_materials,
+                $squareFootageBills,
+                $expenses
+            )->sortByDesc(function ($d) {
+                return $d['created_at'];
+            });
+        } else {
+            // For site and ledger controllers - include attendance data
+            [$payments, $raw_materials, $squareFootageBills, $expenses, $attendances] = $this->dataService->getData(
+                $date_filter,
+                $site_id,
+                $supplier_id,
+                $start_date,
+                $end_date,
+                $phase_id
+            );
+
+            $ledgers = $this->dataService->makeData(
+                $payments,
+                $raw_materials,
+                $squareFootageBills,
+                $expenses,
+                $attendances
+            )->sortByDesc(function ($d) {
+                return $d['created_at'];
+            });
+        }
+
+
+        // Calculate balances
+        $balances = $this->dataService->calculateAllBalances($ledgers);
+
+        $withoutServiceCharge = $balances['without_service_charge'];
+        $withServiceCharge = $balances['with_service_charge'];
+        $effective_balance = $withoutServiceCharge['due'];
+        $total_paid = $withServiceCharge['paid'];
+        $total_due = $withServiceCharge['due'];
+        $total_balance = $withServiceCharge['balance'];
+        $service_charge_amount = $balances['service_charge_amount'];
+        $returns = $withoutServiceCharge['return'];
+
+
+        $ledgers = $ledgers->sortByDesc(function ($d) {
+            return $d['created_at'];
+        });
+
+        $pdf = new PDF();
+        $pdf->AliasNbPages();
+        $pdf->AddPage();
+        $pdf->SetFont('Times', '', 10);
+        $pdf->SetTitle('Ledger');
+        $pdf->ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance, $service_charge_amount, $returns);
+        $file_name = 'Ledger_' . Carbon::now()->format('Y-m-d') . '.pdf';
+        $pdf->Output();
+        exit();
+
+    }
+
+
+    public function showSupplierPaymentPdf(string $id)
+    {
 
         $supplier = Supplier::with([
             'payments' => function ($q) {
@@ -290,297 +375,771 @@ class PDFController extends Controller
         return $pdf->Output($file_name, 'D');
     }
 
-    public function showLedgerPdf(Request $request, DataService $dataService)
-    {
-
-        $dateFilter = $request->get('date_filter', 'lifetime');
-        $site_id = $request->input('site_id', $request->input('site_id'));
-        $supplier_id = $request->input('supplier_id', 'all');
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
-        $phase_id = $request->input('phase_id', 'all');
-
-        // Call the service to get all data including wasta and labours
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $dataService->getData(
-            $dateFilter,
-            $site_id,
-            $supplier_id,
-            $startDate,
-            $endDate,
-            $phase_id
-        );
-
-        // Create ledger data including wasta and labours
-        $ledgers = $dataService->makeData(
-            $payments,
-            $raw_materials,
-            $squareFootageBills,
-            $expenses,
-            $wastas,
-            $labours
-
-        )->sortByDesc(function ($d) {
-            return $d['created_at'];
-        });
-
-        // Calculate balances
-        $balances = $dataService->calculateAllBalances($ledgers);
-
-        $withoutServiceCharge = $balances['without_service_charge'];
-        $withServiceCharge = $balances['with_service_charge'];
-        $effective_balance = $withoutServiceCharge['due'];
-        $total_paid = $withServiceCharge['paid'];
-        $total_due = $withServiceCharge['due'];
-        $total_balance = $withServiceCharge['balance'];
-        $service_charge_amount = $balances['service_charge_amount'];
-        $returns = $withoutServiceCharge['return'];
 
 
-        $ledgers = $ledgers->sortByDesc(function ($d) {
-            return $d['created_at'];
-        });
+    // public function generateAttendancePdf(Request $request)
+    // {
+    //     $site = Site::findOrFail($request->input('site_id'));
 
-        $pdf = new PDF();
-        $pdf->AliasNbPages();
-        $pdf->AddPage();
-        $pdf->SetFont('Times', '', 10);
-        $pdf->SetTitle('Ledger');
-        $pdf->ledgerTable($ledgers, $total_paid, $total_due, $total_balance, $effective_balance, $service_charge_amount, $returns);
-        $file_name = 'Ledger_' . Carbon::now()->format('Y-m-d') . '.pdf';
-        return $pdf->Output($file_name, 'D');
-    }
+    //     // --- Date Filters ---
+    //     $dateFilter = $request->input('date_filter', 'month');
+    //     $monthYear = $request->input('monthYear', now()->format('Y-m'));
+    //     $customStart = $request->input('custom_start', now()->startOfMonth()->format('Y-m-d'));
+    //     $customEnd = $request->input('custom_end', now()->endOfMonth()->format('Y-m-d'));
+    //     $specificDate = $request->input('specific_date', null);
+
+    //     // Calculate date range based on filter type
+    //     if ($dateFilter === 'month') {
+    //         [$year, $month] = explode('-', $monthYear);
+    //         $startDate = Carbon::create($year, $month, 1)->startOfDay();
+    //         $endDate = $startDate->copy()->endOfMonth()->endOfDay();
+    //         $dateRange = Carbon::parse($startDate)->format('F, Y');
+    //     } elseif ($dateFilter === 'day' && $specificDate) {
+    //         $startDate = Carbon::parse($specificDate)->startOfDay();
+    //         $endDate = $startDate->copy()->endOfDay();
+    //         $dateRange = Carbon::parse($specificDate)->format('M d, Y');
+    //     } else {
+    //         $startDate = Carbon::parse($customStart)->startOfDay();
+    //         $endDate = Carbon::parse($customEnd)->endOfDay();
+    //         $dateRange = $startDate->format('M d, Y') . ' - ' . $endDate->format('M d, Y');
+    //     }
+
+    //     // --- Additional Filters ---
+    //     $typeFilter = $request->input('type');
+    //     $wastaIdFilter = $request->input('wasta_id');
+    //     $attendanceFilter = $request->input('attendance_filter');
+
+    //     // --- Base setups query with attendance data ---
+    //     $setupQuery = AttendanceSetup::with([
+    //         'setupable',
+    //         'attendances' => function ($q) use ($startDate, $endDate) {
+    //             $q->whereBetween('attendance_date', [$startDate, $endDate])
+    //                 ->orderBy('attendance_date', 'asc');
+    //         }
+    //     ])
+    //         ->where('site_id', $site->id)
+    //         ->when($typeFilter, function ($q) use ($typeFilter) {
+    //             if ($typeFilter === 'wasta') {
+    //                 $q->where('setupable_type', Wasta::class);
+    //             } elseif ($typeFilter === 'wager') {
+    //                 $q->where('setupable_type', Wager::class);
+    //             }
+    //         })
+    //         ->when($wastaIdFilter, function ($q) use ($wastaIdFilter) {
+    //             $q->where(function ($sub) use ($wastaIdFilter) {
+    //                 $sub->where(function ($x) use ($wastaIdFilter) {
+    //                     $x->where('setupable_type', Wasta::class)
+    //                         ->where('setupable_id', $wastaIdFilter);
+    //                 })->orWhere(function ($x) use ($wastaIdFilter) {
+    //                     $x->where('setupable_type', Wager::class)
+    //                         ->whereIn('setupable_id', Wager::where('wasta_id', $wastaIdFilter)->pluck('id'));
+    //                 });
+    //             });
+    //         })
+    //         ->orderBy('name');
+
+    //     // --- Apply attendance filter ---
+    //     if ($attendanceFilter && $attendanceFilter !== 'all') {
+    //         $setupQuery->whereHas('attendances', function ($q) use ($startDate, $endDate, $attendanceFilter) {
+    //             $q->whereBetween('attendance_date', [$startDate, $endDate]);
+    //             if ($attendanceFilter === 'present') {
+    //                 $q->where('is_present', 1);
+    //             } elseif ($attendanceFilter === 'absent') {
+    //                 $q->where('is_present', 0);
+    //             }
+    //         });
+    //     }
+
+    //     $setups = $setupQuery->get();
+
+    //     // --- Workers transformation with detailed attendance ---
+    //     $workers = $setups->map(function ($setup) use ($startDate, $endDate) {
+    //         $attendances = $setup->attendances;
+    //         $presentDays = $attendances->where('is_present', 1)->count();
+    //         $absentDays = $attendances->where('is_present', 0)->count();
+    //         $totalWorkingDays = $attendances->count();
+
+    //         $presentAmount = $attendances->where('is_present', 1)->sum(function ($att) use ($setup) {
+    //             return $att->price;
+    //         });
+
+    //         // Get attendance dates for detailed view
+    //         $attendanceDates = $attendances->map(function ($att) {
+    //             return [
+    //                 'date' => Carbon::parse($att->attendance_date)->format('M d'),
+    //                 'status' => $att->is_present ? 'P' : 'A',
+    //                 'amount' => $att->is_present ? ($att->price) : 0
+    //             ];
+    //         });
+
+    //         $type = class_basename($setup->setupable_type);
+
+    //         return [
+    //             'id' => $setup->id,
+    //             'name' => $setup->name,
+    //             'type' => $type,
+    //             'count' => $setup->count,
+    //             'price' => $setup->price,
+    //             'present_days' => $presentDays,
+    //             'absent_days' => $absentDays,
+    //             'total_working_days' => $totalWorkingDays,
+    //             'attendance_percentage' => $totalWorkingDays > 0 ? round(($presentDays / $totalWorkingDays) * 100, 1) : 0,
+    //             'total_amount' => $presentAmount,
+    //             'wasta_id' => $type === 'Wasta' ? $setup->setupable_id : optional($setup->setupable)->wasta_id,
+    //             'wasta_name' => $type === 'Wasta' ? optional($setup->setupable)->wasta_name : optional($setup->setupable->wasta)->wasta_name,
+    //             'is_wasta' => $type === 'Wasta',
+    //             'is_labor' => $type === 'Wager',
+    //             'attendance_details' => $attendanceDates,
+    //         ];
+    //     });
+
+    //     // --- Grouped workers for hierarchical display ---
+    //     $wastasWithLabors = $workers->where('is_wasta', true)->map(function ($wasta) use ($workers) {
+    //         $labors = $workers->where('is_labor', true)->where('wasta_id', $wasta['wasta_id'])->values();
+
+    //         $totalContractorAmount = $wasta['total_amount'] + $labors->sum('total_amount');
+    //         $totalContractorDays = $wasta['present_days'] + $labors->sum('present_days');
+
+    //         return [
+    //             'id' => $wasta['wasta_id'],
+    //             'setup_id' => $wasta['id'],
+    //             'name' => $wasta['wasta_name'],
+    //             'is_wasta' => true,
+    //             'price' => $wasta['price'],
+    //             'present_days' => $wasta['present_days'],
+    //             'absent_days' => $wasta['absent_days'],
+    //             'attendance_percentage' => $wasta['attendance_percentage'],
+    //             'total_amount' => $wasta['total_amount'],
+    //             'labors' => $labors,
+    //             'total_workers' => $labors->count() + 1,
+    //             'total_contractor_amount' => $totalContractorAmount,
+    //             'total_contractor_days' => $totalContractorDays,
+    //             'attendance_details' => $wasta['attendance_details'],
+    //         ];
+    //     })->values();
+
+    //     $directLabors = $workers->where('is_labor', true)->whereNull('wasta_id')->values();
+
+    //     // Calculate totals
+    //     $grandTotalAmount = $workers->sum('total_amount');
+    //     $grandTotalDays = $workers->sum('present_days');
+    //     $totalWorkers = $workers->count();
+
+    //     // Create PDF with better formatting
+    //     $pdf = new \FPDF('L', 'mm', 'A4'); // Landscape for more space
+    //     $pdf->AddPage();
+    //     $pdf->SetAutoPageBreak(true, 15);
+
+    //     // === HEADER SECTION ===
+    //     $pdf->SetFillColor(44, 62, 80); // Dark blue background
+    //     $pdf->SetTextColor(255, 255, 255); // White text
+    //     $pdf->SetFont('Arial', 'B', 16);
+    //     $pdf->Cell(0, 15, 'ATTENDANCE REPORT' .  strtoupper($site->site_name), 0, 1, 'C', true);
+
+    //     // === REPORT INFO SECTION ===
+    //     $pdf->SetTextColor(0, 0, 0); // Black text
+    //     $pdf->SetFillColor(236, 240, 241); // Light gray
+
+    //     $pdf->SetFont('Arial', 'B', 10);
+    //     $pdf->Cell(40, 8, 'Report Period:', 1, 0, 'L', true);
+    //     $pdf->SetFont('Arial', '', 10);
+    //     $pdf->Cell(60, 8, $dateRange, 1, 0, 'L', true);
+
+    //     $pdf->SetFont('Arial', 'B', 10);
+    //     $pdf->Cell(30, 8, 'Generated:', 1, 0, 'L', true);
+    //     $pdf->SetFont('Arial', '', 10);
+    //     $pdf->Cell(0, 8, date('M d, Y H:i'), 1, 1, 'L', true);
+
+    //     $pdf->Ln(10);
+
+    //     // === SUMMARY SECTION ===
+    //     $pdf->SetFont('Arial', 'B', 12);
+    //     $pdf->Cell(0, 8, 'SUMMARY STATISTICS', 0, 1, 'L');
+    //     $pdf->Ln(2);
+
+    //     // Summary boxes
+    //     $pdf->SetFont('Arial', 'B', 10);
+    //     $pdf->Cell(92, 10, 'TOTAL WORKERS', 1, 0, 'C', true);
+    //     $pdf->Cell(92, 10, 'TOTAL PRESENT DAYS', 1, 0, 'C', true);
+    //     $pdf->Cell(92, 10, 'TOTAL AMOUNT', 1, 1, 'C', true);
+
+    //     $pdf->SetFont('Arial', 'B', 14);
+    //     $pdf->SetFillColor(230, 230, 230);
+    //     $pdf->SetTextColor(0, 0, 0);
+    //     $pdf->Cell(92, 15, $totalWorkers, 1, 0, 'C', true);
+    //     $pdf->Cell(92, 15, $grandTotalDays, 1, 0, 'C', true);
+    //     $pdf->Cell(92, 15, number_format($grandTotalAmount, 0), 1, 1, 'C', true);
+
+    //     $pdf->Ln(18);
+
+    //     // === DETAILED ATTENDANCE SECTION ===
+    //     $pdf->SetFont('Arial', 'B', 12);
+    //     $pdf->Cell(0, 8, 'DETAILED ATTENDANCE', 0, 1, 'L');
+    //     $pdf->Ln(2);
+
+    //     // Table headers
+    //     $pdf->SetFillColor(52, 73, 94); // Dark header
+    //     $pdf->SetTextColor(255, 255, 255);
+    //     $pdf->SetFont('Arial', 'B', 10);
+
+    //     $pdf->Cell(15, 10, 'S.No', 1, 0, 'C', true);
+    //     $pdf->Cell(50, 10, 'Worker Name', 1, 0, 'L', true);
+    //     $pdf->Cell(20, 10, 'Type', 1, 0, 'C', true);
+    //     $pdf->Cell(20, 10, 'Present', 1, 0, 'C', true);
+    //     $pdf->Cell(20, 10, 'Absent', 1, 0, 'C', true);
+    //     $pdf->Cell(25, 10, 'Attendance %', 1, 0, 'C', true);
+    //     $pdf->Cell(25, 10, 'Rate/Day', 1, 0, 'C', true);
+    //     $pdf->Cell(30, 10, 'Total Amount', 1, 0, 'C', true);
+    //     $pdf->Cell(40, 10, 'Recent Attendance', 1, 1, 'C', true);
+
+    //     $pdf->SetTextColor(0, 0, 0);
+    //     $pdf->SetFont('Arial', '', 9);
+
+    //     $serialNumber = 1;
+
+    //     // === CONTRACTORS AND THEIR LABORERS ===
+    //     foreach ($wastasWithLabors as $wasta) {
+    //         // Contractor row
+    //         $pdf->SetFillColor(220, 220, 220); // Light gray for contractor
+    //         $pdf->SetFont('Arial', 'B', 10);
+
+    //         $pdf->Cell(15, 8, $serialNumber++, 1, 0, 'C', true);
+    //         $pdf->Cell(50, 8, $wasta['name'] . ' (Contractor)', 1, 0, 'L', true);
+    //         $pdf->Cell(20, 8, 'Wasta', 1, 0, 'C', true);
+    //         $pdf->Cell(20, 8, $wasta['present_days'], 1, 0, 'C', true);
+    //         $pdf->Cell(20, 8, $wasta['absent_days'], 1, 0, 'C', true);
+    //         $pdf->Cell(25, 8, $wasta['attendance_percentage'] . '%', 1, 0, 'C', true);
+    //         $pdf->Cell(25, 8, number_format($wasta['price'], 0), 1, 0, 'C', true);
+    //         $pdf->Cell(30, 8, number_format($wasta['total_amount'], 0), 1, 0, 'C', true);
+
+    //         // Recent attendance (last 5 days)
+    //         $recentAttendance = array_slice($wasta['attendance_details']->toArray(), -5);
+    //         $attendanceStr = '';
+    //         foreach ($recentAttendance as $att) {
+    //             $attendanceStr .= $att['date'] . ':' . $att['status'] . ' ';
+    //         }
+    //         $pdf->Cell(40, 8, trim($attendanceStr), 1, 1, 'L', true);
+
+    //         // Laborers under this contractor
+    //         $pdf->SetFont('Arial', '', 9);
+    //         foreach ($wasta['labors'] as $labor) {
+    //             $pdf->SetFillColor(255, 255, 255); // White for laborers
+
+    //             $pdf->Cell(15, 7, $serialNumber++, 1, 0, 'C');
+    //             $pdf->Cell(50, 7, '  - ' . $labor['name'], 1, 0, 'L');
+    //             $pdf->Cell(20, 7, 'Labor', 1, 0, 'C');
+    //             $pdf->Cell(20, 7, $labor['present_days'], 1, 0, 'C');
+    //             $pdf->Cell(20, 7, $labor['absent_days'], 1, 0, 'C');
+    //             $pdf->Cell(25, 7, $labor['attendance_percentage'] . '%', 1, 0, 'C');
+    //             $pdf->Cell(25, 7, number_format($labor['price'], 0), 1, 0, 'C');
+    //             $pdf->Cell(30, 7, number_format($labor['total_amount'], 0), 1, 0, 'C');
+
+    //             // Recent attendance for laborer
+    //             $recentLaborAttendance = array_slice($labor['attendance_details']->toArray(), -5);
+    //             $laborAttendanceStr = '';
+    //             foreach ($recentLaborAttendance as $att) {
+    //                 $laborAttendanceStr .= $att['date'] . ':' . $att['status'] . ' ';
+    //             }
+    //             $pdf->Cell(40, 7, trim($laborAttendanceStr), 1, 1, 'L');
+    //         }
+
+    //         // Contractor subtotal
+    //         $pdf->SetFillColor(240, 240, 240);
+    //         $pdf->SetFont('Arial', 'B', 9);
+    //         $pdf->Cell(165, 8, 'Subtotal for ' . $wasta['name'] . ' (Contractor + ' . count($wasta['labors']) . ' labors)', 1, 0, 'R', true);
+    //         $pdf->Cell(30, 8, number_format($wasta['total_contractor_amount'], 0), 1, 1, 'C', true);
+
+    //         $pdf->Ln(3);
+    //     }
+
+    //     // === DIRECT LABORERS SECTION ===
+    //     if ($directLabors->count() > 0) {
+    //         $pdf->SetFillColor(231, 76, 60); // Red header
+    //         $pdf->SetTextColor(255, 255, 255);
+    //         $pdf->SetFont('Arial', 'B', 12);
+    //         $pdf->Cell(0, 10, 'DIRECT LABORERS (No Contractor)', 0, 1, 'L', true);
+    //         $pdf->Ln(2);
+
+    //         $pdf->SetTextColor(0, 0, 0);
+    //         $pdf->SetFont('Arial', '', 9);
+
+    //         foreach ($directLabors as $labor) {
+    //             $pdf->SetFillColor(255, 255, 255);
+
+    //             $pdf->Cell(15, 7, $serialNumber++, 1, 0, 'C');
+    //             $pdf->Cell(50, 7, $labor['name'], 1, 0, 'L');
+    //             $pdf->Cell(20, 7, 'Labor', 1, 0, 'C');
+    //             $pdf->Cell(20, 7, $labor['present_days'], 1, 0, 'C');
+    //             $pdf->Cell(20, 7, $labor['absent_days'], 1, 0, 'C');
+    //             $pdf->Cell(25, 7, $labor['attendance_percentage'] . '%', 1, 0, 'C');
+    //             $pdf->Cell(25, 7, number_format($labor['price'], 0), 1, 0, 'C');
+    //             $pdf->Cell(30, 7, number_format($labor['total_amount'], 0), 1, 0, 'C');
+
+    //             // Recent attendance
+    //             $recentAttendance = array_slice($labor['attendance_details']->toArray(), -5);
+    //             $attendanceStr = '';
+    //             foreach ($recentAttendance as $att) {
+    //                 $attendanceStr .= $att['date'] . ':' . $att['status'] . ' ';
+    //             }
+    //             $pdf->Cell(40, 7, trim($attendanceStr), 1, 1, 'L');
+    //         }
+    //     }
+
+    //     // === GRAND TOTAL ===
+    //     $pdf->Ln(10);
+    //     $pdf->SetFillColor(44, 62, 80); // Dark blue
+    //     $pdf->SetTextColor(255, 255, 255);
+    //     $pdf->SetFont('Arial', 'B', 12);
+    //     $pdf->Cell(165, 10, 'GRAND TOTAL', 1, 0, 'R', true);
+    //     $pdf->Cell(30, 10, number_format($grandTotalAmount, 0), 1, 1, 'C', true);
+
+    //     // === FOOTER ===
+    //     $pdf->Ln(8);
+    //     $pdf->SetTextColor(100, 100, 100);
+    //     $pdf->SetFont('Arial', 'I', 8);
+    //     $pdf->Cell(0, 5, 'Report generated on ' . date('F d, Y \a\t H:i:s'), 0, 1, 'L');
+    //     $pdf->Cell(0, 5, 'Legend: P = Present, A = Absent | Recent attendance shows last 5 working days', 0, 1, 'L');
+
+    //     // Generate filename
+    //     $filename = 'Attendance_' . str_replace(' ', '_', $site->site_name) . '_' .
+    //         ($dateFilter === 'custom'
+    //             ? $startDate->format('Ymd') . '_to_' . $endDate->format('Ymd')
+    //             : $startDate->format('F_Y')) . '.pdf';
+
+    //     // Output the PDF
+    //     $pdf->Output();
+    //     exit();
+    // }
+
 
     public function generateAttendancePdf(Request $request)
     {
-        // Determine date range based on request
-        if ($request->input('date_filter') === 'custom' && $request->filled('custom_start') && $request->filled('custom_end')) {
-            $startDate = Carbon::parse($request->input('custom_start'));
-            $endDate = Carbon::parse($request->input('custom_end'));
-        } elseif ($request->filled('monthYear')) {
-            [$year, $month] = explode('-', $request->input('monthYear'));
-            $startDate = Carbon::create($year, $month, 1);
-            $endDate = Carbon::create($year, $month, $startDate->daysInMonth);
+
+
+        $siteId = $request->site_id;
+
+        // Handle month filter - if month_filter is provided, override start_date and end_date
+        if ($request->filled('month_filter')) {
+            $monthYear = explode('-', $request->month_filter);
+            $year = $monthYear[0];
+            $month = $monthYear[1];
+
+            $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
         } else {
-            // Default to current month if no date range specified
-            $startDate = now()->startOfMonth();
-            $endDate = now()->endOfMonth();
+            // Use provided dates or default to current month
+            $startDate = Carbon::parse($request->start_date ?? now()->startOfMonth());
+            $endDate = Carbon::parse($request->end_date ?? now()->endOfMonth());
         }
 
-        // Load Wastas with their labours, phase, and site data
-        $wastasQuery = Wasta::with([
-            'phase.site',
-            'labours.attendances' => function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('attendance_date', [$startDate, $endDate]);
-            },
-            'attendances' => function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('attendance_date', [$startDate, $endDate]);
-            }
-        ]);
-
-        // Filter by site if selected
-        $site = null;
-        if ($request->filled('site_id')) {
-            $wastasQuery->whereHas('phase.site', function ($query) use ($request) {
-                $query->where('id', $request->input('site_id'));
-            });
-            $site = Site::find($request->input('site_id'));
+        // Ensure end date is not before start date
+        if ($endDate->lt($startDate)) {
+            $endDate = $startDate->copy();
         }
 
-        // Filter by phase if selected
-        if ($request->filled('phase_id')) {
-            $wastasQuery->where('phase_id', $request->input('phase_id'));
+        $site = Site::findOrFail($siteId);
+
+        // Base query for wastas with eager loading scoped to site
+        $wastaQuery = Wasta::whereHas('attendanceSetups', function ($q) use ($site) {
+            $q->where('site_id', $site->id);
+        })
+            ->with([
+                'attendanceSetups' => fn($q) => $q->where('site_id', $site->id)
+                    ->with(['attendances' => fn($a) => $a->whereBetween('attendance_date', [$startDate, $endDate])]),
+                'wagers.attendanceSetups' => fn($q) => $q->where('site_id', $site->id)
+                    ->with(['attendances' => fn($a) => $a->whereBetween('attendance_date', [$startDate, $endDate])]),
+            ]);
+
+        // Apply wasta filter if selected
+        if ($request->filled('wasta_id')) {
+            $wastaQuery->where('id', $request->wasta_id);
         }
 
-        $wastas = $wastasQuery->get();
+        $wastas = $wastaQuery->get();
 
-        // Group wastas by phase (even if filtered by single phase)
-        $phases = $wastas->groupBy('phase_id');
+        // Base query for independent workers (no wasta) scoped to site
+        $independentQuery = Wager::whereNull('wasta_id')
+            ->whereHas('attendanceSetups', function ($q) use ($site) {
+                $q->where('site_id', $site->id);
+            })
+            ->with([
+                'attendanceSetups' => fn($q) => $q->where('site_id', $site->id)
+                    ->with(['attendances' => fn($a) => $a->whereBetween('attendance_date', [$startDate, $endDate])]),
+            ]);
 
-        // Get dates in range
-        $dates = $this->getDatesInRange($startDate, $endDate);
-
-        // Generate PDF
-        $pdf = new PDF();
-        $pdf->SetTitle('Phase-wise Labour Attendance Report');
-
-        foreach ($phases as $phaseId => $phaseWastas) {
-            $phase = $phaseWastas->first()->phase;
-
-            // Prepare title with all relevant information
-            $title = ($site ? strtoupper($site->site_name) : 'ALL SITES') . ' LABOUR ATTENDANCE SHEET';
-
-            // Prepare subtitle based on date range
-            if ($request->input('date_filter') === 'custom') {
-                $subtitle = 'Phase: ' . ($phase->phase_name ?? 'All Phases') .
-                    ' | Period: ' . $startDate->format('d-M-Y') . ' to ' . $endDate->format('d-M-Y');
-            } else {
-                $subtitle = 'Phase: ' . ($phase->phase_name ?? 'All Phases') .
-                    ' | Month: ' . $startDate->format('F Y');
-            }
-
-            // Get all workers (wastas + their labours) for this phase
-            $workers = [];
-            foreach ($phaseWastas as $wasta) {
-                $workers[] = [
-                    'name' => $wasta->wasta_name,
-                    'type' => 'wasta',
-                    'contact' => $wasta->contact_no
-                ];
-                foreach ($wasta->labours as $labour) {
-                    $workers[] = [
-                        'name' => $labour->labour_name,
-                        'type' => 'labour',
-                        'contact' => $labour->contact
-                    ];
-                }
-            }
-
-            // Prepare attendance data for each date
-            $attendanceData = $this->prepareAttendanceData($phaseWastas, $startDate, $endDate);
-
-            // Calculate totals for this phase
-            $totals = $this->calculateTotals($phaseWastas);
-
-            // Prepare phase info
-            $info = [
-                'site_name' => $site->site_name ?? 'All Sites',
-                'phase_name' => $phase->phase_name ?? 'All Phases',
-                'month_year' => $request->input('date_filter') === 'custom'
-                    ? $startDate->format('d-M-Y') . ' to ' . $endDate->format('d-M-Y')
-                    : $startDate->format('F Y')
-            ];
-
-            // Add a new page for each phase
-            $pdf->phaseWiseAttendanceReport(
-                $title,
-                $subtitle,
-                $dates,
-                $workers,
-                $attendanceData,
-                $totals,
-                $info
-            );
+        // Apply wager filter if selected (for independent workers)
+        if ($request->filled('wager_id')) {
+            $independentQuery->where('id', $request->wager_id);
         }
 
-        $filename = 'Attendance_' .
-            ($site ? $site->site_name . '_' : '') .
-            ($request->input('date_filter') === 'custom'
-                ? $startDate->format('Ymd') . '_to_' . $endDate->format('Ymd')
-                : $startDate->format('F_Y')) . '.pdf';
-        return $pdf->Output($filename, 'D');
+        $independents = $independentQuery->get();
 
-    }
+        $dates = CarbonPeriod::create($startDate, $endDate);
+        $dateArray = iterator_to_array($dates);
+        $totalDays = count($dateArray);
 
-    protected function prepareAttendanceData($wastas, $startDate, $endDate)
-    {
+        // Process data for display with filtering
         $attendanceData = [];
-        $current = clone $startDate;
+        $grandTotalDays = 0;
+        $grandTotalAmount = 0;
 
-        // Initialize attendance data structure with all workers
+        // Process Wastas and their workers
         foreach ($wastas as $wasta) {
-            $attendanceData[$wasta->wasta_name] = [
-                'attendances' => [],
-                'total_amount' => 0
+            // Skip if we're filtering by worker type and it's not contractors
+            if ($request->worker_type === 'workers' || $request->worker_type === 'independents') {
+                continue;
+            }
+
+            $dailyAttendance = [];
+            $presentCount = 0;
+
+            foreach ($dateArray as $date) {
+                $present = $wasta->attendanceSetups->flatMap->attendances
+                    ->firstWhere('attendance_date', $date->format('Y-m-d'));
+                $isPresent = $present && $present->is_present;
+
+                // Skip if filtering by attendance status
+                if ($request->attendance_status === 'present' && !$isPresent)
+                    continue;
+                if ($request->attendance_status === 'absent' && $isPresent)
+                    continue;
+
+                $dailyAttendance[] = $isPresent;
+                if ($isPresent)
+                    $presentCount++;
+            }
+
+            // Skip if no attendance matches the filter
+            if ($request->attendance_status === 'present' && $presentCount === 0)
+                continue;
+            if ($request->attendance_status === 'absent' && $presentCount === count($dateArray))
+                continue;
+
+            $amount = $wasta->price * $presentCount;
+            $grandTotalDays += $presentCount;
+            $grandTotalAmount += $amount;
+
+            $attendanceData[] = [
+                'id' => 'wasta_' . $wasta->id,
+                'name' => $wasta->wasta_name,
+                'type' => 'Contractor',
+                'rate' => $wasta->price,
+                'daily' => $dailyAttendance,
+                'days' => $presentCount,
+                'amount' => $amount,
+                'is_contractor' => true,
+                'parent_id' => null
             ];
-            foreach ($wasta->labours as $labour) {
-                $attendanceData[$labour->labour_name] = [
-                    'attendances' => [],
-                    'total_amount' => 0
+
+            // Process wagers under this wasta
+            foreach ($wasta->wagers as $wager) {
+                // Skip if we're filtering by worker type and it's not workers
+                if ($request->worker_type === 'contractors' || $request->worker_type === 'independents') {
+                    continue;
+                }
+
+                // Apply wager filter if selected
+                if ($request->filled('wager_id') && $wager->id != $request->wager_id) {
+                    continue;
+                }
+
+                $dailyAttendance = [];
+                $presentCount = 0;
+
+                foreach ($dateArray as $date) {
+                    $present = $wager->attendanceSetups->flatMap->attendances
+                        ->firstWhere('attendance_date', $date->format('Y-m-d'));
+                    $isPresent = $present && $present->is_present;
+
+                    // Skip if filtering by attendance status
+                    if ($request->attendance_status === 'present' && !$isPresent)
+                        continue;
+                    if ($request->attendance_status === 'absent' && $isPresent)
+                        continue;
+
+                    $dailyAttendance[] = $isPresent;
+                    if ($isPresent)
+                        $presentCount++;
+                }
+
+                // Skip if no attendance matches the filter
+                if ($request->attendance_status === 'present' && $presentCount === 0)
+                    continue;
+                if ($request->attendance_status === 'absent' && $presentCount === count($dateArray))
+                    continue;
+
+                $amount = $wager->price * $presentCount;
+                $grandTotalDays += $presentCount;
+                $grandTotalAmount += $amount;
+
+                $attendanceData[] = [
+                    'id' => 'wager_' . $wager->id,
+                    'name' => $wager->wager_name,
+                    'type' => 'Worker',
+                    'rate' => $wager->price,
+                    'daily' => $dailyAttendance,
+                    'days' => $presentCount,
+                    'amount' => $amount,
+                    'is_contractor' => false,
+                    'parent_id' => 'wasta_' . $wasta->id
                 ];
             }
         }
 
-        // Populate attendance data for each date
-        while ($current <= $endDate) {
-            $dateStr = $current->format('Y-m-d');
+        // Process independent workers
+        foreach ($independents as $worker) {
+            // Skip if we're filtering by worker type and it's not independents
+            if ($request->worker_type === 'contractors' || $request->worker_type === 'workers') {
+                continue;
+            }
 
-            foreach ($wastas as $wasta) {
-                // Wasta attendance
-                $wastaAttendance = $wasta->attendances->firstWhere('attendance_date', $dateStr);
-                $isPresent = $wastaAttendance && $wastaAttendance->is_present;
+            $dailyAttendance = [];
+            $presentCount = 0;
 
-                $attendanceData[$wasta->wasta_name]['attendances'][$dateStr] = [
-                    'present' => $isPresent ? 1 : 0,
-                    'price' => $isPresent ? ($wastaAttendance->price ?? 0) : 0
-                ];
+            foreach ($dateArray as $date) {
+                $present = $worker->attendanceSetups->flatMap->attendances
+                    ->firstWhere('attendance_date', $date->format('Y-m-d'));
+                $isPresent = $present && $present->is_present;
 
+                // Skip if filtering by attendance status
+                if ($request->attendance_status === 'present' && !$isPresent)
+                    continue;
+                if ($request->attendance_status === 'absent' && $isPresent)
+                    continue;
+
+                $dailyAttendance[] = $isPresent;
+                if ($isPresent)
+                    $presentCount++;
+            }
+
+            // Skip if no attendance matches the filter
+            if ($request->attendance_status === 'present' && $presentCount === 0)
+                continue;
+            if ($request->attendance_status === 'absent' && $presentCount === count($dateArray))
+                continue;
+
+            $amount = $worker->price * $presentCount;
+            $grandTotalDays += $presentCount;
+            $grandTotalAmount += $amount;
+
+            $attendanceData[] = [
+                'id' => 'independent_' . $worker->id,
+                'name' => $worker->wager_name,
+                'type' => 'Independent',
+                'rate' => $worker->price,
+                'daily' => $dailyAttendance,
+                'days' => $presentCount,
+                'amount' => $amount,
+                'is_contractor' => false,
+                'parent_id' => null
+            ];
+        }
+
+        // Calculate totals for statistics (after filtering)
+        $totalWorkers = count(array_filter($attendanceData, fn($item) => !$item['is_contractor']));
+        $totalContractors = count(array_filter($attendanceData, fn($item) => $item['is_contractor']));
+
+        // === Calculate dynamic column widths based on number of days ===
+        $pageWidth = 277; // A4 landscape usable width (297-20 margins)
+        $nameWidth = 45;
+        $rateWidth = 20;
+        $totalDaysWidth = 18;
+        $totalAmountWidth = 25;
+
+        // Calculate remaining width for date columns
+        $fixedWidth = $nameWidth + $rateWidth + $totalDaysWidth + $totalAmountWidth;
+        $availableForDates = $pageWidth - $fixedWidth;
+        $dayColumnWidth = min(8, $availableForDates / $totalDays); // Max 8mm per day
+
+        // If days don't fit, we'll need to split into multiple tables or reduce day column width
+        if ($dayColumnWidth < 4) {
+            $dayColumnWidth = 4; // Minimum readable width
+            // Consider splitting large date ranges into multiple pages
+        }
+
+        // === Initialize PDF ===
+        $pdf = new PDF('L', 'mm', 'A4');
+        $pdf->SetCreator('Attendance Management System');
+        $pdf->SetAuthor($site->site_name);
+        $pdf->SetTitle("Attendance Report - {$site->site_name}");
+        $pdf->SetMargins(10, 15, 10);
+        $pdf->SetAutoPageBreak(true, 15);
+        $pdf->AddPage();
+
+        // === COMPACT HEADER ===
+        $pdf->SetFont('helvetica', 'B', 14);
+        $pdf->SetTextColor(44, 62, 80);
+        $pdf->Cell(0, 10, 'ATTENDANCE REPORT - ' . strtoupper($site->site_name), 0, 1, 'C');
+
+        $pdf->SetFont('helvetica', '', 9);
+        $pdf->SetTextColor(127, 140, 141);
+        $pdf->Cell(0, 6, "Period: {$startDate->format('M d, Y')} - {$endDate->format('M d, Y')}", 0, 1, 'C');
+
+        // Add filter information to PDF header
+        $filterInfo = [];
+        if ($request->filled('worker_type') && $request->worker_type !== 'all') {
+            $filterInfo[] = "Type: " . ucfirst($request->worker_type);
+        }
+        if ($request->filled('attendance_status') && $request->attendance_status !== 'all') {
+            $filterInfo[] = "Status: " . ucfirst($request->attendance_status);
+        }
+        if ($request->filled('search')) {
+            $filterInfo[] = "Search: " . $request->search;
+        }
+
+        if (!empty($filterInfo)) {
+            $pdf->Cell(0, 4, "Filters Applied: " . implode(' | ', $filterInfo), 0, 1, 'C');
+        }
+
+        $pdf->Ln(3);
+
+        // === COMPACT SUMMARY ===
+        $pdf->SetFont('helvetica', 'B', 8);
+        $pdf->SetFillColor(52, 152, 219);
+        $pdf->SetTextColor(255, 255, 255);
+
+        $summaryWidth = $pageWidth / 4;
+        $pdf->Cell($summaryWidth, 6, "Workers: " . ($totalWorkers + $totalContractors), 1, 0, 'C', true);
+        $pdf->Cell($summaryWidth, 6, "Contractors: $totalContractors", 1, 0, 'C', true);
+        $pdf->Cell($summaryWidth, 6, "Total Days: $grandTotalDays", 1, 0, 'C', true);
+        $pdf->Cell($summaryWidth, 6, "Amount: " . number_format($grandTotalAmount, 2), 1, 1, 'C', true);
+        $pdf->Ln(5);
+
+        // === TABLE HEADER ===
+        $pdf->SetFont('helvetica', 'B', 7);
+        $pdf->SetFillColor(52, 73, 94);
+        $pdf->SetTextColor(255, 255, 255);
+        $pdf->SetDrawColor(44, 62, 80);
+
+        // First row: Name, Rate, Date headers, Totals
+        $pdf->Cell($nameWidth, 10, 'Name', 1, 0, 'C', true);
+        $pdf->Cell($rateWidth, 10, 'Rate', 1, 0, 'C', true);
+
+        // Date columns
+        foreach ($dateArray as $date) {
+            $pdf->Cell($dayColumnWidth, 10, $date->format('d'), 1, 0, 'C', true);
+        }
+
+        $pdf->Cell($totalDaysWidth, 10, 'Days', 1, 0, 'C', true);
+        $pdf->Cell($totalAmountWidth, 10, 'Amount', 1, 1, 'C', true);
+
+        // Second row: Month names for date columns (if space allows)
+        if ($dayColumnWidth >= 6) {
+            $pdf->SetFont('helvetica', '', 6);
+            $pdf->Cell($nameWidth, 5, '', 1, 0, 'C', true);
+            $pdf->Cell($rateWidth, 5, '', 1, 0, 'C', true);
+
+            $currentMonth = '';
+            foreach ($dateArray as $date) {
+                $monthAbbr = $date->format('M');
+                $display = ($monthAbbr != $currentMonth) ? $monthAbbr : '';
+                $currentMonth = $monthAbbr;
+                $pdf->Cell($dayColumnWidth, 5, $display, 1, 0, 'C', true);
+            }
+
+            $pdf->Cell($totalDaysWidth, 5, '', 1, 0, 'C', true);
+            $pdf->Cell($totalAmountWidth, 5, '', 1, 1, 'C', true);
+        }
+
+        // === DATA ROWS ===
+        $pdf->SetTextColor(44, 62, 80);
+        $pdf->SetDrawColor(189, 195, 199);
+
+        $rowCount = 0;
+        foreach ($attendanceData as $row) {
+            $rowCount++;
+
+            // Check for page break
+            if ($pdf->GetY() > 180) {
+                $pdf->AddPage();
+
+                // Repeat header
+                $pdf->SetFont('helvetica', 'B', 7);
+                $pdf->SetFillColor(52, 73, 94);
+                $pdf->SetTextColor(255, 255, 255);
+
+                $pdf->Cell($nameWidth, 10, 'Name', 1, 0, 'C', true);
+                $pdf->Cell($rateWidth, 10, 'Rate', 1, 0, 'C', true);
+
+                foreach ($dateArray as $date) {
+                    $pdf->Cell($dayColumnWidth, 10, $date->format('d'), 1, 0, 'C', true);
+                }
+
+                $pdf->Cell($totalDaysWidth, 10, 'Days', 1, 0, 'C', true);
+                $pdf->Cell($totalAmountWidth, 10, 'Amount', 1, 1, 'C', true);
+
+                $pdf->SetTextColor(44, 62, 80);
+            }
+
+            // Row styling
+            if ($rowCount % 2 == 0) {
+                $pdf->SetFillColor(248, 249, 250);
+            } else {
+                $pdf->SetFillColor(255, 255, 255);
+            }
+
+            if ($row['is_contractor']) {
+                $pdf->SetFont('helvetica', 'B', 7);
+                $pdf->SetFillColor(231, 243, 255);
+            } else {
+                $pdf->SetFont('helvetica', '', 7);
+            }
+
+            // Name (truncated if necessary)
+            $displayName = strlen($row['name']) > 25 ? substr($row['name'], 0, 22) . '...' : $row['name'];
+            $pdf->Cell($nameWidth, 8, $displayName, 1, 0, 'L', true);
+
+            // Rate
+            $pdf->Cell($rateWidth, 8, number_format($row['rate'], 2), 1, 0, 'R', true);
+
+            // Daily attendance
+            foreach ($row['daily'] as $isPresent) {
+                $symbol = $isPresent ? 'P' : 'A';
                 if ($isPresent) {
-                    $attendanceData[$wasta->wasta_name]['total_amount'] += $wastaAttendance->price ?? 0;
+                    $pdf->SetTextColor(34, 139, 34); // Green for Present
+                } else {
+                    $pdf->SetTextColor(220, 53, 69); // Red for Absent
                 }
-
-                // Labour attendance
-                foreach ($wasta->labours as $labour) {
-                    $labourAttendance = $labour->attendances->firstWhere('attendance_date', $dateStr);
-                    $isPresent = $labourAttendance && $labourAttendance->is_present;
-
-                    $attendanceData[$labour->labour_name]['attendances'][$dateStr] = [
-                        'present' => $isPresent ? 1 : 0,
-                        'price' => $isPresent ? ($labourAttendance->price ?? 0) : 0
-                    ];
-
-                    if ($isPresent) {
-                        $attendanceData[$labour->labour_name]['total_amount'] += $labourAttendance->price ?? 0;
-                    }
-                }
+                $pdf->Cell($dayColumnWidth, 8, $symbol, 1, 0, 'C', true);
             }
 
-            $current->addDay();
+            // Reset text color
+            $pdf->SetTextColor(44, 62, 80);
+
+            // Total days and amount
+            $pdf->Cell($totalDaysWidth, 8, $row['days'], 1, 0, 'C', true);
+            $pdf->Cell($totalAmountWidth, 8, number_format($row['amount'], 2), 1, 1, 'R', true);
         }
 
-        return $attendanceData;
-    }
+        // === TOTALS ROW ===
+        $pdf->Ln(2);
+        $pdf->SetFont('helvetica', 'B', 8);
+        $pdf->SetFillColor(44, 62, 80);
+        $pdf->SetTextColor(255, 255, 255);
 
-    protected function calculateTotals($wastas)
-    {
-        $totals = [
-            'wastas' => [],
-            'labours' => [],
-            'grand_total' => 0
-        ];
+        $pdf->Cell($nameWidth + $rateWidth, 8, 'GRAND TOTAL', 1, 0, 'C', true);
 
-        foreach ($wastas as $wasta) {
-            // Wasta totals
-            $wastaPresentDays = $wasta->attendances->where('is_present', true)->count();
-            $wastaTotalAmount = $wasta->attendances->where('is_present', true)->sum('price');
-
-            $totals['wastas'][$wasta->wasta_name] = [
-                'present_days' => $wastaPresentDays,
-                'total_amount' => $wastaTotalAmount,
-                'avg_rate' => $wastaPresentDays > 0 ? $wastaTotalAmount / $wastaPresentDays : 0
-            ];
-            $totals['grand_total'] += $wastaTotalAmount;
-
-            // Labour totals
-            foreach ($wasta->labours as $labour) {
-                $labourPresentDays = $labour->attendances->where('is_present', true)->count();
-                $labourTotalAmount = $labour->attendances->where('is_present', true)->sum('price');
-
-                $totals['labours'][$labour->labour_name] = [
-                    'present_days' => $labourPresentDays,
-                    'total_amount' => $labourTotalAmount,
-                    'avg_rate' => $labourPresentDays > 0 ? $labourTotalAmount / $labourPresentDays : 0
-                ];
-                $totals['grand_total'] += $labourTotalAmount;
-            }
+        // Empty cells for date columns
+        foreach ($dateArray as $date) {
+            $pdf->Cell($dayColumnWidth, 8, '', 1, 0, 'C', true);
         }
 
-        return $totals;
+        $pdf->Cell($totalDaysWidth, 8, $grandTotalDays, 1, 0, 'C', true);
+        $pdf->Cell($totalAmountWidth, 8, number_format($grandTotalAmount, 2), 1, 1, 'R', true);
+
+        // === FOOTER ===
+        $pdf->Ln(5);
+        $pdf->SetFont('helvetica', '', 7);
+        $pdf->SetTextColor(127, 140, 141);
+        $pdf->Cell(0, 4, 'Generated: ' . now()->format('M d, Y g:i A') . ' | Records: ' . count($attendanceData) . ' | P=Present, A=Absent', 0, 1, 'C');
+
+        // === OUTPUT ===
+        $filename = "Attendance_{$site->site_name}_{$startDate->format('M-d')}_to_{$endDate->format('M-d')}.pdf";
+        $filename = preg_replace('/[^a-zA-Z0-9_.-]/', '_', $filename);
+
+        $pdf->Output();
+        exit();
     }
 
-    protected function getDatesInRange($startDate, $endDate)
-    {
-        $dates = [];
-        $current = clone $startDate;
 
-        while ($current <= $endDate) {
-            $dates[] = [
-                'date' => $current->format('Y-m-d'),
-                'day' => $current->format('D'),
-                'is_weekend' => $current->isWeekend()
-            ];
-            $current->addDay();
-        }
-
-        return $dates;
-    }
 }

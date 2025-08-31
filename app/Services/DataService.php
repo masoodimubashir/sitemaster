@@ -2,27 +2,24 @@
 
 namespace App\Services;
 
+use App\Models\Attendance;
 use App\Models\ConstructionMaterialBilling;
 use App\Models\DailyExpenses;
-use App\Models\Labour;
 use App\Models\Payment;
+use App\Models\Site;
 use App\Models\SquareFootageBill;
+use App\Models\Wager;
 use App\Models\Wasta;
 use Carbon\Carbon;
+use Closure;
 use Illuminate\Support\Collection;
 
 class DataService
 {
 
+    public function getData(string $dateFilter, $site_id, $supplier_id, ?string $startDate = null, ?string $endDate = null, $phase_id): array
+    {
 
-    public function getData(
-        string $dateFilter,
-        $site_id,
-        $supplier_id,
-        ?string $startDate = null,
-        ?string $endDate = null,
-        $phase_id
-    ): array {
         $dateRange = $this->filterByDate($dateFilter, $startDate, $endDate);
 
         return [
@@ -30,111 +27,186 @@ class DataService
             $this->getRawMaterials($dateFilter, $dateRange, $site_id, $supplier_id, $phase_id),
             $this->getSquareFootageBills($dateFilter, $dateRange, $site_id, $supplier_id, $phase_id),
             $this->getExpenses($dateFilter, $dateRange, $site_id, $supplier_id, $phase_id),
-            $this->getWastas($dateFilter, $dateRange, $site_id, $supplier_id, $phase_id),
-            $this->getLabours($dateFilter, $dateRange, $site_id, $supplier_id, $phase_id),
+            $this->getAttendances($dateFilter, $dateRange, $site_id, $phase_id),
         ];
     }
 
-    public function makeData(
-        ?Collection $payments = null,
-        ?Collection $rawMaterials = null,
-        ?Collection $squareFootageBills = null,
-        ?Collection $expenses = null,
-        ?Collection $wastas = null,
-        ?Collection $labours = null
-    ): Collection {
+    private function filterByDate(string $dateFilter, ?string $startDate, ?string $endDate): ?array
+    {
+        return match ($dateFilter) {
+            'yesterday' => [now()->yesterday()->startOfDay(), now()->yesterday()->endOfDay()],
+            'this_week' => [now()->startOfWeek(), now()->endOfWeek()],
+            'this_month' => [now()->startOfMonth(), now()->endOfMonth()],
+            'this_year' => [now()->startOfYear(), now()->endOfYear()],
+            'custom' => [
+                $startDate ? Carbon::parse($startDate)->startOfDay() : now()->startOfDay(),
+                $endDate ? Carbon::parse($endDate)->endOfDay() : now()->endOfDay(),
+            ],
+            'lifetime' => null,
+            default => [now()->startOfDay(), now()->endOfDay()],
+        };
+    }
+
+    // FIXME:  Check Why the filter is not working based on the site_id when i try to use $this->isActiveSite()..
+
+    private function getPayments(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
+    {
+        // Payments are not tied to a phase in this context; honor current behavior
+        if ($this->isValidPhase($phase_id)) {
+            return collect();
+        }
+
+        $query = Payment::query()
+            ->where('verified_by_admin', 1)
+            ->with(['site', 'supplier']);
+
+        // Direct relation: site_id is a column on payments
+        $this->applyCommonFilters($query, $dateFilter, $dateRange, $site_id, $supplier_id, $phase_id, 'direct');
+
+        return $query->get();
+    }
+
+    private function isValidPhase($phase_id): bool
+    {
+        return $phase_id && $phase_id !== 'all';
+    }
+
+    // Private helper methods
+
+    /**
+     * Apply common filters to queries across different models.
+     * $type: 'direct' for models with site_id column; 'nested' for models linked via phase.site
+     */
+    private function applyCommonFilters($query, string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id, string $type)
+    {
+        // Supplier filter
+        if ($this->isValidSupplier($supplier_id)) {
+            $query->where('supplier_id', $supplier_id);
+        }
+        // Date filter
+        if ($this->isFilteredDate($dateFilter, $dateRange)) {
+            $query->whereBetween('created_at', $dateRange);
+        }
+        // Phase filter (only for nested relations that have phase)
+        if ($this->isValidPhase($phase_id) && $type === 'nested') {
+            $query->whereHas('phase', fn($q) => $q->where('id', $phase_id));
+        }
+        // Site filter
+        if ($this->isValidSite($site_id)) {
+            if ($type === 'nested') {
+                $query->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id));
+            } else { // direct
+                $query->where('site_id', $site_id);
+            }
+        }
+
+        return $query;
+    }
+
+    private function isValidSupplier($supplier_id): bool
+    {
+        return $supplier_id && $supplier_id !== 'all';
+    }
+
+    private function isFilteredDate(string $dateFilter, ?array $dateRange): bool
+    {
+        return $dateFilter !== 'lifetime' && $dateRange;
+    }
+
+    private function isValidSite($site_id): bool
+    {
+        return $site_id && $site_id !== 'all';
+    }
+
+    private function getRawMaterials(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
+    {
+        $query = ConstructionMaterialBilling::query()
+            ->with(['phase.site', 'supplier'])
+            ->where('verified_by_admin', 1)
+            ->latest();
+
+        // Nested relation via phase.site
+        $this->applyCommonFilters($query, $dateFilter, $dateRange, $site_id, $supplier_id, $phase_id, 'nested');
+
+        return $query->get();
+    }
+
+    private function getSquareFootageBills(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
+    {
+        $query = SquareFootageBill::query()
+            ->with([
+                'phase' => fn($phase) => $phase->with(['site' => fn($site) => $site->withoutTrashed()])->withoutTrashed(),
+                'supplier' => fn($supplier) => $supplier->withoutTrashed(),
+            ])
+            ->where('verified_by_admin', 1)
+            ->latest();
+
+        // Nested relation via phase.site
+        $this->applyCommonFilters($query, $dateFilter, $dateRange, $site_id, $supplier_id, $phase_id, 'nested');
+
+        return $query->get();
+    }
+
+    private function getExpenses(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
+    {
+        $query = DailyExpenses::query()
+            ->with(['phase.site' => fn($site) => $site->withoutTrashed()])
+            ->where('verified_by_admin', 1)
+            ->latest();
+
+        // Nested relation via phase.site
+        $this->applyCommonFilters($query, $dateFilter, $dateRange, $site_id, $supplier_id, $phase_id, 'nested');
+
+        return $query->get();
+    }
+
+    private function getAttendances(string $dateFilter, ?array $dateRange, $site_id, $phase_id): Collection
+    {
+        return Attendance::query()
+            ->with([
+                'attendanceSetup.setupable',
+                'attendanceSetup.site'
+            ])
+            ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
+            ->when($this->isValidSite($site_id), function ($q) use ($site_id) {
+                return $q->whereHas('attendanceSetup', fn($setupQuery) => $setupQuery->where('site_id', $site_id));
+            })
+            ->where('is_present', 1)
+            ->latest('attendance_date')
+            ->get();
+    }
+
+    public function makeData(?Collection $payments = null, ?Collection $rawMaterials = null, ?Collection $squareFootageBills = null, ?Collection $expenses = null, ?Collection $attendances = null): Collection
+    {
+
         $ledgers = collect();
 
         if ($payments) {
+
             $ledgers = $ledgers->merge($this->transformPayments($payments));
         }
 
         if ($rawMaterials) {
+
             $ledgers = $ledgers->merge($this->transformRawMaterials($rawMaterials));
         }
 
         if ($squareFootageBills) {
+
             $ledgers = $ledgers->merge($this->transformSquareFootageBills($squareFootageBills));
         }
 
         if ($expenses) {
+
             $ledgers = $ledgers->merge($this->transformExpenses($expenses));
         }
 
-        if ($wastas) {
-            $ledgers = $ledgers->merge($this->transformWastas($wastas));
-        }
-
-        if ($labours) {
-            $ledgers = $ledgers->merge($this->transformLabours($labours));
+        if ($attendances) {
+            $ledgers = $ledgers->merge($this->transformAttendances($attendances));
         }
 
         return $ledgers;
     }
-
-    public function calculateAllBalances(Collection $ledgers): array
-    {
-        $totals = [
-            'without_service_charge' => [
-                'paid' => 0,
-                'due' => 0,
-                'balance' => 0,
-                'return' => 0,
-            ],
-            'with_service_charge' => [
-                'paid' => 0,
-                'due' => 0,
-                'balance' => 0,
-                'return' => 0
-            ],
-            'total_debits' => 0,
-            'total_credits' => 0,
-            'total_return' => 0,
-            'service_charge_amount' => 0,
-        ];
-
-        foreach ($ledgers as $item) {
-            $credit = (float) ($item['credit'] ?? 0);
-            $debit = (float) ($item['debit'] ?? 0);
-            $return = (float) ($item['return'] ?? 0);
-
-            // Always sum these totals
-            $totals['total_debits'] += $debit;
-            $totals['total_credits'] += $credit;
-            $totals['total_return'] += $return;
-
-            if ($item['category'] === 'Payment') {
-                $totals['without_service_charge']['paid'] += $credit;
-                $totals['with_service_charge']['paid'] += $credit;
-
-                $totals['without_service_charge']['return'] += $return;
-                $totals['with_service_charge']['return'] += $return;
-
-                $totals['without_service_charge']['due'] += $debit;
-                $totals['with_service_charge']['due'] += $debit;
-            } else {
-                // For other categories (Labour, Material, etc.)
-                $totals['without_service_charge']['due'] += $debit;
-                $totals['with_service_charge']['due'] += $item['total_amount_with_service_charge'] ?? $debit;
-                $totals['service_charge_amount'] += $item['service_charge_amount'] ?? 0;
-            }
-        }
-
-        // dd($totals);
-
-        $totals['without_service_charge']['balance'] =
-            ($totals['without_service_charge']['due'] - $totals['without_service_charge']['paid'])
-            - $totals['without_service_charge']['return'];
-
-        $totals['with_service_charge']['balance'] =
-            ($totals['with_service_charge']['due'] - $totals['with_service_charge']['paid'])
-            - $totals['with_service_charge']['return'];
-
-
-        return $totals;
-    }
-
-    // Private helper methods
 
     private function transformPayments(Collection $payments): Collection
     {
@@ -174,12 +246,8 @@ class DataService
                 'amount_status' => $amount_status,
                 'debit' => 0,
                 'return' => $return,
-                'transaction_type' => $hasSupplier && $hasSite
-                    ? 'Sent By ' . ucwords($pay->site->site_name)
-                    : ($pay->transaction_type === 0 ? 'Return To Firm' : 'Received By Admin'),
-                'payment_initiator' => $hasSite && !$hasSupplier
-                    ? 'Site'
-                    : ($hasSupplier ? 'Supplier' : 'Admin'),
+                'transaction_type' => $hasSupplier && $hasSite ? 'Sent By ' . ucwords($pay->site->site_name) : ($pay->transaction_type === 0 ? 'Return To Firm' : 'Received By Admin'),
+                'payment_initiator' => $hasSite && !$hasSupplier ? 'Site' : ($hasSupplier ? 'Supplier' : 'Admin'),
                 'site' => $pay->site->site_name ?? null,
                 'supplier' => $pay->supplier->name ?? null,
                 'supplier_id' => $pay->supplier_id ?? null,
@@ -229,6 +297,11 @@ class DataService
         });
     }
 
+    private function calculateServiceCharge(float $amount, float $serviceChargePercentage): float
+    {
+        return ($amount * $serviceChargePercentage) / 100;
+    }
+
     private function transformSquareFootageBills(Collection $bills): Collection
     {
         return $bills->map(function ($bill) {
@@ -271,9 +344,7 @@ class DataService
         return $expenses->map(function ($expense) {
 
             $serviceCharge = $this->calculateServiceCharge($expense->price, $expense->phase->site->service_charge);
-
             $amount_status = $expense->price > 0 ? '' : 'Pending Price';
-
 
             return [
 
@@ -302,69 +373,54 @@ class DataService
         });
     }
 
-
-    private function transformWastas(Collection $wastas): Collection
+    private function transformAttendances(Collection $attendances): Collection
     {
-        return $wastas->map(function ($wasta) {
-            $totalAmount = $this->calculateWastaTotal($wasta);
-            $presentDays = $wasta->attendances->where('is_present', true)->count();
+        return $attendances->map(function ($attendance) {
+            $setup = $attendance->attendanceSetup;
+            $setupable = $setup->setupable;
 
-            $serviceCharge = $this->calculateServiceCharge($totalAmount, $wasta->phase->site->service_charge ?? 0);
-            $amount_status = $presentDays > 0 ? '' : 'No Attendance';
+            // Get site information from attendance_setup
+            $site = null;
+            $serviceChargePercentage = 0;
+
+            if ($setup->site_id) {
+                // Assuming you have a Site model relationship or can fetch it
+                $site = Site::find($setup->site_id);
+                $serviceChargePercentage = $site->service_charge ?? 0;
+            }
+
+            // Calculate total amount (count × price from attendance_setup)
+            $totalAmount = ($setup->count ?? 1) * ($setup->price ?? 0);
+            $serviceCharge = $this->calculateServiceCharge($totalAmount, $serviceChargePercentage);
+
+            // Determine description based on setupable type
+            $description = 'Unknown';
+            if ($setupable instanceof Wasta) {
+                $description = $setupable->wasta_name ?? 'Wasta';
+            } elseif ($setupable instanceof Wager) {
+                $description = $setupable->wager_name ?? 'Wager';
+            }
+
+            $amount_status = $setup->count > 0 ? '' : 'No Count';
 
             return [
-                'id' => $wasta->id,
-                'verified_by_admin' => $wasta->verified_by_admin,
-                'description' => $wasta->wasta_name,
-                'category' => 'Wasta',
+                'id' => $attendance->id,
+                'verified_by_admin' => 1,
+                'description' => $description,
+                'category' => 'Attendance',
                 'credit' => 0,
                 'amount_status' => $amount_status,
                 'debit' => $totalAmount,
                 'return' => 0,
                 'transaction_type' => null,
                 'payment_initiator' => 'NA',
-                'site' => $wasta->phase->site->site_name ?? null,
+                'site' => $site->site_name ?? null,
                 'supplier' => null,
                 'supplier_id' => null,
-                'site_id' => $wasta->phase->site_id ?? null,
-                'phase' => $wasta->phase->phase_name ?? null,
-                'phase_id' => $wasta->phase_id ?? null,
-                'created_at' => $wasta->created_at,
-                'total_amount_with_service_charge' => $totalAmount + $serviceCharge,
-                'service_charge_amount' => $serviceCharge,
-                'service_charge_percentage' => $wasta->phase->site->service_charge ?? 0,
-                'image' => null,
-            ];
-        });
-    }
-
-    private function transformLabours(Collection $labours): Collection
-    {
-        return $labours->map(function ($labour) {
-            $totalAmount = $this->calculateLabourTotal($labour);
-            $presentDays = $labour->attendances->where('is_present', true)->count();
-
-            $serviceCharge = $this->calculateServiceCharge($totalAmount, $labour->phase->site->service_charge ?? 0);
-            $amount_status = $presentDays > 0 ? '' : 'No Attendance';
-
-            return [
-                'id' => $labour->id,
-                'verified_by_admin' => $labour->verified_by_admin,
-                'description' => $labour->labour_name,
-                'category' => 'Labour',
-                'credit' => 0,
-                'amount_status' => $amount_status,
-                'debit' => $totalAmount,
-                'return' => 0,
-                'transaction_type' => null,
-                'payment_initiator' => 'NA',
-                'site' => $labour->phase->site->site_name ?? null,
-                'supplier' => null,
-                'supplier_id' => null,
-                'site_id' => $labour->phase->site_id ?? null,
-                'phase' => $labour->phase->phase_name ?? null,
-                'phase_id' => $labour->phase_id ?? null,
-                'created_at' => $labour->created_at,
+                'site_id' => $setup->site_id ?? null,
+                'phase' => null,
+                'phase_id' => null,
+                'created_at' => $attendance->created_at,
                 'total_amount_with_service_charge' => $totalAmount + $serviceCharge,
                 'service_charge_amount' => $serviceCharge,
                 'image' => null,
@@ -372,161 +428,76 @@ class DataService
         });
     }
 
-    private function calculateWastaTotal(Wasta $wasta): float
+    public function calculateAllBalances(Collection $ledgers): array
     {
-        return $wasta->attendances
-            ->where('is_present', true)
-            ->sum('price');
-    }
-
-    private function calculateLabourTotal(Labour $labour): float
-    {
-        return $labour->attendances
-            ->where('is_present', true)
-            ->sum('price');
-    }
-
-    private function calculateServiceCharge(float $amount, float $serviceChargePercentage): float
-    {
-        return ($amount * $serviceChargePercentage) / 100;
-    }
-
-    private function filterByDate(string $dateFilter, ?string $startDate, ?string $endDate): ?array
-    {
-        return match ($dateFilter) {
-            'yesterday' => [now()->yesterday()->startOfDay(), now()->yesterday()->endOfDay()],
-            'this_week' => [now()->startOfWeek(), now()->endOfWeek()],
-            'this_month' => [now()->startOfMonth(), now()->endOfMonth()],
-            'this_year' => [now()->startOfYear(), now()->endOfYear()],
-            'custom' => [
-                $startDate ? Carbon::parse($startDate)->startOfDay() : now()->startOfDay(),
-                $endDate ? Carbon::parse($endDate)->endOfDay() : now()->endOfDay(),
+        $totals = [
+            'without_service_charge' => [
+                'paid' => 0,
+                'due' => 0,
+                'balance' => 0,
+                'return' => 0,
             ],
-            'lifetime' => null,
-            default => [now()->startOfDay(), now()->endOfDay()],
-        };
-    }
+            'with_service_charge' => [
+                'paid' => 0,
+                'due' => 0,
+                'balance' => 0,
+                'return' => 0
+            ],
+            'total_debits' => 0,
+            'total_credits' => 0,
+            'total_return' => 0,
+            'service_charge_amount' => 0,
+        ];
 
+        foreach ($ledgers as $item) {
+            $credit = (float)($item['credit'] ?? 0);
+            $debit = (float)($item['debit'] ?? 0);
+            $return = (float)($item['return'] ?? 0);
 
+            // Always sum these totals
+            $totals['total_debits'] += $debit;
+            $totals['total_credits'] += $credit;
+            $totals['total_return'] += $return;
 
-    private function getPayments(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
-    {
-        // Return empty collection if phase is selected
-        if ($this->isValidPhase($phase_id)) {
-            return collect();
+            if ($item['category'] === 'Payment') {
+                $totals['without_service_charge']['paid'] += $credit;
+                $totals['with_service_charge']['paid'] += $credit;
+
+                $totals['without_service_charge']['return'] += $return;
+                $totals['with_service_charge']['return'] += $return;
+
+                $totals['without_service_charge']['due'] += $debit;
+                $totals['with_service_charge']['due'] += $debit;
+            } else {
+                // For other categories (Labour, Material, Attendance, etc.)
+                $totals['without_service_charge']['due'] += $debit;
+                $totals['with_service_charge']['due'] += $item['total_amount_with_service_charge'] ?? $debit;
+                $totals['service_charge_amount'] += $item['service_charge_amount'] ?? 0;
+            }
         }
 
-        return Payment::query()
-            ->where('verified_by_admin', 1)
-            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
-            ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
-            ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('site', fn($sq) => $sq->where('id', $site_id)))
-            ->with(['site', 'supplier'])
-            ->get();
+        $totals['without_service_charge']['balance'] =
+            ($totals['without_service_charge']['due'] - $totals['without_service_charge']['paid'])
+            - $totals['without_service_charge']['return'];
+
+        $totals['with_service_charge']['balance'] =
+            ($totals['with_service_charge']['due'] - $totals['with_service_charge']['paid'])
+            - $totals['with_service_charge']['return'];
+
+
+        return $totals;
     }
 
-    private function getRawMaterials(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
+    public function getSuppliersWithSites($site_id = null, $supplier_id = null, $phase_id = null): Collection
     {
 
-
-        return ConstructionMaterialBilling::query()
-            ->with(['phase.site', 'supplier'])
-            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
-            ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
-            ->when($this->isValidPhase($phase_id), fn($q) => $q->whereHas('phase', fn($sq) => $sq->where('id', $phase_id)))
-            ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
-            ->where('verified_by_admin', 1)
-            ->latest()
-            ->get();
-    }
-
-    private function getSquareFootageBills(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
-    {
-        return SquareFootageBill::query()
-            ->with([
-                'phase' => fn($phase) => $phase->with(['site' => fn($site) => $site->withoutTrashed()])->withoutTrashed(),
-                'supplier' => fn($supplier) => $supplier->withoutTrashed(),
-            ])
-            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
-            ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
-            ->when($this->isValidPhase($phase_id), fn($q) => $q->whereHas('phase', fn($sq) => $sq->where('id', $phase_id)))
-            ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
-            ->where('verified_by_admin', 1)
-            ->latest()
-            ->get();
-    }
-
-    private function getExpenses(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
-    {
-        return DailyExpenses::query()
-            ->with(['phase.site' => fn($site) => $site->withoutTrashed()])
-            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
-            ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
-            ->when($this->isValidPhase($phase_id), fn($q) => $q->whereHas('phase', fn($sq) => $sq->where('id', $phase_id)))
-            ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
-            ->where('verified_by_admin', 1)
-
-            ->latest()
-            ->get();
-    }
-
-
-    private function getWastas(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
-    {
-        return Wasta::query()
-            ->with([
-                'phase.site',
-                'attendances' => fn($q) => $q->where('is_present', 1),
-            ])
-            ->whereHas('attendances', fn($q) => $q->where('is_present', 1)) // <-- Enforce at least one presence
-            ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
-            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
-            ->when($this->isValidPhase($phase_id), fn($q) => $q->whereHas('phase', fn($sq) => $sq->where('id', $phase_id)))
-            ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
-            ->latest()
-            ->get();
-    }
-    private function getLabours(string $dateFilter, ?array $dateRange, $site_id, $supplier_id, $phase_id): Collection
-    {
-        return Labour::query()
-            ->with([
-                'wasta',
-                'phase.site',
-                'attendances' => fn($q) => $q->where('is_present', 1),
-            ])
-            ->whereHas('attendances', fn($q) => $q->where('is_present', 1)) // <-- Enforce at least one presence
-            ->when($this->isFilteredDate($dateFilter, $dateRange), fn($q) => $q->whereBetween('created_at', $dateRange))
-            ->when($this->isValidSupplier($supplier_id), fn($q) => $q->where('supplier_id', $supplier_id))
-            ->when($this->isValidPhase($phase_id), fn($q) => $q->whereHas('phase', fn($sq) => $sq->where('id', $phase_id)))
-            ->when($this->isValidSite($site_id), fn($q) => $q->whereHas('phase.site', fn($sq) => $sq->where('id', $site_id)))
-            ->latest()
-            ->get();
-    }
-
-
-    /**
-     * Get all suppliers with their site info (without date filters)
-     * 
-     * @param int|null $site_id
-     * @param int|null $supplier_id
-     * @param int|null $phase_id
-     * @return Collection
-     */
-    public function getSuppliersWithSites(
-        $site_id = null,
-        $supplier_id = null,
-        $phase_id = null
-    ): Collection {
         $suppliers = collect();
 
-        // Define models and their relationships
         $models = [
             Payment::class => ['relation' => 'site', 'type' => 'direct'],
             ConstructionMaterialBilling::class => ['relation' => 'phase.site', 'type' => 'nested'],
             SquareFootageBill::class => ['relation' => 'phase.site', 'type' => 'nested'],
             DailyExpenses::class => ['relation' => 'phase.site', 'type' => 'nested'],
-            Wasta::class => ['relation' => 'phase.site', 'type' => 'nested'],
-            Labour::class => ['relation' => 'phase.site', 'type' => 'nested']
         ];
 
         foreach ($models as $model => $config) {
@@ -572,17 +543,19 @@ class DataService
             );
         }
 
-        // Return unique suppliers sorted by name
-        return $suppliers->unique('supplier_id')
-            ->sortBy('supplier_name')
+        // Return unique supplier-site pairs, sorted by supplier then site
+        return $suppliers
+            ->unique(function ($item) {
+                return ($item['supplier_id'] ?? 'null') . '|' . ($item['site_id'] ?? 'null');
+            })
+            ->sortBy([
+                ['supplier_name', 'asc'],
+                ['site_name', 'asc'],
+            ])
             ->values();
     }
 
-
-
-
-
-    private function activeSiteQuery(): \Closure
+    private function isActiveSite(): Closure
     {
         return fn($site) => $site->where([
             'deleted_at' => null,
@@ -590,28 +563,7 @@ class DataService
         ]);
     }
 
-    private function isValidWager($wager_id): bool
-    {
-        return $wager_id && $wager_id !== 'all';
-    }
 
-    private function isValidSite($site_id): bool
-    {
-        return $site_id && $site_id !== 'all';
-    }
-
-    private function isValidPhase($phase_id)
-    {
-        return $phase_id && $phase_id !== 'all';
-    }
-
-    private function isValidSupplier($supplier_id): bool
-    {
-        return $supplier_id && $supplier_id !== 'all';
-    }
-
-    private function isFilteredDate(string $dateFilter, ?array $dateRange): bool
-    {
-        return $dateFilter !== 'lifetime' && $dateRange;
-    }
 }
+
+

@@ -1,6 +1,7 @@
 <x-app-layout>
 
-    <x-breadcrumb :names="['Sites', $site->site_name, ' Back']" :urls="['/admin/sites', '/admin/sites/' . base64_encode($site->id), '/admin/sites/' . base64_encode($site->id)]" />
+    <x-breadcrumb :names="['Sites', $site->site_name, ' Back']"
+                  :urls="['/admin/sites', '/admin/sites/' . base64_encode($site->id), '/admin/sites/' . base64_encode($site->id)]"/>
 
     <style>
         .hover-opacity-100:hover {
@@ -10,7 +11,6 @@
         .transition-all {
             transition: all 0.3s ease;
         }
-
 
 
         .minimal-card {
@@ -253,7 +253,7 @@
                         <div class="label-text">Contact</div>
                         <div class="value-text">
                             <a href="tel:+91-{{ $site->contact_no }}" class="text-decoration-none"
-                                style="color: #111827;">
+                               style="color: #111827;">
                                 +91-{{ $site->contact_no }}
                             </a>
                         </div>
@@ -281,14 +281,13 @@
     </div>
 
 
-
     <!-- Phase Data -->
     @if (count($phaseData) > 0)
         <!-- Phase Tabs -->
         <div class="mb-4">
             @foreach ($phaseData as $key => $phase)
                 <button class="tab-minimal {{ $key === 0 ? 'active' : '' }}" onclick="showPhase({{ $key }})"
-                    id="tab-{{ $key }}">
+                        id="tab-{{ $key }}">
                     {{ ucfirst($phase['phase']) }}
                 </button>
             @endforeach
@@ -301,7 +300,6 @@
                 <!-- Financial Summary -->
                 <div class="summary-section">
                     <h3 class="section-title">{{ ucfirst($phase['phase']) }}</h3>
-
 
 
                     <div class="row">
@@ -349,7 +347,7 @@
                                 <div class="metric-row mb-0">
                                     <span class="metric-label">Total Amount</span>
                                     <span class="metric-value"
-                                        style="font-size: 16px;">₹{{ number_format($phase['phase_total_with_service_charge'], 2) }}</span>
+                                          style="font-size: 16px;">₹{{ number_format($phase['phase_total_with_service_charge'], 2) }}</span>
                                 </div>
                             </div>
 
@@ -361,7 +359,7 @@
                 <!-- Generate PDF Button -->
                 <div class="d-flex justify-content-end mt-4 mb-4">
                     <a href="{{ url('admin/download-phase/report', ['id' => base64_encode($phase['phase_id'])]) }}"
-                        class="btn-minimal">
+                       class="btn-minimal">
                         <i class="fas fa-file-pdf"></i>
                         Generate PDF
                     </a>
@@ -418,274 +416,272 @@
                             <div class="table-responsive">
                                 <table class="table table-hover mb-0">
                                     <thead class="bg-light">
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Bill Proof</th>
-                                            <th>Description</th>
-                                            <th>Supplier</th>
-                                            <th>Amount</th>
-                                            <th>Total (with SC)</th>
-                                            <th>Action</th>
-                                        </tr>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Bill Proof</th>
+                                        <th>Description</th>
+                                        <th>Supplier</th>
+                                        <th>Amount</th>
+                                        <th>Total (with SC)</th>
+                                        <th>Action</th>
+                                    </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse ($table['data'] as $entry)
-                                            <tr>
-                                                <td>
-                                                    {{ \Carbon\Carbon::parse($entry['created_at'])->format('d-M-Y') }}
-                                                </td>
-                                                <td>
-                                                    @if ($entry['image'])
-                                                        <div class="position-relative d-inline-block">
-                                                            <img src="{{ asset('storage/' . $entry['image']) }}"
-                                                                alt=""
-                                                                style="max-width: 100px; max-height: 100px;">
+                                    @forelse ($table['data'] as $entry)
+                                        <tr>
+                                            <td>
+                                                {{ \Carbon\Carbon::parse($entry['created_at'])->format('d-M-Y') }}
+                                            </td>
+                                            <td>
+                                                @if ($entry['image'])
+                                                    <div class="position-relative d-inline-block">
+                                                        <img src="{{ asset('storage/' . $entry['image']) }}"
+                                                             alt=""
+                                                             style="max-width: 100px; max-height: 100px;">
 
-                                                            <a href="{{ asset('storage/' . $entry['image']) }}"
-                                                                download
-                                                                class="position-absolute start-0 end-0 bottom-0 text-center text-white bg-dark bg-opacity-70 p-1 text-decoration-none opacity-0 hover-opacity-100 transition-all">
-                                                                <i class="fas fa-download"></i>
-                                                            </a>
-                                                        </div>
-                                                    @else
-                                                        Bill Not Available
-                                                    @endif
-                                                </td>
+                                                        <a href="{{ asset('storage/' . $entry['image']) }}"
+                                                           download
+                                                           class="position-absolute start-0 end-0 bottom-0 text-center text-white bg-dark bg-opacity-70 p-1 text-decoration-none opacity-0 hover-opacity-100 transition-all">
+                                                            <i class="fas fa-download"></i>
+                                                        </a>
+                                                    </div>
+                                                @else
+                                                    Bill Not Available
+                                                @endif
+                                            </td>
 
 
-                                                <td>{{ $entry['description'] ?? '-' }}</td>
-                                                <td>{{ $entry['supplier'] ?? '-' }}</td>
-                                                <td class="">
-                                                    <div class="fw-bold">{{ $entry['debit'] }}</div>
-                                                    <small class="text-muted">
-                                                        {{ ucwords($entry['amount_status']) }}
-                                                    </small>
-                                                </td>
-                                                <td class="fw-medium">
-                                                    ₹{{ number_format($entry['total_amount_with_service_charge'], 2) }}
-                                                </td>
-                                                <td class="text-nowrap">
-                                                    @switch($entry['category'])
-                                                        @case('Material')
-                                                            <a href="{{ route('construction-material-billings.edit', [base64_encode($entry['id'])]) }}"
-                                                                class="text-primary me-2" title="Edit">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
-                                                            <a href="#" class="text-danger delete-btn"
-                                                                data-id="{{ base64_encode($entry['id']) }}"
-                                                                data-type="Materials"
-                                                                data-url="{{ route('construction-material-billings.destroy', [$entry['id']]) }}"
-                                                                title="Delete">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </a>
+                                            <td>{{ $entry['description'] ?? '-' }}</td>
+                                            <td>{{ $entry['supplier'] ?? '-' }}</td>
+                                            <td class="">
+                                                <div class="fw-bold">{{ $entry['debit'] }}</div>
+                                                <small class="text-muted">
+                                                    {{ ucwords($entry['amount_status']) }}
+                                                </small>
+                                            </td>
+                                            <td class="fw-medium">
+                                                ₹{{ number_format($entry['total_amount_with_service_charge'], 2) }}
+                                            </td>
+                                            <td class="text-nowrap">
+                                                @switch($entry['category'])
+                                                    @case('Material')
+                                                        <a href="{{ route('construction-material-billings.edit', [base64_encode($entry['id'])]) }}"
+                                                           class="text-primary me-2" title="Edit">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <a href="#" class="text-danger delete-btn"
+                                                           data-id="{{ base64_encode($entry['id']) }}"
+                                                           data-type="Materials"
+                                                           data-url="{{ route('construction-material-billings.destroy', [$entry['id']]) }}"
+                                                           title="Delete">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </a>
                                                         @break
 
-                                                        @case('SQFT')
-                                                            <a href="{{ route('square-footage-bills.edit', [base64_encode($entry['id'])]) }}"
-                                                                class="text-primary me-2" title="Edit">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
-                                                            <a href="#" class="text-danger delete-btn"
-                                                                data-id="{{ base64_encode($entry['id']) }}"
-                                                                data-type="Contractor"
-                                                                data-url="{{ route('square-footage-bills.destroy', [$entry['id']]) }}"
-                                                                title="Delete">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </a>
+                                                    @case('SQFT')
+                                                        <a href="{{ route('square-footage-bills.edit', [base64_encode($entry['id'])]) }}"
+                                                           class="text-primary me-2" title="Edit">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <a href="#" class="text-danger delete-btn"
+                                                           data-id="{{ base64_encode($entry['id']) }}"
+                                                           data-type="Contractor"
+                                                           data-url="{{ route('square-footage-bills.destroy', [$entry['id']]) }}"
+                                                           title="Delete">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </a>
                                                         @break
 
-                                                        @case('Expense')
-                                                            <a href="{{ route('daily-expenses.edit', [base64_encode($entry['id'])]) }}"
-                                                                class="text-primary me-2" title="Edit">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
-                                                            <a href="#" class="text-danger delete-btn"
-                                                                data-id="{{ base64_encode($entry['id']) }}"
-                                                                data-type="Expenses"
-                                                                data-url="{{ route('daily-expenses.destroy', [$entry['id']]) }}"
-                                                                title="Delete">
-                                                                <i class="fas fa-trash-alt"></i>
-                                                            </a>
+                                                    @case('Expense')
+                                                        <a href="{{ route('daily-expenses.edit', [base64_encode($entry['id'])]) }}"
+                                                           class="text-primary me-2" title="Edit">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <a href="#" class="text-danger delete-btn"
+                                                           data-id="{{ base64_encode($entry['id']) }}"
+                                                           data-type="Expenses"
+                                                           data-url="{{ route('daily-expenses.destroy', [$entry['id']]) }}"
+                                                           title="Delete">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </a>
                                                         @break
-                                                    @endswitch
-                                                </td>
-                                            </tr>
-                                            @empty
-                                                <tr>
-                                                    <td colspan="6" class="text-center py-4 text-muted">
-                                                        <i class="fas fa-database me-2"></i> No records found
-                                                    </td>
-                                                </tr>
-                                            @endforelse
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                @endswitch
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4 text-muted">
+                                                <i class="fas fa-database me-2"></i> No records found
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                    @endforeach
-                </div>
-            @endforeach
-        @else
-            <div class="minimal-card p-5 text-center">
-                <i class="fas fa-info-circle" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
-                <h4 style="color: #6b7280; font-weight: 500;">No phase data available for this site.</h4>
+                    </div>
+                @endforeach
             </div>
-        @endif
+        @endforeach
+    @else
+        <div class="minimal-card p-5 text-center">
+            <i class="fas fa-info-circle" style="font-size: 48px; color: #d1d5db; margin-bottom: 16px;"></i>
+            <h4 style="color: #6b7280; font-weight: 500;">No phase data available for this site.</h4>
+        </div>
+    @endif
 
 
+    @push('scripts')
+        <script>
+            function showPhase(phaseIndex) {
+                // Hide all phase contents
+                document.querySelectorAll('.phase-content').forEach(content => {
+                    content.classList.add('d-none');
+                });
 
-        @push('scripts')
-            <script>
-                function showPhase(phaseIndex) {
-                    // Hide all phase contents
-                    document.querySelectorAll('.phase-content').forEach(content => {
-                        content.classList.add('d-none');
-                    });
+                // Remove active class from all tabs
+                document.querySelectorAll('.tab-minimal').forEach(tab => {
+                    tab.classList.remove('active');
+                });
 
-                    // Remove active class from all tabs
-                    document.querySelectorAll('.tab-minimal').forEach(tab => {
-                        tab.classList.remove('active');
-                    });
+                // Show selected phase content
+                document.getElementById('phase-' + phaseIndex).classList.remove('d-none');
 
-                    // Show selected phase content
-                    document.getElementById('phase-' + phaseIndex).classList.remove('d-none');
+                // Add active class to selected tab
+                document.getElementById('tab-' + phaseIndex).classList.add('active');
+            }
+        </script>
 
-                    // Add active class to selected tab
-                    document.getElementById('tab-' + phaseIndex).classList.add('active');
-                }
-            </script>
+        <script>
+            $(document).on('click', '.delete-btn', function () {
+                const button = $(this);
+                const id = button.data('id');
+                const type = button.data('type');
+                const url = button.data('url');
+                const row = button.closest('tr');
 
-            <script>
-                $(document).on('click', '.delete-btn', function() {
-                    const button = $(this);
-                    const id = button.data('id');
-                    const type = button.data('type');
-                    const url = button.data('url');
-                    const row = button.closest('tr');
-
-                    Swal.fire({
-                        title: 'Are you sure?',
-                        text: `You are about to delete this  record. This action cannot be undone!`,
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#3085d6',
-                        confirmButtonText: 'Yes, delete it!',
-                        cancelButtonText: 'Cancel'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            $.ajax({
-                                url: url,
-                                type: 'DELETE',
-                                data: {
-                                    _token: '{{ csrf_token() }}',
-                                },
-                                success: function(response) {
-                                    if (response.error) {
-                                        // Show error message from backend
-                                        Swal.fire({
-                                            icon: 'error',
-                                            title: 'Cannot Delete',
-                                            text: response.error,
-                                            confirmButtonColor: '#3085d6',
-                                        });
-                                    } else {
-                                        // Show success message
-                                        Swal.fire({
-                                            icon: 'success',
-                                            title: 'Deleted!',
-                                            text: response.message ||
-                                                'The record has been deleted successfully.',
-                                            confirmButtonColor: '#3085d6',
-                                        });
-                                        row.fadeOut(400, function() {
-                                            $(this).remove();
-                                        });
-                                    }
-                                },
-                                error: function(xhr) {
-                                    let errorMessage = 'Something went wrong. Please try again.';
-
-                                    // Check for specific error messages from backend
-                                    if (xhr.responseJSON && xhr.responseJSON.error) {
-                                        errorMessage = xhr.responseJSON.error;
-                                    } else if (xhr.status === 404) {
-                                        errorMessage =
-                                            'Record not found. It may have already been deleted.';
-                                    } else if (xhr.status === 500) {
-                                        errorMessage = 'Server error. Please try again later.';
-                                    }
-
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: `You are about to delete this  record. This action cannot be undone!`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: url,
+                            type: 'DELETE',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                            },
+                            success: function (response) {
+                                if (response.error) {
+                                    // Show error message from backend
                                     Swal.fire({
                                         icon: 'error',
-                                        title: 'Error',
-                                        text: errorMessage,
+                                        title: 'Cannot Delete',
+                                        text: response.error,
                                         confirmButtonColor: '#3085d6',
                                     });
+                                } else {
+                                    // Show success message
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Deleted!',
+                                        text: response.message ||
+                                            'The record has been deleted successfully.',
+                                        confirmButtonColor: '#3085d6',
+                                    });
+                                    row.fadeOut(400, function () {
+                                        $(this).remove();
+                                    });
                                 }
-                            });
-                        }
-                    });
-                });
-            </script>
+                            },
+                            error: function (xhr) {
+                                let errorMessage = 'Something went wrong. Please try again.';
 
-            <script>
-                // Delete functionality
-                $(document).on('click', '.delete-link', function(e) {
-                    e.preventDefault();
+                                // Check for specific error messages from backend
+                                if (xhr.responseJSON && xhr.responseJSON.error) {
+                                    errorMessage = xhr.responseJSON.error;
+                                } else if (xhr.status === 404) {
+                                    errorMessage =
+                                        'Record not found. It may have already been deleted.';
+                                } else if (xhr.status === 500) {
+                                    errorMessage = 'Server error. Please try again later.';
+                                }
 
-                    const button = $(this);
-                    const id = button.data('id');
-                    const type = button.data('type');
-                    const row = button.closest('tr');
-
-                    const routes = {
-                        'Materials': 'construction-material-billings',
-                        'Contractor': 'square-footage-bills',
-                        'Expenses': 'daily-expenses',
-                        'Wasta': 'dailywager',
-                        'Labour': 'daily-wager-attendance'
-                    };
-
-                    if (!routes[type]) {
-                        showAlert('error', 'Invalid operation type');
-                        return;
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: errorMessage,
+                                    confirmButtonColor: '#3085d6',
+                                });
+                            }
+                        });
                     }
-
-                    if (!confirm('Are you sure you want to delete this item?')) {
-                        return;
-                    }
-
-                    $.ajax({
-                        url: `{{ url('admin') }}/${routes[type]}/${id}`,
-                        type: 'DELETE',
-                        data: {
-                            _token: '{{ csrf_token() }}',
-                        },
-                        success: function(response) {
-                            showAlert('success', response.message);
-                            row.fadeOut(400, function() {
-                                $(this).remove();
-                            });
-                        },
-                        error: function(error) {
-                            const message = error.status === 404 ?
-                                (error.responseJSON?.error || 'Resource not found') :
-                                'An error occurred. Please try again.';
-                            showAlert('error', message);
-                        }
-                    });
                 });
+            });
+        </script>
+
+        <script>
+            // Delete functionality
+            $(document).on('click', '.delete-link', function (e) {
+                e.preventDefault();
+
+                const button = $(this);
+                const id = button.data('id');
+                const type = button.data('type');
+                const row = button.closest('tr');
+
+                const routes = {
+                    'Materials': 'construction-material-billings',
+                    'Contractor': 'square-footage-bills',
+                    'Expenses': 'daily-expenses',
+                    'Wasta': 'dailywager',
+                    'Labour': 'daily-wager-attendance'
+                };
+
+                if (!routes[type]) {
+                    showAlert('error', 'Invalid operation type');
+                    return;
+                }
+
+                if (!confirm('Are you sure you want to delete this item?')) {
+                    return;
+                }
+
+                $.ajax({
+                    url: `{{ url('admin') }}/${routes[type]}/${id}`,
+                    type: 'DELETE',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                    },
+                    success: function (response) {
+                        showAlert('success', response.message);
+                        row.fadeOut(400, function () {
+                            $(this).remove();
+                        });
+                    },
+                    error: function (error) {
+                        const message = error.status === 404 ?
+                            (error.responseJSON?.error || 'Resource not found') :
+                            'An error occurred. Please try again.';
+                        showAlert('error', message);
+                    }
+                });
+            });
 
 
+            // Helper function for showing alerts
+            function showAlert(type, message) {
+                const container = $('#messageContainer');
+                const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+                const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
 
-                // Helper function for showing alerts
-                function showAlert(type, message) {
-                    const container = $('#messageContainer');
-                    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-                    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-
-                    container.empty().append(`
+                container.empty().append(`
                     <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
                         <i class="fas ${icon} me-2"></i>
                         ${message}
@@ -693,13 +689,13 @@
                     </div>
                 `);
 
-                    setTimeout(() => {
-                        container.find('.alert').fadeOut(400, function() {
-                            $(this).remove();
-                        });
-                    }, 3000);
-                }
-            </script>
-        @endpush
+                setTimeout(() => {
+                    container.find('.alert').fadeOut(400, function () {
+                        $(this).remove();
+                    });
+                }, 3000);
+            }
+        </script>
+    @endpush
 
-    </x-app-layout>
+</x-app-layout>

@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ConstructionMaterialBilling extends Model
 {
 
+
+    public $timestamps = false;
+
     protected $fillable = [
         'item_image_path',
         'amount',
@@ -18,7 +21,9 @@ class ConstructionMaterialBilling extends Model
         'supplier_id',
         'user_id',
         'phase_id',
-        'unit_count'
+        'unit_count',
+        'created_at',
+        'updated_at'
     ];
 
     /**
@@ -41,5 +46,10 @@ class ConstructionMaterialBilling extends Model
         return $this->belongsTo(Phase::class);
     }
 
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 
 }

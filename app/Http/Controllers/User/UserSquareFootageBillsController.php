@@ -40,6 +40,7 @@ class UserSquareFootageBillsController extends Controller
                 'multiplier' => 'required|numeric|min:0',
                 'phase_id' => 'required|exists:phases,id',
                 'supplier_id' => 'required|exists:suppliers,id',
+                'created_at' => 'required|date',
             ], [
                 'wager_name.required' => 'Work type is required.',
                 'wager_name.string' => 'The work type  must be a valid string.',
@@ -75,7 +76,8 @@ class UserSquareFootageBillsController extends Controller
                     'multiplier' => $request->type === 'full_contract' ? 1 : $request->multiplier,
                     'phase_id' => $request->phase_id,
                     'supplier_id' => $request->supplier_id,
-                    'verified_by_admin' => 0
+                    'verified_by_admin' => 0,
+                    'created_at' => $request->created_at,
                 ]);
 
                 if ($sqft) {

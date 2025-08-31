@@ -13,6 +13,7 @@
             z-index: 9999;
         }
 
+
         .header-container {
             display: flex;
             align-items: center;
@@ -31,51 +32,6 @@
             margin-right: 15px;
         }
 
-        .tab-container {
-            border-bottom: 1px solid #e5e7eb;
-            margin-bottom: 20px;
-        }
-
-        .tab {
-            display: inline-block;
-            padding: 10px 0;
-            margin-right: 30px;
-            cursor: pointer;
-        }
-
-        .tab.active {
-            border-bottom: 2px solid #3b82f6;
-            color: #3b82f6;
-            font-weight: 500;
-        }
-
-        .badge {
-            background-color: #e5e7eb;
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 12px;
-            margin-left: 5px;
-        }
-
-        .filters-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .filter-label {
-            font-weight: 500;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .filter-input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-        }
 
         .summary-cards {
             display: flex;
@@ -171,28 +127,32 @@
     </style>
 
 
-    <x-breadcrumb :names="['Sites', $site->site_name]" :urls="['/user/dashboard', '/user/sites/' . base64_encode($site->id)]" />
-
-
+    <x-breadcrumb :names="['Sites', $site->site_name]" :urls="[$user . '/sites', $user . '/sites/' . base64_encode($site->id)]" />
 
     <div class="header-container">
+
 
         <div class="header-icon">
             <i class="menu-icon fa fa-building"></i>
         </div>
 
-        <h2 class="font-semibold">{{ ucwords($site->site_name) }}</h2>
+        <h2 class="text-xl font-semibold">{{ ucwords($site->site_name) }} | {{ ucwords($site->client->name) }}</h2>
 
         <div class="ms-auto action-buttons d-flex gap-2">
-            <!-- Settings Dropdown -->
+
 
             <button class="btn btn-outline btn-sm" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown"
-                aria-expanded="false">
+                    aria-expanded="false">
                 <i class="fas fa-bolt me-1"></i> Quick Actions
             </button>
 
             <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                 <!-- Entry Actions -->
+                <li>
+                    <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#phase">
+                        <i class="fas fa-layer-group me-2"></i> Add Phase
+                    </a>
+                </li>
 
                 <li>
                     <a class="dropdown-item" data-bs-toggle="modal" role="button" href="#modal-construction-billings">
@@ -222,54 +182,64 @@
 
                 <!-- View / Utility Actions -->
                 <li>
-                    <a class="dropdown-item" href="{{ url('user/sites/details/' . $id) }}">
+                    <a class="dropdown-item" href="{{ url($user . '/sites/details/' . $id) }}">
                         <i class="fas fa-info-circle me-2"></i> View Site Details
                     </a>
                 </li>
-
                 <li>
                     <a class="dropdown-item" href="{{ url($user . '/attendance/site/show/' . $id) }}">
                         <i class="fas fa-calendar-check me-2"></i> View Attendance
                     </a>
                 </li>
+                <li>
+                    <a class="dropdown-item"
+                       href="{{ url($user . '/site-payment/report', ['id' => $id]) }}">
+                        <i class="fas fa-file-invoice-dollar me-2"></i> View Payment Report
+                    </a>
+                </li>
 
                 <li>
-                    <a class="dropdown-item" href="{{ url('user/sites/payments', [$id]) }}">
+                    <a class="dropdown-item" href="{{ url($user . '/sites/payments', [base64_decode($id)]) }}">
                         <i class="fas fa-list me-2"></i>
                         View Payments
                     </a>
                 </li>
-
-
-                <li>
-                    <a class="dropdown-item" href="#query" data-bs-toggle="modal" role="button">
-                        <i class="fas fa-list me-2"></i>
-                        Add Query
-                    </a>
-                </li>
-
-
             </ul>
 
-
             <form action="{{ url($user . '/ledger/report') }}" method="GET">
-                <input type="hidden" name="site_id" value="{{ request('site_id', $id) }}">
+                <!-- Existing filters -->
+                <input type="hidden" name="site_id" value="{{ request('site_id', $site->id) }}">
                 <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
-                <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
+                <input type="hidden" name="supplier_id" value="{{ request('supplier_id', $data['supplier']->id ?? 'all') }}">
                 <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
+
+                <!-- Missing custom date range filters -->
+                @if(request('date_filter') === 'custom')
+                    <input type="hidden" name="start_date" value="{{ request('start_date') }}">
+                    <input type="hidden" name="end_date" value="{{ request('end_date') }}">
+                @endif
+
+
+                <!-- Add more hidden inputs for any other query parameters you want to preserve -->
+                @foreach(request()->query() as $key => $value)
+                    @if(!in_array($key, ['site_id', 'date_filter', 'supplier_id', 'phase_id', 'start_date', 'end_date']))
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endif
+                @endforeach
+
                 <button type="submit" class="btn btn-outline">
                     <i class="far fa-file-pdf"></i> PDF
                 </button>
             </form>
-
 
         </div>
 
     </div>
 
 
+
     <form class="d-flex flex-column flex-md-row gap-2 w-100" action="{{ url()->current() }}" method="GET"
-        id="filterForm">
+          id="filterForm">
 
         <!-- Supplier Select -->
         <select class="bg-white text-black form-select form-select-sm" name="phase_id" id="phaseFilter">
@@ -315,11 +285,11 @@
 
         <!-- Date Range Inputs (shown only when custom is selected) -->
         <div id="customDateRange"
-            style="display: {{ request('date_filter') === 'custom' ? 'flex' : 'none' }}; gap: 0.5rem;">
+             style="display: {{ request('date_filter') === 'custom' ? 'flex' : 'none' }}; gap: 0.5rem;">
             <input type="date" name="start_date" class="form-control form-control-sm bg-white text-black"
-                value="{{ request('start_date') }}" placeholder="Start Date">
+                   value="{{ request('start_date') }}" placeholder="Start Date">
             <input type="date" name="end_date" class="form-control form-control-sm bg-white text-black"
-                value="{{ request('end_date') }}" placeholder="End Date">
+                   value="{{ request('end_date') }}" placeholder="End Date">
         </div>
 
         <!-- Reset Button -->
@@ -329,35 +299,35 @@
     </form>
 
 
-
     <div class="mt-4">
 
         <div class="summary-cards">
 
             <div class="summary-card gave">
-                <div class="summary-amount gave-text">₹{{ number_format($total_balance) }}</div>
+                <div class="summary-amount gave-text">₹{{ $total_balance }}</div>
                 <div class="summary-label gave-text">Total Balance</div>
             </div>
 
             <div class="summary-card gave">
-                <div class="summary-amount gave-text">₹{{ number_format($total_due) }}</div>
+                <div class="summary-amount gave-text">₹{{ $total_due }}</div>
                 <div class="summary-label gave-text">Total Due</div>
             </div>
 
             <div class="summary-card balance">
-                <div class="summary-amount balance-text">₹{{ number_format($effective_balance) }}</div>
+                <div class="summary-amount balance-text">₹{{ $effective_balance }}</div>
                 <div class="summary-label balance-text">Effective Balance</div>
             </div>
 
             <div class="summary-card got">
-                <div class="summary-amount got-text">₹{{ number_format($total_paid) }}</div>
+                <div class="summary-amount got-text">₹{{ $total_paid }}</div>
                 <div class="summary-label got-text">Total Paid</div>
             </div>
 
             <div class="summary-card got">
-                <div class="summary-amount got-text">₹{{ number_format($return) }}</div>
+                <div class="summary-amount got-text">₹{{ $returns }}</div>
                 <div class="summary-label got-text">Total Returns</div>
             </div>
+
 
         </div>
 
@@ -367,60 +337,60 @@
         <div class="table-responsive">
             <table class="table mb-0">
                 <thead>
-                    <tr>
-                        <th class="fw-bold">DATE</th>
-                        <th class="fw-bold">Customer Name</th>
-                        <th class="fw-bold">DETAILS</th>
-                        <th class="fw-bold">Return</th>
-                        <th class="fw-bold">Debit</th>
-                        <th class="fw-bold">Credit</th>
-                    </tr>
+                <tr>
+                    <th class="fw-bold">Date</th>
+                    <th class="fw-bold">Customer Name</th>
+                    <th class="fw-bold">Details</th>
+                    <th class="fw-bold">Returns</th>
+                    <th class="fw-bold ">Purchases</th>
+                    <th class="fw-bold ">Payments</th>
+                </tr>
                 </thead>
                 <tbody>
-                    @if ($paginatedLedgers->count())
-                        @foreach ($paginatedLedgers as $ledger)
-                            <tr>
-                                <td>{{ \Carbon\Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
-                                <td>
-                                    <strong>{{ ucwords($ledger['supplier']) }}</strong>
-                                </td>
-                                <td>
-                                    <div class="fw-bold">{{ ucwords($ledger['description']) }}</div>
-                                    <small class="text-muted">
-                                        {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
-                                    </small>
-                                </td>
-                                <td class="text-danger fw-bold">
-                                    @if ($ledger['return'] > 0)
-                                        ₹{{ number_format($ledger['return']) }}
-                                    @else
-                                        ₹0
-                                    @endif
-                                </td>
-                                <td class="fw-bold">
-                                    @if ($ledger['debit'] > 0)
-                                        ₹{{ number_format($ledger['debit']) }}
-                                    @else
-                                        <div class="fw-bold">₹0</div>
-                                        <small class="text-muted">
-                                            {{ ucwords($ledger['amount_status']) }}
-                                        </small>
-                                    @endif
-                                </td>
-                                <td class="text-success fw-bold">
-                                    @if ($ledger['credit'] > 0)
-                                        ₹{{ number_format($ledger['credit']) }}
-                                    @else
-                                        ₹0
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    @else
+                @if ($paginatedLedgers->count())
+                    @foreach ($paginatedLedgers as $ledger)
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">No records available</td>
+                            <td>{{ \Carbon\Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
+                            <td>
+                                <strong>{{ ucwords($ledger['supplier']) }}</strong>
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ ucwords($ledger['description']) }}</div>
+                                <small class="text-muted">
+                                    {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
+                                </small>
+                            </td>
+                            <td class=" text-danger fw-bold">
+                                @if ($ledger['return'] > 0)
+                                    ₹{{ number_format($ledger['return']) }}
+                                @else
+                                    ₹0
+                                @endif
+                            </td>
+                            <td class="fw-bold">
+                                @if ($ledger['debit'] > 0)
+                                    ₹{{ number_format($ledger['debit']) }}
+                                @else
+                                    <div class="fw-bold">₹0</div>
+                                    <small class="text-muted">
+                                        {{ ucwords($ledger['amount_status']) }}
+                                    </small>
+                                @endif
+                            </td>
+                            <td class=" text-success fw-bold">
+                                @if ($ledger['credit'] > 0)
+                                    ₹{{ number_format($ledger['credit']) }}
+                                @else
+                                    ₹0
+                                @endif
+                            </td>
                         </tr>
-                    @endif
+                    @endforeach
+                @else
+                    <tr>
+                        <td colspan="6" class="text-center py-4 text-muted">No records available</td>
+                    </tr>
+                @endif
                 </tbody>
             </table>
         </div>
@@ -436,7 +406,7 @@
                         @else
                             <li class="page-item">
                                 <a class="page-link" href="{{ $paginatedLedgers->previousPageUrl() }}"
-                                    rel="prev">&laquo;</a>
+                                   rel="prev">&laquo;</a>
                             </li>
                         @endif
 
@@ -455,7 +425,7 @@
                         @if ($paginatedLedgers->hasMorePages())
                             <li class="page-item">
                                 <a class="page-link" href="{{ $paginatedLedgers->nextPageUrl() }}"
-                                    rel="next">&raquo;</a>
+                                   rel="next">&raquo;</a>
                             </li>
                         @else
                             <li class="page-item disabled">
@@ -469,9 +439,6 @@
 
 
     </div>
-
-
-
 
     <div id="messageContainer"></div>
 
@@ -509,9 +476,9 @@
 
 
 
-    <!-- Contruction Material Form -->
-    <div id="modal-construction-billings" class="modal fade" aria-hidden="true"
-        aria-labelledby="exampleModalToggleLabel" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <!-- Construction Material Form -->
+    <div id="modal-construction-billings" class="modal fade" aria-hidden="true" data-bs-backdrop="static"
+         data-bs-keyboard="false" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
 
         <div class="modal-dialog modal-dialog-centered">
 
@@ -520,19 +487,21 @@
                 <div class="modal-body">
 
                     <form enctype="multipart/form-data" class="forms-sample material-form"
-                        id="constructionBillingForm">
+                          id="constructionBillingForm">
                         @csrf
                         <div class="row">
                             <div class="col-md-6">
                                 <!-- Amount -->
                                 <div class="form-group mb-3">
                                     <input type="number" name="amount" id="amount" step="0.01"
-                                        min="0" />
+                                           min="0" />
                                     <label for="amount" class="control-label">Material Price</label>
                                     <i class="bar"></i>
                                     <p class="mt-1 text-danger" id="amount-error"></p>
                                 </div>
                             </div>
+
+
 
                             <div class="col-md-6">
                                 <!-- Unit -->
@@ -550,15 +519,15 @@
                             <div class="col-12 mb-3">
                                 <div class="btn-group btn-group-sm mb-2" role="group">
                                     <button type="button" class="btn btn-outline-primary toggle-item-btn active"
-                                        data-mode="select">View list</button>
+                                            data-mode="select">View list</button>
                                     <button type="button" class="btn btn-outline-secondary toggle-item-btn"
-                                        data-mode="custom">Enter custom</button>
+                                            data-mode="custom">Enter custom</button>
                                 </div>
 
                                 <!-- Item Select (visible by default) -->
                                 <div id="item-select-container">
                                     <select class="form-select text-black form-select-sm" name="item_name"
-                                        id="item_name">
+                                            id="item_name">
                                         <option value="">Select Item</option>
                                         @foreach ($items as $item)
                                             <option value="{{ $item->item_name }}">{{ $item->item_name }}</option>
@@ -567,11 +536,23 @@
                                     <p class="mt-1 text-danger" id="item_name-error"></p>
                                 </div>
 
+
+
                                 <!-- Custom Input (hidden by default) -->
                                 <div id="custom-item-container" style="display: none;">
                                     <input type="text" class="form-control" name="custom_item_name"
-                                        id="custom_item_name" placeholder="Enter item name">
+                                           id="custom_item_name" placeholder="Enter item name">
                                     <p class="mt-1 text-danger" id="custom_item_name-error"></p>
+                                </div>
+
+
+                                {{-- Date --}}
+                                <div class="form-group">
+                                    <input type="date" name="created_at" id="created_at" />
+                                    <label for="created_at" class="control-label">Date</label>
+                                    <i class="bar"></i>
+                                    <p class="mt-1 text-danger" id="created_at-error"></p>
+
                                 </div>
                             </div>
 
@@ -579,7 +560,7 @@
                             <div class="col-md-6 mb-3">
                                 <select class="form-select text-black form-select-sm" name="supplier_id">
                                     <option value="">Select Supplier</option>
-                                    @foreach ($raw_material_providers as $supplier)
+                                    @foreach ($supp as $supplier)
                                         <option value="{{ $supplier->id }}">{{ $supplier->name }}</option>
                                     @endforeach
                                 </select>
@@ -600,7 +581,7 @@
                             <!-- Image Upload -->
                             <div class="col-12 mb-3">
                                 <input class="form-control form-control-md" id="image" type="file"
-                                    name="image">
+                                       name="image">
                                 <p class="mt-1 text-danger" id="image-error"></p>
                             </div>
                         </div>
@@ -617,9 +598,10 @@
 
     </div>
 
+
     {{-- Square Footage Bill Model --}}
-    <div id="modal-square-footage-bills" class="modal fade" aria-hidden="true"
-        aria-labelledby="exampleModalToggleLabel" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div id="modal-square-footage-bills" class="modal fade" aria-hidden="true" data-bs-backdrop="static"
+         data-bs-keyboard="false" aria-labelledby="exampleModalToggleLabel" tabindex="-1">
 
         <div class="modal-dialog modal-dialog-centered">
 
@@ -631,6 +613,15 @@
                     <form id="squareFootageBills" enctype="multipart/form-data" class="forms-sample material-form">
 
                         @csrf
+
+                        {{-- Date --}}
+                        <div class="form-group">
+                            <input type="date" name="created_at" id="created_at" />
+                            <label for="created_at" class="control-label">Date</label>
+                            <i class="bar"></i>
+                            <p class="mt-1 text-danger" id="created_at-error"></p>
+
+                        </div>
 
                         <!-- Wager Name -->
                         <div class="form-group">
@@ -660,7 +651,7 @@
                             <div class="col-md-4">
                                 <!-- Type -->
                                 <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
-                                    name="type" style="cursor: pointer">
+                                        name="type" style="cursor: pointer">
                                     <option value="">Select Type</option>
                                     <option value="per_sqr_ft">Per Square Feet</option>
                                     <option value="per_unit">Per Unit</option>
@@ -673,9 +664,9 @@
                             <div class="col-md-4">
                                 <!-- Select Supplier -->
                                 <select class="form-select text-black form-select-sm" id="supplier_id"
-                                    name="supplier_id" style="cursor: pointer">
+                                        name="supplier_id" style="cursor: pointer">
                                     <option value="">Select Supplier</option>
-                                    @foreach ($workforce_suppliers as $supplier)
+                                    @foreach ($supp as $supplier)
                                         <option value="{{ $supplier->id }}">
                                             {{ $supplier->name }}
                                         </option>
@@ -690,7 +681,7 @@
                             <!-- Phases -->
                             <div class="col-md-4">
                                 <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
-                                    name="phase_id" style="cursor: pointer">
+                                        name="phase_id" style="cursor: pointer">
                                     <option value="">Select Phase</option>
                                     @foreach ($phases as $phase)
                                         <option value="{{ $phase->id }}">
@@ -702,13 +693,16 @@
                             </div>
                         </div>
 
+
                         <!-- Image -->
                         <div class="mt-3">
                             <label for="image">Item Bill</label>
                             <input class="form-control form-control-md" id="image" type="file"
-                                name="image_path">
+                                   name="image_path">
                             <p class="text-danger" id="image_path-error"></p>
+
                         </div>
+
 
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -726,9 +720,11 @@
         </div>
     </div>
 
+
+
     <!-- Daily Expense -->
     <div id="modal-daily-expenses" class="modal fade" aria-hidden="true" aria-labelledby="exampleModalToggleLabel"
-        data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
+         data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1">
 
         {{-- Daily Expenses  --}}
         <div class="modal-dialog modal-dialog-centered">
@@ -737,6 +733,15 @@
                     <form id="dailyExpenses" class="forms-sample material-form">
 
                         @csrf
+
+                        {{-- Date --}}
+                        <div class="form-group">
+                            <input type="date" name="created_at" id="created_at" />
+                            <label for="created_at" class="control-label">Date</label>
+                            <i class="bar"></i>
+                            <p class="mt-1 text-danger" id="created_at-error"></p>
+
+                        </div>
 
                         <!-- Wager Name -->
                         <div class="form-group">
@@ -761,7 +766,7 @@
                         <!-- Phases -->
                         <div class=" col-12">
                             <select class="form-select text-black form-select-sm" id="exampleFormControlSelect3"
-                                name="phase_id" style="cursor: pointer">
+                                    name="phase_id" style="cursor: pointer">
                                 <option value="">Select Phase
                                 </option>
                                 @foreach ($phases as $phase)
@@ -785,8 +790,8 @@
 
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button class="btn btn-success " type="submit">
-                                Create Expense
+                            <button type="submit" class="btn btn-success">
+                                {{ __('Create Bill') }}
                             </button>
                         </div>
                     </form>
@@ -815,34 +820,51 @@
                             </div>
                         </div>
 
+                        {{-- Date --}}
+                        <div class="form-group">
+                            <input type="date" name="created_at" id="created_at" />
+                            <label for="created_at" class="control-label">Date</label>
+                            <i class="bar"></i>
+                            <p class="mt-1 text-danger" id="created_at-error"></p>
+                        </div>
+
                         {{-- Amount --}}
                         <div class="form-group">
-                            <input type="number" min="0" name="amount" />
-                            <label for="input" class="control-label">Amount</label><i class="bar"></i>
+                            <input type="text" name="amount" class="form-control" />
+                            <label class="control-label">Amount</label>
+                            <i class="bar"></i>
                             <div class="invalid-feedback" id="amount-error"></div>
                         </div>
 
-                        {{-- Site (hidden) --}}
-                        <input type="hidden" name="site_id" value="{{ $site->id }}" />
-
-                        {{-- Supplier Options --}}
-                        <select name="supplier_id" id="supplier_id" class="form-select text-black"
-                            style="cursor: pointer">
-                            <option value="">Select Supplier</option>
-                            @foreach ($suppliers as $supplier)
-                                <option value="{{ $supplier['supplier_id'] }}">
-                                    {{ $supplier['supplier_name'] }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <div class="invalid-feedback" id="supplier_id-error"></div>
 
 
-                        <div class="mt-2">
-                            {{-- Screenshot Upload --}}
+                        {{-- Admin Options (Shown when Admin is selected) --}}
+
+                        <div class="row g-3">
+                            {{-- Sent Radio Option --}}
+                            <div class="col-auto">
+                                <label for="transaction_sent">
+                                    <input type="radio" name="transaction_type" id="transaction_sent"
+                                        value="1"> Return To {{ $site->client->name }}
+                                </label>
+                            </div>
+                            {{-- Received Radio Option --}}
+                            <div class="col-auto">
+                                <label for="transaction_received">
+                                    <input type="radio" name="transaction_type" id="transaction_received"
+                                        value="0"> Received By Admin
+                                </label>
+                            </div>
+                        </div>
+
+
+                        {{-- Screenshot Upload --}}
+                        <div class="mb-3">
                             <label class="control-label mt-3">Upload Screenshot</label>
                             <input class="form-control" id="image" type="file" name="screenshot">
+                            <div class="invalid-feedback" id="screenshot-error"></div>
                         </div>
+
 
                         {{-- Submit --}}
                         <div class="modal-footer">

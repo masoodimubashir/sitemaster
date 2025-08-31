@@ -65,6 +65,8 @@ class SquareFootageBillsController extends Controller
                 'multiplier' => 'required|numeric|min:0',
                 'phase_id' => 'required|exists:phases,id',
                 'supplier_id' => 'required|exists:suppliers,id',
+                'created_at' => 'required|date',
+
             ], [
                 'wager_name.required' => 'Work type is required.',
                 'wager_name.string' => 'The work type  must be a valid string.',
@@ -98,7 +100,8 @@ class SquareFootageBillsController extends Controller
                     'multiplier' => $request->type === 'full_contract' ? 1 : $request->multiplier,
                     'phase_id' => $request->phase_id,
                     'supplier_id' => $request->supplier_id,
-                    'verified_by_admin' => true
+                    'verified_by_admin' => true,
+                    'created_at' => $request->created_at,
                 ]);
 
                 if ($sqft) {
@@ -114,7 +117,7 @@ class SquareFootageBillsController extends Controller
                 return response()->json([
                     'message' => 'Square footage bill created successfully.'
                 ], 201);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
 
                 DB::rollBack();
                 return response()->json(['error' => 'An unexpected error occurred: '], 500);
@@ -168,6 +171,9 @@ class SquareFootageBillsController extends Controller
                     'multiplier' => 'required|numeric|min:0',
                     'phase_id' => 'required|exists:phases,id',
                     'supplier_id' => 'required|exists:suppliers,id',
+                    'created_at' => 'required|date',
+
+
                 ], [
                     'wager_name.required' => 'Work type is required.',
                     'wager_name.string' => 'The work type must be a valid string.',
@@ -200,6 +206,7 @@ class SquareFootageBillsController extends Controller
                     'multiplier' => $validatedData['type'] === 'full_contract' ? 1 : $validatedData['multiplier'],
                     'phase_id' => $phase_id,
                     'supplier_id' => $validatedData['supplier_id'],
+                    'created_at' => $validatedData['created_at'],
                 ]);
 
                 // Update balances

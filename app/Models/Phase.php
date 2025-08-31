@@ -12,7 +12,9 @@ class Phase extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['phase_name', 'site_id'];
+    public $timestamps = false;
+
+    protected $fillable = ['phase_name', 'site_id', 'created_at', 'updated_at'];
 
     /**
      * Get the phase that owns the Phase
@@ -102,7 +104,7 @@ class Phase extends Model
         if (
             $this->constructionMaterialBillings()->where('verified_by_admin', 1)->exists() ||
             $this->squareFootageBills()->where('verified_by_admin', 1)->exists() ||
-            $this->dailyWagers()->exists() ||  $this->dailyExpenses()->where('verified_by_admin', 1)->exists() ||
+            $this->dailyWagers()->exists() || $this->dailyExpenses()->where('verified_by_admin', 1)->exists() ||
             $this->wagerAttendances()->where('verified_by_admin')->exists()
         ) {
             return true;
@@ -110,4 +112,10 @@ class Phase extends Model
             return false;
         }
     }
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
 }

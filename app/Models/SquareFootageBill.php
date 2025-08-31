@@ -11,6 +11,9 @@ class SquareFootageBill extends Model
 {
     use HasFactory;
 
+
+      public $timestamps = false;
+
     protected $fillable = [
         'image_path',
         'wager_name',
@@ -20,6 +23,8 @@ class SquareFootageBill extends Model
         'phase_id',
         'supplier_id',
         'verified_by_admin',
+        'created_at',
+        'updated_at'
     ];
 
     /**
@@ -41,4 +46,9 @@ class SquareFootageBill extends Model
     {
         return $this->belongsTo(Phase::class);
     }
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 }

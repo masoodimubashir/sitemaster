@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Payment extends Model
 {
 
+
+    public $timestamps = false;
+
     protected $fillable = [
         'screenshot',
         'site_id',
@@ -15,7 +18,10 @@ class Payment extends Model
         'verified_by_admin',
         'amount',
         'transaction_type',
-        'payment_initiator'
+        'payment_initiator',
+        'created_at',
+        'updated_at',
+        'narration'
     ];
 
     /**
@@ -37,4 +43,9 @@ class Payment extends Model
     {
         return $this->belongsTo(Supplier::class);
     }
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 }

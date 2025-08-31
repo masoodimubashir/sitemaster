@@ -1,6 +1,6 @@
 <nav class="sidebar sidebar-offcanvas" id="sidebar">
     <ul class="nav">
-     
+
 
         <li class="nav-item nav-category">Management</li>
 
@@ -28,13 +28,13 @@
             </a>
         </li>
 
-        <!-- Attendance -->
-        <li class="nav-item">
-            <a class="nav-link {{ request()->is('user/wager-attendance*') ? 'active' : '' }}" href="{{ url('user/wager-attendance') }}">
-                <i class="fas fa-clipboard-user menu-icon"></i>
-                <span class="menu-title">Attendance</span>
-            </a>
-        </li>
+{{--        <!-- Attendance -->--}}
+{{--        <li class="nav-item">--}}
+{{--            <a class="nav-link {{ request()->is('user/wager-attendance*') ? 'active' : '' }}" href="{{ url('user/wager-attendance') }}">--}}
+{{--                <i class="fas fa-clipboard-user menu-icon"></i>--}}
+{{--                <span class="menu-title">Attendance</span>--}}
+{{--            </a>--}}
+{{--        </li>--}}
 
 
         <!-- Verify Items -->

@@ -63,8 +63,6 @@ class ConstructionMaterialBilling extends Controller
     {
         if ($request->ajax()) {
 
-
-
             DB::beginTransaction();
 
             try {
@@ -77,6 +75,7 @@ class ConstructionMaterialBilling extends Controller
                     'supplier_id' => 'required|exists:suppliers,id',
                     'phase_id' => 'required|exists:phases,id',
                     'unit_count' => 'required|integer|min:1',
+                    'created_at' => 'required|date',
                 ]);
 
                 if ($validator->fails()) {
@@ -104,6 +103,7 @@ class ConstructionMaterialBilling extends Controller
                     'user_id' => auth()->user()->id,
                     'phase_id' => $request->input('phase_id'),
                     'unit_count' => $request->input('unit_count'),
+                    'created_at' => $request->input('created_at'),
                 ]);
 
                 // Update site total amount
@@ -177,6 +177,8 @@ class ConstructionMaterialBilling extends Controller
                     'supplier_id' => 'required|exists:suppliers,id',
                     'phase_id' => 'required|exists:phases,id',
                     'unit_count' => 'required|integer|min:1',
+                    'created_at' => 'required|date',
+
                 ], [
                     'item_name.required_without' => 'This field is required',
                     'custom_item_name.required_without' => 'This field is required',
@@ -206,6 +208,7 @@ class ConstructionMaterialBilling extends Controller
                     'user_id' => auth()->id(),
                     'phase_id' => $request->phase_id,
                     'unit_count' => $request->unit_count,
+                    'created_at' => $request->created_at,
                 ]);
 
                 // Update financial balances

@@ -41,9 +41,6 @@ class AdminVerificationController extends Controller
 
         try {
 
-
-
-
             $bill = SquareFootageBill::find($id);
 
             $bill->update([
@@ -83,27 +80,7 @@ class AdminVerificationController extends Controller
         }
     }
 
-    public function verifyDailyWagers(string $id)
-    {
 
-        try {
-
-            $wager = DailyWager::find($id);
-
-            $wager->update([
-                'verified_by_admin' => !$wager->verified_by_admin
-            ]);
-
-            return response()->json([
-                'message' => 'Verification status updated successfully'
-            ]);
-
-        } catch (\Throwable $th) {
-            return response()->json([
-                'message' => 'Error updating verification status'
-            ], 500);
-        }
-    }
 
     public function verifyAttendance(string $id)
     {

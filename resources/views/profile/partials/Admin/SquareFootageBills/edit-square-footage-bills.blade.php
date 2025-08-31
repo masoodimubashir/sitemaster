@@ -17,11 +17,20 @@
 
 
                     <form method="POST"
-                        action="{{ url($user . '/square-footage-bills/'.  base64_encode($square_footage_bill->id)) }}"
+                        action="{{ url($user . '/square-footage-bills/' . base64_encode($square_footage_bill->id)) }}"
                         class="forms-sample material-form" enctype="multipart/form-data">
 
                         @method('PUT')
                         @csrf
+
+                        {{-- Date --}}
+                        <div class="form-group">
+                            <input type="date" name="created_at" id="created_at"
+                                value="{{ $square_footage_bill->created_at ? $square_footage_bill->created_at->format('Y-m-d') : '' }}" />
+                            <label for="created_at" class="control-label">Date</label>
+                            <i class="bar"></i>
+                            <p class="mt-1 text-danger" id="created_at-error"></p>
+                        </div>
 
                         <!-- Wager Name -->
                         <div class="form-group">

@@ -167,15 +167,12 @@
     </style>
 
 
-
-
     <div class="header-container">
-
 
         <div class="header-icon">
             <i class="menu-icon fa fa-building"></i>
         </div>
-        
+
         <h2 class="text-xl font-semibold">Ledger Report</h2>
 
         <div class="ms-auto action-buttons d-flex gap-2">
@@ -195,7 +192,8 @@
     </div>
 
 
-    <form class="d-flex flex-column flex-md-row gap-2 w-100" action="{{ url()->current() }}" method="GET" id="filterForm">
+    <form class="d-flex flex-column flex-md-row gap-2 w-100" action="{{ url()->current() }}" method="GET"
+          id="filterForm">
 
         <!-- Supplier Select -->
         <select class="bg-white text-black form-select form-select-sm" name="phase_id" id="phaseFilter">
@@ -242,11 +240,11 @@
 
         <!-- Date Range Inputs -->
         <div id="customDateRange"
-            style="display: {{ request('date_filter') === 'custom' ? 'flex' : 'none' }}; gap: 10px;">
+             style="display: {{ request('date_filter') === 'custom' ? 'flex' : 'none' }}; gap: 10px;">
             <input type="date" name="start_date" class="form-control form-control-sm"
-                value="{{ request('start_date') }}" placeholder="Start Date">
+                   value="{{ request('start_date') }}" placeholder="Start Date">
             <input type="date" name="end_date" class="form-control form-control-sm"
-                value="{{ request('end_date') }}" placeholder="End Date">
+                   value="{{ request('end_date') }}" placeholder="End Date">
         </div>
 
         <!-- Reset Button -->
@@ -290,57 +288,57 @@
         <div class="table-responsive">
             <table class="table mb-0">
                 <thead>
-                    <tr>
-                        <th class="fw-bold">DATE</th>
-                        <th class="fw-bold">Customer Name</th>
-                        <th class="fw-bold">DETAILS</th>
-                        <th class="fw-bold">Return</th>
-                        <th class="fw-bold text-end">Purchases</th>
-                        <th class="fw-bold text-end">Payments</th>
-                    </tr>
+                <tr>
+                    <th class="fw-bold">DATE</th>
+                    <th class="fw-bold">Customer Name</th>
+                    <th class="fw-bold">DETAILS</th>
+                    <th class="fw-bold">Return</th>
+                    <th class="fw-bold text-end">Purchases</th>
+                    <th class="fw-bold text-end">Payments</th>
+                </tr>
                 </thead>
                 <tbody>
-                    @if ($paginatedLedgers->count())
-                        @foreach ($paginatedLedgers as $ledger)
-                            <tr>
-                                <td>{{ \Carbon\Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
-                                <td>
-                                    <strong>{{ ucwords($ledger['supplier']) }}</strong>
-                                </td>
-                                <td>
-                                    <div class="fw-bold">{{ ucwords($ledger['description']) }}</div>
-                                    <small class="text-muted">
-                                        {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
-                                    </small>
-                                </td>
-                                <td class="text-danger fw-bold">
-                                    @if ($ledger['return'] > 0)
-                                        ₹{{ number_format($ledger['return']) }}
-                                    @else
-                                        ₹0
-                                    @endif
-                                </td>
-                                <td class="text-end text-danger fw-bold">
-                                    @if ($ledger['debit'] > 0)
-                                        ₹{{ number_format($ledger['debit']) }}
-                                    @else
-                                        ₹0
-                                    @endif
-                                </td>
-                                <td class="text-end text-success fw-bold">
-                                    @if ($ledger['credit'] > 0)
-                                        ₹{{ number_format($ledger['credit']) }}
-                                    @else
-                                        ₹0
-                                    @endif
-                                </td>
-                            </tr>
-                        @endforeach
-                    @else
+                @if ($paginatedLedgers->count())
+                    @foreach ($paginatedLedgers as $ledger)
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-muted">No records available</td>
+                            <td>{{ \Carbon\Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
+                            <td>
+                                <strong>{{ ucwords($ledger['supplier']) }}</strong>
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ ucwords($ledger['description']) }}</div>
+                                <small class="text-muted">
+                                    {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
+                                </small>
+                            </td>
+                            <td class="text-danger fw-bold">
+                                @if ($ledger['return'] > 0)
+                                    ₹{{ number_format($ledger['return']) }}
+                                @else
+                                    ₹0
+                                @endif
+                            </td>
+                            <td class="text-end text-danger fw-bold">
+                                @if ($ledger['debit'] > 0)
+                                    ₹{{ number_format($ledger['debit']) }}
+                                @else
+                                    ₹0
+                                @endif
+                            </td>
+                            <td class="text-end text-success fw-bold">
+                                @if ($ledger['credit'] > 0)
+                                    ₹{{ number_format($ledger['credit']) }}
+                                @else
+                                    ₹0
+                                @endif
+                            </td>
                         </tr>
-                    @endif
+                    @endforeach
+                @else
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-muted">No records available</td>
+                    </tr>
+                @endif
                 </tbody>
             </table>
         </div>
@@ -356,7 +354,7 @@
                         @else
                             <li class="page-item">
                                 <a class="page-link" href="{{ $paginatedLedgers->previousPageUrl() }}"
-                                    rel="prev">&laquo;</a>
+                                   rel="prev">&laquo;</a>
                             </li>
                         @endif
 
@@ -375,7 +373,7 @@
                         @if ($paginatedLedgers->hasMorePages())
                             <li class="page-item">
                                 <a class="page-link" href="{{ $paginatedLedgers->nextPageUrl() }}"
-                                    rel="next">&raquo;</a>
+                                   rel="next">&raquo;</a>
                             </li>
                         @else
                             <li class="page-item disabled">
@@ -392,16 +390,10 @@
 
     <div id="messageContainer"></div>
 
-
-    {{-- ------------------------------------------------------- All The Models Are Here ----------------------------------------------------------- --}}
-
-
-
-
     {{-- ------------------------------------------  All The Scripts For This Page Are Below ---------------------------------------- --}}
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
 
             const supplierFilter = document.getElementById('supplierFilter');
             const filterForm = document.getElementById('filterForm');
@@ -414,7 +406,7 @@
             filterForm.action = "{{ url()->current() }}";
 
             // Toggle date range visibility
-            dateFilter.addEventListener('change', function() {
+            dateFilter.addEventListener('change', function () {
                 if (this.value === 'custom') {
                     customDateRange.style.display = 'flex';
                 } else {
@@ -428,7 +420,7 @@
 
             // Auto-submit when any filter changes (except date inputs)
             document.querySelectorAll('#filterForm select:not(#dateFilter)').forEach(select => {
-                select.addEventListener('change', function() {
+                select.addEventListener('change', function () {
                     submitForm();
                 });
             });
@@ -436,7 +428,7 @@
             // For date inputs, add a small delay before submitting
             document.querySelectorAll('#customDateRange input').forEach(input => {
                 let timeout;
-                input.addEventListener('change', function() {
+                input.addEventListener('change', function () {
                     clearTimeout(timeout);
                     timeout = setTimeout(() => {
                         submitForm();
@@ -445,7 +437,7 @@
             });
 
             // Reset all filters
-            resetBtn.addEventListener('click', function() {
+            resetBtn.addEventListener('click', function () {
                 // Reset form values
                 filterForm.reset();
                 // Ensure default selections

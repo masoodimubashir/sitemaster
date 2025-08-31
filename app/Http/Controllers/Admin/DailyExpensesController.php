@@ -45,7 +45,6 @@ class DailyExpensesController extends Controller
     {
         if ($request->ajax()) {
 
-
             DB::beginTransaction();
 
             // Validation rules
@@ -55,6 +54,7 @@ class DailyExpensesController extends Controller
                 'bill_photo' => 'nullable|image|mimes:jpg,jpeg,webp,png|max:1024',
                 'phase_id' => 'required|exists:phases,id',
                 'site_id' => 'required|exists:sites,id',
+                'created_at' => 'required|date',
             ]);
 
             // Check for validation errors
@@ -81,6 +81,7 @@ class DailyExpensesController extends Controller
                     'user_id' => auth()->user()->id,
                     'site_id' => $request->site_id,
                     'verified_by_admin' => true,
+                    'created_at' => $request->created_at,
                 ]);
 
                 if ($expense) {
@@ -91,7 +92,8 @@ class DailyExpensesController extends Controller
                 }
 
                 return response()->json(['message' => 'Expenses detail created successfully.'], 201);
-            } catch (\Exception $e) {
+            
+            } catch (Exception $e) {
                 // Handle any unexpected errors
                 return response()->json(['error' => 'An unexpected error occurred: ' . $e->getMessage()], 500);
             }
@@ -135,6 +137,7 @@ class DailyExpensesController extends Controller
                     'price' => 'required|numeric|max:9999999999',
                     'bill_photo' => 'nullable|image|mimes:jpg,jpeg,webp,png|max:1024',
                     'phase_id' => 'required|exists:phases,id',
+                    'created_at' => 'required|date',
                 ]);
 
                 $daily_expense = DailyExpenses::findOrFail($id);
@@ -156,7 +159,8 @@ class DailyExpensesController extends Controller
                     'bill_photo' => $image_path,
                     'price' => $validatedData['price'],
                     'phase_id' => $validatedData['phase_id'],
-                    'user_id' => auth()->id()
+                    'user_id' => auth()->id(),
+                    'created_at' => $validatedData['created_at'],
                 ]);
 
                 // Update balances

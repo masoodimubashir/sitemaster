@@ -30,7 +30,7 @@ class Site extends Model
     }
 
     /**
-     * Get all of the paymeentSuppliers for the Site
+     * Get all the paymentSuppliers for the Site
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
@@ -40,7 +40,7 @@ class Site extends Model
     }
 
     /**
-     * Get all of the phases for the Site
+     * Get all the phases for the Site
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
@@ -62,26 +62,17 @@ class Site extends Model
 
 
     /**
-     * Polymorphic relationship to AdminPayment.
-     */
-    public function adminPayments(): MorphMany
-    {
-        return $this->morphMany(AdminPayment::class, 'entity');
-    }
-
-
-    /**
-     * Get all of the labours for the Site
+     * Get all the attendanceSetups for the Site
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
-    public function labours(): HasMany
+    public function attendanceSetups(): HasMany
     {
-        return $this->hasMany(Labour::class);
+        return $this->hasMany(AttendanceSetup::class);
     }
 
     /**
-     * Get all of the wastas for the Site
+     * Get all the wastas for the Site
      *
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */

@@ -22,6 +22,15 @@
 
                         @csrf
 
+                        {{-- Date --}}
+                        <div class="form-group">
+                            <input type="date" name="created_at" id="created_at"
+                                value="{{ $phase->created_at ? $phase->created_at->format('Y-m-d') : '' }}" />
+                            <label for="created_at" class="control-label">Date</label>
+                            <i class="bar"></i>
+                            <p class="mt-1 text-danger" id="created_at-error"></p>
+                        </div>
+
                         <!-- Phase Name -->
                         <div class="form-group">
                             <input type="text" name="phase_name" id="phase_name" value="{{ $phase->phase_name }}" />
@@ -43,11 +52,6 @@
         </div>
     </div>
 
-    {{-- <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Users') }}
-        </h2>
-    </x-slot> --}}
 
 
 </x-app-layout>

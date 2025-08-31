@@ -3,50 +3,43 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Attendance;
-use App\Models\ConstructionMaterialBilling;
-use App\Models\DailyExpenses;
-use App\Models\DailyWager;
-use App\Models\Labour;
-use App\Models\Phase;
-use App\Models\Site;
-use App\Models\SquareFootageBill;
-use App\Models\Supplier;
-use App\Models\WagerAttendance;
-use App\Models\Wasta;
-use App\Services\DataService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Log;
+use App\Models\{
+    Attendance,
+    ConstructionMaterialBilling,
+    SquareFootageBill,
+    DailyExpenses,
+    Site,
+    Phase,
+    Supplier,
+    Wasta,
+    Wager
+};
 
-class ItemsVerificationController extends Controller
+class   ItemsVerificationController extends Controller
 {
+    private const DEFAULT_PER_PAGE = 10;
+    private const ALL_FILTER = 'all';
+
     public function index(Request $request)
     {
-        $siteId = $request->input('site_id');
-        $phaseName = $request->input('phase');
-        $supplierName = $request->input('supplier');
-        $verificationStatus = $request->input('verification_status');
-        $from_date = $request->input('from_date');
-        $to_date = $request->input('to_date');
+        $filters = $this->extractFilters($request);
 
-        // Fetch items
-        $attendanceItems = $this->getAttendanceItems($siteId, $phaseName, $verificationStatus, $from_date, $to_date);
-        $otherItems = $this->getOtherItems($siteId, $phaseName, $supplierName, $verificationStatus, $from_date, $to_date);
+        // Get all items with optimized queries
+        $attendanceItems = $this->getAttendanceItems($filters);
+        $otherItems = $this->getOtherItems($filters);
 
-        $data = $otherItems->merge($attendanceItems)->sortByDesc('created_at');
+        // Merge and sort data
+        $data = $otherItems->merge($attendanceItems)
+                          ->sortByDesc('created_at')
+                          ->values();
 
+        // Get filter options for dropdowns
         $filterOptions = $this->getFilterOptions();
 
-        // Pagination
-        $perPage = $request->get('per_page', 10);
-        $paginatedData = new LengthAwarePaginator(
-            $data->forPage($request->input('page', 1), $perPage),
-            $data->count(),
-            $perPage,
-            $request->input('page', 1),
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
+        // Create pagination
+        $paginatedData = $this->createPagination($data, $request);
 
         return view("profile.partials.Admin.Site.show_unverified_items", array_merge(
             ['paginatedData' => $paginatedData],
@@ -54,185 +47,361 @@ class ItemsVerificationController extends Controller
         ));
     }
 
-
-    protected function getAttendanceItems($siteId, $phaseName, $verificationStatus, $from_date = null, $to_date = null)
+    private function extractFilters(Request $request): array
     {
-        $query = Attendance::with([
-            'attendable' => function ($q) {
-                $q->with(['phase.site']);
+        // Handle date filter conversions
+        $dateFilter = $request->input('date_filter', 'lifetime');
+        $fromDate = null;
+        $toDate = null;
 
-                if ($q->getModel() instanceof Labour) {
-                    $q->with('wasta');
-                }
-            }
-        ])
-            ->whereIn('attendable_type', [Wasta::class, Labour::class])
-            ->whereHas('attendable', function ($q) use ($siteId, $phaseName) {
-                $q->whereHas('phase.site', function ($q) use ($siteId) {
-                    $q->whereNull('deleted_at');
-                    if ($siteId && $siteId !== 'all') {
-                        $q->where('id', $siteId);
-                    }
-                })->whereHas('phase', function ($q) use ($phaseName) {
-                    $q->whereNull('deleted_at');
-                    if ($phaseName && $phaseName !== 'all') {
-                        $q->where('phase_name', $phaseName);
-                    }
-                });
-            });
-
-        // Apply verification status
-        if ($verificationStatus && $verificationStatus !== 'all') {
-            $query->where('is_present', $verificationStatus === 'verified');
+        switch ($dateFilter) {
+            case 'today':
+                $fromDate = $toDate = now()->format('Y-m-d');
+                break;
+            case 'yesterday':
+                $fromDate = $toDate = now()->subDay()->format('Y-m-d');
+                break;
+            case 'this_week':
+                $fromDate = now()->startOfWeek()->format('Y-m-d');
+                $toDate = now()->endOfWeek()->format('Y-m-d');
+                break;
+            case 'this_month':
+                $fromDate = now()->startOfMonth()->format('Y-m-d');
+                $toDate = now()->endOfMonth()->format('Y-m-d');
+                break;
+            case 'this_year':
+                $fromDate = now()->startOfYear()->format('Y-m-d');
+                $toDate = now()->endOfYear()->format('Y-m-d');
+                break;
+            case 'custom':
+                $fromDate = $request->input('start_date');
+                $toDate = $request->input('end_date');
+                break;
+            case 'lifetime':
+            default:
+                // No date filters
+                break;
         }
 
-        // Apply date filters
-        $query->when($from_date, fn($q) => $q->whereDate('created_at', '>=', $from_date))
-            ->when($to_date, fn($q) => $q->whereDate('created_at', '<=', $to_date));
-
-        return $query->latest()
-            ->get()
-            ->map(function ($attendance) {
-                $attendable = $attendance->attendable;
-                if (!$attendable)
-                    return null;
-
-                $isWasta = $attendable instanceof Wasta;
-                $isLabour = $attendable instanceof Labour;
-
-                $supplierName = $isLabour
-                    ? ($attendable->relationLoaded('wasta') ? $attendable->wasta->wasta_name : 'NA')
-                    : 'NA';
-
-                $supplierId = $isLabour ? $attendable->wasta_id : null;
-
-                return [
-                    'id' => $attendance->id,
-                    'phase' => $attendable->phase->phase_name ?? 'NA',
-                    'description' => $isWasta ? $attendable->wasta_name : $attendable->labour_name,
-                    'site' => $attendable->phase->site->site_name ?? 'NA',
-                    'category' => 'Attendance',
-                    'site_id' => $attendable->phase->site_id ?? null,
-                    'supplier' => $supplierName,
-                    'supplier_id' => $supplierId,
-                    'created_at' => $attendance->created_at,
-                    'verified_by_admin' => $attendance->is_present ? 1 : 0,
-                    'is_present' => $attendance->is_present,
-                    'price' => $attendable->price ?? 0,
-                ];
-            })->filter()->values();
+        return [
+            'site_id' => $request->input('site_id', self::ALL_FILTER),
+            'phase_name' => $request->input('phase', self::ALL_FILTER),
+            'supplier_name' => $request->input('supplier', self::ALL_FILTER),
+            'verification_status' => $request->input('verification_status', self::ALL_FILTER),
+            'from_date' => $fromDate,
+            'to_date' => $toDate,
+        ];
     }
 
-    protected function getOtherItems($siteId, $phaseName, $supplierName, $verificationStatus, $from_date = null, $to_date = null)
+    private function getAttendanceItems(array $filters)
+    {
+        $query = Attendance::with([
+            'attendanceSetup.setupable',
+            'attendanceSetup.site.phases',
+        ])
+        ->whereHas('attendanceSetup', function ($q) use ($filters) {
+            $this->applySiteFilter($q, $filters['site_id']);
+            $this->applyPhaseFilter($q, $filters['phase_name']);
+        });
+
+        $this->applyVerificationFilter($query, $filters['verification_status'], 'is_present');
+        $this->applyDateFilters($query, $filters['from_date'], $filters['to_date'], 'attendance_date');
+
+        $results = $query->latest()->get();
+
+        // Load wasta relationship for Wager models
+        $results->each(function ($attendance) {
+            $setupable = $attendance->attendanceSetup?->setupable;
+            if ($setupable instanceof Wager && !$setupable->relationLoaded('wasta')) {
+                $setupable->load('wasta');
+            }
+        });
+
+        return $results->map(function ($attendance) {
+            return $this->mapAttendanceItem($attendance);
+        })->filter()->values();
+    }
+
+    private function getOtherItems(array $filters)
     {
         $items = collect();
 
-        // Common filters
-        $filters = function ($query) use ($siteId, $phaseName, $supplierName, $verificationStatus, $from_date, $to_date) {
-            $query->whereHas('phase.site', fn($q) => $q->whereNull('deleted_at'));
-            $query->whereHas('phase', fn($q) => $q->whereNull('deleted_at'));
+        // Process each item type with optimized queries
+        $itemTypes = [
+            [
+                'model' => ConstructionMaterialBilling::class,
+                'category' => 'Raw Material',
+                'description_field' => 'item_name',
+                'price_calculation' => fn($item) => $item->amount
+            ],
+            [
+                'model' => SquareFootageBill::class,
+                'category' => 'Square Footage Bill',
+                'description_field' => 'wager_name',
+                'price_calculation' => fn($item) => ($item->price * $item->multiplier)
+            ],
+            [
+                'model' => DailyExpenses::class,
+                'category' => 'Daily Expense',
+                'description_field' => 'item_name',
+                'price_calculation' => fn($item) => $item->price
+            ]
+        ];
 
-            if ($siteId && $siteId !== 'all') {
-                $query->whereHas('phase.site', fn($q) => $q->where('id', $siteId));
-            }
-
-            if ($phaseName && $phaseName !== 'all') {
-                $query->whereHas('phase', fn($q) => $q->where('phase_name', $phaseName));
-            }
-
-            if ($supplierName && $supplierName !== 'all') {
-                $query->whereHas('supplier', fn($q) => $q->where('name', $supplierName));
-            }
-
-            if ($verificationStatus && $verificationStatus !== 'all') {
-                $query->where('verified_by_admin', $verificationStatus === 'verified' ? 1 : 0);
-            }
-
-            if ($from_date) {
-                $query->whereDate('created_at', '>=', $from_date);
-            }
-
-            if ($to_date) {
-                $query->whereDate('created_at', '<=', $to_date);
-            }
-        };
-
-        // Construction Material Billing
-        $items = $items->merge(
-            ConstructionMaterialBilling::with(['phase.site', 'supplier'])
-                ->where($filters)
-                ->latest()
-                ->get()
-                ->map(fn($item) => [
-                    'id' => $item->id,
-                    'supplier' => $item->supplier->name ?? 'NA',
-                    'description' => $item->item_name ?? 'NA',
-                    'category' => 'Raw Material',
-                    'phase' => $item->phase->phase_name ?? 'NA',
-                    'site' => $item->phase->site->site_name ?? 'NA',
-                    'site_id' => $item->phase->site_id ?? null,
-                    'supplier_id' => $item->supplier_id ?? null,
-                    'created_at' => $item->created_at,
-                    'verified_by_admin' => $item->verified_by_admin,
-                    'price' => $item->amount ?? null,
-                ])
-        );
-
-        // Square Footage Bills
-        $items = $items->merge(
-            SquareFootageBill::with(['phase.site', 'supplier'])
-                ->where($filters)
-                ->latest()
-                ->get()
-                ->map(fn($item) => [
-                    'id' => $item->id,
-                    'supplier' => $item->supplier->name ?? 'NA',
-                    'description' => $item->wager_name ?? 'NA',
-                    'category' => 'Square Footage Bill',
-                    'phase' => $item->phase->phase_name ?? 'NA',
-                    'site' => $item->phase->site->site_name ?? 'NA',
-                    'site_id' => $item->phase->site_id ?? null,
-                    'supplier_id' => $item->supplier_id ?? null,
-                    'created_at' => $item->created_at,
-                    'verified_by_admin' => $item->verified_by_admin,
-                    'price' => $item->price * $item->multiplier ?? null,
-                ])
-        );
-
-        // Daily Expenses
-        $items = $items->merge(
-            DailyExpenses::with(['phase.site', 'supplier'])
-                ->where($filters)
-                ->latest()
-                ->get()
-                ->map(fn($item) => [
-                    'id' => $item->id,
-                    'supplier' => $item->supplier->name ?? 'NA',
-                    'description' => $item->item_name ?? 'NA',
-                    'category' => 'Daily Expense',
-                    'phase' => $item->phase->phase_name ?? 'NA',
-                    'site' => $item->phase->site->site_name ?? 'NA',
-                    'site_id' => $item->phase->site_id ?? null,
-                    'supplier_id' => $item->supplier_id ?? null,
-                    'created_at' => $item->created_at,
-                    'verified_by_admin' => $item->verified_by_admin,
-                    'price' => $item->price ?? null,
-                ])
-        );
+        foreach ($itemTypes as $itemType) {
+            $items = $items->merge($this->getItemsByType($itemType, $filters));
+        }
 
         return $items;
     }
 
+    private function getItemsByType(array $itemType, array $filters)
+    {
+        $model = $itemType['model'];
 
-    protected function getFilterOptions()
+        $query = $model::with(['phase.site', 'supplier'])
+            ->whereHas('phase.site', fn($q) => $q->whereNull('deleted_at'))
+            ->whereHas('phase', fn($q) => $q->whereNull('deleted_at'));
+
+        // Apply all filters
+        $this->applyCommonFilters($query, $filters);
+
+        return $query->latest()->get()->map(function ($item) use ($itemType) {
+            return $this->mapOtherItem($item, $itemType);
+        });
+    }
+
+    private function applyCommonFilters($query, array $filters): void
+    {
+        if ($this->isValidFilter($filters['site_id'])) {
+            $query->whereHas('phase.site', fn($q) => $q->where('id', $filters['site_id']));
+        }
+
+        if ($this->isValidFilter($filters['phase_name'])) {
+            $query->whereHas('phase', fn($q) => $q->where('phase_name', $filters['phase_name']));
+        }
+
+        if ($this->isValidFilter($filters['supplier_name'])) {
+            $query->whereHas('supplier', fn($q) => $q->where('name', $filters['supplier_name']));
+        }
+
+        $this->applyVerificationFilter($query, $filters['verification_status'], 'verified_by_admin');
+        $this->applyDateFilters($query, $filters['from_date'], $filters['to_date']);
+    }
+
+    private function applySiteFilter($query, $siteId): void
+    {
+        if ($this->isValidFilter($siteId)) {
+            $query->where('site_id', $siteId);
+        }
+    }
+
+    private function applyPhaseFilter($query, $phaseName): void
+    {
+        if ($this->isValidFilter($phaseName)) {
+            $query->whereHas('site.phases', fn($q) => $q->where('phase_name', $phaseName));
+        }
+    }
+
+    private function applyVerificationFilter($query, $status, string $field = 'verified_by_admin'): void
+    {
+        if ($this->isValidFilter($status)) {
+            $isVerified = $status === 'verified';
+            $query->where($field, $isVerified ? 1 : 0);
+        }
+    }
+
+    private function applyDateFilters($query, $fromDate, $toDate, string $dateField = 'created_at'): void
+    {
+        if ($fromDate) {
+            $query->whereDate($dateField, '>=', $fromDate);
+        }
+
+        if ($toDate) {
+            $query->whereDate($dateField, '<=', $toDate);
+        }
+    }
+
+    private function isValidFilter($value): bool
+    {
+        return $value && $value !== self::ALL_FILTER;
+    }
+
+    private function mapAttendanceItem($attendance): ?array
+    {
+        $setup = $attendance->attendanceSetup;
+        if (!$setup) {
+            return null;
+        }
+
+        $setupable = $setup->setupable; // Wasta or Wager (already eager loaded)
+
+        // Handle the case where setupable is Wager and we need wasta
+        $supplier = null;
+        $supplierId = null;
+
+        if ($setupable instanceof Wager) {
+            // The wasta relationship should be eager loaded now
+            $supplier = $setupable->wasta;
+            $supplierId = $setupable->wasta_id;
+        }
+
+        return [
+            'id' => $attendance->id,
+            'phase' => $setup->site->phases->pluck('phase_name')->implode(', ') ?? 'NA',
+            'description' => $setupable->wasta_name ?? $setupable->wager_name ?? 'NA',
+            'site' => $setup->site->site_name ?? 'NA',
+            'category' => 'Attendance',
+            'site_id' => $setup->site_id,
+            'supplier' => $supplier,
+            'supplier_id' => $supplierId,
+            'created_at' => $attendance->created_at,
+            'verified_by_admin' => $attendance->is_present ? 1 : 0,
+            'is_present' => $attendance->is_present,
+            'price' => $setup->price ?? 0,
+            'debit' => $setup->price ?? 0, // Add debit field for view compatibility
+        ];
+    }
+
+    private function mapOtherItem($item, array $itemType): array
+    {
+        $descriptionField = $itemType['description_field'];
+        $priceCalculation = $itemType['price_calculation'];
+        $calculatedPrice = $priceCalculation($item) ?? 0;
+
+        return [
+            'id' => $item->id,
+            'supplier' => $item->supplier->name ?? 'NA',
+            'description' => $item->$descriptionField ?? 'NA',
+            'category' => $itemType['category'],
+            'phase' => $item->phase->phase_name ?? 'NA',
+            'site' => $item->phase->site->site_name ?? 'NA',
+            'site_id' => $item->phase->site_id ?? null,
+            'supplier_id' => $item->supplier_id ?? null,
+            'created_at' => $item->created_at,
+            'verified_by_admin' => $item->verified_by_admin,
+            'price' => $calculatedPrice,
+            'debit' => $calculatedPrice, // Add debit field for view compatibility
+        ];
+    }
+
+    private function createPagination($data, Request $request): LengthAwarePaginator
+    {
+        $perPage = (int) $request->get('per_page', self::DEFAULT_PER_PAGE);
+        $currentPage = (int) $request->input('page', 1);
+
+        return new LengthAwarePaginator(
+            $data->forPage($currentPage, $perPage),
+            $data->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query()
+            ]
+        );
+    }
+
+    private function getFilterOptions(): array
     {
         return [
             'sites' => Site::where('is_on_going', 1)->latest()->get(),
             'phases' => Phase::whereHas('site', fn($q) => $q->where('is_on_going', 1))
-                ->pluck('phase_name')->unique(),
-            'suppliers' => Supplier::whereNull('deleted_at')->pluck('name')->unique()
+                             ->pluck('phase_name')
+                             ->unique()
+                             ->values(),
+            'suppliers' => Supplier::whereNull('deleted_at')
+                                  ->pluck('name')
+                                  ->unique()
+                                  ->values()
         ];
     }
 
+    /**
+     * Verify/Unverify Daily Expenses
+     */
+    public function verifyExpense(Request $request, $id)
+    {
+        try {
+            $expense = DailyExpenses::findOrFail($id);
+            $expense->verified_by_admin = $request->input('verified', 1);
+            $expense->save();
 
+            return response()->json([
+                'success' => true,
+                'message' => $expense->verified_by_admin ? 'Expense verified successfully!' : 'Expense unverified successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Verify/Unverify Raw Materials
+     */
+    public function verifyMaterial(Request $request, $id)
+    {
+        try {
+            $material = ConstructionMaterialBilling::findOrFail($id);
+            $material->verified_by_admin = $request->input('verified', 1);
+            $material->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => $material->verified_by_admin ? 'Material verified successfully!' : 'Material unverified successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Verify/Unverify Square Footage Bills
+     */
+    public function verifySquareFootage(Request $request, $id)
+    {
+        try {
+            $squareFootage = SquareFootageBill::findOrFail($id);
+            $squareFootage->verified_by_admin = $request->input('verified', 1);
+            $squareFootage->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => $squareFootage->verified_by_admin ? 'Square footage bill verified successfully!' : 'Square footage bill unverified successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Verify/Unverify Attendance
+     */
+    public function verifyAttendance(Request $request, $id)
+    {
+        try {
+            $attendance = Attendance::findOrFail($id);
+            $attendance->is_present = $request->input('verified', 1);
+            $attendance->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => $attendance->is_present ? 'Attendance verified successfully!' : 'Attendance unverified successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

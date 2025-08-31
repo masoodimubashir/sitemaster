@@ -45,6 +45,7 @@ class PhaseController extends Controller
             $validator = Validator::make($request->all(), [
                 'site_id' => 'required|exists:sites,id',
                 'phase_name' => ['required', 'string',],
+                'created_at' => 'required|date'
             ]);
 
             if ($validator->fails()) {
@@ -94,9 +95,7 @@ class PhaseController extends Controller
      */
     public function update(Request $request, string $id)
     {
-
         $phase_id = base64_decode($id);
-
         $phase = Phase::find($phase_id);
 
         $request->validate([
@@ -110,12 +109,14 @@ class PhaseController extends Controller
                     })
                     ->ignore($phase_id)
             ],
+            'created_at' => 'required|date',
         ]);
 
         $phase->update($request->all());
 
         return redirect()->route('phase.index')->with('status', 'update');
     }
+
 
     /**
      * Remove the specified resource from storage.

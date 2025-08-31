@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,11 +12,9 @@ return new class extends Migration
     {
         Schema::create('wastas', function (Blueprint $table) {
             $table->id();
-            $table->string('wasta_name')->nullable();
-            $table->foreignId('phase_id')->constrained('phases')->cascadeOnDelete();
-            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->cascadeOnDelete();
-            $table->integer('price')->nullable();
-            $table->string('contact_no');
+            $table->string('wasta_name');
+            $table->string('contact_no')->nullable();
+            $table->unsignedBigInteger('price')->default(0);
             $table->timestamps();
         });
     }

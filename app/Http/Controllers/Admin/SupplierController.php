@@ -61,20 +61,17 @@ class SupplierController extends Controller
     public function show(string $id, Request $request)
     {
 
-
         $date_filter = $request->input('date_filter', 'today');
         $site_id = $request->input('site_id', 'all');
         $supplier_id = $request->input('supplier_id', $id);
-        $wager_id = $request->input('wager_id', 'all');
-        $start_date = $request->input('start_date'); // for 'custom'
+        $start_date = $request->input('start_date');
         $end_date = $request->input('end_date');
         $phase_id = $request->input('phase_id', 'all');
-
 
         // Load the supplier
         $supplier = Supplier::findOrFail($supplier_id);
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills] = $this->dataService->getData(
             $date_filter,
             $site_id,
             $supplier_id,
@@ -87,13 +84,9 @@ class SupplierController extends Controller
             $payments,
             $raw_materials,
             $squareFootageBills,
-            $expenses,
-            $wastas,
-            $labours
         )->sortByDesc(function ($d) {
             return $d['created_at'];
         });
-
 
         // Paginate the ledgers
         $paginatedLedgers = new LengthAwarePaginator(
@@ -286,13 +279,11 @@ class SupplierController extends Controller
 
         $supplier = Supplier::find($id);
 
-
         if (!$supplier) {
             return redirect()->back()->with('status', 'error');
         }
 
         $hasPaymnent = $supplier->payments()->exists();
-
 
         if ($hasPaymnent) {
             return redirect()->to('admin/suppliers')->with('status', 'hasPaymnent');
@@ -302,4 +293,16 @@ class SupplierController extends Controller
 
         return redirect()->to('admin/suppliers')->with('status', 'delete');
     }
+
+
+    public function generatePdf(Request $request)
+    {
+
+        $request->merge(['exclude_attendance' => true]);
+
+        $pdfController = new PDFController($this->dataService);
+
+        return $pdfController->showLedgerPdf($request);
+    }
+
 }

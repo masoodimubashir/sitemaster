@@ -29,32 +29,30 @@ class PaymentsController extends Controller
     {
 
 
+
         $dateFilter = $request->input('date_filter', 'today');
         $site_id = $request->input('site_id', 'all');
         $supplier_id = $request->input('supplier_id', 'all');
         $phase_id = $request->input('phase_id', 'all');
-        $wager_id = $request->input('wager_id', 'all');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
         // Call the service or method
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $attendances] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
             $startDate,
             $endDate,
-            $phase_id,
+            $phase_id
         );
 
-        // Create ledger data including wasta and labours
         $ledgers = $dataService->makeData(
             $payments,
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wastas,
-            $labours
+            $attendances
         )->sortByDesc(function ($d) {
             return $d['created_at'];
         });
@@ -88,17 +86,11 @@ class PaymentsController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $suppliers = Supplier::where([
-            'deleted_at' => null,
-        ])->orderBy('name', 'asc')->get();
+        $suppliers = Supplier::where(['deleted_at' => null,])->orderBy('name', 'asc')->get();
 
-        $sites = Site::where([
-            'deleted_at' => null,
-        ])->orderBy('site_name', 'asc')->get();
+        $sites = Site::where(['deleted_at' => null,])->orderBy('site_name', 'asc')->get();
 
-        $phases = Phase::with('site')->where([
-            'deleted_at' => null,
-        ])->get();
+        $phases = Phase::with('site')->where(['deleted_at' => null,])->get();
 
 
         return view("profile.partials.Admin.PaymentSuppliers.payments", compact(
@@ -237,15 +229,28 @@ class PaymentsController extends Controller
     {
         try {
 
+
             DB::beginTransaction();
 
+            // Get available balance
+            $totalAvailable = AdminPayment::sum('amount');
+
             $validatedData = Validator::make($request->all(), [
+                'created_at' => 'required|date',
                 'screenshot' => 'nullable|image|mimes:jpeg,jpg|max:2048',
-                'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
+                'amount' => [
+                    'required',
+                    'numeric',
+                    'min:0',
+                    'max:' . $totalAvailable,
+                ],
                 'transaction_type' => 'nullable|in:0,1',
-                'entity_type' => 'required|in:site,supplier',
-                'entity_id' => 'required|integer',
-                'payment_id' => 'required|integer',
+                'supplier_id' => 'required|exists:suppliers,id',
+                'narration' => 'nullable|string|max:255',
+
+            ], [
+                'created_at.required' => 'The date field is required.',
+                'amount.max' => 'The payment amount cannot exceed  ₹' . $totalAvailable,
             ]);
 
             if ($validatedData->fails()) {
@@ -254,77 +259,20 @@ class PaymentsController extends Controller
                 ], 422);
             }
 
-            $adminPayment = AdminPayment::find($request->input('payment_id'));
-
-            if (!$adminPayment) {
-                return response()->json([
-                    'error' => 'Admin payment entry not found.',
-                ], 404);
-            }
-
-            if ($adminPayment->amount < $request->input('amount')) {
-                return response()->json([
-                    'error' => 'Insufficient balance in admin payment.',
-                ], 422);
-            }
-
-            $transactionType = $request->input('transaction_type');
-            $entityType = $request->input('entity_type');
-            $entityId = $request->input('entity_id');
-
-            // Determine site_id and supplier_id based on logic
-            $siteId = null;
-            $supplierId = null;
-
-            if (is_null($transactionType)) {
-                if ($entityType === 'site') {
-                    $siteId = $entityId;
-                    $supplierId = $adminPayment->supplier_id;
-                } elseif ($entityType === 'supplier') {
-                    $supplierId = $entityId;
-                    $siteId = $adminPayment->site_id;
-                }
-
-                if (!$siteId || !$supplierId) {
-                    return response()->json([
-                        'error' => 'Both site and supplier must be specified for internal transfers.',
-                    ], 422);
-                }
-            } else {
-                // For normal sent/received transactions
-                if ($entityType === 'site') {
-                    $siteId = $entityId;
-                } elseif ($entityType === 'supplier') {
-                    $supplierId = $entityId;
-                }
-            }
-
             // Handle screenshot logic
             $screenshotPath = null;
-            $oldScreenshotPath = $adminPayment->screenshot;
-
             if ($request->hasFile('screenshot')) {
-                // New screenshot uploaded
                 $screenshotPath = $request->file('screenshot')->store('payment_screenshots', 'public');
-
-                // Delete old screenshot if exists
-                if ($oldScreenshotPath && Storage::disk('public')->exists($oldScreenshotPath)) {
-                    Storage::disk('public')->delete($oldScreenshotPath);
-                }
-            } elseif ($oldScreenshotPath) {
-                // No new screenshot but existing one in admin payment
-                $screenshotPath = $oldScreenshotPath;
             }
-            // Else both are null, so $screenshotPath remains null
 
             $payment = Payment::create([
                 'amount' => $request->input('amount'),
-                'transaction_type' => $transactionType,
-                'site_id' => $siteId,
-                'supplier_id' => $supplierId,
+                'supplier_id' => $request->input('supplier_id'),
                 'verified_by_admin' => 1,
-                'payment_initiator' => 0, // Always admin for now
-                'screenshot' => $screenshotPath, // Set the screenshot path
+                'payment_initiator' => 0,
+                'screenshot' => $screenshotPath,
+                'created_at' => $request->input('created_at'),
+                'narration' => $request->input('narration', null),
             ]);
 
             if (!$payment) {
@@ -332,19 +280,6 @@ class PaymentsController extends Controller
                 return response()->json([
                     'error' => 'Payment could not be created. Please try again.',
                 ], 500);
-            }
-
-            // Update admin payment with new screenshot if it was uploaded
-            if ($request->hasFile('screenshot')) {
-                $adminPayment->update(['screenshot' => $screenshotPath]);
-            }
-
-            if ($adminPayment->amount == $request->input('amount')) {
-                $adminPayment->delete();
-            } else {
-                $adminPayment->update([
-                    'amount' => $adminPayment->amount - $request->input('amount'),
-                ]);
             }
 
             DB::commit();
@@ -357,7 +292,6 @@ class PaymentsController extends Controller
             DB::rollBack();
             Log::error("Payment creation failed: " . $e->getMessage());
 
-            // Clean up if screenshot was uploaded but transaction failed
             if (isset($screenshotPath) && $screenshotPath && Storage::disk('public')->exists($screenshotPath)) {
                 Storage::disk('public')->delete($screenshotPath);
             }
@@ -367,6 +301,7 @@ class PaymentsController extends Controller
             ], 500);
         }
     }
+
 
 
 

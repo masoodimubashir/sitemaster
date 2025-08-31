@@ -38,6 +38,7 @@ class UserDailyExpensesController extends Controller
                 'bill_photo' => 'nullable|image|mimes:jpg,jpeg,webp|max:1024',
                 'phase_id' => 'required|exists:phases,id',
                 'site_id' => 'required|exists:sites,id',
+                'created_at' => 'required|date',
             ]);
 
 
@@ -65,6 +66,7 @@ class UserDailyExpensesController extends Controller
                     'user_id' => auth()->user()->id,
                     'verified_by_admin' => 0,
                     'site_id' => $request->site_id,
+                    'created_at' => $request->created_at,
                 ]);
 
                 if ($expense) {

@@ -185,18 +185,34 @@
         <h2 class="text-xl font-semibold">Ledger Report</h2>
         <div class="ms-auto action-buttons d-flex gap-2">
             <!-- Dropdown Menu -->
+
+
+
             <form action="{{ url($user . '/ledger/report') }}" method="GET">
+                <!-- Existing filters -->
                 <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
                 <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
-                <input type="hidden" name="supplier_id" value="{{ request('supplier_id', 'all') }}">
+                <input type="hidden" name="supplier_id" value="{{ request('supplier_id', $data['supplier']->id ?? 'all') }}">
                 <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
+
+                <!-- Missing custom date range filters -->
+                @if(request('date_filter') === 'custom')
+                    <input type="hidden" name="start_date" value="{{ request('start_date') }}">
+                    <input type="hidden" name="end_date" value="{{ request('end_date') }}">
+                @endif
+
+
+                <!-- Add more hidden inputs for any other query parameters you want to preserve -->
+                @foreach(request()->query() as $key => $value)
+                    @if(!in_array($key, ['site_id', 'date_filter', 'supplier_id', 'phase_id', 'start_date', 'end_date']))
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endif
+                @endforeach
+
                 <button type="submit" class="btn btn-outline">
-                    <i class="far fa-file-pdf"></i>  PDF
+                    <i class="far fa-file-pdf"></i> PDF
                 </button>
             </form>
-
-
-
 
 
         </div>

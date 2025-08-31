@@ -11,6 +11,8 @@ class DailyExpenses extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $fillable = [
         'item_name',
         'price',
@@ -18,7 +20,9 @@ class DailyExpenses extends Model
         'user_id',
         'site_id',
         'bill_photo',
-        'verified_by_admin'
+        'verified_by_admin',
+        'created_at',
+        'updated_at'
     ];
 
     /**
@@ -40,4 +44,10 @@ class DailyExpenses extends Model
     {
         return $this->belongsTo(Supplier::class);
     }
+
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 }

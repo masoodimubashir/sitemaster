@@ -46,9 +46,7 @@ class UserSitePayments extends Controller
             $validatedData = Validator::make($request->all(), [
                 'screenshot' => 'nullable|mimes:png,jpg,webp, jpeg|max:1024',
                 'amount' => ['required', 'numeric', 'min:0', 'max:99999999.99',],
-                'transaction_type' => 'nullable|in:0,1',
-                'site_id' => 'nullable|exists:sites,id',
-                'supplier_id' => 'nullable|exists:suppliers,id',
+                'created_at' => 'required|date',
             ]);
 
             if ($validatedData->fails()) {
@@ -66,21 +64,17 @@ class UserSitePayments extends Controller
                 $image_path = $request->file('screenshot')->store('Payment', 'public');
             }
 
-            $site = Site::find($request->input('site_id'));
+            // $site = Site::find($request->input('site_id'));
 
-            Notification::send(
-                User::where('role_name', 'admin')->get(),
-                new PaymentNotification($request->input('amount'), $site->site_name)
-            );
+            // Notification::send(
+            //     User::where('role_name', 'admin')->get(),
+            //     new PaymentNotification($request->input('amount'), $site->site_name)
+            // );
 
             AdminPayment::create([
                 'screenshot' => $image_path,
                 'amount' => $request->input('amount'),
                 'transaction_type' => $request->input('transaction_type'),
-                'site_id' => $request->input('site_id'),
-                'supplier_id' => $request->input('supplier_id'),
-                'entity_id' => $request->input('site_id'),
-                'entity_type' => Site::class,
             ]);
 
             return response()->json(['message' => 'Payment done...']);

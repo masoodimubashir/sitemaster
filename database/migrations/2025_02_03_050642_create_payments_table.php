@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->string('screenshot')->nullable();
             $table->foreignId('site_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('supplier_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->string('narration')->nullable();
             $table->decimal('amount', 8, 2);
             $table->boolean('verified_by_admin')->default(false);
             $table->boolean('transaction_type')->nullable()->comment('1 => Sent , 0 => Received');

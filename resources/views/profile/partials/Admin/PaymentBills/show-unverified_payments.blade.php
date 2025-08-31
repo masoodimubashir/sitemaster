@@ -310,6 +310,9 @@
                 <div class="modal-body">
                     <form id="uploadScreenshotForm" enctype="multipart/form-data">
                         @csrf
+
+                        
+
                         <input type="hidden" name="payment_id" id="payment_id">
                         <div class="mb-3">
                             <label for="screenshot" class="form-label">Select Image</label>

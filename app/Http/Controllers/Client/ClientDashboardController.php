@@ -56,23 +56,18 @@ class ClientDashboardController extends Controller
     public function show(string $id)
     {
 
-
-        $site_id = base64_decode($id);
+        $site = Site::findOrFail(base64_decode($id));
 
         // Default filter options — or pull from request if needed
         $dateFilter = 'lifetime';
         $supplier_id = 'all';
-        $wager_id = 'all';
         $startDate = 'start_date';
         $endDate = 'end_date';
         $phase_id = 'all';
+        $site_id = $site->id;
 
-
-        // Load site (for service charge, name, etc.)
-        $site = Site::findOrFail($site_id);
-
-        // Load processed financial data
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
+        // Call the service to get all data including attendances
+        [$payments, $raw_materials, $squareFootageBills, $expenses] = $this->dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
@@ -81,29 +76,20 @@ class ClientDashboardController extends Controller
             $phase_id
         );
 
-        // Combine and group all entries by phase
         $ledgers = $this->dataService->makeData(
             $payments,
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wastas,
-            $labours
         )->filter(function ($entry) {
-            return !empty($entry['phase']); // Only include entries with a phase
-        })->sortByDesc(fn($entry) => $entry['created_at']);
-
-
-        $ledgersGroupedByPhase = $ledgers->groupBy('phase');
-
-        $balances = $this->dataService->calculateAllBalances($ledgers);
-        $withoutServiceCharge = $balances['without_service_charge'];
-        $withServiceCharge = $balances['with_service_charge'];
+            return !empty($entry['phase']);
+        })->sortByDesc(fn($entry) => $entry['created_at'])
+            ->groupBy('phase');
 
         // Per-phase breakdown
         $phaseData = [];
 
-        foreach ($ledgersGroupedByPhase as $phaseName => $records) {
+        foreach ($ledgers as $phaseName => $records) {
 
             $construction_total = $records->where('category', 'Material')->sum('debit');
             $square_total = $records->where('category', 'SQFT')->sum('debit');
@@ -127,10 +113,6 @@ class ClientDashboardController extends Controller
                 'total_payment_amount' => $payments_total,
                 'phase_total' => $subtotal,
                 'phase_total_with_service_charge' => $withService,
-                'total_balance' => $withServiceCharge['balance'],
-                'total_due' => $withServiceCharge['due'],
-                'effective_balance' => $withoutServiceCharge['due'],
-                'total_paid' => $withServiceCharge['paid'],
                 'construction_material_billings' => $records->where('category', 'Material'),
                 'square_footage_bills' => $records->where('category', 'SQFT'),
                 'daily_expenses' => $records->where('category', 'Expense'),

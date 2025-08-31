@@ -17,33 +17,29 @@ class ClientLedgerController extends Controller
     public function index(Request $request, DataService $dataService)
     {
 
-
         $dateFilter = $request->input('date_filter', 'today');
         $site_id = $request->input('site_id', 'all');
         $supplier_id = $request->input('supplier_id', 'all');
         $phase_id = $request->input('phase_id', 'all');
-        $wager_id = $request->input('wager_id', 'all');
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
         // Call the service or method
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $attendances] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
             $startDate,
             $endDate,
-            $phase_id,
+            $phase_id
         );
 
-        // Create ledger data including wasta and labours
         $ledgers = $dataService->makeData(
             $payments,
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wastas,
-            $labours
+            $attendances
         )->sortByDesc(function ($d) {
             return $d['created_at'];
         });
@@ -61,6 +57,10 @@ class ClientLedgerController extends Controller
 
         $perPage = $request->get('per_page', 20);
 
+        $site = Site::query();
+        $is_ongoing_count = $site->where('is_on_going', 1)->count();
+        $is_not_ongoing_count = Site::where('is_on_going', 0)->count();
+
         $paginatedLedgers = new LengthAwarePaginator(
             $ledgers->forPage(
                 $request->input('page', 1),
@@ -71,6 +71,7 @@ class ClientLedgerController extends Controller
             $request->input('page', 1), // Changed from 10 to 1 for default page
             ['path' => $request->url(), 'query' => $request->query()]
         );
+
 
         $suppliers = Supplier::where([
             'deleted_at' => null,
@@ -98,6 +99,8 @@ class ClientLedgerController extends Controller
             'total_paid',
             'total_due',
             'total_balance',
+            'is_ongoing_count',
+            'is_not_ongoing_count',
             'suppliers',
             'sites',
             'effective_balance',

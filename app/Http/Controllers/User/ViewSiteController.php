@@ -34,52 +34,41 @@ class ViewSiteController extends Controller
     public function showDetails(Request $request, string $id)
     {
 
+        $site = Site::findOrFail(base64_decode($id));
 
         // Default filter options — or pull from request if needed
         $dateFilter = 'lifetime';
         $supplier_id = 'all';
-        $wager_id = 'all';
         $startDate = 'start_date';
         $endDate = 'end_date';
         $phase_id = 'all';
+        $site_id = $site->id;
 
-
-        // Load site (for service charge, name, etc.)
-        $site = Site::findOrFail($id);
-
-        // Load processed financial data
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
+        // Call the service to get all data including attendances
+        [$payments, $raw_materials, $squareFootageBills, $expenses] = $this->dataService->getData(
             $dateFilter,
-            $id,
+            $site_id,
             $supplier_id,
             $startDate,
             $endDate,
             $phase_id
         );
 
-        // Combine and group all entries by phase
         $ledgers = $this->dataService->makeData(
             $payments,
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wastas,
-            $labours
         )->filter(function ($entry) {
-            return !empty($entry['phase']); // Only include entries with a phase
-        })->sortByDesc(fn($entry) => $entry['created_at']);
+            return !empty($entry['phase']);
+        })->sortByDesc(fn($entry) => $entry['created_at'])
+            ->groupBy('phase');
 
-
-        $ledgersGroupedByPhase = $ledgers->groupBy('phase');
-
-        $balances = $this->dataService->calculateAllBalances($ledgers);
-        $withoutServiceCharge = $balances['without_service_charge'];
-        $withServiceCharge = $balances['with_service_charge'];
 
         // Per-phase breakdown
         $phaseData = [];
 
-        foreach ($ledgersGroupedByPhase as $phaseName => $records) {
+        foreach ($ledgers as $phaseName => $records) {
 
             $construction_total = $records->where('category', 'Material')->sum('debit');
             $square_total = $records->where('category', 'SQFT')->sum('debit');
@@ -100,10 +89,9 @@ class ViewSiteController extends Controller
                 'daily_expenses_total_amount' => $expenses_total,
                 'daily_wastas_total_amount' => $wasta_total,
                 'daily_labours_total_amount' => $labour_total,
+                'total_payment_amount' => $payments_total,
                 'phase_total' => $subtotal,
                 'phase_total_with_service_charge' => $withService,
-                'effective_balance' => $withoutServiceCharge['due'],
-                'total_paid' => $withServiceCharge['paid'],
                 'construction_material_billings' => $records->where('category', 'Material'),
                 'square_footage_bills' => $records->where('category', 'SQFT'),
                 'daily_expenses' => $records->where('category', 'Expense'),
@@ -111,7 +99,6 @@ class ViewSiteController extends Controller
                 'daily_labours' => $records->where('category', 'Labour'),
             ];
         }
-
         return view(
             'profile.User.Site.show-site-detail',
             compact(
@@ -126,17 +113,22 @@ class ViewSiteController extends Controller
     {
 
 
-        $id = base64_decode($id);
+        $site = Site::with('client')
+            ->select('id', 'site_name', 'client_id')->where([
+                'is_on_going' => 1,
+                'deleted_at' => null
+            ])
+            ->find(base64_decode($id));
 
         $dateFilter = $request->input('date_filter', 'today');
-        $site_id = $request->input('site_id', $id);
+        $site_id = $request->input('site_id', $site->id);
         $supplier_id = $request->input('supplier_id', 'all');
         $phase_id = $request->input('phase_id', 'all');
-        $startDate = $request->input('start_date'); // for 'custom'
+        $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
-        // Call the service to get all data including wasta and labours
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wagers, $labours] = $dataService->getData(
+        // Call the service to get all data including attendances
+        [$payments, $raw_materials, $squareFootageBills, $expenses, $attendances] = $dataService->getData(
             $dateFilter,
             $site_id,
             $supplier_id,
@@ -145,28 +137,25 @@ class ViewSiteController extends Controller
             $phase_id
         );
 
-
         $ledgers = $dataService->makeData(
             $payments,
             $raw_materials,
             $squareFootageBills,
             $expenses,
-            $wagers,
-            $labours
+            $attendances
         )->sortByDesc(function ($d) {
             return $d['created_at'];
         });
 
         // Calculate balances
         $balances = $dataService->calculateAllBalances($ledgers);
-
         $withoutServiceCharge = $balances['without_service_charge'];
         $withServiceCharge = $balances['with_service_charge'];
         $effective_balance = $withoutServiceCharge['due'];
         $total_paid = $withServiceCharge['paid'];
         $total_due = $withServiceCharge['due'];
         $total_balance = $withServiceCharge['balance'];
-        $return = $withoutServiceCharge['return'];
+        $returns = $withoutServiceCharge['return'];
 
         // Paginate the ledgers
         $paginatedLedgers = new LengthAwarePaginator(
@@ -180,34 +169,15 @@ class ViewSiteController extends Controller
         // Get unique suppliers
         $suppliers = $dataService->getSuppliersWithSites($site_id);
 
-
         // Get additional data for the view
         $items = Item::orderBy('item_name')->get();
 
-        $workforce_suppliers = Supplier::where([
-            'is_workforce_provider' => 1,
-            'deleted_at' => null
-        ])->orderBy('name')->get();
+        // Single query to get both workforce and raw material providers
+        $supp = Supplier::whereNull('deleted_at')->orderBy('name')->get();
 
-        $raw_material_providers = Supplier::where([
-            'is_raw_material_provider' => 1,
-            'deleted_at' => null
-        ])->orderBy('name')->get();
+        $phases = Phase::where(['deleted_at' => null, 'site_id' => $site_id])->latest()->get();
 
-        $phases = Phase::where([
-            'deleted_at' => null,
-            'site_id' => $site_id
-        ])->latest()->get();
 
-        $site = Site::with('client')
-            ->select('id', 'site_name', 'client_id')
-            ->where([
-                'is_on_going' => 1,
-                'deleted_at' => null
-            ])
-            ->find($id);
-
-            
 
         return view(
             'profile.User.Site.show-site',
@@ -217,15 +187,13 @@ class ViewSiteController extends Controller
                 'total_due',
                 'total_balance',
                 'suppliers',
-                'wagers',
                 'effective_balance',
                 'id',
                 'items',
-                'workforce_suppliers',
-                'raw_material_providers',
                 'phases',
                 'site',
-                'return'
+                'returns',
+                'supp'
             )
         );
     }

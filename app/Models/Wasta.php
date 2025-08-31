@@ -11,23 +11,18 @@ class Wasta extends Model
 {
 
     protected $fillable = [
-        'wasta_id',
-        'phase_id',
         'wasta_name',
+        'contact_no',
         'price',
-        'contact_no'
     ];
 
 
-    /**
-     * Get all of the attendances for the Wasta
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
-     */
-    public function attendances(): MorphMany
+
+    public function attendanceSetups()
     {
-        return $this->morphMany(Attendance::class, 'attendable');
+        return $this->morphMany(AttendanceSetup::class, 'setupable');
     }
+
 
 
     public function labours()
@@ -39,5 +34,15 @@ class Wasta extends Model
     public function phase()
     {
         return $this->belongsTo(Phase::class);
+    }
+
+    /**
+     * Get all of the wagers for the Wasta
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function wagers(): HasMany
+    {
+        return $this->hasMany(Wager::class);
     }
 }

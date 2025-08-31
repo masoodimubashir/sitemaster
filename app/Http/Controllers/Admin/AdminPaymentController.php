@@ -16,19 +16,35 @@ class AdminPaymentController extends Controller
 {
     public function index(Request $request)
     {
+        $query = AdminPayment::with('entity'); // Keep eager loading like old index
 
-        $payments = AdminPayment::with('entity')
+        // Filter by date range if provided
+        if ($request->filled('start_date')) {
+            $query->whereDate('created_at', '>=', $request->start_date);
+        }
+        if ($request->filled('end_date')) {
+            $query->whereDate('created_at', '<=', $request->end_date);
+        }
+
+        // Calculate total based on the filtered results
+        $total_amount = $query->sum('amount');
+
+        // Clone query for paginated results
+        $payments = (clone $query)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        $total_amount = AdminPayment::sum('amount');
+        $suppliers = Supplier::select('id', 'name')->get();
 
-        return view('profile.partials.Admin.PaymentSuppliers.manage-payments', compact(
-                'payments',
-                'total_amount',
-            )
-        );
+        return view(
+            'profile.partials.Admin.PaymentSuppliers.manage-payments',
+            compact('payments', 'suppliers', 'total_amount')
+        )->with([
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date
+        ]);
     }
+
 
     public function storeOrUpdate(Request $request, $id = null)
     {

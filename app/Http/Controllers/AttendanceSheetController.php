@@ -3,176 +3,356 @@
 namespace App\Http\Controllers;
 
 use App\Models\Labour;
-use App\Models\Phase;
 use App\Models\Site;
+use App\Models\Wager;
 use App\Models\Wasta;
+use App\Models\AttendanceSetup;
+use App\Models\Attendance;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class AttendanceSheetController extends Controller
 {
 
 
+    // TODO : The Index Method Has Yet To Be Implemented
 
     public function index(Request $request)
     {
-        // Handle date filtering
-        $dateFilter = $request->input('date_filter', 'month');
-        $monthYear = $request->input('monthYear', now()->format('Y-m'));
-        $customStart = $request->input('custom_start', now()->startOfMonth()->format('Y-m-d'));
-        $customEnd = $request->input('custom_end', now()->endOfMonth()->format('Y-m-d'));
 
-        // Set date range based on filter type
-        if ($dateFilter === 'month') {
-            [$year, $month] = explode('-', $monthYear);
-            $startDate = Carbon::create($year, $month, 1)->startOfDay();
-            $endDate = $startDate->copy()->endOfMonth();
-            $totalDays = $startDate->daysInMonth;
+        // Handle month filter - if month_filter is provided, override start_date and end_date
+        if ($request->filled('month_filter')) {
+            $monthYear = explode('-', $request->month_filter);
+            $year = $monthYear[0];
+            $month = $monthYear[1];
+
+            $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
         } else {
-            $startDate = Carbon::parse($customStart)->startOfDay();
-            $endDate = Carbon::parse($customEnd)->endOfDay();
-            $totalDays = $startDate->diffInDays($endDate) + 1; // Inclusive count
+            // Use provided dates or default to current month
+            $startDate = Carbon::parse($request->start_date ?? now()->startOfMonth());
+            $endDate = Carbon::parse($request->end_date ?? now()->endOfMonth());
         }
+
+        // Ensure end date is not before start date
+        if ($endDate->lt($startDate)) {
+            $endDate = $startDate->copy();
+        }
+
+        // Get all dates in the range
+        $dates = CarbonPeriod::create($startDate, $endDate);
+        $dateArray = iterator_to_array($dates);
+        $totalDays = count($dateArray);
 
         // Base query for wastas with eager loading
-        $wastasQuery = Wasta::with([
-            'attendances' => function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('attendance_date', [$startDate, $endDate]);
-            },
-            'labours.attendances' => function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('attendance_date', [$startDate, $endDate]);
-            },
-            'phase.site'
+        $wastaQuery = Wasta::with([
+            'attendanceSetups.attendances' => fn($q) => $q->whereBetween('attendance_date', [$startDate, $endDate]),
+            'wagers.attendanceSetups.attendances' => fn($q) => $q->whereBetween('attendance_date', [$startDate, $endDate]),
         ]);
 
-        // Filter by site if provided
-        if ($request->filled('site_id')) {
-            $wastasQuery->whereHas('phase.site', function ($query) use ($request) {
-                $query->where('id', $request->input('site_id'));
+        // Apply wasta filter if selected
+        if ($request->filled('wasta_id')) {
+            $wastaQuery->where('id', $request->wasta_id);
+        }
+
+        $wastas = $wastaQuery->get();
+
+        // Base query for independent workers
+        $independentQuery = Wager::whereNull('wasta_id')
+            ->with(['attendanceSetups.attendances' => fn($q) => $q->whereBetween('attendance_date', [$startDate, $endDate])]);
+
+        // Apply wager filter if selected (for independent workers)
+        if ($request->filled('wager_id')) {
+            $independentQuery->where('id', $request->wager_id);
+        }
+
+        $independents = $independentQuery->get();
+
+        // Process data for display
+        $attendanceData = [];
+        $grandTotalDays = 0;
+        $grandTotalAmount = 0;
+
+        // Process Wastas and their workers
+        foreach ($wastas as $wasta) {
+            // Skip if we're filtering by worker type and it's not contractors
+            if ($request->worker_type === 'workers' || $request->worker_type === 'independents') {
+                continue;
+            }
+
+            $dailyAttendance = [];
+            $presentCount = 0;
+
+            foreach ($dateArray as $date) {
+                $present = $wasta->attendanceSetups->flatMap->attendances
+                    ->firstWhere('attendance_date', $date->format('Y-m-d'));
+                $isPresent = $present && $present->is_present;
+
+                // Skip if filtering by attendance status
+                if ($request->attendance_status === 'present' && !$isPresent)
+                    continue;
+                if ($request->attendance_status === 'absent' && $isPresent)
+                    continue;
+
+                $dailyAttendance[] = $isPresent;
+                if ($isPresent)
+                    $presentCount++;
+            }
+
+            // Skip if no attendance matches the filter
+            if ($request->attendance_status === 'present' && $presentCount === 0)
+                continue;
+            if ($request->attendance_status === 'absent' && $presentCount === count($dateArray))
+                continue;
+
+            $amount = $wasta->price * $presentCount;
+            $grandTotalDays += $presentCount;
+            $grandTotalAmount += $amount;
+
+            $attendanceData[] = [
+                'id' => 'wasta_' . $wasta->id,
+                'name' => $wasta->wasta_name,
+                'type' => 'Contractor',
+                'rate' => $wasta->price,
+                'daily' => $dailyAttendance,
+                'days' => $presentCount,
+                'amount' => $amount,
+                'is_contractor' => true,
+                'parent_id' => null
+            ];
+
+            // Process wagers under this wasta
+            foreach ($wasta->wagers as $wager) {
+                // Skip if we're filtering by worker type and it's not workers
+                if ($request->worker_type === 'contractors' || $request->worker_type === 'independents') {
+                    continue;
+                }
+
+                // Apply wager filter if selected
+                if ($request->filled('wager_id') && $wager->id != $request->wager_id) {
+                    continue;
+                }
+
+                $dailyAttendance = [];
+                $presentCount = 0;
+
+                foreach ($dateArray as $date) {
+                    $present = $wager->attendanceSetups->flatMap->attendances
+                        ->firstWhere('attendance_date', $date->format('Y-m-d'));
+                    $isPresent = $present && $present->is_present;
+
+                    // Skip if filtering by attendance status
+                    if ($request->attendance_status === 'present' && !$isPresent)
+                        continue;
+                    if ($request->attendance_status === 'absent' && $isPresent)
+                        continue;
+
+                    $dailyAttendance[] = $isPresent;
+                    if ($isPresent)
+                        $presentCount++;
+                }
+
+                // Skip if no attendance matches the filter
+                if ($request->attendance_status === 'present' && $presentCount === 0)
+                    continue;
+                if ($request->attendance_status === 'absent' && $presentCount === count($dateArray))
+                    continue;
+
+                $amount = $wager->price * $presentCount;
+                $grandTotalDays += $presentCount;
+                $grandTotalAmount += $amount;
+
+                $attendanceData[] = [
+                    'id' => 'wager_' . $wager->id,
+                    'name' => $wager->wager_name,
+                    'type' => 'Worker',
+                    'rate' => $wager->price,
+                    'daily' => $dailyAttendance,
+                    'days' => $presentCount,
+                    'amount' => $amount,
+                    'is_contractor' => false,
+                    'parent_id' => 'wasta_' . $wasta->id
+                ];
+            }
+        }
+
+        // Process independent workers
+        foreach ($independents as $worker) {
+            // Skip if we're filtering by worker type and it's not independents
+            if ($request->worker_type === 'contractors' || $request->worker_type === 'workers') {
+                continue;
+            }
+
+            $dailyAttendance = [];
+            $presentCount = 0;
+
+            foreach ($dateArray as $date) {
+                $present = $worker->attendanceSetups->flatMap->attendances
+                    ->firstWhere('attendance_date', $date->format('Y-m-d'));
+                $isPresent = $present && $present->is_present;
+
+                // Skip if filtering by attendance status
+                if ($request->attendance_status === 'present' && !$isPresent)
+                    continue;
+                if ($request->attendance_status === 'absent' && $isPresent)
+                    continue;
+
+                $dailyAttendance[] = $isPresent;
+                if ($isPresent)
+                    $presentCount++;
+            }
+
+            // Skip if no attendance matches the filter
+            if ($request->attendance_status === 'present' && $presentCount === 0)
+                continue;
+            if ($request->attendance_status === 'absent' && $presentCount === count($dateArray))
+                continue;
+
+            $amount = $worker->price * $presentCount;
+            $grandTotalDays += $presentCount;
+            $grandTotalAmount += $amount;
+
+            $attendanceData[] = [
+                'id' => 'independent_' . $worker->id,
+                'name' => $worker->wager_name,
+                'type' => 'Independent',
+                'rate' => $worker->price,
+                'daily' => $dailyAttendance,
+                'days' => $presentCount,
+                'amount' => $amount,
+                'is_contractor' => false,
+                'parent_id' => null
+            ];
+        }
+
+        // Apply search filter if provided
+        if ($request->filled('search')) {
+            $searchTerm = strtolower($request->search);
+            $attendanceData = array_filter($attendanceData, function ($item) use ($searchTerm) {
+                return str_contains(strtolower($item['name']), $searchTerm);
             });
         }
 
-        // Filter by phase if provided
-        if ($request->filled('phase_id')) {
-            $wastasQuery->where('phase_id', $request->input('phase_id'));
-        }
+        // Calculate totals for statistics
+        $totalWorkers = count(array_filter($attendanceData, fn($item) => !$item['is_contractor']));
+        $totalContractors = count(array_filter($attendanceData, fn($item) => $item['is_contractor']));
 
-        // Paginate and transform results with price from attendance records
-        $perPage = 10;
-        $wastas = $wastasQuery->paginate($perPage)->through(function ($wasta) use ($startDate, $endDate) {
-            // Calculate wasta totals from attendance records
-            $wastaPresentDays = $wasta->attendances->where('is_present', true)->count();
-            $wastaTotalAmount = $wasta->attendances->where('is_present', true)->sum('price');
+        // Paginate results
+        $perPage = $request->per_page ?? 20;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $currentItems = array_slice($attendanceData, ($currentPage - 1) * $perPage, $perPage);
 
-            $wasta->present_days = $wastaPresentDays;
-            $wasta->total_amount = $wastaTotalAmount;
-            $wasta->avg_rate = $wastaPresentDays > 0 ? $wastaTotalAmount / $wastaPresentDays : 0;
+        $paginatedData = new LengthAwarePaginator(
+            $currentItems,
+            count($attendanceData),
+            $perPage,
+            $currentPage,
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'query' => $request->query()
+            ]
+        );
 
-            // Calculate labour totals from attendance records
-            $wasta->labours->each(function ($labour) {
-                $labourPresentDays = $labour->attendances->where('is_present', true)->count();
-                $labourTotalAmount = $labour->attendances->where('is_present', true)->sum('price');
+        // Get filter options for dropdowns
+        $wastas = Wasta::select('wasta_name', 'id')->latest()->get();
+        $wagers = Wager::select('wager_name', 'id')->latest()->get();
 
-                $labour->present_days = $labourPresentDays;
-                $labour->total_amount = $labourTotalAmount;
-                $labour->avg_rate = $labourPresentDays > 0 ? $labourTotalAmount / $labourPresentDays : 0;
-            });
-
-            $wasta->labours_total_amount = $wasta->labours->sum('total_amount');
-            $wasta->combined_total = $wasta->total_amount + $wasta->labours_total_amount;
-
-            return $wasta;
-        });
-
-        // Get sites and phases for filters (only needed if not filtered)
-        $sites = $request->filled('site_id')
-            ? Site::where('id', $request->input('site_id'))->get()
-            : Site::where('is_on_going', true)->get();
-
-        $phases = $request->filled('phase_id')
-            ? Phase::where('id', $request->input('phase_id'))->with('site')->get()
-            : Phase::with('site')->latest()->get();
-
-        // Calculate totals
-        $siteTotal = [
-            'wasta_amount' => $wastas->sum('total_amount'),
-            'labour_amount' => $wastas->sum('labours_total_amount'),
-            'combined_total' => $wastas->sum('combined_total')
-        ];
-
-        $totalLabours = $wastas->sum(fn($w) => $w->labours->count());
-
-        // Format date range for display
-        $dateRange = $startDate->format('M d, Y') . ' - ' . $endDate->format('M d, Y');
 
         return view('profile.partials.Admin.Ledgers.wager-attendance-sheet', [
-            'wastas' => $wastas,
-            'sites' => $sites,
-            'phases' => $phases,
-            'siteTotal' => $siteTotal,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'totalDays' => $totalDays,
-            'dateRange' => $dateRange,
-            'dateFilter' => $dateFilter,
-            'monthYear' => $monthYear,
-            'customStart' => $customStart,
-            'customEnd' => $customEnd,
-            'selectedSiteId' => $request->input('site_id'),
-            'selectedPhaseId' => $request->input('phase_id'),
-            'totalLabours' => $totalLabours,
+            'site',
+            'startDate',
+            'endDate',
+            'dateArray',
+            'totalDays',
+            'paginatedData',
+            'grandTotalDays',
+            'grandTotalAmount',
+            'totalWorkers',
+            'totalContractors',
+            'wastas',
+            'wagers'
         ]);
 
 
     }
 
-
-
     public function storeWastaAttendance(Request $request)
     {
 
-
-
         try {
 
-            $data = Validator::make($request->only('wasta_id', 'is_present', 'attendance_id', 'attendance_date', 'daily_price'), [
+//            dd($request->all());
+
+            $validator = Validator::make($request->only('wasta_name','wasta_id', 'site_id', 'is_present', 'attendance_date', 'daily_price'), [
                 'wasta_id' => 'required|exists:wastas,id',
+                'site_id' => 'required|exists:sites,id',
                 'is_present' => 'required|boolean',
-                'attendance_id' => 'nullable|exists:attendances,id',
                 'attendance_date' => 'required|date',
-                'daily_price' => 'required|integer',
+                'daily_price' => 'required|numeric|min:0',
             ]);
 
-            if ($data->fails()) {
+            if ($validator->fails()) {
                 return response()->json([
-                    'errors' => $data->errors()
+                    'errors' => $validator->errors()
                 ], 422);
             }
 
-            $validatedData = $data->validated();
-            $wasta = Wasta::find($validatedData['wasta_id']);
+            $data = $validator->validated();
 
-            $wasta->attendances()->updateOrCreate(
+            DB::beginTransaction();
+
+            $wasta = Wasta::findOrFail($data['wasta_id']);
+
+            // Keep the rate column consistent with the edited daily price
+            if (isset($data['daily_price'])) {
+                $wasta->update(['price' => $data['daily_price']]);
+            }
+
+            // Find or create the attendance setup for this site and wasta
+            $setup = AttendanceSetup::firstOrCreate(
                 [
-                    'attendable_type' => 'App\Models\Wasta',
-                    'attendable_id' => $wasta->id,
-                    'id' => $validatedData['attendance_id'],
-                    'attendance_date' => $validatedData['attendance_date'],
+                    'site_id' => $data['site_id'],
+                    'setupable_id' => $wasta->id,
+                    'setupable_type' => Wasta::class,
                 ],
                 [
-                    'price' => $validatedData['daily_price'],
-                    'is_present' => $validatedData['is_present'],
+                    'name' => $wasta->wasta_name,
+                    'count' => 1,
+                    'price' => $data['daily_price'],
                 ]
             );
+
+            // Always keep setup price in sync with the provided daily price
+            $setup->update([
+                'name' => $wasta->wasta_name,
+                'price' => $data['daily_price'],
+            ]);
+
+            // Upsert attendance for the given date
+            Attendance::updateOrCreate(
+                [
+                    'attendance_setup_id' => $setup->id,
+                    'attendance_date' => $data['attendance_date'],
+                ],
+                [
+                    'is_present' => (bool) $data['is_present'],
+                ]
+            );
+
+            DB::commit();
 
             return response()->json([
                 'message' => 'Wasta attendance updated successfully',
             ], 200);
 
         } catch (Exception $e) {
+            DB::rollBack();
             Log::error($e->getMessage());
             return response()->json([
                 'message' => 'Something went wrong',
@@ -185,47 +365,76 @@ class AttendanceSheetController extends Controller
     {
         try {
 
-            $data = Validator::make($request->only('labour_id', 'is_present', 'attendance_id', 'attendance_date', 'daily_price'), [
-                'labour_id' => 'required|exists:labours,id',
+            $validator = Validator::make($request->only('labour_id', 'site_id', 'is_present', 'attendance_date', 'daily_price'), [
+                'labour_id' => 'required|exists:wagers,id',
+                'site_id' => 'required|exists:sites,id',
                 'is_present' => 'required|boolean',
-                'attendance_id' => 'nullable|exists:attendances,id',
                 'attendance_date' => 'required|date',
-                'daily_price' => 'required|integer',
+                'daily_price' => 'required|numeric|min:0',
             ]);
 
-            if ($data->fails()) {
+            if ($validator->fails()) {
                 return response()->json([
-                    'errors' => $data->errors()
+                    'errors' => $validator->errors()
                 ], 422);
             }
 
-            $validatedData = $data->validated();
-            $labour = Labour::find($validatedData['labour_id']);
+            $data = $validator->validated();
 
-            $labour->attendances()->updateOrCreate(
+            DB::beginTransaction();
+
+            $wager = Wager::findOrFail($data['labour_id']);
+
+            // Keep the rate column consistent with the edited daily price
+            if (isset($data['daily_price'])) {
+                $wager->update(['price' => $data['daily_price']]);
+            }
+
+            // Find or create the attendance setup for this site and worker (wager)
+            $setup = AttendanceSetup::firstOrCreate(
                 [
-                    'attendable_type' => 'App\Models\Labour',
-                    'attendable_id' => $labour->id,
-                    'id' => $validatedData['attendance_id'],
-                    'attendance_date' => $validatedData['attendance_date'],
+                    'site_id' => $data['site_id'],
+                    'setupable_id' => $wager->id,
+                    'setupable_type' => Wager::class,
                 ],
                 [
-                    'price' => $data->validated()['daily_price'],
-                    'is_present' => $validatedData['is_present'],
+                    'name' => $wager->wager_name,
+                    'count' => 1,
+                    'price' => $data['daily_price'],
                 ]
             );
+
+            // Always keep setup price in sync with the provided daily price
+            $setup->update([
+                'name' => $wager->wager_name,
+                'price' => $data['daily_price'],
+            ]);
+
+            // Upsert attendance for the given date
+            Attendance::updateOrCreate(
+                [
+                    'attendance_setup_id' => $setup->id,
+                    'attendance_date' => $data['attendance_date'],
+                ],
+                [
+                    'is_present' => (bool) $data['is_present'],
+                ]
+            );
+
+            DB::commit();
 
             return response()->json([
                 'message' => 'Labour attendance updated successfully',
             ], 200);
 
         } catch (Exception $e) {
+            DB::rollBack();
+            Log::error($e->getMessage());
             return response()->json([
                 'message' => 'Something went wrong',
             ], 500);
         }
     }
-
 
     public function storeLabour(Request $request)
     {
@@ -283,8 +492,9 @@ class AttendanceSheetController extends Controller
                     ], 422);
                 }
 
-                Labour::where('id', $id)->update([
-                    'labour_name' => $data->validated()['labour_name'],
+                // Note: In the attendance table, "labour" refers to a worker row which maps to Wager model
+                Wager::where('id', $id)->update([
+                    'wager_name' => $data->validated()['labour_name'],
                 ]);
 
                 return response()->json([
@@ -300,12 +510,13 @@ class AttendanceSheetController extends Controller
         }
     }
 
-
     public function updateWasta(Request $request, $id)
     {
 
 
         try {
+
+//            dd($request->all());
 
             $data = Validator::make($request->only('wasta_name'), [
                 "wasta_name" => "required|string|max:255",
@@ -326,105 +537,283 @@ class AttendanceSheetController extends Controller
             ], 200);
         } catch (Exception $e) {
 
+            Log::error($e->getMessage());
             return response()->json([
                 'message' => 'Something went wrong',
             ], 500);
         }
     }
 
-
-    public function showAttendanceBySite(Request $request, string $id)
+    public function showAttendanceBySite(Request $request, $id)
     {
-        $site = Site::findOrFail($id);
 
-        // Handle date filtering
-        $dateFilter = $request->input('date_filter', 'month');
-        $monthYear = $request->input('monthYear', now()->format('Y-m'));
-        $customStart = $request->input('custom_start', now()->startOfMonth()->format('Y-m-d'));
-        $customEnd = $request->input('custom_end', now()->endOfMonth()->format('Y-m-d'));
 
-        // Set date range based on filter type
-        if ($dateFilter === 'month') {
-            [$year, $month] = explode('-', $monthYear);
-            $startDate = Carbon::create($year, $month, 1)->startOfDay();
-            $endDate = $startDate->copy()->endOfMonth();
-            $totalDays = $startDate->daysInMonth;
+        $site = Site::findOrFail(base64_decode($id));
+
+        // Handle month filter - if month_filter is provided, override start_date and end_date
+        if ($request->filled('month_filter')) {
+            $monthYear = explode('-', $request->month_filter);
+            $year = $monthYear[0];
+            $month = $monthYear[1];
+
+            $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth();
         } else {
-            $startDate = Carbon::parse($customStart)->startOfDay();
-            $endDate = Carbon::parse($customEnd)->endOfDay();
-            $totalDays = round($startDate->diffInDays($endDate));
+            // Use provided dates or default to current month
+            $startDate = Carbon::parse($request->start_date ?? now()->startOfMonth());
+            $endDate = Carbon::parse($request->end_date ?? now()->endOfMonth());
         }
 
-        // Base query for wastas with eager loading
-        $wastasQuery = Wasta::with([
-            'attendances' => function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('attendance_date', [$startDate, $endDate]);
-            },
-            'labours.attendances' => function ($query) use ($startDate, $endDate) {
-                $query->whereBetween('attendance_date', [$startDate, $endDate]);
-            },
-            'phase'
-        ])->whereHas('phase.site', function ($query) use ($site) {
-            $query->where('id', $site->id);
-        });
-
-        // Filter by phase if selected
-        if ($request->filled('phase_id')) {
-            $wastasQuery->where('phase_id', $request->phase_id);
+        // Ensure end date is not before start date
+        if ($endDate->lt($startDate)) {
+            $endDate = $startDate->copy();
         }
 
-        // Paginate and transform results
-        $perPage = 10;
-        $wastas = $wastasQuery->paginate($perPage)->through(function ($wasta) {
-            // Calculate wasta totals
-            $wastaPresentDays = $wasta->attendances->where('is_present', true);
-            $wasta->present_days = $wastaPresentDays->count();
-            $wasta->total_amount = $wastaPresentDays->sum('price');
+        // Get all dates in the range
+        $dates = CarbonPeriod::create($startDate, $endDate);
+        $dateArray = iterator_to_array($dates);
+        $totalDays = count($dateArray);
 
-            // Calculate labour totals
-            $wasta->labours->each(function ($labour) {
-                $labourPresentDays = $labour->attendances->where('is_present', true);
-                $labour->present_days = $labourPresentDays->count();
-                $labour->total_amount = $labourPresentDays->sum('price');
+        // Base query for wastas with eager loading scoped to site
+        $wastaQuery = Wasta::whereHas('attendanceSetups', function ($q) use ($site) {
+            $q->where('site_id', $site->id);
+        })
+            ->with([
+                'attendanceSetups' => fn($q) => $q->where('site_id', $site->id)
+                    ->with(['attendances' => fn($a) => $a->whereBetween('attendance_date', [$startDate, $endDate])]),
+                'wagers.attendanceSetups' => fn($q) => $q->where('site_id', $site->id)
+                    ->with(['attendances' => fn($a) => $a->whereBetween('attendance_date', [$startDate, $endDate])]),
+            ]);
+
+        // Apply wasta filter if selected
+        if ($request->filled('wasta_id')) {
+            $wastaQuery->where('id', $request->wasta_id);
+        }
+
+        $wastas = $wastaQuery->get();
+
+        // Base query for independent workers (no wasta) scoped to site
+        $independentQuery = Wager::whereNull('wasta_id')
+            ->whereHas('attendanceSetups', function ($q) use ($site) {
+                $q->where('site_id', $site->id);
+            })
+            ->with([
+                'attendanceSetups' => fn($q) => $q->where('site_id', $site->id)
+                    ->with(['attendances' => fn($a) => $a->whereBetween('attendance_date', [$startDate, $endDate])]),
+            ]);
+
+        // Apply wager filter if selected (for independent workers)
+        if ($request->filled('wager_id')) {
+            $independentQuery->where('id', $request->wager_id);
+        }
+
+        $independents = $independentQuery->get();
+
+        // Process data for display
+        $attendanceData = [];
+        $grandTotalDays = 0;
+        $grandTotalAmount = 0;
+
+        // Process Wastas and their workers
+        foreach ($wastas as $wasta) {
+            // Skip if we're filtering by worker type and it's not contractors
+            if ($request->worker_type === 'workers' || $request->worker_type === 'independents') {
+                continue;
+            }
+
+            $dailyAttendance = [];
+            $presentCount = 0;
+
+            foreach ($dateArray as $date) {
+                $present = $wasta->attendanceSetups->flatMap->attendances
+                    ->firstWhere('attendance_date', $date->format('Y-m-d'));
+                $isPresent = $present && $present->is_present;
+
+                // Skip if filtering by attendance status
+                if ($request->attendance_status === 'present' && !$isPresent)
+                    continue;
+                if ($request->attendance_status === 'absent' && $isPresent)
+                    continue;
+
+                $dailyAttendance[] = $isPresent;
+                if ($isPresent)
+                    $presentCount++;
+            }
+
+            // Skip if no attendance matches the filter
+            if ($request->attendance_status === 'present' && $presentCount === 0)
+                continue;
+            if ($request->attendance_status === 'absent' && $presentCount === count($dateArray))
+                continue;
+
+            $amount = $wasta->price * $presentCount;
+            $grandTotalDays += $presentCount;
+            $grandTotalAmount += $amount;
+
+            $attendanceData[] = [
+                'id' => 'wasta_' . $wasta->id,
+                'name' => $wasta->wasta_name,
+                'type' => 'Contractor',
+                'rate' => $wasta->price,
+                'daily' => $dailyAttendance,
+                'days' => $presentCount,
+                'amount' => $amount,
+                'is_contractor' => true,
+                'parent_id' => null
+            ];
+
+            // Process wagers under this wasta
+            foreach ($wasta->wagers as $wager) {
+                // Skip if we're filtering by worker type and it's not workers
+                if ($request->worker_type === 'contractors' || $request->worker_type === 'independents') {
+                    continue;
+                }
+
+                // Apply wager filter if selected
+                if ($request->filled('wager_id') && $wager->id != $request->wager_id) {
+                    continue;
+                }
+
+                $dailyAttendance = [];
+                $presentCount = 0;
+
+                foreach ($dateArray as $date) {
+                    $present = $wager->attendanceSetups->flatMap->attendances
+                        ->firstWhere('attendance_date', $date->format('Y-m-d'));
+                    $isPresent = $present && $present->is_present;
+
+                    // Skip if filtering by attendance status
+                    if ($request->attendance_status === 'present' && !$isPresent)
+                        continue;
+                    if ($request->attendance_status === 'absent' && $isPresent)
+                        continue;
+
+                    $dailyAttendance[] = $isPresent;
+                    if ($isPresent)
+                        $presentCount++;
+                }
+
+                // Skip if no attendance matches the filter
+                if ($request->attendance_status === 'present' && $presentCount === 0)
+                    continue;
+                if ($request->attendance_status === 'absent' && $presentCount === count($dateArray))
+                    continue;
+
+                $amount = $wager->price * $presentCount;
+                $grandTotalDays += $presentCount;
+                $grandTotalAmount += $amount;
+
+                $attendanceData[] = [
+                    'id' => 'wager_' . $wager->id,
+                    'name' => $wager->wager_name,
+                    'type' => 'Worker',
+                    'rate' => $wager->price,
+                    'daily' => $dailyAttendance,
+                    'days' => $presentCount,
+                    'amount' => $amount,
+                    'is_contractor' => false,
+                    'parent_id' => 'wasta_' . $wasta->id
+                ];
+            }
+        }
+
+        // Process independent workers
+        foreach ($independents as $worker) {
+            // Skip if we're filtering by worker type and it's not independents
+            if ($request->worker_type === 'contractors' || $request->worker_type === 'workers') {
+                continue;
+            }
+
+            $dailyAttendance = [];
+            $presentCount = 0;
+
+            foreach ($dateArray as $date) {
+                $present = $worker->attendanceSetups->flatMap->attendances
+                    ->firstWhere('attendance_date', $date->format('Y-m-d'));
+                $isPresent = $present && $present->is_present;
+
+                // Skip if filtering by attendance status
+                if ($request->attendance_status === 'present' && !$isPresent)
+                    continue;
+                if ($request->attendance_status === 'absent' && $isPresent)
+                    continue;
+
+                $dailyAttendance[] = $isPresent;
+                if ($isPresent)
+                    $presentCount++;
+            }
+
+            // Skip if no attendance matches the filter
+            if ($request->attendance_status === 'present' && $presentCount === 0)
+                continue;
+            if ($request->attendance_status === 'absent' && $presentCount === count($dateArray))
+                continue;
+
+            $amount = $worker->price * $presentCount;
+            $grandTotalDays += $presentCount;
+            $grandTotalAmount += $amount;
+
+            $attendanceData[] = [
+                'id' => 'independent_' . $worker->id,
+                'name' => $worker->wager_name,
+                'type' => 'Independent',
+                'rate' => $worker->price,
+                'daily' => $dailyAttendance,
+                'days' => $presentCount,
+                'amount' => $amount,
+                'is_contractor' => false,
+                'parent_id' => null
+            ];
+        }
+
+        // Apply search filter if provided
+        if ($request->filled('search')) {
+            $searchTerm = strtolower($request->search);
+            $attendanceData = array_filter($attendanceData, function ($item) use ($searchTerm) {
+                return str_contains(strtolower($item['name']), $searchTerm);
             });
+        }
 
-            $wasta->labours_total_amount = $wasta->labours->sum('total_amount');
-            $wasta->combined_total = $wasta->total_amount + $wasta->labours_total_amount;
+        // Calculate totals for statistics
+        $totalWorkers = count(array_filter($attendanceData, fn($item) => !$item['is_contractor']));
+        $totalContractors = count(array_filter($attendanceData, fn($item) => $item['is_contractor']));
 
-            return $wasta;
-        });
+        // Paginate results
+        $perPage = $request->per_page ?? 20;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $currentItems = array_slice($attendanceData, ($currentPage - 1) * $perPage, $perPage);
 
-        $phases = Phase::where('site_id', $site->id)->orderBy('phase_name')->get();
-        $totalLabours = $wastas->sum(fn($w) => $w->labours->count());
+        $paginatedData = new LengthAwarePaginator(
+            $currentItems,
+            count($attendanceData),
+            $perPage,
+            $currentPage,
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'query' => $request->query()
+            ]
+        );
 
-        // Calculate site totals
-        $siteTotal = [
-            'wasta_amount' => $wastas->sum('total_amount'),
-            'labour_amount' => $wastas->sum('labours_total_amount'),
-            'combined_total' => $wastas->sum('combined_total')
-        ];
+        // Get filter options for dropdowns
+        $wastas = Wasta::select('wasta_name', 'id')->latest()->get();
+        $wagers = Wager::select('wager_name', 'id')->latest()->get();
 
-        // Format date range for display
-        $dateRange = $startDate->format('M d, Y') . ' - ' . $endDate->format('M d, Y');
-
-        return view('profile.partials.Admin.Ledgers.site-wager-attendance-sheet', compact(
-            'wastas',
+        return view('profile.partials.admin.ledgers.site-wager-attendance-sheet', compact(
             'site',
-            'phases',
-            'siteTotal',
             'startDate',
             'endDate',
+            'dateArray',
             'totalDays',
-            'dateRange',
-            'dateFilter',
-            'monthYear',
-            'customStart',
-            'customEnd',
-            'totalLabours'
+            'paginatedData',
+            'grandTotalDays',
+            'grandTotalAmount',
+            'totalWorkers',
+            'totalContractors',
+            'wastas',
+            'wagers'
         ));
+
     }
-
-
 
 
 }

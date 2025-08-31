@@ -98,9 +98,9 @@ class PendingPaymentsVerifications extends Controller
             'supplier_id' => 'required|exists:suppliers,id',
             'site_id' => 'required|exists:sites,id',
             'screenshot' => 'nullable|image|mimes:jpg,jpeg,png|max:1024',
-            'notes' => 'nullable|string',
+            'narration' => 'nullable|string',
+            'created_at' => 'required|date',
         ]);
-
 
         // Handle file upload
         if ($request->hasFile('screenshot')) {

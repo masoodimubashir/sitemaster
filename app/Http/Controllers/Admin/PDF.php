@@ -607,7 +607,7 @@ class PDF extends Fpdf
 
             // Date
             $this->SetXY($x, $y);
-            $this->Cell($columns['date'], $maxHeight, $ledger['created_at']->format('d-M-y'), 1);
+            $this->Cell($columns['date'], $maxHeight, $ledger['created_at'], 1);
             $x += $columns['date'];
 
             // Supplier (MultiCell)
@@ -863,7 +863,7 @@ class PDF extends Fpdf
     public function phaseWiseAttendanceReport($title, $subtitle, $dates, $workers, $attendanceData, $totals, $info)
     {
 
-        
+
         $this->SetMargins($this->m_left, $this->m_top, $this->m_right);
         $this->AddPage('L');
 

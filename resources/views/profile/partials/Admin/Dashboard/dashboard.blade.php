@@ -1,6 +1,7 @@
 <x-app-layout>
 
 
+
     <style>
         #messageContainer {
             position: fixed;
@@ -9,193 +10,378 @@
             transform: translateX(-50%);
             z-index: 999999999;
         }
+
+        .badge-soft {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.6rem;
+        }
+
+        .dashboard-card {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+        }
+
+
+        .icon-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-container {
+            background: #f8f9fc;
+            border-radius: 15px;
+            border: 1px solid #e3e6f0;
+            transition: all 0.3s ease;
+        }
+
+        .search-container:focus-within {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-container .form-control {
+            border: none;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .search-container .input-group-text {
+            border: none;
+            background: transparent;
+        }
+
+        .btn-modern {
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 12px 24px;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-modern.btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-modern.btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-modern.btn-outline-secondary {
+            border: 2px solid #e3e6f0;
+            color: #6c757d;
+        }
+
+        .btn-modern.btn-outline-secondary:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .table-modern {
+            overflow: hidden;
+        }
+
+        .table-modern thead {
+            background: linear-gradient(135deg, #f8f9fc 0%, #e9ecf3 100%);
+        }
+
+        .table-modern thead th {
+            border: none;
+            font-weight: 700;
+            color: #5a5c69;
+            padding: 20px 15px;
+            font-size: 0.875rem;
+        }
+
+        .table-modern tbody tr {
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .table-modern tbody tr:hover {
+            background-color: #f8f9fc;
+            transform: scale(1.01);
+        }
+
+        .table-modern tbody td {
+            border: none;
+            padding: 20px 15px;
+            vertical-align: middle;
+        }
+
+        .site-link {
+            font-weight: 700;
+            color: #5a5c69;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .site-link:hover {
+            color: #667eea;
+        }
+
+        .amount-positive {
+            color: #1cc88a;
+            font-weight: 700;
+        }
+
+        .amount-negative {
+            color: #e74a3b;
+            font-weight: 700;
+        }
+
+        .amount-neutral {
+            color: #36b9cc;
+            font-weight: 700;
+        }
+
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            border: none;
+        }
+
+        .status-progress {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            color: #8b4513;
+        }
+
+        .status-completed {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+        }
+
+        .expand-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #f8f9fc 0%, #e9ecf3 100%);
+            color: #5a5c69;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .expand-btn:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .breakdown-container {
+            background: linear-gradient(135deg, #f8f9fc 0%, #ffffff 100%);
+            border-radius: 15px;
+            margin: 10px 0;
+        }
+
+        .breakdown-card {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e3e6f0;
+            transition: all 0.3s ease;
+        }
+
+        .breakdown-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
+        }
+
+        .page-title {
+            color: #5a5c69;
+            font-weight: 800;
+            margin-bottom: 2rem;
+        }
     </style>
 
-    <div class="row">
-        <!-- Stats Overview -->
-        <div class="row mb-4">
-            <!-- Statistics Cards -->
-            <div class="col-md-8">
-                <div class="row">
-                    <div class="col-md-6 mb-3 mb-md-0">
-                        <div class="card bg-primary text-white h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="card-title mb-1 text-white">Sites Open</h6>
-                                        <h2 class="mb-0">{{ $ongoingSites }}</h2>
-                                    </div>
-                                    <div class="icon-shape bg-white text-primary rounded-circle p-3">
-                                        <i class="fas fa-building fs-4"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+
+
+    <!-- Stats Overview -->
+    <div class="row mb-5 g-4">
+        <div class="col-md-4">
+            <div class="dashboard-card primary h-100 p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-2 ">Sites Open</h6>
+                        <h1 class="mb-0 fw-bold">{{ $ongoingSites ?? '1' }}</h1>
                     </div>
-                    <div class="col-md-6">
-                        <div class="card bg-secondary text-white h-100">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="card-title mb-1 text-white">Closed Sites</h6>
-                                        <h2 class="mb-0">{{ $completedSites }}</h2>
-                                    </div>
-                                    <div class="icon-shape bg-white text-danger rounded-circle p-3">
-                                        <i class="fas fa-lock"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="icon-circle">
+                        <i class="fas fa-building fs-3"></i>
                     </div>
                 </div>
             </div>
-
-            <!-- Action Buttons -->
-            <div class="col-md-4 mt-3 mt-md-0">
-                <div class="d-flex flex-column h-100 gap-2">
-                    <a class="btn btn-outline-info btn-sm w-100 d-flex align-items-center justify-content-center"
-                        href="{{ route('suppliers.dashboard') }}">
+        </div>
+        <div class="col-md-4">
+            <div class="dashboard-card secondary h-100 p-4">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-2 ">Closed Sites</h6>
+                        <h1 class="mb-0 fw-bold">{{ $completedSites ?? '0' }}</h1>
+                    </div>
+                    <div class="icon-circle">
+                        <i class="fas fa-lock fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="success h-100 p-4">
+                <div class="d-flex flex-column gap-3">
+                    <a class="btn btn-success btn-modern text-decoration-none d-flex align-items-center justify-content-center"
+                        href="{{ route('suppliers.dashboard') ?? '#' }}">
                         <i class="fas fa-exchange-alt me-2"></i> Switch Suppliers
                     </a>
-                    <button class="btn  btn-success btn-sm w-100 d-flex align-items-center justify-content-center"
+                    <button class="btn btn-success btn-modern d-flex align-items-center justify-content-center"
                         data-bs-toggle="modal" data-bs-target="#create-site-modal">
                         <i class="fas fa-plus me-2"></i> Create Site
                     </button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Main Content Area -->
+    <!-- Sites Table -->
+    <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-body p-0">
-                    <!-- Search and Filters -->
-                    <div class="p-3 ">
-                        <form method="GET" action="{{ url()->current() }}">
-                            <div class="row g-2">
-                                <div class="col-md-8">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
-                                        <input type="text" name="search" class="form-control"
-                                            placeholder="Search for customers or sites..."
-                                            value="{{ request('search') }}">
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <button type="submit" class="btn btn-sm btn-primary w-100">Search</button>
-                                </div>
-                                <div class="col-md-2">
-                                    <a href="{{ url()->current() }}"
-                                        class="btn btn-sm btn-outline-secondary text-black w-100">Reset</a>
+            <div class="table-modern">
+                <!-- Search Filters -->
+                <div class="p-4 bg-white">
+                    <form method="GET" action="{{ url()->current() ?? '#' }}">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-8">
+                                <div class="search-container input-group">
+                                    <span class="input-group-text">
+                                        <i class="fas fa-search text-muted"></i>
+                                    </span>
+                                    <input type="text" name="search" class="form-control"
+                                        placeholder="Search for customers or sites..."
+                                        value="{{ request('search') ?? '' }}">
                                 </div>
                             </div>
-                        </form>
-                    </div>
-
-                    <!-- Sites List -->
-                    <div class="table-responsive">
-                        <table class="table mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Site Name</th>
-                                    <th>Client</th>
-                                    <th>Created</th>
-                                    <th class="text-end">Paid</th>
-                                    <th class="text-end">Balance</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($sites as $site)
-                                    @php
-                                        $baseCost = 0;
-                                        foreach ($site->phases as $phase) {
-                                            $baseCost +=
-                                                ($phase->total_material_billing ?? 0) +
-                                                ($phase->total_square_footage ?? 0) +
-                                                ($phase->total_daily_expenses ?? 0) +
-                                                ($phase->total_labour_cost ?? 0) +
-                                                ($phase->total_wasta_cost ?? 0);
-                                        }
-
-                                        $servicePercentage = $site->service_charge ?? 0;
-                                        $serviceAmount = ($baseCost * $servicePercentage) / 100;
-                                        $totalCost = $baseCost + $serviceAmount;
-
-                                        $paid = $site->total_payments ?? 0;
-                                        $balance = $totalCost - $paid;
-                                        $status = $balance <= 0 ? 'Completed' : 'In Progress';
-                                    @endphp
-
-                                    <tr>
-                                        <td>
-                                            <a href="{{ url('/admin/sites/' . base64_encode($site->id)) }}"
-                                                class="fw-bold text-decoration-none">
-                                                {{ $site->site_name }}
-                                            </a>
-                                        </td>
-                                        <td>{{ $site->client->name }}</td>
-                                        <td>{{ $site->created_at->diffForHumans() }}</td>
-                                        <td class="text-end text-success fw-bold">{{ number_format($paid, 2) }}</td>
-                                        <td class="text-end text-danger fw-bold">{{ number_format($balance, 2) }}</td>
-
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    @if ($sites->hasPages())
-                        <div class="p-3 border-top">
-                            <nav aria-label="Page navigation">
-                                <ul class="pagination justify-content-center mb-0">
-                                    {{-- Previous Page Link --}}
-                                    @if ($sites->onFirstPage())
-                                        <li class="page-item disabled">
-                                            <span class="page-link">&laquo;</span>
-                                        </li>
-                                    @else
-                                        <li class="page-item">
-                                            <a class="page-link" href="{{ $sites->previousPageUrl() }}"
-                                                rel="prev">&laquo;</a>
-                                        </li>
-                                    @endif
-
-                                    {{-- Pagination Elements --}}
-                                    @foreach ($sites->getUrlRange(1, $sites->lastPage()) as $page => $url)
-                                        @if ($page == $sites->currentPage())
-                                            <li class="page-item active">
-                                                <span class="page-link">{{ $page }}</span>
-                                            </li>
-                                        @else
-                                            <li class="page-item">
-                                                <a class="page-link"
-                                                    href="{{ $url }}">{{ $page }}</a>
-                                            </li>
-                                        @endif
-                                    @endforeach
-
-                                    {{-- Next Page Link --}}
-                                    @if ($sites->hasMorePages())
-                                        <li class="page-item">
-                                            <a class="page-link" href="{{ $sites->nextPageUrl() }}"
-                                                rel="next">&raquo;</a>
-                                        </li>
-                                    @else
-                                        <li class="page-item disabled">
-                                            <span class="page-link">&raquo;</span>
-                                        </li>
-                                    @endif
-                                </ul>
-                            </nav>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-modern btn-success w-100">Search</button>
+                            </div>
+                            <div class="col-md-2">
+                                <a href="{{ url()->current() ?? '#' }}"
+                                    class="btn btn-modern btn-outline-primary w-100">Reset</a>
+                            </div>
                         </div>
-                    @endif
+                    </form>
                 </div>
+
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table class="table table-modern mb-0">
+                        <thead>
+                            <tr>
+                                <th>Site</th>
+                                <th>Client</th>
+                                <th>Created</th>
+                                <th class="text-end">Paid</th>
+                                <th class="text-end">Due</th>
+                                <th class="text-end">Balance</th>
+                                <th>Status</th>
+                                <th class="text-center"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+
+
+                            <!-- Dynamic rows would go here in your actual implementation -->
+                            @forelse ($sites as  $site)
+                                @php
+                                    $status = ($site->total_balance ?? 0) <= 0 ? 'Completed' : 'In Progress';
+                                    $badgeClass = $status === 'Completed' ? 'status-completed' : 'status-progress';
+                                @endphp
+                                <tr>
+                                    <td>
+                                        <a href="{{ url('/admin/sites/' . base64_encode($site->id)) }}"
+                                            class="site-link">
+                                            {{ $site->site_name }}
+                                        </a>
+                                        <div class="text-muted small mt-1">{{ $site->location ?? '' }}</div>
+                                    </td>
+                                    <td class="fw-semibold">{{ $site->client->name ?? '' }}</td>
+                                    <td class="text-muted">{{ $site->created_at->format('M d, Y') ?? '' }}</td>
+                                    <td class="text-end amount-positive">
+                                        {{ number_format($site->total_paid ?? 0, 2) }}</td>
+                                    <td class="text-end amount-negative">
+                                        {{ number_format($site->total_due ?? 0, 2) }}</td>
+                                    <td class="text-end amount-neutral">
+                                        {{ number_format($site->total_balance ?? 0, 2) }}</td>
+                                    <td><span class="status-badge {{ $badgeClass }}">{{ $status }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button class="expand-btn" data-bs-toggle="collapse"
+                                            data-bs-target="#breakdown-{{ $site->id }}">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- Balance Breakdown -->
+                                <tr class="collapse" id="breakdown-{{ $site->id }}">
+                                    <td colspan="8" class="p-0">
+                                        <div class="breakdown-container p-4">
+                                            <div class="row g-3">
+                                                @if (isset($site->balance_breakdown))
+                                                    @foreach ($site->balance_breakdown as $key => $value)
+                                                        <div class="col-md-2">
+                                                            <div class="breakdown-card p-3 text-center">
+                                                                <small
+                                                                    class="text-muted text-uppercase d-block mb-1">{{ ucfirst($key) }}</small>
+                                                                <div class="fw-bold">
+                                                                    {{ number_format($value, 2) }}</div>
+                                                            </div>
+                                                        </div>
+                                                    @endforeach
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-5">
+                                        <i class="fas fa-inbox fs-1 mb-3 d-block text-muted"></i>
+                                        <h5>No sites found</h5>
+                                        <p class="mb-0">Try adjusting your search criteria</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                @if (isset($sites) && $sites->hasPages())
+                    <div class="p-4 bg-white border-top">
+                        {{ $sites->links('pagination::bootstrap-5') }}
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 
-    <div id="messageContainer"></div>
 
     <!-- Create Site Modal -->
     <div id="create-site-modal" class="modal fade" aria-hidden="true" aria-labelledby="createSiteModalLabel"
@@ -210,7 +396,7 @@
                     <!-- Message Container for Success/Error Messages -->
                     <div id="messageContainer"></div>
 
-                       <form id="createSiteForm" class="forms-sample material-form" enctype="multipart/form-data">
+                    <form id="createSiteForm" class="forms-sample material-form" enctype="multipart/form-data">
                         @csrf
 
                         <!-- Site Name -->
@@ -294,8 +480,7 @@
 
                                         <!-- Buttons -->
                                         <div class="d-flex justify-content-end">
-                                            <button type="button" class="btn btn-sm"
-                                                onclick="clearAllEngineers()">
+                                            <button type="button" class="btn btn-sm" onclick="clearAllEngineers()">
                                                 <i class="fas fa-times me-1"></i>
                                             </button>
                                             <button type="button" class="btn btn-sm"
@@ -335,6 +520,10 @@
             </div>
         </div>
     </div>
+
+
+    <div id="messageContainer"></div>
+
 
     @push('scripts')
         <script>

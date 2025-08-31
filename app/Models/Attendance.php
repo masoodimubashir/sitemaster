@@ -3,20 +3,37 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Attendance extends Model
 {
 
+
+
+    public $timestamps = false;
+
+
     protected $fillable = [
-        'attendable_id',
-        'attendable_type',
         'is_present',
         'attendance_date',
-        'price'
+        'attendance_setup_id',
+        'created_at',
+        'updated_at'
     ];
 
-    public function attendable()
+
+
+    /**
+     * Get the attendanceSetup that owns the Attendance
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function attendanceSetup(): BelongsTo
     {
-        return $this->morphTo();
+        return $this->belongsTo(AttendanceSetup::class);
     }
+
+    
+
 }

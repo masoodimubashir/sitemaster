@@ -56,7 +56,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">
                             <i class="fas fa-layer-group me-2 text-info"></i>
-                            Phases 
+                            Phases
                         </h5>
                         <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#phaseModal">
                             <i class="fas fa-plus me-1"></i>
@@ -86,8 +86,8 @@
                                             <td class="text-center">
                                                 <div class="d-flex justify-content-center gap-2">
                                                     <x-actions
-                                                        editUrl="{{ url($user . '/phase/' . base64_encode( $phase->id)  . '/edit') }}"
-                                                        deleteUrl="{{ url($user . '/phase/' . base64_encode( $phase->id) ) }}"
+                                                        editUrl="{{ url($user . '/phase/' . base64_encode($phase->id) . '/edit') }}"
+                                                        deleteUrl="{{ url($user . '/phase/' . base64_encode($phase->id)) }}"
                                                         userType="{{ $user }}"
                                                         deleteMessage="Are you sure you want to delete this Phase?" />
                                                 </div>
@@ -102,7 +102,7 @@
                                     <i class="fas fa-layer-group fa-4x text-muted mb-4"></i>
                                     <h4 class="text-muted">No Phases Found</h4>
                                     <p class="text-muted mb-4">There are no phase records available at the moment.</p>
-                                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#phaseModal">
+                                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#phaseModal">
                                         <i class="fas fa-plus me-1"></i>
                                         Create New Phase
                                     </button>
@@ -124,7 +124,8 @@
     </div>
 
     <!-- Create Phase Modal -->
-    <div class="modal fade" id="phaseModal" tabindex="-1" aria-hidden="true"   data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="phaseModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static"
+        data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header text-black">
@@ -146,8 +147,16 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="created_at" class="form-label">Date</label>
+                            <input type="date" class="form-control" name="created_at" id="created_at" required>
+                            <div class="invalid-feedback">Please select a date.</div>
+                        </div>
+
+
+                        <div class="mb-3">
                             <label for="site_id" class="form-label">Site</label>
-                            <select class="form-select form-select-sm text-black" style="cursor: pointer;" id="site_id" name="site_id" required>
+                            <select class="form-select form-select-sm text-black" style="cursor: pointer;"
+                                id="site_id" name="site_id" required>
                                 <option value="" selected disabled>Select Site</option>
                                 @foreach ($sites as $site)
                                     <option value="{{ $site->id }}">{{ ucfirst($site->site_name) }}</option>
@@ -248,7 +257,7 @@
                                 } else {
                                     input.after(
                                         `<div class="invalid-feedback">${messages.join(' ')}</div>`
-                                        );
+                                    );
                                 }
                             });
                         } else if (xhr.responseJSON && xhr.responseJSON.message) {

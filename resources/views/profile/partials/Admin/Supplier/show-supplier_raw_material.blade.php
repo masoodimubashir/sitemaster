@@ -2,6 +2,8 @@
 
     @php
 
+        use Carbon\Carbon;
+
         $user = auth()->user()->role_name === 'admin' ? 'admin' : 'user';
 
     @endphp
@@ -34,51 +36,7 @@
             margin-right: 15px;
         }
 
-        .tab-container {
-            border-bottom: 1px solid #e5e7eb;
-            margin-bottom: 20px;
-        }
 
-        .tab {
-            display: inline-block;
-            padding: 10px 0;
-            margin-right: 30px;
-            cursor: pointer;
-        }
-
-        .tab.active {
-            border-bottom: 2px solid #3b82f6;
-            color: #3b82f6;
-            font-weight: 500;
-        }
-
-        .badge {
-            background-color: #e5e7eb;
-            padding: 2px 8px;
-            border-radius: 9999px;
-            font-size: 12px;
-            margin-left: 5px;
-        }
-
-        .filters-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .filter-label {
-            font-weight: 500;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .filter-input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d1d5db;
-            border-radius: 6px;
-        }
 
         .summary-cards {
             display: flex;
@@ -121,16 +79,6 @@
 
         .got-text {
             color: #059669;
-        }
-
-        .balance-text {
-            color: #4f46e5;
-        }
-
-        .report-table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
         }
 
         .report-table th {
@@ -177,7 +125,6 @@
     <x-breadcrumb :names="['Suppliers', $data['supplier']->name]" :urls="[$user . '/suppliers', $user . '/suppliers/' . $data['supplier']->id]" />
 
 
-
     <div class="header-container">
 
 
@@ -207,7 +154,6 @@
                 </li>
 
 
-
                 <li>
                     <a class="dropdown-item" href="{{ url($user . '/supplier/payments', [$data['supplier']->id]) }}">
                         <i class="fas fa-money-check-alt me-2"></i> View Payments
@@ -230,14 +176,29 @@
                     </a>
                 </li>
 
-
             </ul>
 
-            <form action="{{ url($user . '/ledger/report') }}" method="GET">
+            <form action="{{ url($user . '/supplier/ledger-pdf') }}" method="GET">
+                <!-- Existing filters -->
                 <input type="hidden" name="site_id" value="{{ request('site_id', 'all') }}">
                 <input type="hidden" name="date_filter" value="{{ request('date_filter', 'today') }}">
-                <input type="hidden" name="supplier_id" value="{{ request('supplier_id', $data['supplier']->id) }}">
+                <input type="hidden" name="supplier_id"
+                    value="{{ request('supplier_id', $data['supplier']->id ?? 'all') }}">
                 <input type="hidden" name="phase_id" value="{{ request('phase_id', 'all') }}">
+
+                <!-- Missing custom date range filters -->
+                @if (request('date_filter') === 'custom')
+                    <input type="hidden" name="start_date" value="{{ request('start_date') }}">
+                    <input type="hidden" name="end_date" value="{{ request('end_date') }}">
+                @endif
+
+                <!-- Add more hidden inputs for any other query parameters you want to preserve -->
+                @foreach (request()->query() as $key => $value)
+                    @if (!in_array($key, ['site_id', 'date_filter', 'supplier_id', 'phase_id', 'start_date', 'end_date']))
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endif
+                @endforeach
+
                 <button type="submit" class="btn btn-outline">
                     <i class="far fa-file-pdf"></i> PDF
                 </button>
@@ -289,7 +250,6 @@
     </form>
 
 
-
     <div class="mt-4">
 
         <div class="summary-cards">
@@ -304,10 +264,6 @@
                 <div class="summary-label gave-text">Total Due</div>
             </div>
 
-            <div class="summary-card balance">
-                <div class="summary-amount balance-text">₹{{ number_format($data['totalDebit']) }}</div>
-                <div class="summary-label balance-text">Effective Balance</div>
-            </div>
 
             <div class="summary-card got">
                 <div class="summary-amount got-text">₹{{ number_format($data['totalCredit']) }}</div>
@@ -321,7 +277,6 @@
             </div>
 
         </div>
-
 
 
         <div class="card">
@@ -341,7 +296,7 @@
                         @if (count($data['ledgers']))
                             @foreach ($data['ledgers'] as $key => $ledger)
                                 <tr>
-                                    <td>{{ \Carbon\Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
+                                    <td>{{ Carbon::parse($ledger['created_at'])->format('d M Y') }}</td>
                                     <td>
                                         <strong>{{ ucwords($ledger['supplier']) }}</strong>
                                     </td>
@@ -349,6 +304,7 @@
                                         <div class="fw-bold">{{ ucwords($ledger['description']) }}</div>
                                         <small class="text-muted">
                                             {{ ucwords($ledger['phase']) }} / {{ $ledger['category'] }}
+                                            / {{ $ledger['site'] }}
                                         </small>
                                     </td>
                                     <td class="text-danger fw-bold">
@@ -443,10 +399,10 @@
                 <div class="modal-body">
 
 
-
                     <form id="payment_form" class="forms-sample material-form" enctype="multipart/form-data">
 
                         @csrf
+
 
                         <div class="d-flex align-items-center gap-2 p-2 border-start border-3 border-primary">
                             <i class="bi bi-building text-primary"></i>
@@ -454,6 +410,14 @@
                                 <small class="text-muted d-block">Supplier</small>
                                 <strong>{{ $supplier->name }}</strong>
                             </div>
+                        </div>
+
+                        {{-- Date --}}
+                        <div class="form-group">
+                            <input type="date" name="created_at" id="created_at" />
+                            <label for="created_at" class="control-label">Date</label>
+                            <i class="bar"></i>
+                            <p class="mt-1 text-danger" id="created_at-error"></p>
                         </div>
 
                         {{-- Phase Name --}}
@@ -470,17 +434,9 @@
                         </div>
 
 
-
                         @if ($user === 'user')
-                            <select name="site_id" id="site_id" class="form-select text-black form-select-sm"
-                                style="cursor: pointer">
-                                <option for="site_id" value="">Select Site</option>
-                                @foreach ($sites as $site)
-                                    <option value="{{ $site['site_id'] }}">
-                                        {{ $site['site_name'] }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <!-- For user role, payments always go to Admin; hide sites selection -->
+                            <input type="hidden" name="payment_initiator" value="1" />
                         @endif
 
                         @if ($user === 'admin')
@@ -534,6 +490,13 @@
                             </div>
                         @endif
 
+                        <div class="mb-3">
+                            {{-- Narration  --}}
+                            <label class="control-label mt-3">Narration</label>
+                            <textarea id="narration" class="form-control" name="narration"></textarea>
+                            <div class="invalid-feedback" id="screenshot-error"></div>
+                        </div>
+
                         {{-- File Upload for Screenshot --}}
                         <div class="mt-3">
                             <input class="form-control form-control-md" id="image" type="file"
@@ -568,15 +531,24 @@
                 function togglePayOptions() {
                     const payToAdmin = document.getElementById('payment_initiator').checked;
                     const adminOptions = document.getElementById('adminOptions');
+                    const siteSelect = document.getElementById('site_id');
 
                     if (payToAdmin) {
                         adminOptions.style.display = 'block';
+                        // Hide site selection when paying to admin
+                        if (siteSelect) {
+                            $(siteSelect).slideUp(200);
+                        }
                         // Add smooth transition
                         $(adminOptions).slideDown(300);
                     } else {
                         // Clear radio selections when hiding
                         $('input[name="transaction_type"]').prop('checked', false);
                         $(adminOptions).slideUp(300);
+                        // Show site selection when not paying to admin
+                        if (siteSelect) {
+                            $(siteSelect).slideDown(200);
+                        }
                     }
                 }
 
@@ -697,7 +669,6 @@
                 // Initialize tooltips if any
                 $('[data-bs-toggle="tooltip"]').tooltip();
             });
-
 
 
             document.addEventListener('DOMContentLoaded', function() {

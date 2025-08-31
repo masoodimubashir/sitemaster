@@ -1,13 +1,7 @@
 <x-app-layout>
 
 
-    <x-breadcrumb :names="['Sites']" :urls="['client/dashboard']" />
-
-
-
-
-
-
+    <x-breadcrumb :names="['Sites']" :urls="['client/dashboard']"/>
 
 
     <style>
@@ -18,7 +12,6 @@
         .transition-all {
             transition: all 0.3s ease;
         }
-
 
 
         .minimal-card {
@@ -261,7 +254,7 @@
                         <div class="label-text">Contact</div>
                         <div class="value-text">
                             <a href="tel:+91-{{ $site->contact_no }}" class="text-decoration-none"
-                                style="color: #111827;">
+                               style="color: #111827;">
                                 +91-{{ $site->contact_no }}
                             </a>
                         </div>
@@ -280,26 +273,13 @@
         </div>
     </div>
 
-    <div class="d-flex justify-content-start gap-2 align-items-center mb-4">
-
-        <!-- Download Report Button -->
-        <div class="mb-4">
-            <a class="btn-minimal" href="{{ url('/client/attendance/site/show/' . $site->id) }}">
-                <i class="fas fa-calendar-check me-2"></i> View Attendance
-            </a>
-
-
-        </div>
-
-        <!-- Download Report Button -->
-        <div class="mb-4">
-            <a href="{{ url('client/download-site/report/' . base64_encode($site->id)) }}" class="btn-minimal">
-                <i class="fas fa-download"></i>
-                Download Site Report
-            </a>
-        </div>
+    <!-- Download Report Button -->
+    <div class="mb-4">
+        <a href="{{ url('client/download-site/report/' . base64_encode($site->id)) }}" class="btn-minimal">
+            <i class="fas fa-download"></i>
+            Download Site Report
+        </a>
     </div>
-
 
 
     <!-- Phase Data -->
@@ -308,7 +288,7 @@
         <div class="mb-4">
             @foreach ($phaseData as $key => $phase)
                 <button class="tab-minimal {{ $key === 0 ? 'active' : '' }}" onclick="showPhase({{ $key }})"
-                    id="tab-{{ $key }}">
+                        id="tab-{{ $key }}">
                     {{ ucfirst($phase['phase']) }}
                 </button>
             @endforeach
@@ -321,6 +301,7 @@
                 <!-- Financial Summary -->
                 <div class="summary-section">
                     <h3 class="section-title">{{ ucfirst($phase['phase']) }}</h3>
+
 
                     <div class="row">
                         <div class="col-md-6">
@@ -356,60 +337,35 @@
                                 <span class="metric-value">₹{{ number_format($phase['phase_total'], 2) }}</span>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="divider"></div>
 
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="metric-row">
-                                <span class="metric-label">Service Charge (10%)</span>
-                                <span
-                                    class="metric-value">₹{{ number_format($phase['phase_total_with_service_charge'] - $phase['phase_total'], 2) }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="metric-row">
-                                <span class="metric-label">Total Paid</span>
-                                <span class="metric-value">₹{{ number_format($phase['total_paid'], 2) }}</span>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="metric-row">
-                                <span class="metric-label">Total Due</span>
-                                <span class="metric-value">₹{{ number_format($phase['total_due'], 2) }}</span>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="total-row">
+
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="metric-row mb-0">
                                     <span class="metric-label">Total Amount</span>
                                     <span class="metric-value"
-                                        style="font-size: 16px;">₹{{ number_format($phase['phase_total_with_service_charge'], 2) }}</span>
+                                          style="font-size: 16px;">₹{{ number_format($phase['phase_total_with_service_charge'], 2) }}</span>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="metric-row mb-0">
-                                    <span class="metric-label">Effective Balance</span>
-                                    <span class="metric-value"
-                                        style="font-size: 16px;">₹{{ number_format($phase['effective_balance'], 2) }}</span>
-                                </div>
-                            </div>
+
                         </div>
                     </div>
+
                 </div>
 
                 <!-- Generate PDF Button -->
                 <div class="d-flex justify-content-end mt-4 mb-4">
                     <a href="{{ url('client/download-phase/report', ['id' => base64_encode($phase['phase_id'])]) }}"
-                        class="btn-minimal">
+                       class="btn-minimal">
                         <i class="fas fa-file-pdf"></i>
                         Generate PDF
                     </a>
                 </div>
+                <!-- Data Tables -->
                 @php
                     $tables = [
                         'construction_material_billings' => [
@@ -461,55 +417,60 @@
                             <div class="table-responsive">
                                 <table class="table table-hover mb-0">
                                     <thead class="bg-light">
-                                        <tr>
-                                            <th>Date</th>
-                                            <th>Bill Proof</th>
-                                            <th>Description</th>
-                                            <th>Supplier</th>
-                                            <th class="text-end">Amount</th>
-                                            <th class="text-end">Total (with SC)</th>
-                                        </tr>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Bill Proof</th>
+                                        <th>Description</th>
+                                        <th>Supplier</th>
+                                        <th>Amount</th>
+                                        <th>Total (with SC)</th>
+                                    </tr>
                                     </thead>
                                     <tbody>
-                                        @forelse ($table['data'] as $entry)
-                                            <tr>
-                                                <td>
-                                                    {{ \Carbon\Carbon::parse($entry['created_at'])->format('d-M-Y') }}
-                                                </td>
-                                                <td>
-                                                    @if ($entry['image'])
-                                                        <div class="position-relative d-inline-block">
-                                                            <img src="{{ asset('storage/' . $entry['image']) }}"
-                                                                alt=""
-                                                                style="max-width: 100px; max-height: 100px;">
+                                    @forelse ($table['data'] as $entry)
+                                        <tr>
+                                            <td>
+                                                {{ \Carbon\Carbon::parse($entry['created_at'])->format('d-M-Y') }}
+                                            </td>
+                                            <td>
+                                                @if ($entry['image'])
+                                                    <div class="position-relative d-inline-block">
+                                                        <img src="{{ asset('storage/' . $entry['image']) }}"
+                                                             alt=""
+                                                             style="max-width: 100px; max-height: 100px;">
 
-                                                            <a href="{{ asset('storage/' . $entry['image']) }}"
-                                                                download
-                                                                class="position-absolute start-0 end-0 bottom-0 text-center text-white bg-dark bg-opacity-70 p-1 text-decoration-none opacity-0 hover-opacity-100 transition-all">
-                                                                <i class="fas fa-download"></i>
-                                                            </a>
-                                                        </div>
-                                                    @else
-                                                        Bill Not Available
-                                                    @endif
-                                                </td>
+                                                        <a href="{{ asset('storage/' . $entry['image']) }}"
+                                                           download
+                                                           class="position-absolute start-0 end-0 bottom-0 text-center text-white bg-dark bg-opacity-70 p-1 text-decoration-none opacity-0 hover-opacity-100 transition-all">
+                                                            <i class="fas fa-download"></i>
+                                                        </a>
+                                                    </div>
+                                                @else
+                                                    Bill Not Available
+                                                @endif
+                                            </td>
 
 
-                                                <td>{{ $entry['description'] ?? '-' }}</td>
-                                                <td>{{ $entry['supplier'] ?? '-' }}</td>
-                                                <td class="text-end">₹{{ number_format($entry['debit'], 2) }}</td>
-                                                <td class="text-end fw-medium">
-                                                    ₹{{ number_format($entry['total_amount_with_service_charge'], 2) }}
-                                                </td>
+                                            <td>{{ $entry['description'] ?? '-' }}</td>
+                                            <td>{{ $entry['supplier'] ?? '-' }}</td>
+                                            <td class="">
+                                                <div class="fw-bold">{{ $entry['debit'] }}</div>
+                                                <small class="text-muted">
+                                                    {{ ucwords($entry['amount_status']) }}
+                                                </small>
+                                            </td>
+                                            <td class="fw-medium">
+                                                ₹{{ number_format($entry['total_amount_with_service_charge'], 2) }}
+                                            </td>
 
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="6" class="text-center py-4 text-muted">
-                                                    <i class="fas fa-database me-2"></i> No records found
-                                                </td>
-                                            </tr>
-                                        @endforelse
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4 text-muted">
+                                                <i class="fas fa-database me-2"></i> No records found
+                                            </td>
+                                        </tr>
+                                    @endforelse
                                     </tbody>
                                 </table>
                             </div>

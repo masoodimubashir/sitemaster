@@ -23,6 +23,15 @@
                         @csrf
                         @method('PUT')
 
+                        {{-- Date --}}
+                        <div class="form-group">
+                            <input type="date" name="created_at" id="created_at"
+                                value="{{ $dialy_expense->created_at ? $dialy_expense->created_at->format('Y-m-d') : '' }}" />
+                            <label for="created_at" class="control-label">Date</label>
+                            <i class="bar"></i>
+                            <p class="mt-1 text-danger" id="created_at-error"></p>
+                        </div>
+
                         <!-- Wager Name -->
                         <div class="form-group">
                             <input id="item_name" type="text" name="item_name"

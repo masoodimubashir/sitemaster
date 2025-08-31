@@ -61,16 +61,14 @@ class UserSupplierController extends Controller
         $date_filter = $request->input('date_filter', 'today');
         $site_id = $request->input('site_id', 'all');
         $supplier_id = $request->input('supplier_id', $id);
-        $wager_id = $request->input('wager_id', 'all');
-        $start_date = $request->input('start_date'); // for 'custom'
+        $start_date = $request->input('start_date');
         $end_date = $request->input('end_date');
         $phase_id = $request->input('phase_id', 'all');
-
 
         // Load the supplier
         $supplier = Supplier::findOrFail($supplier_id);
 
-        [$payments, $raw_materials, $squareFootageBills, $expenses, $wastas, $labours] = $this->dataService->getData(
+        [$payments, $raw_materials, $squareFootageBills] = $this->dataService->getData(
             $date_filter,
             $site_id,
             $supplier_id,
@@ -83,13 +81,9 @@ class UserSupplierController extends Controller
             $payments,
             $raw_materials,
             $squareFootageBills,
-            $expenses,
-            $wastas,
-            $labours
         )->sortByDesc(function ($d) {
             return $d['created_at'];
         });
-
 
         // Paginate the ledgers
         $paginatedLedgers = new LengthAwarePaginator(
@@ -104,7 +98,7 @@ class UserSupplierController extends Controller
         $totals = $this->dataService->calculateAllBalances($ledgers);
 
         // Group unique sites
-        $sites = $this->dataService->getSuppliersWithSites(null, $supplier_id);
+        $sites = $this->dataService->getSuppliersWithSites($site_id, $supplier_id, $phase_id);
 
         // Prepare data
         $data = [
@@ -116,6 +110,7 @@ class UserSupplierController extends Controller
             'sites' => $sites,
             'returns' => $totals['without_service_charge']['return']
         ];
+
 
         if ($supplier->is_raw_material_provider == 1) {
             return view('profile.partials.Admin.Supplier.show-supplier_raw_material', compact('data', 'sites', 'supplier'));
@@ -202,8 +197,8 @@ class UserSupplierController extends Controller
             ];
         }));
 
-        $perPage = 20; 
-        $currentPage = request('page', 1); 
+        $perPage = 20;
+        $currentPage = request('page', 1);
 
         // Create paginator for the ledger data
         $paginatedLedgers = new LengthAwarePaginator(
@@ -213,7 +208,7 @@ class UserSupplierController extends Controller
             $currentPage, // Current page
             [
                 'path' => request()->url(),
-                'query' => request()->query() 
+                'query' => request()->query()
             ]
         );
 

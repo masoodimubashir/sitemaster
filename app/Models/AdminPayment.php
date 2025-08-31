@@ -8,19 +8,25 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 class AdminPayment extends Model
 {
 
+
+    public $timestamps = false;
+
     protected $fillable = [
         'amount',
-        'entity_type',
-        'entity_id',
         'transaction_type',
-        'site_id',
-        'supplier_id',
-        'screenshot'
+        'screenshot',
+        'created_at',
+        'updated_at'
     ];
 
     public function entity(): MorphTo
     {
         return $this->morphTo();
     }
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 
 }

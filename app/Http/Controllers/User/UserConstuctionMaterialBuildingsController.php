@@ -38,6 +38,7 @@ class UserConstuctionMaterialBuildingsController extends Controller
                 'supplier_id' => 'required|exists:suppliers,id',
                 'phase_id' => 'required|exists:phases,id',
                 'unit_count' => 'required|integer|min:1',
+                'created_at' => 'required|date',
             ]);
 
             if ($validator->fails()) {
@@ -52,16 +53,19 @@ class UserConstuctionMaterialBuildingsController extends Controller
                 $image_path = $request->file('image')->store('ConstructionBillingImage', 'public');
             }
 
+            $itemName = $request->input('item_name') ?? $request->input('custom_item_name');
+
             try {
                 $material = new ModelsConstructionMaterialBilling();
                 $material->amount = $request->input('amount');
                 $material->item_image_path = $image_path;
-                $material->item_name = $request->input('item_name');
+                $material->item_name = $itemName;
                 $material->verified_by_admin = 0;
                 $material->supplier_id = $request->input('supplier_id');
                 $material->user_id = auth()->user()->id;
                 $material->phase_id = $request->input('phase_id');
                 $material->unit_count = $request->input('unit_count');
+                $material->created_at = $request->input('created_at');
                 $material->save();
 
                 $data = [
@@ -87,7 +91,7 @@ class UserConstuctionMaterialBuildingsController extends Controller
 
                 return response()->json(['message' => 'Construction Created...'], 201);
             } catch (Exception $e) {
-                // Handle any unexpected errors
+                Log::error($e->getMessage());
                 return response()->json(['error' => 'An unexpected error occurred: '], 500);
             }
         }
@@ -136,6 +140,7 @@ class UserConstuctionMaterialBuildingsController extends Controller
                 ]);
 
 
+                $itemName = $request->input('item_name') ?? $request->input('custom_item_name');
                 $construction_material_billing = ModelsConstructionMaterialBilling::findOrFail($id);
                 $previousAmount = $construction_material_billing->amount;
                 $image_path = $construction_material_billing->item_image_path;
@@ -155,13 +160,13 @@ class UserConstuctionMaterialBuildingsController extends Controller
 
                 // Update billing record
                 $construction_material_billing->update([
-                    'amount' => $validatedData['amount'],
+                    'amount' => $validator['amount'],
                     'item_image_path' => $image_path,
-                    'item_name' => $validatedData['item_name'],
-                    'supplier_id' => $validatedData['supplier_id'],
+                    'item_name' => $validator['item_name'],
+                    'supplier_id' => $validator['supplier_id'],
                     'user_id' => auth()->id(),
-                    'phase_id' => $validatedData['phase_id'],
-                    'unit_count' => $validatedData['unit_count']
+                    'phase_id' => $validator['phase_id'],
+                    'unit_count' => $validator['unit_count']
                 ]);
 
                 // Update financial balances

@@ -44,8 +44,9 @@ class PaymentSiteController extends Controller
                 'site_id' => 'nullable|exists:sites,id',
                 'supplier_id' => 'nullable|exists:suppliers,id',
                 'payment_initiator' => 'required|in:0,1',
+                'created_at' => 'required|date',
+                'narration' => 'nullable|string|max:255',
             ]);
-
 
 
             if ($validatedData->fails()) {
@@ -66,20 +67,17 @@ class PaymentSiteController extends Controller
                 $path = $request->file('screenshot')->storeAs('Payment', $imageName, 'public');
             }
 
-            // if ($request->filled('payment_initiator') && !$request->filled('supplier_id')) {
+            if ($request->filled('payment_initiator') && !$request->filled('supplier_id')) {
 
-            //     dd($request->all());
+                AdminPayment::create([
+                    'screenshot' => $path,
+                    'amount' => $request->input('amount'),
+                    'transaction_type' => $request->input('transaction_type'),
+                    'created_at' => $request->input('created_at'),
+                ]);
 
-            //     AdminPayment::create([
-            //         'screenshot' => $path,
-            //         'amount' => $request->input('amount'),
-            //         'transaction_type' => $request->input('transaction_type'),
-            //         'entity_id' => $request->input('site_id'),
-            //         'entity_type' => Site::class,
-            //     ]);
-
-            //     return response()->json(['message' => 'Payment To Admin']);
-            // }
+                return response()->json(['message' => 'Payment To Admin']);
+            }
 
             $payment = new Payment();
             $payment->amount = $request->input('amount');
@@ -89,6 +87,8 @@ class PaymentSiteController extends Controller
             $payment->verified_by_admin = 1;
             $payment->payment_initiator = $request->filled('supplier_id') && $request->filled('site_id') ? 1 : 0;
             $payment->screenshot = $path;
+            $payment->narration = $request->input('narration', null);
+            $payment->created_at = $request->input('created_at');
             $payment->save();
 
             return response()->json(['message' => 'Payment Done...']);
